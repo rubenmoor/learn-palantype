@@ -1,23 +1,24 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeApplications  #-}
 
 module Frontend where
 
-import Control.Monad
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import Language.Javascript.JSaddle (eval, liftJSM)
+import           Control.Monad               (void)
+import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as T
+import           Language.Javascript.JSaddle (eval, liftJSM)
 
-import Obelisk.Frontend
-import Obelisk.Configs
-import Obelisk.Route
-import Obelisk.Generated.Static
+import           Obelisk.Configs             (HasConfigs (getConfig))
+import           Obelisk.Frontend            (Frontend (..))
+import           Obelisk.Generated.Static    (static)
+import           Obelisk.Route               (R)
 
-import Reflex.Dom.Core
+import           Reflex.Dom.Core             (blank, el, elAttr, prerender_,
+                                              text, (=:))
 
-import Common.Api
-import Common.Route
+import           Common.Api                  (commonStuff)
+import           Common.Route                (FrontendRoute)
 
 
 -- This runs in a monad that can be run on the client or the server.
@@ -31,7 +32,7 @@ frontend = Frontend
   , _frontend_body = do
       el "h1" $ text "Welcome to Obelisk!"
       el "p" $ text $ T.pack commonStuff
-      
+
       -- `prerender` and `prerender_` let you choose a widget to run on the server
       -- during prerendering and a different widget to run on the client with
       -- JavaScript. The following will generate a `blank` widget on the server and
@@ -43,6 +44,6 @@ frontend = Frontend
         exampleConfig <- getConfig "common/example"
         case exampleConfig of
           Nothing -> text "No config file found in config/common/example"
-          Just s -> text $ T.decodeUtf8 s
+          Just s  -> text $ T.decodeUtf8 s
       return ()
   }
