@@ -16,8 +16,8 @@ commonStuff = "Here is a string defined in Common.Api"
 type RoutesApi = "api" :> "config" :> "new" :> ReqBody '[PlainText] String  :> Post '[JSON] PloverCfg
 
 data PloverCfg = PloverCfg
-  { pcfgStenoKeys :: Map Text [Text]
-  , pcfgKeySteno :: Map Text Text
+  { pcfgStenoKeys :: Map String [String]
+  , pcfgKeySteno :: Map String String
   , pcfgSystem :: Text
   , pcfgMachine :: Text
   }

@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -6,41 +6,40 @@ module Handler
   ( handlers
   ) where
 
-import Servant.Server (err400, ServantErr(errBody), HasServer(ServerT))
-import qualified Servant.Server as Snap (throwError)
-import Snap.Core (Snap)
-import Common.Api (PloverCfg(..), RoutesApi)
-import Data.Text ( Text )
-import Control.Applicative (Applicative((<*>), pure))
-import Data.String (String)
-import qualified Data.ConfigFile as CfgParser
-import Data.Function (flip, ($))
-import Control.Monad.Except (MonadError(throwError), runExcept)
-import Data.List (lookup)
-import Control.Monad (foldM, unless, when)
-import Data.Monoid ((<>))
-import qualified Data.Aeson as Json
-import qualified Data.ByteString.Lazy as Lazy
+import           Common.Api            (PloverCfg (..), RoutesApi)
+import           Control.Applicative   (Applicative (pure, (<*>)))
+import           Control.Monad         (foldM)
+import           Control.Monad.Except  (MonadError (throwError), runExcept)
+import           Data.Aeson            (FromJSON (..), Value (Array))
+import qualified Data.Aeson            as Json
+import           Data.Aeson.Types      (Parser, typeMismatch)
 import qualified Data.ByteString.Char8 as Char8
-import Data.Either (Either(..))
-import Data.Traversable (for)
-import Data.Functor
-import Data.Aeson (Value (Array), FromJSON (..))
-import qualified Data.Map as Map
-import Data.Map (Map)
-import Data.Aeson.Types (Parser, typeMismatch)
-import Data.Foldable (Foldable(toList, foldl))
-import qualified Data.Text as Text
-import GHC.Show (Show(show))
+import qualified Data.ByteString.Lazy  as Lazy
+import qualified Data.ConfigFile       as CfgParser
+import           Data.Either           (Either (..))
+import           Data.Foldable         (Foldable (foldl, toList))
+import           Data.Function         (($))
+import           Data.Functor          ((<$>))
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
+import           Data.Monoid           ((<>))
+import           Data.String           (String)
+import           Data.Text             (Text)
+import qualified Data.Text             as Text
+import           GHC.Show              (Show (show))
+import           Servant.Server        (HasServer (ServerT),
+                                        ServantErr (errBody), err400)
+import qualified Servant.Server        as Snap (throwError)
+import           Snap.Core             (Snap)
 
 handlers :: ServerT RoutesApi '[] Snap
 handlers = handleConfigNew
 
-newtype KeysMap = KeysMap { unKeysMap :: Map Text [Text]}
+newtype KeysMap = KeysMap { unKeysMap :: Map String [String]}
 
 instance FromJSON KeysMap where
   parseJSON (Array values) =
-    let acc :: Map Text [Text] -> Value -> Parser (Map Text [Text])
+    let acc :: Map String [String] -> Value -> Parser (Map String [String])
         acc m a@(Array xs) = do
           (key, value) <- case toList xs of
             [l1, l2] -> (,) <$> parseJSON l1 <*> parseJSON l2
@@ -66,7 +65,7 @@ handleConfigNew str =
           Right km -> pure (km :: KeysMap)
 
         let keyStenoMap =
-              let acc :: Map Text Text -> (Text, [Text]) -> Map Text Text
+              let acc :: Map String String -> (String, [String]) -> Map String String
                   acc m (key, values) = foldl (\m' value -> Map.insert value key m') m values
               in  foldl acc Map.empty $ Map.toList $ unKeysMap keysMap
 
