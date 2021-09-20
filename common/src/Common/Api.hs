@@ -4,7 +4,7 @@
 
 module Common.Api where
 
-import           Data.Aeson   (ToJSON)
+import           Data.Aeson   (FromJSON, ToJSON)
 import           GHC.Generics (Generic)
 import           Servant.API  ((:>), JSON, PlainText, Post, ReqBody)
 import Data.Text (Text)
@@ -24,3 +24,4 @@ data PloverCfg = PloverCfg
   deriving (Generic)
 
 instance ToJSON PloverCfg
+instance FromJSON PloverCfg

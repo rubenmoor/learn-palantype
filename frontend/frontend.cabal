@@ -7,14 +7,17 @@ library
   hs-source-dirs: src
   build-depends: base
                , common
+               , ghcjs-dom
                , obelisk-frontend
                , obelisk-route
                , jsaddle
+               , jsaddle-dom
                , reflex-dom
                , servant-reflex
                , obelisk-executable-config-lookup
                , obelisk-generated-static
                , text
+               , witherable
   exposed-modules:
     Frontend
   other-modules:
