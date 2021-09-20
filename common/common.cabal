@@ -7,10 +7,10 @@ library
   hs-source-dirs: src
   build-depends: base
                , aeson
-               , obelisk-route
+               , containers
                , mtl
+               , obelisk-route
                , servant
-               , servant-multipart
                , text
   exposed-modules:
     Common.Api

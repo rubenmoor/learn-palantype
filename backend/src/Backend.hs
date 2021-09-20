@@ -1,27 +1,28 @@
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE GADTs           #-}
+{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE PatternSynonyms #-}
+
 module Backend where
 
-import Common.Route
-    ( FrontendRoute, BackendRoute, fullRouteEncoder )
-import Obelisk.Backend ( Backend(..) )
-import Snap.Core (Snap)
-import Data.Typeable (Proxy (..))
-import Common.Api ( RoutesApi, PloverCfg(..) )
-import "servant-snap" Servant.Server (HasServer(ServerT), serveSnap)
-import Servant.Multipart (Mem, MultipartData)
+import           Common.Api      (RoutesApi)
+import           Common.Route    (BackendRoute (BackendRoute_Api, BackendRoute_Missing),
+                                  FrontendRoute, fullRouteEncoder)
+import           Data.Typeable   (Proxy (..))
+import           Obelisk.Backend (Backend (..))
+import           Obelisk.Route   (pattern (:/))
+import           Servant.Server  (Context (EmptyContext),
+                                  serveSnapWithContext)
+import           Snap.Core       (Snap)
+import Handler (handlers)
 
 serveApi :: Snap ()
-serveApi = serveSnap (Proxy :: Proxy RoutesApi) handlers
-
-handlers :: ServerT RoutesApi '[] Snap
-handlers = handleConfigNew
-
-handleConfigNew :: MultipartData Mem -> Snap PloverCfg
-handleConfigNew tmp = pure PloverCfg
+serveApi = serveSnapWithContext (Proxy :: Proxy RoutesApi) EmptyContext handlers
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend
-  { _backend_run = \serve -> serve $ const $ return ()
+  { _backend_run = \serve -> serve $ \case
+      (BackendRoute_Missing :/ _) -> pure ()
+      (BackendRoute_Api :/ _) -> serveApi
   , _backend_routeEncoder = fullRouteEncoder
   }

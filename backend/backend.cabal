@@ -8,16 +8,22 @@ library
   if impl(ghcjs)
     buildable: False
   build-depends: base
+               , aeson
+               , bytestring
                , common
                , ConfigFile
+               , containers
                , frontend
+               , mtl
                , obelisk-backend
                , obelisk-route
                , servant-snap
-               , servant-multipart
                , snap-core
+               , text
   exposed-modules:
-    Backend
+      Backend
+  other-modules:
+      Handler
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable backend
