@@ -56,9 +56,15 @@ main = putCss $ do
       position absolute
       width $ px keyboardWidth
       textAlign center
+      left $ px 0
       top $ px 12
       fontSize $ pt 24
     span # ".red" ? color red
+
+    span # ".steno" ? do
+      top $ px keyboardHeight
+      fontSize $ pt 32
+      padding (px 8) (px 8) (px 8) (px 8)
 
     input ? do
       width $ px keyboardWidth

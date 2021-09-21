@@ -6,8 +6,10 @@ build-type: Simple
 library
   hs-source-dirs: src
   build-depends: base
+               , aeson
                , common
                , containers
+               , data-default
                , ghcjs-dom
                , obelisk-frontend
                , obelisk-route
@@ -23,6 +25,9 @@ library
     Frontend
   other-modules:
     Client
+    Home
+    Page.Keyboard
+    State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable frontend
