@@ -15,3 +15,7 @@ table.keyboard td {
   height: 50px;
   text-align: center;
 }
+
+table.keyboard td.pressed {
+  background-color: lightblue;
+}

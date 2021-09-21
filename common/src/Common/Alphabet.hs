@@ -1,6 +1,10 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Common.Alphabet where
 
 -- SCPTH+MFRNLYOEAUI^NLCMFRPT+SH
+import Data.Text (Text)
 data PTChar =
     LeftS
   | LeftC
@@ -111,3 +115,38 @@ instance Read PTChar where
       'e' -> [(RightE, rest2)]
       _   -> []
     _ -> []
+
+showKey :: PTChar -> Text
+showKey = \case
+  LeftS -> "S"
+  LeftC -> "C"
+  LeftP -> "P"
+  LeftT -> "T"
+  LeftH -> "H"
+  LeftCross -> "+"
+  LeftM -> "M"
+  LeftF -> "F"
+  LeftR -> "R"
+  LeftN -> "N"
+  LeftL -> "L"
+  LeftY -> "Y"
+  LeftO -> "O"
+  LeftE -> "E"
+  LeftPipe -> "|"
+  RightPipe -> "|"
+  RightA -> "A"
+  RightU -> "U"
+  MiddleI -> "I"
+  RightPoint -> "^"
+  RightN -> "N"
+  RightL -> "L"
+  RightC -> "C"
+  RightM -> "M"
+  RightF -> "F"
+  RightR -> "R"
+  RightP -> "P"
+  RightT -> "T"
+  RightCross -> "+"
+  RightS -> "S"
+  RightH -> "H"
+  RightE -> "e"

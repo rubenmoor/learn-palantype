@@ -6,6 +6,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Frontend where
@@ -20,15 +21,21 @@ import           Obelisk.Route               (R)
 import           Reflex.Dom.Core             (blank, el, elAttr, text, (=:))
 
 import           Client                      (postConfigNew, postRender)
-import           Common.Alphabet             (PTChar (..))
+import           Common.Alphabet             (PTChar (..), showKey)
 import           Common.Api                  (PloverCfg (..))
+import           Common.Keys                 (fromPlover)
 import           Common.Route                (FrontendRoute)
 import           Control.Monad               (unless, (<=<))
+import           Control.Monad.Fix           (MonadFix)
 import           Data.Foldable               (for_)
 import           Data.Function               ((&))
-import           Data.Functor                (void)
+import           Data.Functor                (void, ($>))
+import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
-import           Data.Maybe                  (mapMaybe, isNothing, listToMaybe)
+import           Data.Maybe                  (isNothing, listToMaybe, mapMaybe)
+import           Data.Set                    (Set)
+import qualified Data.Set                    as Set
+import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
 import           Data.Witherable             (Filterable (catMaybes))
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
@@ -36,22 +43,25 @@ import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
 import           JSDOM.EventM                (on)
 import           JSDOM.Types                 (File)
 import           Obelisk.Route.Frontend      (RoutedT)
-import           Reflex.Dom                  (elClass, DomBuilder (inputElement),
-                                              InputElement (..),
+import           Reflex.Dom                  (DomBuilder (inputElement, textAreaElement),
+                                              InputElement (..), Key (..),
                                               MonadHold (holdDyn),
                                               PerformEvent (performEvent_),
-                                              Reflex (Event, updated), def,
+                                              PostBuild,
+                                              Reflex (Dynamic, Event, updated),
+                                              TextAreaElementConfig (_textAreaElementConfig_elementConfig),
+                                              def, elClass, elDynAttr,
                                               elementConfig_initialAttributes,
-                                              ffor, fmapMaybe,
+                                              ffor, fmapMaybe, foldDyn,
                                               inputElementConfig_elementConfig,
+                                              keydown, keyup, mergeWith,
                                               widgetHold_, wrapDomEvent, (.~))
 import           Servant.Common.Req          (ReqResult (..))
 import           Text.Read                   (readMaybe)
-import Data.List (partition)
-import Data.Set (Set)
-import qualified Data.Set as Set
 
--- fileInput :: DomBuilder t m => m (Dynamic t [File])
+data KeyState
+  = KeyStateDown String
+  | KeyStateUp String
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -112,38 +122,60 @@ frontendBody = do
       postConfigNew dynEitherText (void eText)
 
     widgetHold_ blank $ ffor eReqResult $ \case
-      ResponseSuccess _ cfg _ -> elPloverCfg cfg
+      ResponseSuccess _ cfg _ -> elStageKeyboard cfg
       ResponseFailure _ msg _ -> el "span" $ text msg
       RequestFailure _ msg -> el "span" $ text msg
   pure ()
 
-elPloverCfg
-  :: DomBuilder t m
+elStageKeyboard ::
+  ( DomBuilder t m
+  , PostBuild t m
+  , MonadFix m
+  , MonadHold t m
+  )
   => PloverCfg
   -> m ()
-elPloverCfg PloverCfg{..} = el "div" $ do
+elStageKeyboard PloverCfg{..} = el "div" $ do
   el "h4" $ text "System"
   el "span" $ text pcfgSystem
   el "h4" $ text "Machine"
   el "span" $ text pcfgMachine
   el "div" $ text "Key map loaded."
-  let stenoKeys = Map.keys pcfgStenoKeys
-      ls = zip stenoKeys $ readMaybe <$> stenoKeys
-      unrecognized = mapMaybe (\(f, s) ->
-        if isNothing s && f /= "no-op" && f /= "arpeggiate"
-          then Just f
+  let stenoKeys = Map.toList pcfgStenoKeys
+      ls = zip stenoKeys $ readMaybe . fst <$> stenoKeys
+      unrecognized = mapMaybe (\((k, _), s) ->
+        if isNothing s && k /= "no-op" && k /= "arpeggiate"
+          then Just k
           else Nothing) ls
-      recognized = mapMaybe snd ls
+      recognizedStenoKeys =
+        catMaybes $ ffor ls $ \((_, v), mPTChar) -> (,v) <$> mPTChar
   unless (null unrecognized) $ void $ el "div" $ do
     text "Your key map contains unrecognized entries: "
     for_ unrecognized $ \s -> el "div" $ text $ Text.pack s
-  elPTKeyboard $ Set.fromList recognized
 
-elPTKeyboard
-  :: DomBuilder t m
-  => Set PTChar
+  ta <- textAreaElement $ def & _textAreaElementConfig_elementConfig . elementConfig_initialAttributes .~ ("readonly" =: "readonly")
+  let
+      keyChanges = ffor (Map.keys pcfgKeySteno) $ \k ->
+        case fromPlover k of
+          Just key -> [keydown key ta $> [KeyStateDown k], keyup key ta $> [KeyStateUp k]]
+          Nothing  -> []
+      eKeyChange = mergeWith (<>) $ concat keyChanges
+      register :: [KeyState] -> Set String -> Set String
+      register es set = foldl acc set es
+        where
+          acc s (KeyStateDown k) = Set.insert k s
+          acc s (KeyStateUp   k) = Set.delete k s
+  dynPressedKeys <- foldDyn register Set.empty eKeyChange
+  elPTKeyboard (Map.fromList recognizedStenoKeys) dynPressedKeys
+
+elPTKeyboard ::
+  ( DomBuilder t m
+  , PostBuild t m
+  )
+  => Map PTChar [String]
+  -> Dynamic t (Set String)
   -> m ()
-elPTKeyboard ptChars = elClass "table" "keyboard" $ do
+elPTKeyboard stenoKeys dynPressedKeys = elClass "table" "keyboard" $ do
     el "tr" $ do
       elCell LeftC "1"
       elCell LeftP "1"
@@ -185,6 +217,15 @@ elPTKeyboard ptChars = elClass "table" "keyboard" $ do
       elCell RightU "1"
   where
     elCell c colspan =
-      if Set.member c ptChars
-        then elAttr "td" ("colspan" =: colspan) $ text $ Text.pack $ show c
-        else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+      let highlight c set =
+            case Map.lookup c stenoKeys of
+              Nothing   -> False
+              Just keys -> any (`Set.member` set) keys
+          attrs = ffor dynPressedKeys $ \set ->
+            "colspan" =: colspan <>
+            if highlight c set
+              then "class" =: "pressed"
+              else mempty
+      in  if Map.member c stenoKeys
+            then elDynAttr "td" attrs $ text $ showKey c
+            else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
