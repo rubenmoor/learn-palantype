@@ -32,6 +32,7 @@ in
     android.displayName = "Obelisk Minimal Example";
     ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
     ios.bundleName = "Obelisk Minimal Example";
+    staticFiles = import ./static.nix { inherit pkgs; };
     overrides = self: super: {
       reflex-dom = self.callCabal2nix "reflex-dom" (reflex-dom-framework + /reflex-dom) {};
       reflex-dom-core = pkgs.haskell.lib.dontCheck (
