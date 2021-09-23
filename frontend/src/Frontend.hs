@@ -2,15 +2,18 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Frontend where
 
-import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
-                                              ToJSVal (toJSVal), liftJSM)
-import           State                       (EStateUpdate (..))
+import           Data.Generics.Product       (field)
+import           Language.Javascript.JSaddle (liftJSM)
+import           State                       (EStateUpdate (..), State (..),
+                                              updateState)
 
 import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
@@ -18,52 +21,31 @@ import           Obelisk.Route               (R)
 
 import           Reflex.Dom.Core             (blank, el, elAttr, text, (=:))
 
-import           Client                      (postConfigNew, postRender)
-import           Common.Alphabet             (PTChar (..), showKey)
-import           Common.Api                  (PloverCfg (..))
-import           Common.Keys                 (fromPlover)
-import           Common.Route                (FrontendRoute)
-import           Control.Monad               (unless, (<=<))
-import           Control.Monad.Fix           (MonadFix)
+import           Common.Route                (FrontendRoute (FrontendRoute_Main))
+import           Control.Lens.Setter         ((.~))
+import           Control.Monad.Reader        (MonadReader (ask),
+                                              ReaderT (runReaderT), asks)
 import qualified Data.Aeson                  as Aeson
-import           Data.Foldable               (for_)
-import           Data.Function               ((&))
-import           Data.Functor                (void, ($>))
-import           Data.List                   (sort)
-import           Data.Map                    (Map)
-import qualified Data.Map                    as Map
-import           Data.Maybe                  (isNothing, listToMaybe, mapMaybe)
-import           Data.Set                    (Set)
-import qualified Data.Set                    as Set
+import           Data.Functor                (($>))
+import           Data.Maybe                  (fromMaybe)
 import           Data.Text                   (Text)
-import qualified Data.Text                   as Text
 import qualified Data.Text.Lazy              as Lazy
 import qualified Data.Text.Lazy.Encoding     as Lazy
-import           Data.Witherable             (Filterable (catMaybes))
 import           GHCJS.DOM                   (currentWindowUnchecked)
-import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
-                                              readAsText)
 import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
-import           JSDOM.EventM                (on)
-import           JSDOM.Types                 (File)
-import           Obelisk.Route.Frontend      (RoutedT)
-import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
-                                              EventResult, InputElement (..),
-                                              MonadHold (holdDyn),
+import           Home                        (keyboard, message, loadingScreen, settings)
+import           Obelisk.Route.Frontend      (RoutedT, mapRoutedT, subRoute_)
+import           Reflex.Dom                  (DomBuilder, EventName (Click),
+                                              EventWriter,
+                                              HasDomEvent (domEvent),
                                               PerformEvent (performEvent_),
-                                              PostBuild, Prerender (prerender),
-                                              Reflex (Dynamic, Event, updated),
-                                              def, dynText, dyn_, elClass,
-                                              elDynAttr,
-                                              elementConfig_initialAttributes,
-                                              ffor, fmapMaybe, foldDyn,
-                                              inputElementConfig_elementConfig,
-                                              keydown, keyup, mergeWith,
-                                              runEventWriterT, widgetHold_,
-                                              wrapDomEvent, (.~))
-import           Servant.Common.Req          (ReqResult (..))
-import           Text.Read                   (readMaybe)
+                                              Prerender (prerender),
+                                              Reflex (updated), def, dyn_,
+                                              elAttr', ffor, foldDyn, leftmost,
+                                              prerender_, runEventWriterT,
+                                              tailE, widgetHold_)
+import           Shared                      (iFa)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -76,16 +58,16 @@ frontendBody
   ( ObeliskWidget  js t (R FrontendRoute) m
   )
   => RoutedT t (R FrontendRoute) m ()
-frontendBody = do
+frontendBody = mdo
 
   let key = "state" :: Text
       getState s = getItem s key
       setState d s = setItem s key d
 
-  dynLoadState <- prerender (pure $ EstateUpdate $ const def) $ do
+  dynLoadState <- prerender (pure $ EStateUpdate $ const def) $ do
     mStr <- liftJSM (currentWindowUnchecked >>= getLocalStorage >>= getState)
     let mState = mStr >>= Aeson.decode . Lazy.encodeUtf8. Lazy.fromStrict
-    pure $ EstateUpdate $ const $ fromMaybe def mState
+    pure $ EStateUpdate $ const $ fromMaybe def mState
 
   let eLoaded = updated dynLoadState
   widgetHold_ loadingScreen $ eLoaded $> blank
@@ -98,8 +80,12 @@ frontendBody = do
     let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
     liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
-  (_, eStateUpdate) <- mapRoutedT (flip runReaderT dynState . runEventWriterT)
-    frontendHome
+  (_, eStateUpdate) <- mapRoutedT (flip runReaderT dynState . runEventWriterT) $ do
+    settings
+    message
+    keyboard
+    subRoute_ $ \case
+      FrontendRoute_Main -> text "Hi (FrontendRoute_Main)"
   blank
 
 frontendHead
@@ -126,4 +112,8 @@ frontendHead = do
   elAttr "link"
     (  "href" =: "https://fonts.googleapis.com/css2?family=Abel&display=swap"
     <> "rel" =: "stylesheet"
+    ) blank
+  elAttr "link"
+    (  "rel" =: "stylesheet"
+    <> "href" =: static @"FontAwesome/css/all.min.css"
     ) blank

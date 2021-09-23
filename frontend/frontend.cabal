@@ -10,15 +10,18 @@ library
                , common
                , containers
                , data-default
+               , generic-lens
                , ghcjs-dom
-               , obelisk-frontend
-               , obelisk-route
                , jsaddle
                , jsaddle-dom
+               , lens
+               , mtl
+               , obelisk-executable-config-lookup
+               , obelisk-frontend
+               , obelisk-generated-static
+               , obelisk-route
                , reflex-dom
                , servant-reflex
-               , obelisk-executable-config-lookup
-               , obelisk-generated-static
                , text
                , witherable
   exposed-modules:
@@ -26,7 +29,7 @@ library
   other-modules:
     Client
     Home
-    Page.Keyboard
+    Shared
     State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 

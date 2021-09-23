@@ -8,10 +8,11 @@ module Handler
 
 import           Common.Api            (PloverCfg (..), RoutesApi)
 import           Control.Applicative   (Applicative (pure, (<*>)))
-import           Control.Monad         (foldM)
+import           Control.Monad         (foldM, unless)
 import           Control.Monad.Except  (MonadError (throwError), runExcept)
 import           Data.Aeson            (FromJSON (..), Value (Array))
 import qualified Data.Aeson            as Json
+import Data.Eq ((==))
 import           Data.Aeson.Types      (Parser, typeMismatch)
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy  as Lazy
@@ -54,11 +55,13 @@ handleConfigNew :: String -> Snap PloverCfg
 handleConfigNew str =
   let eCfg = runExcept $ do
 
-        -- throw msg = throwError
         parser <- CfgParser.readstring CfgParser.emptyCP str
         let parse = CfgParser.get parser
         systemName <- parse "System" "name"
         machineType <- parse "Machine Configuration" "machine_type"
+        unless (machineType == "Keyboard") $
+          throwError (CfgParser.ParseError $ "machine: " <> machineType,
+                      "Sorry! Only keyboard is supported.")
         keyMapStr <- parse ("System: " <> systemName) ("keymap[" <> machineType <> "]")
         keysMap <- case Json.eitherDecode $ Lazy.fromStrict $ Char8.pack keyMapStr of
           Left msg -> throwError (CfgParser.ParseError msg, "could not decode keymap")
