@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -97,6 +98,7 @@ keyMapToPloverCfg stenoKeys pcfgSystem pcfgMachine =
               Nothing    -> mapStenoKeys
             lsUSteno' = case mSteno of
               Just _  -> lsUSteno
+              Nothing | strSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
               Nothing -> strSteno : lsUSteno
             lsUQwerty' = lefts lsEQwerty ++ lsUQwerty
         in (lsKeySteno', mapStenoKeys', lsUSteno', lsUQwerty')

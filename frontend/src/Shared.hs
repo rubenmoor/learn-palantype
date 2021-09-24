@@ -12,7 +12,7 @@ import           Control.Category    (Category ((.)))
 import           Control.Monad.Fix   (MonadFix)
 import           Data.Bool           (Bool, not)
 import           Data.Function       (const, ($))
-import           Data.Functor        (Functor (fmap), void)
+import           Data.Functor        (void)
 import           Data.Maybe          (fromMaybe, Maybe (..))
 import           Data.Monoid         ((<>))
 import           Data.Text           (Text, unwords)
@@ -20,7 +20,6 @@ import qualified Data.Text           as Text
 import           Data.Tuple          (fst)
 import           Reflex.Dom          (DomBuilder (DomBuilderSpace, inputElement),
                                       Element, EventName (Click), EventResult,
-                                      EventWriter (tellEvent),
                                       HasDomEvent (domEvent),
                                       InputElement (_inputElement_checked, _inputElement_value),
                                       InputElementConfig, MonadHold (holdDyn),
@@ -33,7 +32,6 @@ import           Reflex.Dom          (DomBuilder (DomBuilderSpace, inputElement)
                                       inputElementConfig_setChecked, leftmost,
                                       text, (&), (.~), (=:))
 import           Servant.Common.Req  (ReqResult (..))
-import           State               (EStateUpdate (..), State)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank

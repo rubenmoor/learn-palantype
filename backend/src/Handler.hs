@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy  as Lazy
 import qualified Data.ConfigFile       as CfgParser
 import           Data.Either           (Either (..))
 import           Data.Eq               ((==))
-import           Data.Foldable         (Foldable (foldl, toList))
+import           Data.Foldable         (Foldable (toList))
 import           Data.Function         (($))
 import           Data.Functor          ((<$>))
 import           Data.Map              (Map)

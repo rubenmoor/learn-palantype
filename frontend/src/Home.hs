@@ -9,7 +9,6 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Home where
@@ -17,35 +16,31 @@ module Home where
 import           Client                      (postConfigNew, postRender)
 import           Common.Alphabet             (PTChar (..), showKey)
 import           Common.Api                  (PloverCfg (..))
-import           Common.Keys                 (fromPlover)
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
 import           Control.Applicative         (Applicative (..))
-import           Control.Category            (Category (id, (.)))
-import           Control.Lens.Setter         (set, (%~), (.~))
-import           Control.Monad               (unless, when, (<=<))
+import           Control.Category            (Category ((.)))
+import           Control.Lens.Setter         ((%~), (.~))
+import           Control.Monad               (when, (<=<))
 import           Control.Monad.Fix           (MonadFix)
-import           Control.Monad.Reader        (MonadReader (ask), asks)
-import           Data.Bool                   (Bool (..), not, (&&))
+import           Control.Monad.Reader        (MonadReader, asks)
+import           Data.Bool                   (Bool (..), not)
 import           Data.Default                (Default (def))
 import           Data.Either                 (Either (..))
-import           Data.Eq                     (Eq ((/=)))
-import           Data.Foldable               (Foldable (foldl, null), concat,
-                                              for_)
+import           Data.Foldable               (Foldable (foldl, null), concat)
 import           Data.Function               (($), (&))
 import           Data.Functor                (fmap, void, ($>), (<$>), (<&>))
 import           Data.Generics.Product       (field)
-import           Data.List                   (elem, sort, zip)
+import           Data.List                   (elem, sort)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
-import           Data.Maybe                  (Maybe (..), isNothing,
-                                              listToMaybe)
-import           Data.Monoid                 (Monoid(mconcat, mempty), (<>))
+import           Data.Maybe                  (Maybe (..), listToMaybe)
+import           Data.Monoid                 (Monoid (mconcat, mempty), (<>))
+import           Data.Semigroup              (Endo (..))
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
 import           Data.String                 (String, unwords)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
-import           Data.Traversable            (Traversable (sequenceA))
 import           Data.Tuple                  (fst)
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
@@ -57,31 +52,32 @@ import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
 import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
-                                              Element, EventName (Click),
-                                              EventResult, EventTag (ClickTag),
+                                              EventName (Click), EventResult,
                                               EventWriter,
-                                              HasDomEvent (DomEventType, domEvent),
+                                              HasDomEvent (domEvent),
                                               InputElement (..),
                                               MonadHold (holdDyn),
                                               PerformEvent (performEvent_),
-                                              PostBuild, Prerender,
-                                              Reflex (Dynamic, Event, updated),
-                                              blank, dynText, dyn_, el, el',
-                                              elAttr, elClass, elClass',
-                                              elDynAttr,
+                                              PostBuild (getPostBuild),
+                                              Prerender,
+                                              Reflex (Dynamic, Event, never, updated),
+                                              blank, dyn, dyn_, el, el', elAttr,
+                                              elClass, elClass', elDynAttr,
                                               elementConfig_initialAttributes,
                                               ffor, foldDyn,
                                               inputElementConfig_elementConfig,
+                                              inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
-                                              keydown, keyup, mergeWith, text,
+                                              keydown, keyup, leftmost,
+                                              mergeWith, switchHold, text,
                                               wrapDomEvent, (=:))
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (iFa, reqFailure)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
-import           Text.Read                   (readMaybe)
 import           Text.Show                   (Show (show))
-import Data.Semigroup (Endo(..))
+
+default(Text)
 
 loadingScreen
   :: DomBuilder t m
@@ -181,27 +177,27 @@ settings = mdo
       isCompatible system = system `elem` compatibleSystems
 
   updateState $ eReqSuccess <&> \ploverCfg@PloverCfg{..} ->
-        appEndo $ mconcat
-          [ Endo $ field @"stPloverCfg" .~ ploverCfg
-          , if' (not $ null pcfgUnrecognizedQwertys) $
-              let msgCaption = "Unrecognized qwerty keys"
-                  msgBody = "Your key map contains unrecognized entries:\n"
-                         <> Text.intercalate "\n"
-                              (Text.pack <$> pcfgUnrecognizedQwertys)
-              in  Endo $ field @"stMsg" .~ Just Message{..}
-          , if' (not $ null pcfgUnrecognizedStenos) $
-              let msgCaption = "Unrecognized steno keys"
-                  msgBody = "Your key map contains unrecognized entries:\n"
-                         <> Text.intercalate "\n"
-                              (Text.pack <$> pcfgUnrecognizedStenos)
-              in  Endo $ field @"stMsg" .~ Just Message{..}
-          , if' (isCompatible pcfgSystem) $
-              let msgCaption = "Incompatible system"
-                  msgBody    = "Your system is " <> pcfgMachine
-                            <> "\nCompatible systems at the moment are\n"
-                            <> Text.intercalate "\n" compatibleSystems
-              in  Endo $ field @"stMsg" .~ Just Message{..}
-          ]
+    appEndo $ mconcat
+      [ Endo $ field @"stPloverCfg" .~ ploverCfg
+      , if' (not $ null pcfgUnrecognizedQwertys) $
+          let msgCaption = "Unrecognized qwerty keys"
+              msgBody = "Your key map contains unrecognized entries:\n"
+                     <> Text.intercalate "\n"
+                          (Text.pack <$> pcfgUnrecognizedQwertys)
+          in  Endo $ field @"stMsg" .~ Just Message{..}
+      , if' (not $ null pcfgUnrecognizedStenos) $
+          let msgCaption = "Unrecognized steno keys"
+              msgBody = "Your key map contains unrecognized entries:\n"
+                     <> Text.intercalate "\n"
+                          (Text.pack <$> pcfgUnrecognizedStenos)
+          in  Endo $ field @"stMsg" .~ Just Message{..}
+      , if' (isCompatible pcfgSystem) $
+          let msgCaption = "Incompatible system"
+              msgBody    = "Your system is " <> pcfgMachine
+                        <> "\nCompatible systems at the moment are\n"
+                        <> Text.intercalate "\n" compatibleSystems
+          in  Endo $ field @"stMsg" .~ Just Message{..}
+      ]
 
   dynShowKeyboard <- asks (stShowKeyboard <$>)
   dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
@@ -226,12 +222,11 @@ stenoInput
   , MonadHold t m
   , MonadReader (Dynamic t State) m
   )
-  => m ()
+  => m (Dynamic t (Set PTChar))
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
-  dyn_ $ dynPloverCfg <&> \PloverCfg{..} -> el "div" $ mdo
+  eDyn <- dyn $ dynPloverCfg <&> \PloverCfg{..} -> elClass "div" "stenoInput" $ mdo
 
-    kbInput <- elHiddenInput
     let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
           [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
           , keyup   qwertyKey kbInput $> [KeyStateUp   stenoKey]
@@ -246,12 +241,14 @@ stenoInput = do
             acc s (KeyStateUp   k) = Set.delete k s
 
     dynPressedKeys <- foldDyn register Set.empty eKeyChange
-
-    elStenoOutput dynPressedKeys
-
     dynShowKeyboard <- asks (stShowKeyboard <$>)
     dyn_ $ dynShowKeyboard <&> \visible -> when visible $
       elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
+
+    kbInput <- elStenoOutput dynPressedKeys
+    pure dynPressedKeys
+  e <- switchHold never $ updated <$> eDyn
+  holdDyn Set.empty e
 
 elPTKeyboard
   :: forall t (m :: * -> *).
@@ -323,33 +320,30 @@ elPTKeyboard stenoKeys dynPressedKeys system =
                    elClass "div" "qwerty "$ text $ showQwerties mQwertyKeys
             else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
 
-elHiddenInput
-  :: forall t (m :: * -> *).
-  ( DomBuilder t m
-  , PostBuild t m
-  , MonadFix m
-  )
-  => m (InputElement EventResult (DomBuilderSpace m) t)
-elHiddenInput = mdo
-  dyn_ $ _inputElement_hasFocus i <&> \case
-    True  -> elClass "span" "clickMe" $ text "Type!"
-    False -> elClass "span" "clickMe red" $ text "Click me!"
-  i <- inputElement $ def
-    & inputElementConfig_elementConfig
-    . elementConfig_initialAttributes
-    .~ ("readonly" =: "readonly")
-  pure i
-
 elStenoOutput
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , PostBuild t m
+  , MonadFix m
   )
   => Dynamic t (Set PTChar)
-  -> m ()
-elStenoOutput dynPressedKeys =
-  elClass "span" "stenoOutput" $ dynText $
-     dynPressedKeys <&> \pressedKeys ->
+  -> m (InputElement EventResult (DomBuilderSpace m) t)
+elStenoOutput dynPressedKeys = mdo
+  -- TODO auto focus
+  -- ePostBuild <- getPostBuild
+  let eFocus = updated (_inputElement_hasFocus i) <&> \case
+        True -> "Type!"
+        False -> "Click me!"
+      eTyping = updated dynPressedKeys <&> \pressedKeys ->
        if Set.null pressedKeys
          then "..."
          else Text.pack $ unwords $ fmap show $ sort $ Set.toList pressedKeys
+      eSetValue = leftmost [eFocus, eTyping]
+  i <- inputElement $ def
+    & inputElementConfig_setValue .~ eSetValue
+    & inputElementConfig_initialValue .~ "Click me!"
+    & inputElementConfig_elementConfig
+    . elementConfig_initialAttributes
+    .~ (  "readonly" =: "readonly"
+       <> "autofocus" =: "autofocus"
+       )
+  pure i

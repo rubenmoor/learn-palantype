@@ -25,14 +25,14 @@ import           Clay          (Auto (auto), Center (center), Color, Css,
                                 solid, span, star, stringContent, table, td,
                                 textAlign, top, transform, transition,
                                 translate, transparent, visibility, visited,
-                                white, whiteSpace, width, zIndex, (#), (&), (?),
-                                (^=), (|>))
+                                white, whiteSpace, width, zIndex, ( # ), (&),
+                                (?), (^=), (|>))
+import           Clay.Border   (borderBottom)
 import qualified Clay.Media    as Media
 import           Data.Function (($))
 import           GHC.IO        (IO)
 import           GHC.Num       (Num ((*), (+), (-)))
 import           System.IO     (putStrLn)
-import Clay.Border (borderBottom)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -74,57 +74,40 @@ main = putCss $ do
     cursor pointer
 
   let keyboardWidth = 650
-      keyboardHeight = 350
+      keyboardHeight = 271
       keyboardPadding = 12
-      stenoOutputHeight = 71
+
+  div # ".stenoInput" ? do
+    width $ px keyboardWidth
+    -- input ? position absolute
+    borderBottom solid (px 1) darkgray
+    input ? do
+      width $ px keyboardWidth
+      textAlign center
+      fontSize $ pt 32
+      padding (px 8) (px 8) (px 8) (px 8)
+      ".red" & color red
+      border none (px 0) transparent
+      --backgroundColor transparent
+      -- input # focus ? outline none (px 0) transparent
+      ":focus-visible" & outline none (px 0) transparent
 
   td # ".gap" ? visibility hidden
   div # ".keyboard" ? do
     width $ px keyboardWidth
     height $ px keyboardHeight
     position relative
-    borderBottom solid (px 1) darkgray
 
-    input ? position absolute
-    table ? position absolute
-
-    span ? do
+    span # ".system" ? do
       position absolute
-      width $ px keyboardWidth
-      left $ px 0
-
-      ".stenoOutput" & do
-        textAlign center
-        top $ px $ keyboardHeight - stenoOutputHeight
-        fontSize $ pt 32
-        padding (px 8) (px 8) (px 8) (px 8)
-      ".clickMe" & do
-        top $ px 12
-        fontSize $ pt 24
-        textAlign center
-      ".clickMe.red" & color red
-
-      ".system" & do
-        top $ px $ keyboardHeight - 32 - stenoOutputHeight
-        left $ px 12
-        fontSize $ pt 12
-        color anthrazit
-
-    input ? do
-      width $ px keyboardWidth
-      height $ px keyboardHeight
-      top $ px 0
-      left $ px 0
-      backgroundColor transparent
-      border none (px 0) transparent
-
-      -- input # focus ? outline none (px 0) transparent
-
-      ":focus-visible" & outline none (px 0) transparent
+      top $ px $ keyboardHeight - 32
+      left $ px 12
+      fontSize $ pt 12
+      color anthrazit
 
     table ? do
       width $ px keyboardWidth
-      height $ px $ keyboardHeight - stenoOutputHeight
+      height $ px keyboardHeight
       borderRadius (px 8) (px 8) (px 8) (px 8)
       backgroundColor lightgray
       padding (px keyboardPadding)

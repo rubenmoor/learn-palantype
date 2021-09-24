@@ -10,10 +10,8 @@
 
 module Frontend where
 
-import           Data.Generics.Product       (field)
 import           Language.Javascript.JSaddle (liftJSM)
-import           State                       (EStateUpdate (..), State (..),
-                                              updateState)
+import           State                       (stageUrl, EStateUpdate (..), State(..))
 
 import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
@@ -21,10 +19,8 @@ import           Obelisk.Route               (R)
 
 import           Reflex.Dom.Core             (blank, el, elAttr, text, (=:))
 
-import           Common.Route                (FrontendRoute (FrontendRoute_Main))
-import           Control.Lens.Setter         ((.~))
-import           Control.Monad.Reader        (MonadReader (ask),
-                                              ReaderT (runReaderT), asks)
+import           Common.Route                (FrontendRoute (..))
+import           Control.Monad.Reader        (ReaderT (runReaderT))
 import qualified Data.Aeson                  as Aeson
 import           Data.Functor                (($>))
 import           Data.Maybe                  (fromMaybe)
@@ -34,18 +30,16 @@ import qualified Data.Text.Lazy.Encoding     as Lazy
 import           GHCJS.DOM                   (currentWindowUnchecked)
 import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
-import           Home                        (stenoInput, message, loadingScreen, settings)
-import           Obelisk.Route.Frontend      (RoutedT, mapRoutedT, subRoute_)
-import           Reflex.Dom                  (DomBuilder, EventName (Click),
-                                              EventWriter,
-                                              HasDomEvent (domEvent),
-                                              PerformEvent (performEvent_),
+import           Home                        (loadingScreen, message, settings,
+                                              stenoInput)
+import           Obelisk.Route.Frontend      (SetRoute(setRoute), RoutedT, mapRoutedT, subRoute_)
+import           Reflex.Dom                  (PerformEvent (performEvent_),
                                               Prerender (prerender),
-                                              Reflex (updated), def, dyn_,
-                                              elAttr', ffor, foldDyn, leftmost,
-                                              prerender_, runEventWriterT,
-                                              tailE, widgetHold_)
-import           Shared                      (iFa)
+                                              Reflex (updated), def, ffor,
+                                              foldDyn, leftmost, prerender_,
+                                              runEventWriterT, tailE,
+                                              widgetHold_)
+import Stage (stage1_0)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -83,9 +77,15 @@ frontendBody = mdo
   (_, eStateUpdate) <- mapRoutedT (flip runReaderT dynState . runEventWriterT) $ do
     settings
     message
-    stenoInput
-    subRoute_ $ \case
-      FrontendRoute_Main -> el "div" $ text "Hi (FrontendRoute_Main)"
+    dynKeysPressed <- stenoInput
+    mapRoutedT (flip runReaderT dynKeysPressed) $
+      subRoute_ $ \case
+        FrontendRoute_Main -> do
+          let eStage = updated $ stProgress <$> dynState
+          setRoute $ stageUrl <$> eStage
+        FrontendRoute_Stage1_0 -> stage1_0
+        FrontendRoute_Stage1_1 -> el "div" $ text "Hi (FrontendRoute_Main)"
+        FrontendRoute_Stage2_0 -> el "div" $ text "Hi (FrontendRoute_Main)"
   blank
 
 frontendHead

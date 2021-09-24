@@ -43,6 +43,9 @@ data BackendRoute :: * -> * where
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
+  FrontendRoute_Stage1_0 :: FrontendRoute ()
+  FrontendRoute_Stage1_1 :: FrontendRoute ()
+  FrontendRoute_Stage2_0 :: FrontendRoute ()
   -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
 
 fullRouteEncoder
@@ -54,7 +57,11 @@ fullRouteEncoder = mkFullRouteEncoder
       BackendRoute_Api -> PathSegment "api" id
   )
   (\case
-      FrontendRoute_Main -> PathEnd $ unitEncoder mempty)
+      FrontendRoute_Main -> PathEnd $ unitEncoder mempty
+      FrontendRoute_Stage1_0 -> PathSegment "stage1-0" $ unitEncoder mempty
+      FrontendRoute_Stage1_1 -> PathSegment "stage1-1" $ unitEncoder mempty
+      FrontendRoute_Stage2_0 -> PathSegment "stage2-0" $ unitEncoder mempty
+  )
 
 concat <$> mapM deriveRouteComponent
   [ ''BackendRoute
