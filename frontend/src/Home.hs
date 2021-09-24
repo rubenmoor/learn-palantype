@@ -181,18 +181,19 @@ settings = mdo
       isCompatible system = system `elem` compatibleSystems
 
   updateState $ eReqSuccess <&> \ploverCfg@PloverCfg{..} ->
-    let stenoKeys = Map.toList pcfgStenoKeys
-        ls = zip stenoKeys $ readMaybe . fst <$> stenoKeys
-        unrecognized = mapMaybe (\((k, _), s) ->
-          if isNothing (s :: Maybe PTChar) && k /= "no-op" && k /= "arpeggiate"
-            then Just k
-            else Nothing) ls
-    in  appEndo $ mconcat
+        appEndo $ mconcat
           [ Endo $ field @"stPloverCfg" .~ ploverCfg
-          , if' (not $ null unrecognized) $
-              let msgCaption = "Unrecognized keys"
+          , if' (not $ null pcfgUnrecognizedQwertys) $
+              let msgCaption = "Unrecognized qwerty keys"
                   msgBody = "Your key map contains unrecognized entries:\n"
-                         <> Text.intercalate "\n" (Text.pack <$> unrecognized)
+                         <> Text.intercalate "\n"
+                              (Text.pack <$> pcfgUnrecognizedQwertys)
+              in  Endo $ field @"stMsg" .~ Just Message{..}
+          , if' (not $ null pcfgUnrecognizedStenos) $
+              let msgCaption = "Unrecognized steno keys"
+                  msgBody = "Your key map contains unrecognized entries:\n"
+                         <> Text.intercalate "\n"
+                              (Text.pack <$> pcfgUnrecognizedStenos)
               in  Endo $ field @"stMsg" .~ Just Message{..}
           , if' (isCompatible pcfgSystem) $
               let msgCaption = "Incompatible system"
@@ -230,24 +231,11 @@ stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   dyn_ $ dynPloverCfg <&> \PloverCfg{..} -> el "div" $ mdo
 
-    let lsKeySteno =
-            mapMaybe (\(k, mV) -> (k,) <$> mV)
-          $ Map.toList
-          $ readMaybe <$> pcfgKeySteno
-
-        stenoKeys = Map.toList pcfgStenoKeys
-        ls = zip stenoKeys $ readMaybe . fst <$> stenoKeys
-
-        recognizedStenoKeys =
-          catMaybes $ ffor ls $ \((_, v), mPTChar) -> (,v) <$> mPTChar
-
     kbInput <- elHiddenInput
-    let keyChanges = ffor lsKeySteno $ \(qwertyKey, stenoKey) ->
-          case fromPlover qwertyKey of
-            Just key -> [ keydown key kbInput $> [KeyStateDown stenoKey]
-                        , keyup   key kbInput $> [KeyStateUp   stenoKey]
-                        ]
-            Nothing  -> []
+    let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
+          [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
+          , keyup   qwertyKey kbInput $> [KeyStateUp   stenoKey]
+          ]
 
         eKeyChange = mergeWith (<>) $ concat keyChanges
 
@@ -263,7 +251,7 @@ stenoInput = do
 
     dynShowKeyboard <- asks (stShowKeyboard <$>)
     dyn_ $ dynShowKeyboard <&> \visible -> when visible $
-      elPTKeyboard (Map.fromList recognizedStenoKeys) dynPressedKeys pcfgSystem
+      elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
 elPTKeyboard
   :: forall t (m :: * -> *).
