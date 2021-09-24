@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (preWrap, pre, whiteSpace, i, overflow, inlineBlock, (&), (|>), opacity, red, transparent, Auto (auto), Center (center), Color, Css,
+import           Clay          (hover, shadowWithSpread, minWidth, rgba, preWrap, pre, whiteSpace, i, overflow, inlineBlock, (&), (|>), opacity, red, transparent, Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -138,24 +138,39 @@ main = putCss $ do
             color gray
             marginTop $ px (-6)
 
+  div # ".dropdown" ? do
+    position relative
+    display inlineBlock
+    span # ".dropdown-button" ? do
+      color gray
+      fontSize $ pt 24
+    div # ".dropdown-content" ? do
+      display none
+      position absolute
+      backgroundColor $ rgb 249 249 249
+      minWidth $ px 160
+      boxShadow [bsColor (rgba 0 0 0 0.2) $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)]
+      zIndex 1
+      span ? do
+        minWidth $ px 160
+        padding (px 12) (px 12) (px 12) (px 12)
+        display block
+        hover & backgroundColor gray
+
+    ":hover" & div # ".dropdown-content" ? display block
 
   -- file input with custom look
   -- cf. https://stackoverflow.com/a/29251314/2925659
   span # ".hiddenFileInput" ? do
-    let size = 60
     position relative
-    star ? do
+    input ? do -- height (pct 100)
       position absolute
-      top (px 0)
-      left (px 0)
-    input ? do
-      height (pct 100)
-      width (px size)
+      top $ px 0
+      left $ px 0
+      height $ pct 100
       opacity 0
       cursor pointer
-    width (px size)
-    height (px size)
-    color gray
-    fontSize (px size)
+    -- width (px size)
+    -- height (px size)
     display inlineBlock
     overflow hidden

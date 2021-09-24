@@ -3,6 +3,7 @@
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RecordWildCards     #-}
@@ -13,26 +14,33 @@
 
 module Home where
 
+import Data.Tuple (fst)
 import           Client                      (postConfigNew, postRender)
 import           Common.Alphabet             (PTChar (..), showKey)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Keys                 (fromPlover)
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
+import           Control.Applicative         (Applicative (..))
 import           Control.Lens.Setter         (set, (.~))
 import           Control.Monad               (unless, (<=<))
 import           Control.Monad.Fix           (MonadFix)
 import           Control.Monad.Reader        (MonadReader, asks)
+import Control.Category ( Category(id, (.)) )
+import Data.Monoid (Monoid(mempty), (<>))
+import           Data.Bool                   ((&&), Bool (..))
 import           Data.Default                (Default (def))
-import           Data.Foldable               (for_)
-import           Data.Function               ((&))
-import           Data.Functor                ((<&>), void, ($>))
+import           Data.Foldable               (concat, Foldable(foldl, null), for_)
+import           Data.Function               (($), (&))
+import           Data.Functor                (void, ($>), (<&>), (<$>), fmap)
 import           Data.Generics.Product       (field)
-import           Data.List                   (sort)
+import           Data.List                   (zip, elem, sort)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
-import           Data.Maybe                  (isNothing, listToMaybe)
+import           Data.Maybe                  (Maybe (..), isNothing,
+                                              listToMaybe)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
+import           Data.String                 (unwords, String)
 import qualified Data.Text                   as Text
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
@@ -43,15 +51,18 @@ import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (elClass', EventName(Click), HasDomEvent(domEvent), elAttr', DomBuilder (DomBuilderSpace, inputElement),
-                                              EventResult, EventWriter,
+import           Reflex.Dom                  (EventTag(ClickTag), Element, DomBuilder (DomBuilderSpace, inputElement),
+                                              EventName (Click), EventResult,
+                                              EventWriter,
+                                              HasDomEvent(DomEventType, domEvent),
                                               InputElement (..),
                                               MonadHold (holdDyn),
                                               PerformEvent (performEvent_),
                                               PostBuild, Prerender,
                                               Reflex (Dynamic, Event, updated),
-                                              blank, dynText, dyn_, el, elAttr,
-                                              elClass, elDynAttr,
+                                              blank, dynText, dyn_, el, el',
+                                              elAttr, elClass,
+                                              elClass', elDynAttr,
                                               elementConfig_initialAttributes,
                                               ffor, foldDyn,
                                               inputElementConfig_elementConfig,
@@ -59,9 +70,13 @@ import           Reflex.Dom                  (elClass', EventName(Click), HasDom
                                               wrapDomEvent, (=:))
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (iFa, reqFailure)
-import           State                       (Message (..), EStateUpdate, State (..),
-                                              updateState)
+import           State                       (EStateUpdate, Message (..),
+                                              State (..), updateState)
 import           Text.Read                   (readMaybe)
+import Data.Traversable (Traversable(sequenceA))
+import Data.Either (Either(..))
+import Data.Eq (Eq((/=)))
+import Text.Show (Show(show))
 
 loadingScreen
   :: DomBuilder t m
@@ -114,22 +129,26 @@ settings
   :: forall t js (m :: * -> *).
   ( DomBuilder t m
   , Prerender js t m
-  -- , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   , EventWriter t EStateUpdate m
   )
   => m ()
 settings = do
-    eFile <- elClass "span" "hiddenFileInput" $ do
-      iFa "fas fa-cog"
-      elFileInput
+    (eFile, eReset) <- elClass "div" "dropdown" $ do
+      elClass "span" "dropdown-button" $ iFa "fas fa-cog"
+      elClass "div" "dropdown-content" $ (,)
+        <$> elClass "span" "hiddenFileInput" (do text "Upload your plover.cfg"
+                                                 elFileInput)
+        <*> (domEvent Click . fst <$> el' "span" (text "Reset"))
 
     el "h3" $ text "Upload Plover config"
+
+    updateState $ eReset $> set (field @"stPloverCfg") def
 
     eReqResult <- postRender $ do
       fileReader <- liftJSM newFileReader
       let encoding = Just ("utf8" :: String)
-      performEvent_ $ fmap (\f -> readAsText fileReader (Just f) encoding) eFile
+      performEvent_ $ eFile <&> \f -> readAsText fileReader (Just f) encoding
       eText <- fmap catMaybes $ wrapDomEvent fileReader (`on` load) $ liftJSM $ do
         v <- getResult fileReader
         (fromJSVal <=< toJSVal) v
@@ -143,7 +162,19 @@ settings = do
           msgBody = "Did you upload a proper .cfg file?\n" <> str
       in    set (field @"stMsg") (Just Message{..})
           . set (field @"stPloverCfg") def
-    updateState $ set (field @"stPloverCfg") <$> eReqSuccess
+
+    let compatibleSystems =
+          ["Palantype", "Possum Palantype", "Possum Palantype German"]
+        isCompatible system = system `elem` compatibleSystems
+
+    updateState $ eReqSuccess <&> \ploverCfg@PloverCfg{..} ->
+        set (field @"stPloverCfg") ploverCfg
+      . if isCompatible pcfgSystem then id else
+          let msgCaption = "Incompatible system"
+              msgBody    = "Your system is " <> pcfgMachine
+                        <> "\nCompatible systems at the moment are\n"
+                        <> Text.intercalate "\n" compatibleSystems
+          in  set (field @"stMsg") (Just Message{..})
     setRoute $ eReqSuccess $> FrontendRoute_Main :/ ()
 
 data KeyState
