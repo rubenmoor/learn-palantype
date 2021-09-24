@@ -6,18 +6,18 @@ module Handler
   ( handlers
   ) where
 
-import           Common.Api            (PloverCfg (..), RoutesApi)
+import           Common.Api            (PloverCfg (..), RoutesApi, keyMapToPloverCfg)
 import           Control.Applicative   (Applicative (pure, (<*>)))
 import           Control.Monad         (foldM, unless)
 import           Control.Monad.Except  (MonadError (throwError), runExcept)
 import           Data.Aeson            (FromJSON (..), Value (Array))
 import qualified Data.Aeson            as Json
-import Data.Eq ((==))
 import           Data.Aeson.Types      (Parser, typeMismatch)
 import qualified Data.ByteString.Char8 as Char8
 import qualified Data.ByteString.Lazy  as Lazy
 import qualified Data.ConfigFile       as CfgParser
 import           Data.Either           (Either (..))
+import           Data.Eq               ((==))
 import           Data.Foldable         (Foldable (foldl, toList))
 import           Data.Function         (($))
 import           Data.Functor          ((<$>))
@@ -36,9 +36,9 @@ import           Snap.Core             (Snap)
 handlers :: ServerT RoutesApi '[] Snap
 handlers = handleConfigNew
 
-newtype KeysMap = KeysMap { unKeysMap :: Map String [String]}
+newtype KeysMapJSON = KeysMapJSON { unKeysMapJSON :: Map String [String]}
 
-instance FromJSON KeysMap where
+instance FromJSON KeysMapJSON where
   parseJSON (Array values) =
     let acc :: Map String [String] -> Value -> Parser (Map String [String])
         acc m a@(Array xs) = do
@@ -48,11 +48,11 @@ instance FromJSON KeysMap where
           pure $ Map.insert key value m
         acc _ invalid = typeMismatch "key map" invalid
         map = foldM acc Map.empty values
-    in  KeysMap <$> map
+    in  KeysMapJSON <$> map
   parseJSON invalid = typeMismatch "key map" invalid
 
 handleConfigNew :: String -> Snap PloverCfg
-handleConfigNew str =
+handleConfigNew str = do
   let eCfg = runExcept $ do
 
         parser <- CfgParser.readstring CfgParser.emptyCP str
@@ -63,22 +63,19 @@ handleConfigNew str =
           throwError (CfgParser.ParseError $ "machine: " <> machineType,
                       "Sorry! Only keyboard is supported.")
         keyMapStr <- parse ("System: " <> systemName) ("keymap[" <> machineType <> "]")
-        keysMap <- case Json.eitherDecode $ Lazy.fromStrict $ Char8.pack keyMapStr of
+        m <- case Json.eitherDecode $ Lazy.fromStrict $ Char8.pack keyMapStr of
           Left msg -> throwError (CfgParser.ParseError msg, "could not decode keymap")
-          Right km -> pure (km :: KeysMap)
+          Right km -> pure (km :: KeysMapJSON)
+        pure
+          ( systemName
+          , machineType
+          , Map.toList $ unKeysMapJSON m
+          )
 
-        let keyStenoMap =
-              let acc :: Map String String -> (String, [String]) -> Map String String
-                  acc m (key, values) = foldl (\m' value -> Map.insert value key m') m values
-              in  foldl acc Map.empty $ Map.toList $ unKeysMap keysMap
-
-        pure $ PloverCfg
-          { pcfgStenoKeys = unKeysMap keysMap
-          , pcfgKeySteno = keyStenoMap
-          , pcfgSystem = Text.pack systemName
-          , pcfgMachine = Text.pack machineType
-          }
-  in  case eCfg of
-        Left err -> Snap.throwError $
-          err400 { errBody = Lazy.fromStrict  $ Char8.pack $ show err }
-        Right cfg -> pure cfg
+  case eCfg of
+    Left err -> Snap.throwError $
+      err400 { errBody = Lazy.fromStrict  $ Char8.pack $ show err }
+    Right (system, machine, stenoKeys) ->
+      pure $ keyMapToPloverCfg stenoKeys
+                               (Text.pack system)
+                               (Text.pack machine)

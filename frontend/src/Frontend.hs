@@ -34,7 +34,7 @@ import qualified Data.Text.Lazy.Encoding     as Lazy
 import           GHCJS.DOM                   (currentWindowUnchecked)
 import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
-import           Home                        (keyboard, message, loadingScreen, settings)
+import           Home                        (stenoInput, message, loadingScreen, settings)
 import           Obelisk.Route.Frontend      (RoutedT, mapRoutedT, subRoute_)
 import           Reflex.Dom                  (DomBuilder, EventName (Click),
                                               EventWriter,
@@ -83,9 +83,9 @@ frontendBody = mdo
   (_, eStateUpdate) <- mapRoutedT (flip runReaderT dynState . runEventWriterT) $ do
     settings
     message
-    keyboard
+    stenoInput
     subRoute_ $ \case
-      FrontendRoute_Main -> text "Hi (FrontendRoute_Main)"
+      FrontendRoute_Main -> el "div" $ text "Hi (FrontendRoute_Main)"
   blank
 
 frontendHead

@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (hover, shadowWithSpread, minWidth, rgba, preWrap, pre, whiteSpace, i, overflow, inlineBlock, (&), (|>), opacity, red, transparent, Auto (auto), Center (center), Color, Css,
+import           Clay          (Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -13,22 +13,26 @@ import           Clay          (hover, shadowWithSpread, minWidth, rgba, preWrap
                                 displayTable, div, easeInOut, em, fixed, flex,
                                 float, floatLeft, floatRight, focus, fontFamily,
                                 fontSize, fontSizeCustom, fontWeight, gray,
-                                height, hidden, important, inlineFlex, input,
-                                justifyContent, left, lightblue, lightgray,
-                                lightgrey, margin, marginBottom, marginRight,
-                                marginTop, maxWidth, minHeight, outline,
+                                height, hidden, hover, i, important,
+                                inlineBlock, inlineFlex, input, justifyContent,
+                                left, lightblue, lightgray, lightgrey, margin,
+                                marginBottom, marginRight, marginTop, maxWidth,
+                                minHeight, minWidth, opacity, outline, overflow,
                                 padding, paddingBottom, pct, pointer, position,
-                                pt, putCss, px, queryOnly, relative, rgb, right,
-                                sansSerif, sec, shadowWithBlur, smaller, solid,
-                                span, star, stringContent, table, td, textAlign,
-                                top, transform, transition, translate,
-                                visibility, visited, white, width, zIndex,
-                                ( # ), (?), (^=))
+                                pre, preWrap, pt, putCss, px, queryOnly, red,
+                                relative, rgb, rgba, right, sansSerif, sec,
+                                shadowWithBlur, shadowWithSpread, smaller,
+                                solid, span, star, stringContent, table, td,
+                                textAlign, top, transform, transition,
+                                translate, transparent, visibility, visited,
+                                white, whiteSpace, width, zIndex, (#), (&), (?),
+                                (^=), (|>))
 import qualified Clay.Media    as Media
 import           Data.Function (($))
 import           GHC.IO        (IO)
+import           GHC.Num       (Num ((*), (+), (-)))
 import           System.IO     (putStrLn)
-import GHC.Num (Num((-), (*), (+)))
+import Clay.Border (borderBottom)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -69,21 +73,17 @@ main = putCss $ do
     float floatRight
     cursor pointer
 
-  let keyboardWidth = 638
-      keyboardHeight = 242
+  let keyboardWidth = 650
+      keyboardHeight = 350
       keyboardPadding = 12
+      stenoOutputHeight = 71
 
   td # ".gap" ? visibility hidden
   div # ".keyboard" ? do
-    borderRadius (px 8) (px 8) (px 8) (px 8)
-    backgroundColor lightgray
     width $ px keyboardWidth
     height $ px keyboardHeight
-    padding (px keyboardPadding)
-            (px keyboardPadding)
-            (px keyboardPadding)
-            (px keyboardPadding)
     position relative
+    borderBottom solid (px 1) darkgray
 
     input ? position absolute
     table ? position absolute
@@ -91,17 +91,24 @@ main = putCss $ do
     span ? do
       position absolute
       width $ px keyboardWidth
-      textAlign center
       left $ px 0
-      top $ px 12
-      fontSize $ pt 24
 
-      ".red" & color red
-
-      ".steno" & do
-        top $ px keyboardHeight
+      ".stenoOutput" & do
+        textAlign center
+        top $ px $ keyboardHeight - stenoOutputHeight
         fontSize $ pt 32
         padding (px 8) (px 8) (px 8) (px 8)
+      ".clickMe" & do
+        top $ px 12
+        fontSize $ pt 24
+        textAlign center
+      ".clickMe.red" & color red
+
+      ".system" & do
+        top $ px $ keyboardHeight - 32 - stenoOutputHeight
+        left $ px 12
+        fontSize $ pt 12
+        color anthrazit
 
     input ? do
       width $ px keyboardWidth
@@ -116,8 +123,14 @@ main = putCss $ do
       ":focus-visible" & outline none (px 0) transparent
 
     table ? do
-      width $ px $ keyboardWidth - 2.0 * keyboardPadding
-      height $ px $ keyboardHeight - 2.0 * keyboardPadding
+      width $ px keyboardWidth
+      height $ px $ keyboardHeight - stenoOutputHeight
+      borderRadius (px 8) (px 8) (px 8) (px 8)
+      backgroundColor lightgray
+      padding (px keyboardPadding)
+              (px keyboardPadding)
+              (px keyboardPadding)
+              (px keyboardPadding)
 
       td ? do
         borderRadius (px 4) (px 4) (px 4) (px 4)
@@ -138,12 +151,21 @@ main = putCss $ do
             color gray
             marginTop $ px (-6)
 
+  span # ".btnToggleKeyboard" ? do
+    color gray
+    fontSize $ pt 24
+    padding (px 8) (px 8) (px 8) (px 8)
+    ".keyboardVisible" & do
+      backgroundColor lightgray
+      color white
+
   div # ".dropdown" ? do
     position relative
     display inlineBlock
     span # ".dropdown-button" ? do
       color gray
       fontSize $ pt 24
+      padding (px 8) (px 8) (px 8) (px 8)
     div # ".dropdown-content" ? do
       display none
       position absolute
@@ -169,8 +191,5 @@ main = putCss $ do
       left $ px 0
       height $ pct 100
       opacity 0
-      cursor pointer
-    -- width (px size)
-    -- height (px size)
     display inlineBlock
     overflow hidden

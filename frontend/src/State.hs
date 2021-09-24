@@ -1,8 +1,8 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module State where
 
@@ -13,14 +13,15 @@ import           Control.Category    (Category ((.)))
 import           Data.Aeson          (FromJSON (..), KeyValue ((.=)),
                                       ToJSON (..), Value (..), object, (.:))
 import           Data.Aeson.Types    (prependFailure, typeMismatch)
+import           Data.Bool           (Bool(..))
 import           Data.Default        (Default (..))
 import           Data.Function       (($))
-import           Data.Maybe          (Maybe(Just, Nothing))
+import           Data.Functor        (Functor (fmap))
+import           Data.Maybe          (Maybe (..))
 import           Data.Semigroup      (Semigroup (..))
 import           Data.Text           (Text)
 import           GHC.Generics        (Generic)
-import Reflex.Dom (EventWriter (..), Reflex(Event))
-import Data.Functor (Functor(fmap))
+import           Reflex.Dom          (EventWriter (..), Reflex (Event))
 
 -- frontend application state
 
@@ -37,9 +38,9 @@ instance Semigroup EStateUpdate where
 
 data State = State
   { -- stSession :: Session
-    stPloverCfg :: PloverCfg
-  , stMsg       :: Maybe Message
-  , stKeyboard  :: Maybe ()
+    stPloverCfg    :: PloverCfg
+  , stMsg          :: Maybe Message
+  , stShowKeyboard :: Bool
   } deriving (Generic)
 
 instance FromJSON State where
@@ -55,14 +56,14 @@ instance ToJSON State where
     object
     [ "ploverCfg" .= stPloverCfg
     -- stMsg: never persist messages
-    , "keyboard" .= stKeyboard
+    , "keyboard" .= stShowKeyboard
     ]
 
 instance Default State where
   def = State
     { stPloverCfg = def
     , stMsg = Nothing
-    , stKeyboard = Just ()
+    , stShowKeyboard = True
     }
 
 updateState ::
@@ -74,7 +75,7 @@ updateState event =
 
 data Message = Message
   { msgCaption :: Text
-  , msgBody :: Text
+  , msgBody    :: Text
   }
 -- -- Session
 --

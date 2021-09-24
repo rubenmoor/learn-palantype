@@ -1,10 +1,14 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Common.Alphabet where
 
+import           Data.Aeson   (ToJSONKey, FromJSONKey, FromJSON, ToJSON)
+import           Data.Text    (Text)
+import           GHC.Generics (Generic)
+
 -- SCPTH+MFRNLYOEAUI^NLCMFRPT+SH
-import Data.Text (Text)
 data PTChar =
     LeftS
   | LeftC
@@ -38,41 +42,46 @@ data PTChar =
   | RightS
   | RightH
   | RightE
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic)
+
+instance FromJSON PTChar
+instance ToJSON PTChar
+instance FromJSONKey PTChar
+instance ToJSONKey PTChar
 
 instance Show PTChar where
-  show LeftS = "S-"
-  show LeftC = "C-"
-  show LeftP = "P-"
-  show LeftT = "T-"
-  show LeftH = "H-"
-  show LeftCross = "+-"
-  show LeftM = "M-"
-  show LeftF = "F-"
-  show LeftR = "R-"
-  show LeftN = "N-"
-  show LeftL = "L-"
-  show LeftY = "Y-"
-  show LeftO = "O-"
-  show LeftE = "E-"
-  show LeftPipe = "|-"
-  show RightPipe = "-|"
-  show RightA = "-A"
-  show RightU = "-U"
-  show MiddleI = "I"
+  show LeftS      = "S-"
+  show LeftC      = "C-"
+  show LeftP      = "P-"
+  show LeftT      = "T-"
+  show LeftH      = "H-"
+  show LeftCross  = "+-"
+  show LeftM      = "M-"
+  show LeftF      = "F-"
+  show LeftR      = "R-"
+  show LeftN      = "N-"
+  show LeftL      = "L-"
+  show LeftY      = "Y-"
+  show LeftO      = "O-"
+  show LeftE      = "E-"
+  show LeftPipe   = "|-"
+  show RightPipe  = "-|"
+  show RightA     = "-A"
+  show RightU     = "-U"
+  show MiddleI    = "I"
   show RightPoint = "-^"
-  show RightN ="-N"
-  show RightL = "-L"
-  show RightC = "-C"
-  show RightM = "-M"
-  show RightF = "-F"
-  show RightR = "-R"
-  show RightP = "-P"
-  show RightT = "-T"
+  show RightN     ="-N"
+  show RightL     = "-L"
+  show RightC     = "-C"
+  show RightM     = "-M"
+  show RightF     = "-F"
+  show RightR     = "-R"
+  show RightP     = "-P"
+  show RightT     = "-T"
   show RightCross = "-+"
-  show RightS = "-S"
-  show RightH = "-H"
-  show RightE = "-e"
+  show RightS     = "-S"
+  show RightH     = "-H"
+  show RightE     = "-e"
 
 instance Read PTChar where
   readsPrec _ [] = []
