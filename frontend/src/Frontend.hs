@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
@@ -20,7 +21,7 @@ import           Obelisk.Route               (R)
 import           Reflex.Dom.Core             (blank, el, elAttr, text, (=:))
 
 import           Common.Route                (FrontendRoute (..))
-import           Control.Monad.Reader        (ReaderT (runReaderT))
+import           Control.Monad.Reader        (withReaderT, ReaderT (runReaderT))
 import qualified Data.Aeson                  as Aeson
 import           Data.Functor                (($>))
 import           Data.Maybe                  (fromMaybe)
@@ -74,11 +75,11 @@ frontendBody = mdo
     let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
     liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
-  (_, eStateUpdate) <- mapRoutedT (flip runReaderT dynState . runEventWriterT) $ do
+  (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState) $ do
     settings
     message
-    dynKeysPressed <- stenoInput
-    mapRoutedT (flip runReaderT dynKeysPressed) $
+    eWord <- stenoInput
+    mapRoutedT (withReaderT (,eWord)) $
       subRoute_ $ \case
         FrontendRoute_Main -> do
           let eStage = updated $ stProgress <$> dynState

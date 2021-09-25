@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (Auto (auto), Center (center), Color, Css,
+import           Clay          (small, code, lightgreen, linear, green, Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -41,7 +41,8 @@ main :: IO ()
 main = putCss $ do
   body ? do
     fontFamily ["Abel"] [sansSerif]
-    margin (px 0) (px 0) (px 0) (px 0)
+    fontSize $ pt 18
+    margin (px 12) (px 12) (px 12) (px 12)
   star ? boxSizing borderBox
 
   div # ".mkOverlay" ? do
@@ -50,6 +51,7 @@ main = putCss $ do
     transform (translate (pct $ -50) $ pct $ -50)
     maxWidth $ px 418
     backgroundColor white
+    boxShadow [bsColor (rgba 0 0 0 0.2) $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)]
     padding (px 24) (px 24) (px 24) (px 24)
     position absolute
     zIndex 1
@@ -86,7 +88,6 @@ main = putCss $ do
       textAlign center
       fontSize $ pt 32
       padding (px 8) (px 8) (px 8) (px 8)
-      ".red" & color red
       border none (px 0) transparent
       --backgroundColor transparent
       -- input # focus ? outline none (px 0) transparent
@@ -152,6 +153,7 @@ main = putCss $ do
     div # ".dropdown-content" ? do
       display none
       position absolute
+      fontSize (pt 12)
       backgroundColor $ rgb 249 249 249
       minWidth $ px 160
       boxShadow [bsColor (rgba 0 0 0 0.2) $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)]
@@ -176,3 +178,15 @@ main = putCss $ do
       opacity 0
     display inlineBlock
     overflow hidden
+
+  ".bgWhite" ? backgroundColor white
+  ".bgGreen" ? backgroundColor lightgreen
+  ".bgRed" ? backgroundColor red
+  ".red" ? color red
+  ".small" ? fontSize (pt 12)
+
+  pre ? do
+    backgroundColor lightgray
+    borderRadius (px 4) (px 4) (px 4) (px 4)
+    padding (px 6) (px 6) (px 6) (px 6)
+    span ? padding (px 2) (px 2) (px 2) (px 2)

@@ -41,7 +41,7 @@ import qualified Data.Set                    as Set
 import           Data.String                 (String, unwords)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
-import           Data.Tuple                  (fst)
+import           Data.Tuple                  (snd, fst)
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
                                               readAsText)
@@ -51,7 +51,7 @@ import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom                  (splitDynPure, DomBuilder (DomBuilderSpace, inputElement),
                                               EventName (Click), EventResult,
                                               EventWriter,
                                               HasDomEvent (domEvent),
@@ -222,7 +222,7 @@ stenoInput
   , MonadHold t m
   , MonadReader (Dynamic t State) m
   )
-  => m (Dynamic t (Set PTChar))
+  => m (Event t (Set PTChar))
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   eDyn <- dyn $ dynPloverCfg <&> \PloverCfg{..} -> elClass "div" "stenoInput" $ mdo
@@ -234,21 +234,36 @@ stenoInput = do
 
         eKeyChange = mergeWith (<>) $ concat keyChanges
 
-        register :: [KeyState] -> Set PTChar -> Set PTChar
-        register es set' = foldl acc set' es
+        register
+          :: [KeyState]
+          -> (Set PTChar, Set PTChar, Maybe (Set PTChar))
+          -> (Set PTChar, Set PTChar, Maybe (Set PTChar))
+        register es (keys, word, _) =
+            let setKeys' = foldl accDownUp keys es
+                (word', release') =
+                  if Set.null setKeys'
+                    then (Set.empty, Just word)
+                    else (foldl accDown word es, Nothing)
+            in  (setKeys', word', release')
           where
-            acc s (KeyStateDown k) = Set.insert k s
-            acc s (KeyStateUp   k) = Set.delete k s
+            accDownUp s (KeyStateDown k) = Set.insert k s
+            accDownUp s (KeyStateUp   k) = Set.delete k s
 
-    dynPressedKeys <- foldDyn register Set.empty eKeyChange
+            accDown s (KeyStateDown k) = Set.insert k s
+            accDown s (KeyStateUp _) = s
+
+    dynInput <- foldDyn register (Set.empty, Set.empty, Nothing) eKeyChange
+    let (dynPressedKeys, dynWord) = splitDynPure $
+          dynInput <&> \(keys, _, release) -> (keys, release)
+
     dynShowKeyboard <- asks (stShowKeyboard <$>)
     dyn_ $ dynShowKeyboard <&> \visible -> when visible $
       elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
     kbInput <- elStenoOutput dynPressedKeys
-    pure dynPressedKeys
-  e <- switchHold never $ updated <$> eDyn
-  holdDyn Set.empty e
+
+    pure dynWord
+  switchHold never $ catMaybes . updated <$> eDyn
 
 elPTKeyboard
   :: forall t (m :: * -> *).
@@ -309,7 +324,7 @@ elPTKeyboard stenoKeys dynPressedKeys system =
           showQwerties Nothing   = ""
           showQwerties (Just ks) = Text.pack $ unwords ks
 
-          attrs = ffor dynPressedKeys $ \set' ->
+          attrs = dynPressedKeys <&> \set' ->
             "colspan" =: colspan <>
             if Set.member cell set'
               then "class" =: "pressed"
