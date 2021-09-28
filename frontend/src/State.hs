@@ -96,9 +96,9 @@ data Message = Message
 -- instance ToJSON Session
 
 data Stage
-  = Stage1_0
-  | Stage1_1
-  | Stage2_0
+  = Stage1_1
+  | Stage1_2
+  | Stage2_1
   deriving (Generic)
 
 instance ToJSON Stage
@@ -106,6 +106,6 @@ instance FromJSON Stage
 
 stageUrl :: Stage -> R FrontendRoute
 stageUrl = \case
-  Stage1_0 -> FrontendRoute_Stage1_0 :/ ()
   Stage1_1 -> FrontendRoute_Stage1_1 :/ ()
-  Stage2_0 -> FrontendRoute_Stage2_0 :/ ()
+  Stage1_2 -> FrontendRoute_Stage1_2 :/ ()
+  Stage2_1 -> FrontendRoute_Stage2_1 :/ ()

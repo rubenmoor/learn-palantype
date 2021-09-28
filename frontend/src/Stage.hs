@@ -33,7 +33,7 @@ import Data.Semigroup (Semigroup((<>)))
 import Obelisk.Route.Frontend (SetRoute, R, RouteToUrl, routeLink)
 import Common.Route (FrontendRoute)
 
-stage1_0
+stage1_1
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
@@ -45,10 +45,11 @@ stage1_0
   , SetRoute t (R FrontendRoute) m
   )
   => m ()
-stage1_0 = do
+stage1_1 = do
   (dynState, eWord) <- ask
   el "h1" $ text "Stage 1"
   el "h2" $ text "The stenographic alphabet"
+  el "h3" $ text "Task 1"
   el "span" $ text "Type the following steno letters in order, one after another:"
 
   let dynAlphabet = Map.keys . pcfgMapStenoKeys . stPloverCfg <$> dynState
@@ -56,17 +57,18 @@ stage1_0 = do
 
     let step :: Set PTChar -> (Int, Maybe (Int, [PTChar])) -> (Int, Maybe (Int, [PTChar]))
         step w (i, mistake) = case (Set.toList w, mistake) of
-          (_, Just _)                     -> (0,     Nothing)
-          ([l], _) | ptAlphabet !! i == l -> (i + 1, Nothing)
-          (ls, _)                         -> (0,     Just (i, ls))
+          (_, Just _)                     -> (0,     Nothing)      -- reset
+          ([l], _) | ptAlphabet !! i == l -> (i + 1, Nothing)      -- correct
+          (ls, _)                         -> (0,     Just (i, ls)) -- mistake!
 
     dynWalk <- foldDyn step (0, Nothing) eWord
 
-    for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) ->
+    for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
+      when
       let dynCls = dynWalk <&> \(counter, mistake) -> case mistake of
             Just (j, _) -> if i == j then "bgRed" else ""
             Nothing     -> if counter > i then "bgGreen" else ""
-      in  elDynClass "span" dynCls $ text $ showKey c
+          elDynClass "span" dynCls $ text $ showKey c
 
     widgetHold_ blank $ updated dynWalk <&> \(_, mistake) -> case mistake of
       Just (_, w)  -> elClass "div" "red small" $ text
