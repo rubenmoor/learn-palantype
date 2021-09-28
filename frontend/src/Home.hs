@@ -45,8 +45,8 @@ import           Data.Tuple                  (snd, fst)
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
                                               readAsText)
-import           JSDOM.EventM                (on)
-import           JSDOM.Types                 (File)
+import           GHCJS.DOM.EventM                (on)
+import           GHCJS.DOM.Types                 (File)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,

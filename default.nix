@@ -25,6 +25,7 @@ let reflex-dom-framework = pkgs.fetchFromGitHub {
       iosSdkVersion = "13.2";
       terms.security.acme.acceptTerms = true;
     });
+    # clay = pkgs.haskellPackages.callHackage "clay" "0.13.3" {};
 in
   with obelisk;
   project ./. ({ ... }: {

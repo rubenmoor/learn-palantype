@@ -71,7 +71,7 @@ instance Default State where
     { stPloverCfg = def
     , stMsg = Nothing
     , stShowKeyboard = True
-    , stProgress = Stage1_0
+    , stProgress = Stage1_1
     }
 
 updateState ::

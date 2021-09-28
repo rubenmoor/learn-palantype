@@ -64,11 +64,11 @@ stage1_1 = do
     dynWalk <- foldDyn step (0, Nothing) eWord
 
     for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
-      when
+      -- when
       let dynCls = dynWalk <&> \(counter, mistake) -> case mistake of
             Just (j, _) -> if i == j then "bgRed" else ""
             Nothing     -> if counter > i then "bgGreen" else ""
-          elDynClass "span" dynCls $ text $ showKey c
+      elDynClass "span" dynCls $ text $ showKey c
 
     widgetHold_ blank $ updated dynWalk <&> \(_, mistake) -> case mistake of
       Just (_, w)  -> elClass "div" "red small" $ text

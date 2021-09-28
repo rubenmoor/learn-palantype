@@ -4,29 +4,30 @@
 
 module Main where
 
-import           Clay          (small, code, lightgreen, linear, green, Auto (auto), Center (center), Color, Css,
+import           Clay          (Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
                                 bottom, boxShadow, boxSizing, bsColor, button,
-                                clear, color, content, darkgray, display,
+                                clear, code, color, content, darkgray, display,
                                 displayTable, div, easeInOut, em, fixed, flex,
                                 float, floatLeft, floatRight, focus, fontFamily,
                                 fontSize, fontSizeCustom, fontWeight, gray,
-                                height, hidden, hover, i, important,
+                                green, height, hidden, hover, i, important,
                                 inlineBlock, inlineFlex, input, justifyContent,
-                                left, lightblue, lightgray, lightgrey, margin,
-                                marginBottom, marginRight, marginTop, maxWidth,
-                                minHeight, minWidth, opacity, outline, overflow,
-                                padding, paddingBottom, pct, pointer, position,
-                                pre, preWrap, pt, putCss, px, queryOnly, red,
+                                left, lightblue, lightgray, lightgreen,
+                                lightgrey, linear, margin, marginBottom,
+                                marginRight, marginTop, maxWidth, minHeight,
+                                minWidth, opacity, outline, overflow, padding,
+                                paddingBottom, pct, pointer, position, pre,
+                                preWrap, pt, putCss, px, queryOnly, red,
                                 relative, rgb, rgba, right, sansSerif, sec,
-                                shadowWithBlur, shadowWithSpread, smaller,
-                                solid, span, star, stringContent, table, td,
-                                textAlign, top, transform, transition,
-                                translate, transparent, visibility, visited,
-                                white, whiteSpace, width, zIndex, ( # ), (&),
-                                (?), (^=), (|>))
+                                shadowWithBlur, shadowWithSpread, small,
+                                smaller, solid, span, star, stringContent,
+                                table, td, textAlign, top, transform,
+                                transition, translate, transparent, visibility,
+                                visited, white, whiteSpace, width, zIndex, (#),
+                                (&), (?), (^=), (|>))
 import           Clay.Border   (borderBottom)
 import qualified Clay.Media    as Media
 import           Data.Function (($))
