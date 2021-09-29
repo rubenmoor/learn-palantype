@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (Auto (auto), Center (center), Color, Css,
+import           Clay          (Other(other), Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -188,6 +188,7 @@ main = putCss $ do
 
   pre ? do
     backgroundColor lightgray
+    width $ other "fit-content"
     borderRadius (px 4) (px 4) (px 4) (px 4)
     padding (px 6) (px 6) (px 6) (px 6)
     span ? padding (px 2) (px 2) (px 2) (px 2)

@@ -12,8 +12,11 @@ library
                , data-default
                , generic-lens
                , ghcjs-dom
-               , jsaddle
-               , jsaddle-dom
+
+               -- jsaddle needed for
+               -- eval
+               -- liftJSM
+               , jsaddle 
                , lens
                , mtl
                , obelisk-executable-config-lookup
