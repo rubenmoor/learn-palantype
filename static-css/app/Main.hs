@@ -183,6 +183,7 @@ main = putCss $ do
   ".bgWhite" ? backgroundColor white
   ".bgGreen" ? backgroundColor lightgreen
   ".bgRed" ? backgroundColor red
+  ".fgTransparent" ? color transparent
   ".red" ? color red
   ".small" ? fontSize (pt 12)
 
@@ -192,3 +193,9 @@ main = putCss $ do
     borderRadius (px 4) (px 4) (px 4) (px 4)
     padding (px 6) (px 6) (px 6) (px 6)
     span ? padding (px 2) (px 2) (px 2) (px 2)
+
+  div # ".congraz" ? do
+    textAlign center
+    i ? do
+      fontSize $ pt 72
+      color green

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedLists   #-}
@@ -106,3 +107,12 @@ reqFailure = \case
   ResponseSuccess {}        -> Nothing
   ResponseFailure _ str xhr -> Just $ str <> fromMaybe "" (_xhrResponse_responseText xhr)
   RequestFailure  _ str     -> Just str
+
+whenJust ::
+  forall a t.
+  Applicative t =>
+  Maybe a ->
+  (a -> t ()) ->
+  t ()
+whenJust (Just x) a = a x
+whenJust Nothing _  = pure ()

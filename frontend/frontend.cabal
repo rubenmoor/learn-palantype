@@ -18,11 +18,13 @@ library
                -- liftJSM
                , jsaddle 
                , lens
+               , MonadRandom
                , mtl
                , obelisk-executable-config-lookup
                , obelisk-frontend
                , obelisk-generated-static
                , obelisk-route
+               , random-shuffle
                , reflex-dom
                , servant-reflex
                , text

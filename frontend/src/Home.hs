@@ -76,7 +76,7 @@ import           Reflex.Dom                  (InputElementConfig, DomBuilder (Do
                                               splitDynPure, switchHold, text,
                                               wrapDomEvent, (=:))
 import           Servant.Common.Req          (reqSuccess)
-import           Shared                      (iFa, reqFailure)
+import           Shared                      (whenJust, iFa, reqFailure)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
 import           Text.Show                   (Show (show))
@@ -108,15 +108,6 @@ elFileInput eSet = do
   let eFiles = _inputElement_files i
   pure $ mapMaybe listToMaybe $ updated eFiles
 
-whenJust ::
-  forall a t.
-  Applicative t =>
-  Maybe a ->
-  (a -> t ()) ->
-  t ()
-whenJust (Just x) a = a x
-whenJust Nothing _  = pure ()
-
 message ::
   forall t (m :: * -> *).
   ( DomBuilder t m,
@@ -127,16 +118,14 @@ message ::
   m ()
 message = do
   dynMsg <- asks (stMsg <$>)
-  dyn_ $
-    ffor dynMsg $ \mMsg -> whenJust mMsg $ \Message {..} ->
-      let spanClose =
-            fmap fst $ elClass' "span" "close" $ iFa "fas fa-times"
-       in elClass "div" "msgOverlay" $ do
-            elClose <- spanClose
-            let eClose = domEvent Click elClose
-            updateState $ eClose $> (field @"stMsg" .~ Nothing)
-            el "div" $ text msgCaption
-            el "span" $ text msgBody
+  dyn_ $ dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
+    let spanClose = elClass' "span" "close" $ iFa "fas fa-times"
+    in  elClass "div" "msgOverlay" $ do
+          (elClose, _) <- spanClose
+          let eClose = domEvent Click elClose
+          updateState $ eClose $> (field @"stMsg" .~ Nothing)
+          el "div" $ text msgCaption
+          el "span" $ text msgBody
 
 if' :: Monoid a => Bool -> a -> a
 if' True x  = x

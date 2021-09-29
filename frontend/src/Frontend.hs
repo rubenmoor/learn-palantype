@@ -40,7 +40,7 @@ import           Reflex.Dom                  (PerformEvent (performEvent_),
                                               foldDyn, leftmost, prerender_,
                                               runEventWriterT, tailE,
                                               widgetHold_)
-import Stage (stage1_1)
+import Stage (stage1_1, stage1_2)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -85,7 +85,10 @@ frontendBody = mdo
           let eStage = updated $ stProgress <$> dynState
           setRoute $ stageUrl <$> eStage
         FrontendRoute_Stage1_1 -> stage1_1
-        FrontendRoute_Stage1_2 -> el "div" $ text "Hi (FrontendRoute_Main)"
+        FrontendRoute_Stage1_2 -> stage1_2
+        FrontendRoute_Stage1_3 -> el "div" $ text "Hi (FrontendRoute_Main)"
+        FrontendRoute_Stage1_4 -> el "div" $ text "Hi (FrontendRoute_Main)"
+        FrontendRoute_Stage1_5 -> el "div" $ text "Hi (FrontendRoute_Main)"
         FrontendRoute_Stage2_1 -> el "div" $ text "Hi (FrontendRoute_Main)"
   blank
 

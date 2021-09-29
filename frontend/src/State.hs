@@ -98,6 +98,9 @@ data Message = Message
 data Stage
   = Stage1_1
   | Stage1_2
+  | Stage1_3
+  | Stage1_4
+  | Stage1_5
   | Stage2_1
   deriving (Generic)
 
@@ -108,4 +111,7 @@ stageUrl :: Stage -> R FrontendRoute
 stageUrl = \case
   Stage1_1 -> FrontendRoute_Stage1_1 :/ ()
   Stage1_2 -> FrontendRoute_Stage1_2 :/ ()
+  Stage1_3 -> FrontendRoute_Stage1_3 :/ ()
+  Stage1_4 -> FrontendRoute_Stage1_4 :/ ()
+  Stage1_5 -> FrontendRoute_Stage1_5 :/ ()
   Stage2_1 -> FrontendRoute_Stage2_1 :/ ()
