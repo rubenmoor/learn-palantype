@@ -14,7 +14,7 @@
 module Home where
 
 import           Client                      (postConfigNew, postRender)
-import           Common.Alphabet             (PTChar (..), showKey)
+import           Common.Alphabet             (mkPTChord, PTChord, PTChar (..), showKey)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
 import           Control.Applicative         (Applicative (..))
@@ -62,12 +62,12 @@ import           Reflex.Dom                  (InputElementConfig, DomBuilder (Do
                                               PerformEvent (performEvent_),
                                               PostBuild,
                                               Prerender,
-                                              Reflex (Dynamic, Event, never, updated),
+                                              Reflex(Dynamic, Event, never, updated),
                                               blank, dyn, dyn_, el, el', elAttr,
                                               elClass, elClass', elDynAttr,
                                               elementConfig_eventSpec,
                                               elementConfig_initialAttributes,
-                                              ffor, foldDyn,
+                                              foldDyn,
                                               inputElementConfig_elementConfig,
                                               inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
@@ -241,7 +241,7 @@ stenoInput ::
     MonadHold t m,
     MonadReader (Dynamic t State) m
   ) =>
-  m (Event t (Set PTChar))
+  m (Event t PTChord)
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   eDyn <-
@@ -249,21 +249,21 @@ stenoInput = do
       dynPloverCfg <&> \PloverCfg {..} -> elClass "div" "stenoInput" $ mdo
         let keyChanges =
               pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
-                [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey],
-                  keyup qwertyKey kbInput $> [KeyStateUp stenoKey]
+                [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
+                , keyup   qwertyKey kbInput $> [KeyStateUp stenoKey]
                 ]
 
             eKeyChange = mergeWith (<>) $ concat keyChanges
 
             register ::
               [KeyState] ->
-              (Set PTChar, Set PTChar, Maybe (Set PTChar)) ->
-              (Set PTChar, Set PTChar, Maybe (Set PTChar))
+              (Set PTChar, Set PTChar, Maybe PTChord) ->
+              (Set PTChar, Set PTChar, Maybe PTChord)
             register es (keys, word, _) =
               let setKeys' = foldl accDownUp keys es
                   (word', release') =
                     if Set.null setKeys'
-                      then (Set.empty, Just word)
+                      then (Set.empty, Just $ mkPTChord word)
                       else (foldl accDown word es, Nothing)
                in (setKeys', word', release')
               where

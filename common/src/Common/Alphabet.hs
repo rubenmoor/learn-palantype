@@ -7,6 +7,10 @@ module Common.Alphabet where
 import           Data.Aeson   (ToJSONKey, FromJSONKey, FromJSON, ToJSON)
 import           Data.Text    (Text)
 import           GHC.Generics (Generic)
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.List (sort)
+import qualified Data.Text as Text
 
 -- SCPTH+MFRNLYOEAUI^NLCMFRPT+SH
 data PTChar =
@@ -124,6 +128,15 @@ instance Read PTChar where
       'e' -> [(RightE, rest2)]
       _   -> []
     _ -> []
+
+newtype PTChord = PTChord { unPTChord :: [PTChar] }
+
+-- make sure the chord have the letters sorted
+mkPTChord :: Set PTChar -> PTChord
+mkPTChord = PTChord . sort . Set.toList
+
+showChord :: PTChord -> Text
+showChord = Text.unwords . fmap showKey . unPTChord
 
 showKey :: PTChar -> Text
 showKey = \case

@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PatternSynonyms     #-}
@@ -12,26 +12,26 @@
 
 module Stage where
 
-import           Common.Alphabet        (PTChar, showKey)
+import           Common.Alphabet        (showChord, PTChord(..),  PTChar, showKey)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
-import           Control.Applicative    (Applicative(pure), (<$>))
+import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category ((.)))
 import           Control.Lens           ((.~), (<&>))
-import           Control.Monad          (when)
 import           Control.Monad.Fix      (MonadFix)
-import           Control.Monad.Reader   (Functor (fmap), MonadReader (ask),
-                                         MonadTrans (lift))
-import           Data.Bool              (Bool (..))
+import           Control.Monad.Random   (mkStdGen, evalRand, StdGen, MonadRandom)
+import           Control.Monad.Reader   (withReaderT, MonadReader (ask))
+import           Data.Bool              (Bool (..), bool)
 import           Data.Eq                (Eq ((==)))
 import           Data.Foldable          (Foldable (length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (($>))
+import           Data.Functor           (Functor(fmap), ($>), void)
 import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
-import           Data.List              (replicate, sort, zip, (!!))
+import           Data.List              (take, replicate, zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
+import           Data.Monoid            (Monoid (mconcat))
 import           Data.Ord               (Ord ((>)))
 import           Data.Semigroup         (Semigroup ((<>)))
 import           Data.Set               (Set)
@@ -39,22 +39,23 @@ import qualified Data.Set               as Set
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes))
 import           GHC.Num                (Num ((+), (-)))
-import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
+import           Obelisk.Route.Frontend (mapRoutedT, pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (switchHold, switchDyn, dyn, EventName(Click), HasDomEvent(domEvent), el', DomBuilder, EventWriter,
-                                         MonadHold (holdDyn), PostBuild(getPostBuild),
-                                         Prerender,
-                                         Reflex(never, Dynamic, Event, updated),
-                                         blank, dynText, dyn_, el, elClass,
-                                         elDynAttr, elDynClass, foldDyn,
-                                         leftmost, text, widgetHold_)
-import           Shared                 (whenJust, iFa)
+import           Reflex.Dom             (dynText, DomBuilder, EventName (Click),
+                                         EventWriter, HasDomEvent (domEvent),
+                                         MonadHold (holdDyn),
+                                         PostBuild (getPostBuild), Prerender,
+                                         Reflex (Dynamic, Event, never, updated),
+                                         blank, dyn, dyn_, el, el',
+                                         elClass, elDynClass,
+                                         foldDyn, leftmost,
+                                         switchHold, text, widgetHold_)
+import           Shared                 (iFa)
 import           State                  (EStateUpdate, Stage (..), State (..),
                                          stageUrl, updateState)
-import Data.Monoid (Monoid(mconcat))
-import Control.Monad.Random (MonadRandom)
-import System.Random.Shuffle (shuffleM)
-import Data.Functor (void)
+import           System.Random.Shuffle  (shuffleM)
+import Text.Show (Show(show))
+import Data.Tuple (snd)
 
 elFooterNextStage
   :: forall js t (m :: * -> *).
@@ -69,7 +70,7 @@ elFooterNextStage nxt = do
   el "hr" blank
   el "div" $ do
     text "Advance to "
-    routeLink (stageUrl nxt) $ text "Stage 1.2"
+    routeLink (stageUrl nxt) $ text $ Text.pack $ show nxt
     text " by completing the tasks or skip "
     -- TODO: define chords to navigate
     elClass "code" "chord" $ text "ASDF"
@@ -79,7 +80,7 @@ elFooterNextStage nxt = do
 
 data WalkState = WalkState
   { wsCounter  :: Int
-  , wsMMistake :: Maybe (Int, Set PTChar)
+  , wsMMistake :: Maybe (Int, PTChord)
   , wsDone     :: Bool
   }
 
@@ -89,7 +90,7 @@ stage1_1
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -100,10 +101,8 @@ stage1_1 = do
   el "h1" $ text "Stage 1"
   el "h2" $ text "The stenographic alphabet"
   el "h3" $ text "Task 1"
-  el "span" $ text "Type the following steno letters in order, one after another:"
-
-
-  el "span" $ text "Some letters occur twice, the first time for your left hand \
+  el "div" $ text "Type the following steno letters in order, one after another."
+  el "div" $ text "Some letters occur twice, the first time for your left hand \
                    \and the second time for your right hand."
 
   taskAlphabet True Stage1_2
@@ -114,7 +113,7 @@ stage1_2
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -138,7 +137,7 @@ stage1_3
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -162,7 +161,7 @@ stage1_4
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -184,7 +183,7 @@ taskAlphabet
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -197,25 +196,27 @@ taskAlphabet showAlphabet nxt = do
 
   (dynState, eWord) <- ask
 
-  let dynAlphabet = Map.keys . pcfgMapStenoKeys . stPloverCfg <$> dynState
+  let dynAlphabet = take 3 .Map.keys . pcfgMapStenoKeys . stPloverCfg <$> dynState
   dyn_ $ dynAlphabet <&> \ptAlphabet -> do
 
-    let len = length ptAlphabet - 1
-        step :: Set PTChar -> WalkState -> WalkState
-        step w ws@WalkState{..} = case (Set.toList w, wsMMistake, wsDone) of
+    let len = length ptAlphabet
+
+        step :: PTChord -> WalkState -> WalkState
+        step w ws@WalkState{..} = case (unPTChord w, wsMMistake, wsDone) of
           (_, _, True)         -> ws { wsDone = False
-                                     , wsCounter = 0
-                                     }                        -- done
-          _ | wsCounter == len -> ws { wsDone = True }
+                                     -- , wsCounter = 0
+                                     }                    -- reset after done
+          _ | wsCounter == len - 1
+                               -> ws { wsDone = True }    -- done
           (_, Just _, _)       -> ws { wsCounter = 0
                                      , wsMMistake = Nothing
-                                     }                        -- reset
+                                     }                    -- reset after mistake
           ([l], _, _) | ptAlphabet !! wsCounter == l ->
                                   ws { wsCounter = wsCounter + 1
-                                     }                        -- correct
+                                     }                    -- correct
           (ls,  _, _)          -> ws { wsMMistake =
-                                         Just ( wsCounter , Set.fromList ls)
-                                     }                        -- mistake
+                                         Just (wsCounter, PTChord ls)
+                                     }                    -- mistake
 
         stepInitial = WalkState
           { wsCounter = 0
@@ -223,8 +224,10 @@ taskAlphabet showAlphabet nxt = do
           , wsDone = False
           }
     dynWalk <- foldDyn step stepInitial eWord
-    let eDone = catMaybes $ updated $ dynWalk <&> \ws ->
-          if wsDone ws then Just () else Nothing
+    let eDone
+          = catMaybes
+          $ updated
+          $ bool Nothing (Just ()) . wsDone <$> dynWalk
 
     el "pre" $ el "code" $ do
       let clsLetter = if showAlphabet then "" else "fgTransparent"
@@ -233,23 +236,26 @@ taskAlphabet showAlphabet nxt = do
               Just (j, _) -> if i == j then "bgRed" else clsLetter
               Nothing     -> if wsCounter > i then "bgGreen" else clsLetter
         elDynClass "span" dynCls $ text $ showKey c
+    el "span" $ do
+      dynText $ dynWalk <&> \WalkState{..} -> Text.pack $ show wsCounter
+      text $ " / " <> Text.pack (show len)
 
-    widgetHold_ blank $ updated dynWalk <&> \WalkState{..} -> case wsMMistake of
+    let eMistake = wsMMistake <$> updated dynWalk
+    widgetHold_ blank $ eMistake <&> \case
       Just (_, w)  -> elClass "div" "red small" $ text
-        -- TODO: function to properly show steno words
-         $ "You typed " <> Text.unwords (showKey <$> Set.toList w)
+         $ "You typed " <> showChord w
         <> ". Any key to start over."
       Nothing -> blank
 
     updateState $ eDone $> (field @"stProgress" .~ nxt)
-    elCongraz (void eWord) eDone
+    elCongraz eDone
 
   elFooterNextStage nxt
 
-data LettersState = LettersState
-  { lsCounter :: Int
-  , lsMMistake :: Maybe (Int, Set PTChar)
-  , lsDone :: Bool
+data StenoLettersState = StenoLettersState
+  { slsCounter :: Int
+  , slsMMistake :: Maybe (Int, PTChord)
+  , slsDone    :: Bool
   }
 
 stage1_5
@@ -258,8 +264,7 @@ stage1_5
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadRandom m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , Prerender js t m
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
@@ -286,67 +291,76 @@ stage1_5 = do
 
   let dynAlphabet = Map.keys . pcfgMapStenoKeys . stPloverCfg <$> dynState
   dyn_ $ dynAlphabet <&> \ptAlphabet -> mdo
-    lsLetters <- shuffleM $ mconcat $ replicate 2 ptAlphabet
-    let len = length lsLetters
+    let rndGen = mkStdGen 0
+        lsLetters = take 3 $ evalRand (shuffleM $ mconcat $ replicate 2 ptAlphabet) rndGen
+        len = length lsLetters
 
-        step :: Set PTChar -> LettersState -> LettersState
-        step w ls@LettersState{..} = case (Set.toList w, lsMMistake, lsDone) of
-          (_, _, True)         -> ls { lsDone = False
-                                     , lsCounter = 0
-                                     }                        -- done
-          _ | wsCounter == len -> ls { lsDone = True }
-          (_, Just _, _)       -> ls { lsCounter = 0
-                                     , lsMMistake = Nothing
-                                     }                        -- reset
-          ([l], _, _) | lsLetters !! lsCounter == l ->
-                                  ls { lsCounter = lsCounter + 1
-                                     }                        -- correct
-          (wrong,  _, _)       -> ls { lsMMistake =
-                                         Just ( lsCounter , Set.fromList wrong)
-                                     }                        -- mistake
+        step :: PTChord -> StenoLettersState -> StenoLettersState
+        step chord ls@StenoLettersState{..} =
+          case (unPTChord chord, slsMMistake, slsDone) of
+            (_, _, True)          -> ls { slsDone = False
+                                        , slsCounter = 0
+                                        }                   -- reset after done
+            _ | slsCounter == len - 1
+                                  -> ls { slsDone = True }  -- done
+            (_, Just _, _)        -> ls { slsCounter = 0
+                                        , slsMMistake = Nothing
+                                        }                   -- reset after mistake
+            ([l], _, _) | lsLetters !! slsCounter == l ->
+                                     ls { slsCounter = slsCounter + 1
+                                        }                   -- correct
+            (wrong,  _, _)        -> ls { slsMMistake =
+                                            Just (slsCounter, PTChord wrong)
+                                        }                   -- mistake
 
-        stepInitial = LettersState
-          { lsCounter = 0
-          , lsMMistake = Nothing
-          , lsDone = False
+        stepInitial = StenoLettersState
+          { slsCounter = 0
+          , slsMMistake = Nothing
+          , slsDone = False
           }
-    dynLetter <- foldDyn step stepInitial eWord
-    let eDone = catMaybes $ updated $ dynLetter <&> \ls ->
-          if lsDone ls then Just () else Nothing
 
-    dyn_ $ dynLetter <&> \LettersState{..} -> case lsMMistake of
-      Nothing     -> do
-        el "code" $ text $ showKey $ lsLetters !! lsCounter
-      Just (j, _) -> blank
+    dynStenoLetters <- foldDyn step stepInitial eWord
 
-    widgetHold_ blank $ updated dynLetter <&> \LettersState{..} -> case lsMMistake of
-      Just (_, w)  -> elClass "div" "red small" $ text
-        -- TODO: function to properly show steno words
-         $ "You typed " <> Text.unwords (showKey <$> Set.toList w)
+    let eDone = catMaybes
+              $ updated
+              $ bool Nothing (Just ()) . slsDone <$> dynStenoLetters
+
+    dyn_ $ dynStenoLetters <&> \StenoLettersState{..} -> do
+      let clsMistake= case slsMMistake of
+            Nothing -> ""
+            Just _  -> "bgRed"
+      elClass "code" clsMistake $
+        text $ showKey $ lsLetters !! slsCounter
+      el "span" $ do
+        el "strong" $ text (Text.pack $ show slsCounter)
+        text " / "
+        text (Text.pack $ show len)
+
+    let eMMistake = slsMMistake <$> updated dynStenoLetters
+    widgetHold_ blank $ eMMistake <&> \case
+      Just (_, chord)  -> elClass "div" "red small" $ text
+         $ "You typed " <> showChord chord
         <> ". Any key to start over."
       Nothing -> blank
 
     updateState $ eDone $> (field @"stProgress" .~ Stage2_1)
-    elCongraz (void eWord) eDone
+    elCongraz eDone
 
   elFooterNextStage Stage2_1
 
 elCongraz
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Dynamic t State, Event t (Set PTChar)) m
-  , Prerender js t m
+  , MonadReader (Dynamic t State, Event t PTChord) m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
   => Event t ()
-  -> Event t ()
   -> m ()
-elCongraz eWord eDone = mdo
+elCongraz eDone = mdo
+  (_, eWord) <- ask
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
   eBack <- switchHold never eEBack
   eEBack <- dyn $ dynShowCongraz <&> \case
@@ -362,3 +376,18 @@ elCongraz eWord eDone = mdo
         el "span" $ text ")"
         pure $ domEvent Click elBack
   blank
+
+stage2_1
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Dynamic t State, Event t PTChord) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
+stage2_1 = blank

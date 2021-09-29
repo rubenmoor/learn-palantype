@@ -26,6 +26,7 @@ import           GHC.Generics        (Generic)
 import           Reflex.Dom          (EventWriter (..), Reflex (Event))
 import Common.Route (FrontendRoute(..))
 import Obelisk.Route (R, pattern (:/))
+import Text.Show (Show (..))
 
 -- frontend application state
 
@@ -106,6 +107,14 @@ data Stage
 
 instance ToJSON Stage
 instance FromJSON Stage
+
+instance Show Stage where
+  show Stage1_1 = "Stage 1.1"
+  show Stage1_2 = "Stage 1.2"
+  show Stage1_3 = "Stage 1.3"
+  show Stage1_4 = "Stage 1.4"
+  show Stage1_5 = "Stage 1.5"
+  show Stage2_1 = "Stage 2.1"
 
 stageUrl :: Stage -> R FrontendRoute
 stageUrl = \case

@@ -1,29 +1,27 @@
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE GADTs               #-}
-{-# LANGUAGE KindSignatures      #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecursiveDo         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecursiveDo           #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TupleSections         #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
-import           State                       (stageUrl, EStateUpdate (..), State(..))
-
-import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
-import           Obelisk.Generated.Static    (static)
-import           Obelisk.Route               (R)
-
-import           Reflex.Dom.Core             (blank, el, elAttr, text, (=:))
+import           State                       (EStateUpdate (..), State (..),
+                                              stageUrl)
 
 import           Common.Route                (FrontendRoute (..))
-import           Control.Monad.Reader        (withReaderT, ReaderT (runReaderT))
+import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
 import qualified Data.Aeson                  as Aeson
-import           Data.Functor                (($>))
+import           Data.Functor                (($>), (<&>))
 import           Data.Maybe                  (fromMaybe)
 import           Data.Text                   (Text)
 import qualified Data.Text.Lazy              as Lazy
@@ -33,20 +31,31 @@ import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
 import           Home                        (loadingScreen, message, settings,
                                               stenoInput)
-import           Obelisk.Route.Frontend      (SetRoute(setRoute), RoutedT, mapRoutedT, subRoute_)
+import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
+import           Obelisk.Generated.Static    (static)
+import           Obelisk.Route               (R)
+import           Obelisk.Route.Frontend      (RoutedT,
+                                              SetRoute (setRoute), mapRoutedT,
+                                              subRoute_)
 import           Reflex.Dom                  (PerformEvent (performEvent_),
                                               Prerender (prerender),
-                                              Reflex (updated), def, ffor,
-                                              foldDyn, leftmost, prerender_,
-                                              runEventWriterT, tailE,
-                                              widgetHold_)
-import Stage (stage1_1, stage1_2)
+                                              Reflex (updated), blank,
+                                              def, el, elAttr, foldDyn,
+                                              leftmost, prerender_,
+                                              runEventWriterT, tailE, text,
+                                              widgetHold_, (=:))
+import           Stage                       (stage1_1, stage1_2, stage1_3,
+                                              stage1_4, stage1_5, stage2_1)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
   { _frontend_head = frontendHead
   , _frontend_body = frontendBody
   }
+
+-- instance (Monad m, SetRoute t r m) => SetRoute t r (RandT g m)
+-- instance DomBuilder t m => DomBuilder t (RandT g m) where
+--     type DomBuilderSpace (RandT g m) = DomBuilderSpace m
 
 frontendBody
   :: forall t js (m :: * -> *).
@@ -71,11 +80,11 @@ frontendBody = mdo
 
   -- TODO: persist application state on visibility change (when hidden)
   eUpdated <- tailE $ updated dynState
-  prerender_ blank $ performEvent_ $ ffor eUpdated $ \st -> do
+  prerender_ blank $ performEvent_ $ eUpdated <&> \st -> do
     let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
     liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
-  (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState) $ do
+  (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
     settings
     message
     eWord <- stenoInput
@@ -86,10 +95,10 @@ frontendBody = mdo
           setRoute $ stageUrl <$> eStage
         FrontendRoute_Stage1_1 -> stage1_1
         FrontendRoute_Stage1_2 -> stage1_2
-        FrontendRoute_Stage1_3 -> el "div" $ text "Hi (FrontendRoute_Main)"
-        FrontendRoute_Stage1_4 -> el "div" $ text "Hi (FrontendRoute_Main)"
-        FrontendRoute_Stage1_5 -> el "div" $ text "Hi (FrontendRoute_Main)"
-        FrontendRoute_Stage2_1 -> el "div" $ text "Hi (FrontendRoute_Main)"
+        FrontendRoute_Stage1_3 -> stage1_3
+        FrontendRoute_Stage1_4 -> stage1_4
+        FrontendRoute_Stage1_5 -> stage1_5
+        FrontendRoute_Stage2_1 -> stage2_1
   blank
 
 frontendHead
