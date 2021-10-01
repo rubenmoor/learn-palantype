@@ -37,7 +37,7 @@ import           Obelisk.Route               (R)
 import           Obelisk.Route.Frontend      (RoutedT,
                                               SetRoute (setRoute), mapRoutedT,
                                               subRoute_)
-import           Reflex.Dom                  (PerformEvent (performEvent_),
+import           Reflex.Dom                  (dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
                                               Prerender (prerender),
                                               Reflex (updated), blank,
                                               def, el, elAttr, foldDyn,
@@ -90,9 +90,10 @@ frontendBody = mdo
     eWord <- stenoInput
     mapRoutedT (withReaderT (,eWord)) $
       subRoute_ $ \case
-        FrontendRoute_Main -> do
-          let eStage = updated $ stProgress <$> dynState
-          setRoute $ stageUrl <$> eStage
+        FrontendRoute_Main ->
+          dyn_ $ fmap stProgress dynState <&> \stage -> do
+            ePb <- getPostBuild
+            setRoute $ ePb $> stageUrl stage
         FrontendRoute_Stage1_1 -> stage1_1
         FrontendRoute_Stage1_2 -> stage1_2
         FrontendRoute_Stage1_3 -> stage1_3
