@@ -205,10 +205,10 @@ settings = mdo
                         "\n"
                         (Text.pack <$> pcfgUnrecognizedStenos)
                in Endo $ field @"stMsg" .~ Just Message {..},
-            if' (isCompatible pcfgSystem) $
+            if' (not $ isCompatible pcfgSystem) $
               let msgCaption = "Incompatible system"
                   msgBody =
-                    "Your system is " <> pcfgMachine
+                    "Your system is " <> pcfgSystem
                       <> "\nCompatible systems at the moment are\n"
                       <> Text.intercalate "\n" compatibleSystems
                in Endo $ field @"stMsg" .~ Just Message {..}
