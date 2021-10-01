@@ -14,7 +14,7 @@
 module Home where
 
 import           Client                      (postConfigNew, postRender)
-import           Common.Alphabet             (mkPTChord, PTChord, PTChar (..), showKey)
+import           Common.Alphabet             (showChord, PTChord (..), mkPTChord, PTChar (..), showKey)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
 import           Control.Applicative         (Applicative (..))
@@ -42,7 +42,7 @@ import qualified Data.Set                    as Set
 import           Data.String                 (String, unwords)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
-import           Data.Tuple                  (fst)
+import           Data.Tuple                  (snd, fst)
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.EventM            (on)
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
@@ -52,7 +52,7 @@ import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (InputElementConfig, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom                  (elementConfig_modifyAttributes, InputElementConfig, DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
@@ -273,7 +273,10 @@ stenoInput = do
                 accDown s (KeyStateDown k) = Set.insert k s
                 accDown s (KeyStateUp _)   = s
 
-        dynInput <- foldDyn register (Set.empty, Set.empty, Nothing) eKeyChange
+        dynInput <- foldDyn register ( Set.empty
+                                     , Set.empty
+                                     , Nothing
+                                     ) eKeyChange
         let (dynPressedKeys, dynWord) =
               splitDynPure $
                 dynInput <&> \(keys, _, release) -> (keys, release)
@@ -364,6 +367,7 @@ elStenoOutput
   :: forall t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
+  , MonadHold t m
   )
   => Dynamic t (Set PTChar)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
@@ -372,22 +376,29 @@ elStenoOutput dynPressedKeys = mdo
   -- ePostBuild <- getPostBuild
   let eFocus =
         updated (_inputElement_hasFocus i) <&> \case
-          True -> "Type!"
-          False -> "Click me!"
+          True -> ("Type!", "class" =: Just "anthrazit")
+          False -> ("Click me!", "class" =: Just "red")
       eTyping =
         updated dynPressedKeys <&> \pressedKeys ->
           if Set.null pressedKeys
-            then "..."
-            else Text.pack $ unwords $ fmap show $ sort $ Set.toList pressedKeys
-      eSetValue = leftmost [eFocus, eTyping]
+            then ("...",                             "class" =: Nothing)
+            else (showChord $ mkPTChord pressedKeys, "class" =: Nothing)
+      eChange = leftmost [eFocus, eTyping]
+      eSetValue = fst <$> eChange
   i <-
     inputElement $
       ( def :: InputElementConfig EventResult t (DomBuilderSpace m))
         & inputElementConfig_setValue .~ eSetValue
+        & inputElementConfig_elementConfig
+          . elementConfig_modifyAttributes
+          .~ (snd <$> eChange)
         & inputElementConfig_initialValue .~ "Click me!"
         & inputElementConfig_elementConfig
           . elementConfig_initialAttributes
-          .~ ( "readonly" =: "readonly" <> "autofocus" =: "autofocus")
+          .~ (  "readonly" =: "readonly"
+             <> "autofocus" =: "autofocus"
+             <> "class" =: "red"
+             )
         & inputElementConfig_elementConfig
           . elementConfig_eventSpec
           %~ addEventSpecFlags (Proxy :: Proxy (DomBuilderSpace m))

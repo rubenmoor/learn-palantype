@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (Other(other), Auto (auto), Center (center), Color, Css,
+import           Clay          (blue, underline, textDecoration, Other(other), Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -38,12 +38,23 @@ import           System.IO     (putStrLn)
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
 
+colorLink :: Color
+colorLink = blue
+
 main :: IO ()
 main = putCss $ do
   body ? do
     fontFamily ["Abel"] [sansSerif]
     fontSize $ pt 18
     margin (px 12) (px 12) (px 12) (px 12)
+    a ? do
+      ":link" & do
+        textDecoration none
+        color colorLink
+      ":hover" & textDecoration underline
+      ".normalLink" & do
+        color colorLink
+        cursor pointer
   star ? boxSizing borderBox
 
   div # ".mkOverlay" ? do
@@ -186,6 +197,7 @@ main = putCss $ do
   ".fgTransparent" ? color transparent
   ".red" ? color red
   ".small" ? fontSize (pt 12)
+  ".anthrazit" ? color anthrazit
 
   pre ? do
     backgroundColor lightgray
@@ -199,3 +211,6 @@ main = putCss $ do
     i ? do
       fontSize $ pt 72
       color green
+      padding (px 4) (px 4) (px 4) (px 4)
+
+  div # ".paragraph" ? marginBottom (em 0.5)

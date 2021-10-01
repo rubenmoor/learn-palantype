@@ -27,6 +27,8 @@ import           Reflex.Dom          (EventWriter (..), Reflex (Event))
 import Common.Route (FrontendRoute(..))
 import Obelisk.Route (R, pattern (:/))
 import Text.Show (Show (..))
+import Data.Ord (Ord)
+import Data.Eq (Eq)
 
 -- frontend application state
 
@@ -103,7 +105,7 @@ data Stage
   | Stage1_4
   | Stage1_5
   | Stage2_1
-  deriving (Generic)
+  deriving (Eq, Ord, Generic)
 
 instance ToJSON Stage
 instance FromJSON Stage

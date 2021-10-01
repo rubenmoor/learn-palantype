@@ -17,7 +17,7 @@ import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category(id, (.)))
-import           Control.Lens           ((.~), (<&>))
+import           Control.Lens           ((.~), (<&>), (%~))
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Random   (mkStdGen, evalRand, StdGen, MonadRandom)
 import           Control.Monad.Reader   (withReaderT, MonadReader (ask))
@@ -41,7 +41,7 @@ import           Data.Witherable        (Filterable(filter, catMaybes))
 import           GHC.Num                (Num ((+), (-)))
 import           Obelisk.Route.Frontend (mapRoutedT, pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (tailE, dynText, DomBuilder, EventName (Click),
+import           Reflex.Dom             (elClass', tailE, dynText, DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          MonadHold(hold, holdDyn),
                                          PostBuild (getPostBuild), Prerender,
@@ -56,6 +56,7 @@ import           State                  (EStateUpdate, Stage (..), State (..),
 import           System.Random.Shuffle  (shuffleM)
 import Text.Show (Show(show))
 import Data.Tuple (snd)
+import Control.Monad (when)
 
 elFooterNextStage
   :: forall js t (m :: * -> *).
@@ -81,7 +82,7 @@ elFooterNextStage nxt = do
 data WalkState = WalkState
   { wsCounter  :: Int
   , wsMMistake :: Maybe (Int, PTChord)
-  , wsDone     :: Bool
+  , wsDone     :: Maybe Bool
   }
 
 stage1_1
@@ -203,31 +204,33 @@ taskAlphabet showAlphabet nxt = do
 
         step :: PTChord -> WalkState -> WalkState
         step w ws@WalkState{..} = case (unPTChord w, wsMMistake, wsDone) of
-          (_, _, True)         -> ws { wsDone = False
-                                     -- , wsCounter = 0
+          (_, _, Just True)    -> ws { wsDone = Just False
+                                     , wsCounter = 0
                                      }                    -- reset after done
           _ | wsCounter == len - 1
-                               -> ws { wsDone = True }    -- done
+                               -> ws { wsDone = Just True
+                                     , wsCounter = wsCounter + 1
+                                     }                    -- done
           (_, Just _, _)       -> ws { wsCounter = 0
                                      , wsMMistake = Nothing
                                      }                    -- reset after mistake
           ([l], _, _) | ptAlphabet !! wsCounter == l ->
-                                  ws { wsCounter = wsCounter + 1
+                                  ws { wsDone = Nothing
+                                     , wsCounter = wsCounter + 1
                                      }                    -- correct
-          (ls,  _, _)          -> ws { wsMMistake =
+          (ls,  _, _)          -> ws { wsDone = Nothing
+                                     , wsMMistake =
                                          Just (wsCounter, PTChord ls)
                                      }                    -- mistake
 
         stepInitial = WalkState
           { wsCounter = 0
           , wsMMistake = Nothing
-          , wsDone = False
+          , wsDone = Nothing
           }
+
     dynWalk <- foldDyn step stepInitial eWord
-    let eDone
-          = filter id
-          $ updated
-          $ wsDone <$> dynWalk
+    let eDone = catMaybes $ wsDone <$> updated dynWalk
 
     el "pre" $ el "code" $ do
       let clsLetter = if showAlphabet then "" else "fgTransparent"
@@ -247,15 +250,20 @@ taskAlphabet showAlphabet nxt = do
         <> ". Any key to start over."
       Nothing -> blank
 
-    updateState $ eDone $> (field @"stProgress" .~ nxt)
-    elCongraz eDone
+    dynDone <- holdDyn False eDone
+    dyn_ $ dynDone <&> \bDone -> when bDone $
+      elClass "div" "small anthrazit" $ text "Cleared. Press any key to start over."
+
+    elCongraz (void $ filter id eDone) nxt
 
   elFooterNextStage nxt
+
+-- stage 1.5
 
 data StenoLettersState = StenoLettersState
   { slsCounter :: Int
   , slsMMistake :: Maybe (Int, PTChord)
-  , slsDone    :: Bool
+  , slsDone    :: Maybe Bool
   }
 
 stage1_5
@@ -275,14 +283,15 @@ stage1_5 = do
   el "h1" $ text "Stage 1"
   el "h2" $ text "The stenographic alphabet"
   el "h3" $ text "Task 5"
-  el "div" $ text "You get the virtual keyboard back. \
-                   \Feel free, to toggle it anytime. \
-                   \You can even use ASDF to do that.\
-                   \This is a chord that just exists for this purpose here on \
-                   \this website."
-  el "div" $ text "In order to be prepared for Stage 2, you should be able \
-                  \to do this task without the virtual keyboard."
-  el "div" $ text "Type every steno letter as it appears!"
+  elClass "div" "paragraph" $
+    text "You get the virtual keyboard back. Feel free, to toggle it anytime. \
+         \You can even use ASDF to do that. This is a chord that just exists \
+         \for this purpose here on this website."
+  elClass "div" "paragraph" $
+    text "In order to be prepared for Stage 2, you should be able \
+         \to do this task without the virtual keyboard."
+  elClass "div" "paragraph" $
+    text "Type every steno letter as it appears!"
 
   ePb <- getPostBuild
   updateState $ ePb $> (field @"stShowKeyboard" .~ True)
@@ -298,32 +307,34 @@ stage1_5 = do
         step :: PTChord -> StenoLettersState -> StenoLettersState
         step chord ls@StenoLettersState{..} =
           case (unPTChord chord, slsMMistake, slsDone) of
-            (_, _, True)          -> ls { slsDone = False
+            (_, _, Just True)     -> ls { slsDone = Just False
                                         , slsCounter = 0
                                         }                   -- reset after done
             _ | slsCounter == len - 1
-                                  -> ls { slsDone = True }  -- done
+                                  -> ls { slsDone = Just True
+                                        , slsCounter = slsCounter + 1
+                                        }                   -- done
             (_, Just _, _)        -> ls { slsCounter = 0
                                         , slsMMistake = Nothing
                                         }                   -- reset after mistake
             ([l], _, _) | lsLetters !! slsCounter == l ->
-                                     ls { slsCounter = slsCounter + 1
+                                     ls { slsDone = Nothing
+                                        , slsCounter = slsCounter + 1
                                         }                   -- correct
-            (wrong,  _, _)        -> ls { slsMMistake =
+            (wrong,  _, _)        -> ls { slsDone = Nothing
+                                        , slsMMistake =
                                             Just (slsCounter, PTChord wrong)
                                         }                   -- mistake
 
         stepInitial = StenoLettersState
           { slsCounter = 0
           , slsMMistake = Nothing
-          , slsDone = False
+          , slsDone = Nothing
           }
 
     dynStenoLetters <- foldDyn step stepInitial eWord
 
-    let eDone = filter id
-              $ updated
-              $ slsDone <$> dynStenoLetters
+    let eDone = catMaybes $ updated $ slsDone <$> dynStenoLetters
 
     dyn_ $ dynStenoLetters <&> \StenoLettersState{..} -> do
       let clsMistake= case slsMMistake of
@@ -343,14 +354,14 @@ stage1_5 = do
         <> ". Any key to start over."
       Nothing -> blank
 
-    updateState $ eDone $> (field @"stProgress" .~ Stage2_1)
-    elCongraz eDone
+    elCongraz (void $ filter id eDone) Stage2_1
 
   elFooterNextStage Stage2_1
 
 elCongraz
   :: forall t (m :: * -> *).
   ( DomBuilder t m
+  , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Dynamic t State, Event t PTChord) m
@@ -358,8 +369,9 @@ elCongraz
   , SetRoute t (R FrontendRoute) m
   )
   => Event t ()
+  -> Stage
   -> m ()
-elCongraz eDone = mdo
+elCongraz eDone nxt = mdo
   (_, eWord) <- ask
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
   eBack <- switchHold never eEBack
@@ -369,11 +381,13 @@ elCongraz eDone = mdo
       elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
         el "div" $ text "Task cleared!"
         el "div" $ iFa "fas fa-check-circle"
-        el "div" $ text "Press any key to continue"
+        elClass "div" "anthrazit" $ text "Press any key to continue"
+        updateState $ eWord $>
+          (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
         setRoute $ eWord $> FrontendRoute_Main :/ ()
         el "div" $ do
           el "span" $ text "("
-          (elBack, _) <- el' "a" $ text "back"
+          (elBack, _) <- elClass' "a" "normalLink" $ text "back"
           el "span" $ text ")"
           pure $ domEvent Click elBack
   blank
