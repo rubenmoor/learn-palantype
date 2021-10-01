@@ -14,7 +14,8 @@
 module Home where
 
 import           Client                      (postConfigNew, postRender)
-import           Common.Alphabet             (showChord, PTChord (..), mkPTChord, PTChar (..), showKey)
+import           Common.Alphabet             (PTChar (..), PTChord (..),
+                                              mkPTChord, showChord, showKey)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
 import           Control.Applicative         (Applicative (..))
@@ -22,6 +23,7 @@ import           Control.Category            (Category ((.)))
 import           Control.Lens.Setter         ((%~), (.~))
 import           Control.Monad               (when, (<=<))
 import           Control.Monad.Fix           (MonadFix)
+import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Reader        (MonadReader, asks)
 import           Data.Bool                   (Bool (..), not)
 import           Data.Default                (Default (def))
@@ -42,44 +44,47 @@ import qualified Data.Set                    as Set
 import           Data.String                 (String, unwords)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
-import           Data.Tuple                  (snd, fst)
+import           Data.Tuple                  (fst, snd)
 import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
 import           GHCJS.DOM.EventM            (on)
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
                                               readAsText)
+import           GHCJS.DOM.HTMLElement       (focus)
 import           GHCJS.DOM.Types             (File)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (elementConfig_modifyAttributes, InputElementConfig, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
                                               HasDomEvent (domEvent),
                                               InputElement (..),
+                                              InputElementConfig,
                                               MonadHold (holdDyn),
                                               PerformEvent (performEvent_),
-                                              PostBuild,
+                                              PostBuild (getPostBuild),
                                               Prerender,
-                                              Reflex(Dynamic, Event, never, updated),
+                                              Reflex (Dynamic, Event, never, updated),
                                               blank, dyn, dyn_, el, el', elAttr,
                                               elClass, elClass', elDynAttr,
                                               elementConfig_eventSpec,
                                               elementConfig_initialAttributes,
+                                              elementConfig_modifyAttributes,
                                               foldDyn,
                                               inputElementConfig_elementConfig,
                                               inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
                                               keydown, keyup, leftmost,
-                                              mergeWith, preventDefault,
-                                              splitDynPure, switchHold, text,
-                                              wrapDomEvent, (=:))
+                                              mergeWith, prerender_,
+                                              preventDefault, splitDynPure,
+                                              switchHold, text, wrapDomEvent,
+                                              (=:), _element_raw, _inputElement_element, _el_element)
 import           Servant.Common.Req          (reqSuccess)
-import           Shared                      (whenJust, iFa, reqFailure)
+import           Shared                      (iFa, reqFailure, whenJust)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
-import           Text.Show                   (Show (show))
 
 default (Text)
 
@@ -233,15 +238,17 @@ data KeyState
   = KeyStateDown PTChar
   | KeyStateUp PTChar
 
-stenoInput ::
-  forall t (m :: * -> *).
-  ( DomBuilder t m,
-    PostBuild t m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Dynamic t State) m
-  ) =>
-  m (Event t PTChord)
+stenoInput
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Dynamic t State) m
+  , PerformEvent t m
+  , PostBuild t m
+  , Prerender js t m
+  )
+  => m (Event t PTChord)
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   eDynMWord <-
@@ -364,16 +371,27 @@ elPTKeyboard stenoKeys dynPressedKeys system =
             else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
 
 elStenoOutput
-  :: forall t (m :: * -> *).
+  :: forall js t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
   , MonadHold t m
+  , PerformEvent t m
+  , Prerender js t m
+  , PostBuild t m
   )
   => Dynamic t (Set PTChar)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynPressedKeys = mdo
   -- TODO auto focus
-  -- ePostBuild <- getPostBuild
+  ePb <- getPostBuild
+  let el = _inputElement_element i
+      -- elr = _element_raw el
+      elr = _el_element el
+  prerender_ blank $ performEvent_ $ ePb $> focus elr
+  -- performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
+  -- prerender_ blank $ performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
+  -- prerender_ blank $ performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
+  --prerender_ blank $ performEvent_ $ ePb $> focus ( _element_raw $ i)
   let eFocus =
         updated (_inputElement_hasFocus i) <&> \case
           True -> ("Type!", "class" =: Just "anthrazit")
