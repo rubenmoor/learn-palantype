@@ -16,7 +16,7 @@ import           Common.Alphabet        (showChord, PTChord(..),  PTChar, showKe
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
-import           Control.Category       (Category ((.)))
+import           Control.Category       (Category(id, (.)))
 import           Control.Lens           ((.~), (<&>))
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Random   (mkStdGen, evalRand, StdGen, MonadRandom)
@@ -37,13 +37,13 @@ import           Data.Semigroup         (Semigroup ((<>)))
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import qualified Data.Text              as Text
-import           Data.Witherable        (Filterable (catMaybes))
+import           Data.Witherable        (Filterable(filter, catMaybes))
 import           GHC.Num                (Num ((+), (-)))
 import           Obelisk.Route.Frontend (mapRoutedT, pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (dynText, DomBuilder, EventName (Click),
+import           Reflex.Dom             (tailE, dynText, DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
-                                         MonadHold (holdDyn),
+                                         MonadHold(hold, holdDyn),
                                          PostBuild (getPostBuild), Prerender,
                                          Reflex (Dynamic, Event, never, updated),
                                          blank, dyn, dyn_, el, el',
@@ -225,9 +225,9 @@ taskAlphabet showAlphabet nxt = do
           }
     dynWalk <- foldDyn step stepInitial eWord
     let eDone
-          = catMaybes
+          = filter id
           $ updated
-          $ bool Nothing (Just ()) . wsDone <$> dynWalk
+          $ wsDone <$> dynWalk
 
     el "pre" $ el "code" $ do
       let clsLetter = if showAlphabet then "" else "fgTransparent"
@@ -321,9 +321,9 @@ stage1_5 = do
 
     dynStenoLetters <- foldDyn step stepInitial eWord
 
-    let eDone = catMaybes
+    let eDone = filter id
               $ updated
-              $ bool Nothing (Just ()) . slsDone <$> dynStenoLetters
+              $ slsDone <$> dynStenoLetters
 
     dyn_ $ dynStenoLetters <&> \StenoLettersState{..} -> do
       let clsMistake= case slsMMistake of
@@ -365,16 +365,17 @@ elCongraz eDone = mdo
   eBack <- switchHold never eEBack
   eEBack <- dyn $ dynShowCongraz <&> \case
     False -> pure never
-    True  -> elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
-      el "div" $ text "Task cleared!"
-      el "div" $ iFa "fas fa-check-circle"
-      el "div" $ text "Press any key to continue"
-      setRoute $ eWord $> FrontendRoute_Main :/ ()
-      el "div" $ do
-        el "span" $ text "("
-        (elBack, _) <- el' "a" $ text "back"
-        el "span" $ text ")"
-        pure $ domEvent Click elBack
+    True  ->
+      elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
+        el "div" $ text "Task cleared!"
+        el "div" $ iFa "fas fa-check-circle"
+        el "div" $ text "Press any key to continue"
+        setRoute $ eWord $> FrontendRoute_Main :/ ()
+        el "div" $ do
+          el "span" $ text "("
+          (elBack, _) <- el' "a" $ text "back"
+          el "span" $ text ")"
+          pure $ domEvent Click elBack
   blank
 
 stage2_1

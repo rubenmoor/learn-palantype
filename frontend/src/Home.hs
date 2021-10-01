@@ -244,7 +244,7 @@ stenoInput ::
   m (Event t PTChord)
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
-  eDyn <-
+  eDynMWord <-
     dyn $
       dynPloverCfg <&> \PloverCfg {..} -> elClass "div" "stenoInput" $ mdo
         let keyChanges =
@@ -287,7 +287,7 @@ stenoInput = do
         kbInput <- elStenoOutput dynPressedKeys
 
         pure dynWord
-  switchHold never $ catMaybes . updated <$> eDyn
+  switchHold never $ catMaybes . updated <$> eDynMWord
 
 elPTKeyboard ::
   forall t (m :: * -> *).
