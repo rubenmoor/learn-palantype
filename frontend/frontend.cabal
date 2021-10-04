@@ -28,6 +28,7 @@ library
                , reflex-dom
                , servant-reflex
                , text
+               , time
                , witherable
   exposed-modules:
     Frontend

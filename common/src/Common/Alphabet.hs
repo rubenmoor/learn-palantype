@@ -130,6 +130,7 @@ instance Read PTChar where
     _ -> []
 
 newtype PTChord = PTChord { unPTChord :: [PTChar] }
+  deriving (Eq, Ord)
 
 -- make sure the chord have the letters sorted
 mkPTChord :: Set PTChar -> PTChord

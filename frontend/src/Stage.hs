@@ -1,93 +1,66 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE OverloadedLists   #-}
+{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module Stage where
 
-import Common.Alphabet
-  ( PTChord (..),
-    showChord,
-    showKey,
-  )
-import Common.Api (PloverCfg (pcfgMapStenoKeys))
-import Common.Route (FrontendRoute (..))
-import Control.Applicative (Applicative (pure), (<$>))
-import Control.Category (Category (id, (.)))
-import Control.Lens ((%~), (.~), (<&>))
-import Control.Monad (when)
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.Random
-  ( evalRand,
-    mkStdGen,
-  )
-import Control.Monad.Reader (MonadReader (ask), asks)
-import Data.Bool (Bool (..))
-import Data.Eq (Eq ((==)))
-import Data.Foldable (Foldable (length), for_)
-import Data.Function (($))
-import Data.Functor (void, ($>))
-import Data.Generics.Product (field)
-import Data.Int (Int)
-import Data.List (replicate, zip, (!!))
-import qualified Data.Map as Map
-import Data.Maybe (Maybe (..))
-import Data.Monoid (Monoid (mconcat))
-import Data.Ord (Ord ((>)))
-import Data.Semigroup (Semigroup ((<>)))
-import qualified Data.Text as Text
-import Data.Witherable (Filterable (catMaybes, filter))
-import GHC.Num (Num ((+), (-)))
-import Obelisk.Route.Frontend
-  ( R,
-    RouteToUrl,
-    SetRoute (setRoute),
-    routeLink,
-    pattern (:/),
-  )
-import Reflex.Dom
-  ( DomBuilder,
-    EventName (Click),
-    EventWriter,
-    HasDomEvent (domEvent),
-    MonadHold (holdDyn),
-    PostBuild (getPostBuild),
-    Prerender,
-    Reflex (Event, never, updated),
-    blank,
-    dyn,
-    dynText,
-    dyn_,
-    el,
-    elAttr,
-    elClass,
-    elClass',
-    elDynClass,
-    foldDyn,
-    leftmost,
-    switchHold,
-    text,
-    widgetHold_,
-    (=:),
-  )
-import Shared (dynSimple, iFa, whenJust)
-import State
-  ( EStateUpdate,
-    Env (..),
-    Stage (..),
-    State (..),
-    stageUrl,
-    updateState,
-  )
-import System.Random.Shuffle (shuffleM)
-import Text.Show (Show (show))
+import           Common.Alphabet        (PTChord (..), mkPTChord, showChord,
+                                         showKey, PTChar (..))
+import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
+import           Common.Route           (FrontendRoute (..))
+import           Control.Applicative    (Applicative (pure), (<$>))
+import           Control.Category       (Category (id, (.)))
+import           Control.Lens           ((%~), (.~), (<&>))
+import           Control.Monad          (when)
+import           Control.Monad.Fix      (MonadFix)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Random   (evalRand, mkStdGen, newStdGen)
+import           Control.Monad.Reader   (MonadReader (ask), asks)
+import           Data.Bool              (Bool (..))
+import           Data.Eq                (Eq ((==)))
+import           Data.Foldable          (Foldable (length), for_)
+import           Data.Function          (($))
+import           Data.Functor           (void, ($>))
+import           Data.Generics.Product  (field)
+import           Data.Int               (Int)
+import           Data.List              (replicate, zip, (!!))
+import qualified Data.Map               as Map
+import  Data.Tuple (fst)
+import           Data.Maybe             (Maybe (..))
+import           Data.Monoid            (Monoid (mconcat))
+import           Data.Ord               (Ord ((>)))
+import           Data.Semigroup         (Semigroup ((<>)))
+import qualified Data.Text              as Text
+import           Data.Time.Clock        (diffTimeToPicoseconds, getCurrentTime,
+                                         utctDayTime)
+import           Data.Witherable        (Filterable (catMaybes, filter))
+import           GHC.Num                (Num ((+), (-)), fromInteger)
+import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
+                                         SetRoute (setRoute), routeLink)
+import           Reflex.Dom             (DomBuilder, EventName (Click),
+                                         EventWriter, HasDomEvent (domEvent),
+                                         MonadHold (holdDyn),
+                                         PostBuild (getPostBuild),
+                                         Prerender (prerender),
+                                         Reflex (Event, never, updated), blank,
+                                         dyn, dynText, dyn_, el, elAttr,
+                                         elClass, elClass', elDynClass, foldDyn,
+                                         leftmost, performEvent, switchHold,
+                                         text, widgetHold_, zipDyn, (=:))
+import           Shared                 (dynSimple, iFa, whenJust)
+import           State                  (EStateUpdate, Env (..), Stage (..),
+                                         State (..), stageUrl, updateState)
+import           System.Random.Shuffle  (shuffleM)
+import           Text.Show              (Show (show))
 
 elFooter ::
   forall js t (m :: * -> *).
@@ -125,32 +98,39 @@ elCongraz ::
   Maybe Stage ->
   m ()
 elCongraz eDone mNxt = mdo
+
   eChord <- asks envEChord
+
+  let chordCON = mkPTChord [LeftC, LeftO, RightN]
+      chordBACK = mkPTChord [LeftP, LeftCross, RightA, RightC]
+      eChordCON = void $ filter (== chordCON) eChord
+      eChordBACK = void $ filter (== chordBACK) eChord
+
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
-  eBack <- switchHold never eEBack
-  eEBack <-
-    dyn $
-      dynShowCongraz <&> \case
-        False -> pure never
-        True ->
-          elClass "div" "mkOverlay" $
-            elClass "div" "congraz" $ do
-              el "div" $ text "Task cleared!"
-              el "div" $ iFa "fas fa-check-circle"
-              whenJust mNxt $ \nxt -> do
-                elClass "div" "anthrazit" $ text "Press any key to continue"
-                -- TODO: palan CON to continue
-                -- TODO: optionally: click
-                updateState $
-                  eChord
-                    $> (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
-                setRoute $ eChord $> FrontendRoute_Main :/ ()
-              el "div" $ do
-                -- TODO: palan P+AC to continue
-                el "span" $ text "("
-                (elBack, _) <- elClass' "a" "normalLink" $ text "back"
-                el "span" $ text ")"
-                pure $ domEvent Click elBack
+  eBack <- dynSimple $ dynShowCongraz <&> \case
+    False -> pure never
+    True ->
+      elClass "div" "mkOverlay" $
+        elClass "div" "congraz" $ do
+          el "div" $ text "Task cleared!"
+          el "div" $ iFa "fas fa-check-circle"
+          whenJust mNxt $ \nxt -> do
+            (elACont, _) <- elClass "div" "anthrazit" $ do
+              text "Type "
+              el "code" $ text "CON"
+              text " to continue to "
+              elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
+            updateState $
+              leftmost [eChordCON, domEvent Click elACont]
+                $> (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
+            setRoute $ eChord $> FrontendRoute_Main :/ ()
+          el "div" $ do
+            el "span" $ text "("
+            (elABack, _) <- elClass' "a" "normalLink" $ text "back"
+            text " "
+            el "code" $ text "P+AC"
+            el "span" $ text ")"
+            pure $ leftmost [eChordBACK, domEvent Click elABack]
   blank
 
 -- introduction
@@ -211,9 +191,9 @@ introduction = do
 -- 1.1
 
 data WalkState = WalkState
-  { wsCounter :: Int,
+  { wsCounter  :: Int,
     wsMMistake :: Maybe (Int, PTChord),
-    wsDone :: Maybe Bool
+    wsDone     :: Maybe Bool
   }
 
 stage1_1 ::
@@ -450,9 +430,9 @@ taskAlphabet showAlphabet = do
 -- stage 1.5
 
 data StenoLettersState = StenoLettersState
-  { slsCounter :: Int,
+  { slsCounter  :: Int,
     slsMMistake :: Maybe (Int, PTChord),
-    slsDone :: Maybe Bool
+    slsDone     :: Maybe Bool
   }
 
 stage1_5 ::
@@ -498,13 +478,15 @@ stage1_5 = do
 
   ePb <- getPostBuild
   updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  dynEStdGen <- prerender (pure never) $ performEvent $ ePb $> liftIO newStdGen
+  eStdGen <- switchHold never $ updated dynEStdGen
+  dynStdGen <- holdDyn (mkStdGen 0) eStdGen
 
   let dynAlphabet = Map.keys . pcfgMapStenoKeys . stPloverCfg <$> envDynState
   eDone <-
-    dynSimple $
-      dynAlphabet <&> \ptAlphabet -> mdo
-        let rndGen = mkStdGen 1
-            lsLetters = evalRand (shuffleM $ mconcat $ replicate 2 ptAlphabet) rndGen
+    dynSimple $ zipDyn dynAlphabet dynStdGen <&>
+      \(ptAlphabet, stdGen) -> mdo
+        let lsLetters = evalRand (shuffleM $ mconcat $ replicate 1 ptAlphabet) stdGen
             len = length lsLetters
 
             step :: PTChord -> StenoLettersState -> StenoLettersState
@@ -553,8 +535,8 @@ stage1_5 = do
           dynStenoLetters <&> \StenoLettersState {..} -> do
             let clsMistake = case slsMMistake of
                   Nothing -> ""
-                  Just _ -> "bgRed"
-            elClass "code" clsMistake $
+                  Just _  -> "bgRed"
+            el "pre" $ elClass "code" clsMistake $
               text $ showKey $ lsLetters !! slsCounter
             el "span" $ do
               el "strong" $ text (Text.pack $ show slsCounter)
