@@ -135,11 +135,47 @@ newtype PTChord = PTChord { unPTChord :: [PTChar] }
 mkPTChord :: Set PTChar -> PTChord
 mkPTChord = PTChord . sort . Set.toList
 
+-- TODO: proper use of '-'
 showChord :: PTChord -> Text
-showChord = Text.unwords . fmap showKey . unPTChord
+showChord = Text.unwords . fmap showLetter . unPTChord
 
 showKey :: PTChar -> Text
 showKey = \case
+  LeftS -> "S-"
+  LeftC -> "C-"
+  LeftP -> "P-"
+  LeftT -> "T-"
+  LeftH -> "H-"
+  LeftCross -> "+-"
+  LeftM -> "M-"
+  LeftF -> "F-"
+  LeftR -> "R-"
+  LeftN -> "N-"
+  LeftL -> "L-"
+  LeftY -> "Y"
+  LeftO -> "O"
+  LeftE -> "E-"
+  LeftPipe -> "|-"
+  RightPipe -> "-|"
+  RightA -> "A"
+  RightU -> "U"
+  MiddleI -> "I"
+  RightPoint -> "^"
+  RightN -> "-N"
+  RightL -> "-L"
+  RightC -> "-C"
+  RightM -> "-M"
+  RightF -> "-F"
+  RightR -> "-R"
+  RightP -> "-P"
+  RightT -> "-T"
+  RightCross -> "-+"
+  RightS -> "-S"
+  RightH -> "-H"
+  RightE -> "-e"
+
+showLetter :: PTChar -> Text
+showLetter = \case
   LeftS -> "S"
   LeftC -> "C"
   LeftP -> "P"

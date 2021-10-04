@@ -43,6 +43,7 @@ data BackendRoute :: * -> * where
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
+  FrontendRoute_Introduction :: FrontendRoute ()
   FrontendRoute_Stage1_1 :: FrontendRoute ()
   FrontendRoute_Stage1_2 :: FrontendRoute ()
   FrontendRoute_Stage1_3 :: FrontendRoute ()
@@ -61,6 +62,7 @@ fullRouteEncoder = mkFullRouteEncoder
   )
   (\case
       FrontendRoute_Main -> PathEnd $ unitEncoder mempty
+      FrontendRoute_Introduction -> PathSegment "introduction" $ unitEncoder mempty
       FrontendRoute_Stage1_1 -> PathSegment "stage1-1" $ unitEncoder mempty
       FrontendRoute_Stage1_2 -> PathSegment "stage1-2" $ unitEncoder mempty
       FrontendRoute_Stage1_3 -> PathSegment "stage1-3" $ unitEncoder mempty

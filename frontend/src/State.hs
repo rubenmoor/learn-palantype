@@ -1,34 +1,44 @@
 {-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms   #-}
 {-# LANGUAGE RecordWildCards   #-}
 
 module State where
 
 -- import           Common.Auth      (SessionData)
+import           Common.Alphabet     (PTChord)
 import           Common.Api          (PloverCfg)
+import           Common.Route        (FrontendRoute (..))
 import           Control.Applicative (Applicative (pure, (<*>)), (<$>))
 import           Control.Category    (Category ((.)))
 import           Data.Aeson          (FromJSON (..), KeyValue ((.=)),
                                       ToJSON (..), Value (..), object, (.:))
 import           Data.Aeson.Types    (prependFailure, typeMismatch)
-import           Data.Bool           (Bool(..))
+import           Data.Bool           (Bool (..))
 import           Data.Default        (Default (..))
+import           Data.Eq             (Eq)
 import           Data.Function       (($))
 import           Data.Functor        (Functor (fmap))
 import           Data.Maybe          (Maybe (..))
+import           Data.Ord            (Ord)
 import           Data.Semigroup      (Semigroup (..))
 import           Data.Text           (Text)
 import           GHC.Generics        (Generic)
-import           Reflex.Dom          (EventWriter (..), Reflex (Event))
-import Common.Route (FrontendRoute(..))
-import Obelisk.Route (R, pattern (:/))
-import Text.Show (Show (..))
-import Data.Ord (Ord)
-import Data.Eq (Eq)
+import           Obelisk.Route       (pattern (:/), R)
+import           Reflex.Dom          (EventWriter (..), Reflex (Dynamic, Event))
+import           Text.Show           (Show (..))
+
+-- environment for frontend pages
+
+data Env t = Env
+  { envDynState :: Dynamic t State
+  , envEChord   :: Event t PTChord
+  , envMPrev    :: Maybe Stage
+  , envMNext    :: Maybe Stage
+  }
 
 -- frontend application state
 
@@ -74,7 +84,7 @@ instance Default State where
     { stPloverCfg = def
     , stMsg = Nothing
     , stShowKeyboard = True
-    , stProgress = Stage1_1
+    , stProgress = def
     }
 
 updateState ::
@@ -99,7 +109,8 @@ data Message = Message
 -- instance ToJSON Session
 
 data Stage
-  = Stage1_1
+  = Introduction
+  | Stage1_1
   | Stage1_2
   | Stage1_3
   | Stage1_4
@@ -110,16 +121,21 @@ data Stage
 instance ToJSON Stage
 instance FromJSON Stage
 
+instance Default Stage where
+  def = Introduction
+
 instance Show Stage where
-  show Stage1_1 = "Stage 1.1"
-  show Stage1_2 = "Stage 1.2"
-  show Stage1_3 = "Stage 1.3"
-  show Stage1_4 = "Stage 1.4"
-  show Stage1_5 = "Stage 1.5"
-  show Stage2_1 = "Stage 2.1"
+  show Introduction = "Introduction"
+  show Stage1_1     = "Stage 1.1"
+  show Stage1_2     = "Stage 1.2"
+  show Stage1_3     = "Stage 1.3"
+  show Stage1_4     = "Stage 1.4"
+  show Stage1_5     = "Stage 1.5"
+  show Stage2_1     = "Stage 2.1"
 
 stageUrl :: Stage -> R FrontendRoute
 stageUrl = \case
+  Introduction -> FrontendRoute_Introduction :/ ()
   Stage1_1 -> FrontendRoute_Stage1_1 :/ ()
   Stage1_2 -> FrontendRoute_Stage1_2 :/ ()
   Stage1_3 -> FrontendRoute_Stage1_3 :/ ()

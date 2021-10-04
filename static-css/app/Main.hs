@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (blue, underline, textDecoration, Other(other), Auto (auto), Center (center), Color, Css,
+import           Clay          (All(all), blue, underline, textDecoration, Other(other), Auto (auto), Center (center), Color, Css,
                                 Cursor (cursor), None (none), a, absolute,
                                 after, alignItems, backgroundColor, block, body,
                                 bold, border, borderBox, borderRadius, both,
@@ -214,3 +214,16 @@ main = putCss $ do
       padding (px 4) (px 4) (px 4) (px 4)
 
   div # ".paragraph" ? marginBottom (em 0.5)
+
+  ".floatLeft" ? float floatLeft
+  ".floatRight" ? float floatRight
+  ".clearBoth" ? clear both
+
+  button # ".start" ? do
+    backgroundColor anthrazit
+    color white
+    fontSize $ pt 24
+    fontWeight bold
+    borderRadius (px 12) (px 12) (px 12) (px 12)
+    padding (px 12) (px 12) (px 12) (px 12)
+    border none (px 0) transparent

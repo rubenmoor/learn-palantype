@@ -15,13 +15,13 @@ module Home where
 
 import           Client                      (postConfigNew, postRender)
 import           Common.Alphabet             (PTChar (..), PTChord (..),
-                                              mkPTChord, showChord, showKey)
+                                              mkPTChord, showChord, showKey, showLetter)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (FrontendRoute_Main))
 import           Control.Applicative         (Applicative (..))
 import           Control.Category            (Category ((.)))
 import           Control.Lens.Setter         ((%~), (.~))
-import           Control.Monad               (when, (<=<))
+import           Control.Monad               ((=<<), unless, when, (<=<))
 import           Control.Monad.Fix           (MonadFix)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Reader        (MonadReader, asks)
@@ -50,12 +50,12 @@ import           GHCJS.DOM.EventM            (on)
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
                                               readAsText)
 import           GHCJS.DOM.HTMLElement       (focus)
-import           GHCJS.DOM.Types             (File)
+import           GHCJS.DOM.Types             (File, HTMLInputElement (..), uncheckedCastTo)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom                  (delay, DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
@@ -63,7 +63,7 @@ import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, input
                                               InputElement (..),
                                               InputElementConfig,
                                               MonadHold (holdDyn),
-                                              PerformEvent (performEvent_),
+                                              PerformEvent (performEvent_), prerender,
                                               PostBuild (getPostBuild),
                                               Prerender,
                                               Reflex (Dynamic, Event, never, updated),
@@ -85,6 +85,7 @@ import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (iFa, reqFailure, whenJust)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
+import Data.Witherable (Filterable(filter))
 
 default (Text)
 
@@ -147,21 +148,24 @@ settings ::
     MonadFix m
   ) =>
   m ()
-settings = mdo
-  (eFile, eReset) <- elClass "div" "dropdown" $ do
+settings = do
+  eFile <- elClass "div" "dropdown" $ do
     elClass "span" "dropdown-button" $ iFa "fas fa-cog"
-    elClass "div" "dropdown-content" $
-      (,)
-        <$> elClass
-          "span"
-          "hiddenFileInput"
-          ( do
-              text "Upload your plover.cfg"
-              elFileInput $ eReset $> ""
-          )
-        <*> (domEvent Click . fst <$> el' "span" (text "Reset"))
+    elClass "div" "dropdown-content" $ mdo
+      eFile' <- elClass "span" "hiddenFileInput" $ do
+        text "Upload your plover.cfg"
+        elFileInput $ eReset $> ""
+      eReset <- do
+        (spanResetConfig, _) <- el' "span" $ text "Reset to default configuration"
+        let eReset' = domEvent Click spanResetConfig
+        updateState $ eReset $> (field @"stPloverCfg" .~ def)
+        pure eReset'
 
-  updateState $ eReset $> (field @"stPloverCfg" .~ def)
+      (e, _) <- el' "span" $ text "Reset progress"
+      updateState $ domEvent Click e $> (field @"stProgress" .~ def)
+
+      pure eFile'
+
 
   eReqResult <- postRender $ do
     fileReader <- liftJSM newFileReader
@@ -241,73 +245,81 @@ data KeyState
 stenoInput
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , MonadFix m
   , MonadHold t m
   , MonadReader (Dynamic t State) m
-  , PerformEvent t m
   , PostBuild t m
   , Prerender js t m
   )
   => m (Event t PTChord)
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
-  eDynMWord <-
-    dyn $
-      dynPloverCfg <&> \PloverCfg {..} -> elClass "div" "stenoInput" $ mdo
-        let keyChanges =
-              pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
-                [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
-                , keyup   qwertyKey kbInput $> [KeyStateUp stenoKey]
-                ]
+  dynShowKeyboard <- asks (stShowKeyboard <$>)
+  eEWord <- dyn $ dynPloverCfg <&> \PloverCfg {..} -> do
+    dynEChord <- prerender (pure never) $ elClass "div" "stenoInput" $ mdo
+      let keyChanges =
+            pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
+              [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
+              , keyup   qwertyKey kbInput $> [KeyStateUp stenoKey]
+              ]
 
-            eKeyChange = mergeWith (<>) $ concat keyChanges
+          eKeyChange = mergeWith (<>) $ concat keyChanges
 
-            register ::
-              [KeyState] ->
-              (Set PTChar, Set PTChar, Maybe PTChord) ->
-              (Set PTChar, Set PTChar, Maybe PTChord)
-            register es (keys, word, _) =
-              let setKeys' = foldl accDownUp keys es
-                  (word', release') =
-                    if Set.null setKeys'
-                      then (Set.empty, Just $ mkPTChord word)
-                      else (foldl accDown word es, Nothing)
-               in (setKeys', word', release')
-              where
-                accDownUp s (KeyStateDown k) = Set.insert k s
-                accDownUp s (KeyStateUp k)   = Set.delete k s
+          register ::
+            [KeyState] ->
+            (Set PTChar, Set PTChar, Maybe PTChord) ->
+            (Set PTChar, Set PTChar, Maybe PTChord)
+          register es (keys, word, _) =
+            let setKeys' = foldl accDownUp keys es
+                (word', release') =
+                  if Set.null setKeys'
+                    then (Set.empty, Just $ mkPTChord word)
+                    else (foldl accDown word es, Nothing)
+             in (setKeys', word', release')
+            where
+              accDownUp s (KeyStateDown k) = Set.insert k s
+              accDownUp s (KeyStateUp k)   = Set.delete k s
 
-                accDown s (KeyStateDown k) = Set.insert k s
-                accDown s (KeyStateUp _)   = s
+              accDown s (KeyStateDown k) = Set.insert k s
+              accDown s (KeyStateUp _)   = s
 
-        dynInput <- foldDyn register ( Set.empty
-                                     , Set.empty
-                                     , Nothing
-                                     ) eKeyChange
-        let (dynPressedKeys, dynWord) =
-              splitDynPure $
-                dynInput <&> \(keys, _, release) -> (keys, release)
+      dynInput <- foldDyn register ( Set.empty
+                                   , Set.empty
+                                   , Nothing
+                                   ) eKeyChange
+      let (dynPressedKeys, dynChord) =
+            splitDynPure $
+              dynInput <&> \(keys, _, release) -> (keys, release)
 
-        dynShowKeyboard <- asks (stShowKeyboard <$>)
-        dyn_ $
-          dynShowKeyboard <&> \visible ->
-            when visible $
-              elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
+      dyn_ $
+        dynShowKeyboard <&> \visible ->
+          when visible $
+            elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
-        kbInput <- elStenoOutput dynPressedKeys
+      kbInput <- elStenoOutput dynPressedKeys
 
-        pure dynWord
-  switchHold never $ catMaybes . updated <$> eDynMWord
+      -- TODO: doesn't seem to have the desired effect
+      let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
+      performEvent_ $ eLostFocus $> focus (_inputElement_raw kbInput)
 
-elPTKeyboard ::
-  forall t (m :: * -> *).
-  ( DomBuilder t m,
-    PostBuild t m
-  ) =>
-  Map PTChar [String] ->
-  Dynamic t (Set PTChar) ->
-  Text ->
-  m ()
+      -- post build auto focus: the post build event happens before the element
+      -- is mounted. postmount event waits for pull request to be accepted
+      -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
+      ePb <- delay 0.1 =<< getPostBuild
+      performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
+
+      pure $ catMaybes $ updated dynChord
+    switchHold never $ updated dynEChord
+  switchHold never eEWord
+
+elPTKeyboard
+  :: forall t (m :: * -> *).
+  ( DomBuilder t m
+  , PostBuild t m
+  )
+  => Map PTChar [String]
+  -> Dynamic t (Set PTChar)
+  -> Text
+  -> m ()
 elPTKeyboard stenoKeys dynPressedKeys system =
   elClass "div" "keyboard" $ do
     el "table" $ do
@@ -366,32 +378,18 @@ elPTKeyboard stenoKeys dynPressedKeys system =
                   else mempty
        in if Map.member cell stenoKeys
             then elDynAttr "td" attrs $ do
-              elClass "div" "steno " $ text $ showKey cell
+              elClass "div" "steno " $ text $ showLetter cell
               elClass "div" "qwerty " $ text $ showQwerties mQwertyKeys
             else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
 
 elStenoOutput
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
-  , MonadHold t m
-  , PerformEvent t m
-  , Prerender js t m
-  , PostBuild t m
   )
   => Dynamic t (Set PTChar)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynPressedKeys = mdo
-  -- TODO auto focus
-  ePb <- getPostBuild
-  let el = _inputElement_element i
-      -- elr = _element_raw el
-      elr = _el_element el
-  prerender_ blank $ performEvent_ $ ePb $> focus elr
-  -- performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
-  -- prerender_ blank $ performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
-  -- prerender_ blank $ performEvent_ $ ePb $> focus ( _el_element $ _inputElement_element i)
-  --prerender_ blank $ performEvent_ $ ePb $> focus ( _element_raw $ i)
   let eFocus =
         updated (_inputElement_hasFocus i) <&> \case
           True -> ("Type!", "class" =: Just "anthrazit")

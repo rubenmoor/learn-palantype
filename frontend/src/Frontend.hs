@@ -7,7 +7,6 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -15,8 +14,8 @@
 module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
-import           State                       (EStateUpdate (..), State (..),
-                                              stageUrl)
+import           State                       (Stage(..),  EStateUpdate (..), State (..),
+                                              stageUrl, Env(..))
 
 import           Common.Route                (FrontendRoute (..))
 import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
@@ -37,14 +36,14 @@ import           Obelisk.Route               (R)
 import           Obelisk.Route.Frontend      (RoutedT,
                                               SetRoute (setRoute), mapRoutedT,
                                               subRoute_)
-import           Reflex.Dom                  (dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
+import           Reflex.Dom                  (EventWriterT, dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
                                               Prerender (prerender),
-                                              Reflex (updated), blank,
+                                              Reflex(Dynamic, Event, updated), blank,
                                               def, el, elAttr, foldDyn,
                                               leftmost, prerender_,
                                               runEventWriterT, tailE, text,
                                               widgetHold_, (=:))
-import           Stage                       (stage1_1, stage1_2, stage1_3,
+import           Stage                       (introduction, stage1_1, stage1_2, stage1_3,
                                               stage1_4, stage1_5, stage2_1)
 
 frontend :: Frontend (R FrontendRoute)
@@ -52,10 +51,6 @@ frontend = Frontend
   { _frontend_head = frontendHead
   , _frontend_body = frontendBody
   }
-
--- instance (Monad m, SetRoute t r m) => SetRoute t r (RandT g m)
--- instance DomBuilder t m => DomBuilder t (RandT g m) where
---     type DomBuilderSpace (RandT g m) = DomBuilderSpace m
 
 frontendBody
   :: forall t js (m :: * -> *).
@@ -87,19 +82,32 @@ frontendBody = mdo
   (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
     settings
     message
-    eWord <- stenoInput
-    mapRoutedT (withReaderT (,eWord)) $
-      subRoute_ $ \case
-        FrontendRoute_Main ->
-          dyn_ $ fmap stProgress dynState <&> \stage -> do
-            ePb <- getPostBuild
-            setRoute $ ePb $> stageUrl stage
-        FrontendRoute_Stage1_1 -> stage1_1
-        FrontendRoute_Stage1_2 -> stage1_2
-        FrontendRoute_Stage1_3 -> stage1_3
-        FrontendRoute_Stage1_4 -> stage1_4
-        FrontendRoute_Stage1_5 -> stage1_5
-        FrontendRoute_Stage2_1 -> stage2_1
+    eChord <- stenoInput
+    let setEnv
+          :: forall a.
+             Maybe Stage
+          -> Maybe Stage
+          -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) ()
+          -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) ()
+        setEnv mPrev mNext =
+          mapRoutedT (withReaderT $ \_ -> Env
+            { envDynState = dynState
+            , envEChord = eChord
+            , envMPrev = mPrev
+            , envMNext = mNext
+            })
+    subRoute_ $ \case
+      FrontendRoute_Main ->
+        dyn_ $ dynState <&> \st -> do
+          ePb <- getPostBuild
+          setRoute $ ePb $> stageUrl (stProgress st)
+      FrontendRoute_Introduction -> setEnv Nothing (Just Stage1_1) introduction
+      FrontendRoute_Stage1_1 -> setEnv (Just Introduction) (Just Stage1_2) stage1_1
+      FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) (Just Stage1_3) stage1_2
+      FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) (Just Stage1_4) stage1_3
+      FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) (Just Stage1_5) stage1_4
+      FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) (Just Stage2_1) stage1_5
+      FrontendRoute_Stage2_1 -> setEnv (Just Stage1_5) Nothing         stage2_1
   blank
 
 frontendHead

@@ -1,3 +1,4 @@
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -19,12 +20,12 @@ import           Data.Monoid         ((<>))
 import           Data.Text           (Text, unwords)
 import qualified Data.Text           as Text
 import           Data.Tuple          (fst)
-import           Reflex.Dom          (DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom          (PostBuild, NotReady, Adjustable, dyn, switchHold, DomBuilder (DomBuilderSpace, inputElement),
                                       Element, EventName (Click), EventResult,
                                       HasDomEvent (domEvent),
                                       InputElement (_inputElement_checked, _inputElement_value),
                                       InputElementConfig, MonadHold (holdDyn),
-                                      Reflex (Dynamic, Event, current, updated),
+                                      Reflex(never, Dynamic, Event, current, updated),
                                       XhrResponse (..), attachWith, blank, def,
                                       el, el', elAttr, elAttr', elClass',
                                       elementConfig_initialAttributes, ffor,
@@ -33,6 +34,7 @@ import           Reflex.Dom          (DomBuilder (DomBuilderSpace, inputElement)
                                       inputElementConfig_setChecked, leftmost,
                                       text, (&), (.~), (=:))
 import           Servant.Common.Req  (ReqResult (..))
+import Control.Monad (Monad, (=<<))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -116,3 +118,14 @@ whenJust ::
   t ()
 whenJust (Just x) a = a x
 whenJust Nothing _  = pure ()
+
+dynSimple
+  :: forall a t (m :: * -> *).
+  ( Adjustable t m
+  , MonadHold t m
+  , NotReady t m
+  , PostBuild t m
+  )
+  => Dynamic t (m (Event t a))
+  -> m (Event t a)
+dynSimple a = switchHold never =<< dyn a
