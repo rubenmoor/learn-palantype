@@ -32,7 +32,7 @@ import           Reflex.Dom          (PostBuild, NotReady, Adjustable, dyn, swit
                                       inputElementConfig_elementConfig,
                                       inputElementConfig_initialChecked,
                                       inputElementConfig_setChecked, leftmost,
-                                      text, (&), (.~), (=:))
+                                      text, (&), (.~), (=:), switchDyn, Prerender (prerender, Client))
 import           Servant.Common.Req  (ReqResult (..))
 import Control.Monad (Monad, (=<<))
 
@@ -129,3 +129,12 @@ dynSimple
   => Dynamic t (m (Event t a))
   -> m (Event t a)
 dynSimple a = switchHold never =<< dyn a
+
+prerenderSimple
+  :: forall a js t (m :: * -> *).
+  ( Prerender js t m
+  , Applicative m
+  )
+  => Client m (Event t a)
+  -> m (Event t a)
+prerenderSimple a = switchDyn <$> prerender (pure never) a

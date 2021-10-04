@@ -3,8 +3,8 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
@@ -13,8 +13,8 @@
 
 module Stage where
 
-import           Common.Alphabet        (PTChord (..), mkPTChord, showChord,
-                                         showKey, PTChar (..))
+import           Common.Alphabet        (PTChar (..), PTChord (..), mkPTChord,
+                                         showChord, showKey, showLetter)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
@@ -34,7 +34,6 @@ import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
 import           Data.List              (replicate, zip, (!!))
 import qualified Data.Map               as Map
-import  Data.Tuple (fst)
 import           Data.Maybe             (Maybe (..))
 import           Data.Monoid            (Monoid (mconcat))
 import           Data.Ord               (Ord ((>)))
@@ -42,6 +41,7 @@ import           Data.Semigroup         (Semigroup ((<>)))
 import qualified Data.Text              as Text
 import           Data.Time.Clock        (diffTimeToPicoseconds, getCurrentTime,
                                          utctDayTime)
+import           Data.Tuple             (fst)
 import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)), fromInteger)
 import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
@@ -84,19 +84,19 @@ elFooter = do
       text " >"
   elClass "br" "clearBoth" blank
 
-elCongraz ::
-  forall t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    PostBuild t m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  Event t () ->
-  Maybe Stage ->
-  m ()
+elCongraz
+  :: forall t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , PostBuild t m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => Event t ()
+  -> Maybe Stage
+  -> m ()
 elCongraz eDone mNxt = mdo
 
   eChord <- asks envEChord
@@ -120,10 +120,10 @@ elCongraz eDone mNxt = mdo
               el "code" $ text "CON"
               text " to continue to "
               elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
-            updateState $
-              leftmost [eChordCON, domEvent Click elACont]
-                $> (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
-            setRoute $ eChord $> FrontendRoute_Main :/ ()
+            let eContinue = leftmost [eChordCON, domEvent Click elACont]
+            updateState $ eContinue $>
+              (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
+            setRoute $ eContinue $> FrontendRoute_Main :/ ()
           el "div" $ do
             el "span" $ text "("
             (elABack, _) <- elClass' "a" "normalLink" $ text "back"
@@ -181,11 +181,23 @@ introduction = do
       \As long as you practice here, you don't need Plover. \
       \Once you installed and configured Plover however, you can upload your \
       \Plover configuration here to practice with the same key map."
-  elClass "div" "paragraph" $ do
+
+  eChord <- asks envEChord
+  let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
+      eChordSTART = void $ filter (== chordSTART) eChord
+
+  elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"
-    let eStart = domEvent Click btn
+    let eStart = leftmost [eChordSTART, domEvent Click btn]
     updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
     setRoute $ eStart $> FrontendRoute_Main :/ ()
+
+  elClass "div" "paragraph" $ do
+    text "Instead of clicking the button, try to input "
+    el "code" $ text "START"
+    text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
+         \finding the next key while holding down. The chord is only registered \
+         \once you release all the keys."
   elFooter
 
 -- 1.1
@@ -404,7 +416,7 @@ taskAlphabet showAlphabet = do
                   dynWalk <&> \WalkState {..} -> case wsMMistake of
                     Just (j, _) -> if i == j then "bgRed" else clsLetter
                     Nothing -> if wsCounter > i then "bgGreen" else clsLetter
-            elDynClass "span" dynCls $ text $ showKey c
+            elDynClass "span" dynCls $ text $ showLetter c
       el "span" $ do
         dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
         text $ " / " <> Text.pack (show len)

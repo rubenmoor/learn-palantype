@@ -79,10 +79,10 @@ import           Reflex.Dom                  (delay, DomBuilder (DomBuilderSpace
                                               keydown, keyup, leftmost,
                                               mergeWith, prerender_,
                                               preventDefault, splitDynPure,
-                                              switchHold, text, wrapDomEvent,
+                                              switchHold, text, wrapDomEvent, switchDyn,
                                               (=:), _element_raw, _inputElement_element, _el_element)
 import           Servant.Common.Req          (reqSuccess)
-import           Shared                      (iFa, reqFailure, whenJust)
+import           Shared                      (iFa, reqFailure, whenJust, dynSimple, prerenderSimple)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
 import Data.Witherable (Filterable(filter))
@@ -254,8 +254,8 @@ stenoInput
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   dynShowKeyboard <- asks (stShowKeyboard <$>)
-  eEWord <- dyn $ dynPloverCfg <&> \PloverCfg {..} -> do
-    dynEChord <- prerender (pure never) $ elClass "div" "stenoInput" $ mdo
+  dynSimple $ dynPloverCfg <&> \PloverCfg {..} -> do
+    prerenderSimple $ elClass "div" "stenoInput" $ mdo
       let keyChanges =
             pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
               [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
@@ -308,8 +308,6 @@ stenoInput = do
       performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
       pure $ catMaybes $ updated dynChord
-    switchHold never $ updated dynEChord
-  switchHold never eEWord
 
 elPTKeyboard
   :: forall t (m :: * -> *).

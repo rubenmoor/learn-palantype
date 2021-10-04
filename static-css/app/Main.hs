@@ -219,6 +219,10 @@ main = putCss $ do
   ".floatRight" ? float floatRight
   ".clearBoth" ? clear both
 
+  div # ".start" ? do
+    textAlign center
+    margin (px 24) (px 24) (px 24) (px 24)
+
   button # ".start" ? do
     backgroundColor anthrazit
     color white
