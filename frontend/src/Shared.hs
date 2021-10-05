@@ -20,7 +20,7 @@ import           Data.Monoid         ((<>))
 import           Data.Text           (Text, unwords)
 import qualified Data.Text           as Text
 import           Data.Tuple          (fst)
-import           Reflex.Dom          (PostBuild, NotReady, Adjustable, dyn, switchHold, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom          (elClass, widgetHold, PostBuild, NotReady, Adjustable, dyn, switchHold, DomBuilder (DomBuilderSpace, inputElement),
                                       Element, EventName (Click), EventResult,
                                       HasDomEvent (domEvent),
                                       InputElement (_inputElement_checked, _inputElement_value),
@@ -138,3 +138,19 @@ prerenderSimple
   => Client m (Event t a)
   -> m (Event t a)
 prerenderSimple a = switchDyn <$> prerender (pure never) a
+
+widgetHoldSimple
+  :: forall a t (m :: * -> *).
+  ( Adjustable t m
+  , MonadHold t m
+  )
+  => Event t (m (Event t a)) -> m (Event t a)
+widgetHoldSimple a = switchDyn <$> widgetHold (pure never) a
+
+loadingScreen
+  :: DomBuilder t m
+  => m ()
+loadingScreen =
+  elClass "div" "mkOverlay" $ do
+    iFa "fas fa-spinner fa-spin"
+    text " Loading ..."

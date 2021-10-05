@@ -13,23 +13,23 @@
 
 module Stage where
 
-import           Common.Alphabet        (PTChar (..), PTChord (..), mkPTChord,
-                                         showChord, showKey, showLetter)
+import           Common.Alphabet        (isRightHand, isLeftHand, PTChar (..), PTChord (..), mkPTChord,
+                                         showChord', showKey, showLetter)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
 import           Control.Lens           ((%~), (.~), (<&>))
-import           Control.Monad          (when)
+import           Control.Monad          ((=<<), unless, when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Random   (evalRand, mkStdGen, newStdGen)
+import           Control.Monad.Random   (runRand, StdGen, evalRand, mkStdGen, newStdGen)
 import           Control.Monad.Reader   (MonadReader (ask), asks)
 import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
 import           Data.Foldable          (Foldable (length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (void, ($>))
+import           Data.Functor           (Functor(fmap), void, ($>))
 import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
 import           Data.List              (replicate, zip, (!!))
@@ -46,38 +46,38 @@ import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)), fromInteger)
 import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (DomBuilder, EventName (Click),
+import           Reflex.Dom             (TriggerEvent, PerformEvent, delay, widgetHold, DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          MonadHold (holdDyn),
                                          PostBuild (getPostBuild),
                                          Prerender (prerender),
-                                         Reflex (Event, never, updated), blank,
+                                         Reflex(Dynamic, Event, never, updated), blank,
                                          dyn, dynText, dyn_, el, elAttr,
                                          elClass, elClass', elDynClass, foldDyn,
-                                         leftmost, performEvent, switchHold,
+                                         leftmost, performEvent, switchDyn,
                                          text, widgetHold_, zipDyn, (=:))
-import           Shared                 (dynSimple, iFa, whenJust)
+import           Shared                 (loadingScreen, prerenderSimple, dynSimple, iFa, whenJust)
 import           State                  (EStateUpdate, Env (..), Stage (..),
                                          State (..), stageUrl, updateState)
 import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
 
-elFooter ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
-elFooter = do
+elFooter
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
+elFooter = el "footer" $ do
   Env {..} <- ask
-  el "hr" blank
   whenJust envMPrev $ \prv -> do
     elClass "div" "floatLeft" $ do
       text "< "
       routeLink (stageUrl prv) $ text $ Text.pack $ show prv
+  text $ Text.pack $ show envCurrent
   whenJust envMNext $ \nxt -> do
     elClass "div" "floatRight" $ do
       routeLink (stageUrl nxt) $ text $ Text.pack $ show nxt
@@ -135,226 +135,240 @@ elCongraz eDone mNxt = mdo
 
 -- introduction
 
-introduction ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    Prerender js t m,
-    MonadReader (Env t) m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+introduction
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , Prerender js t m
+  , MonadReader (Env t) m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 introduction = do
-  el "h1" $ text "Introduction"
-  el "h2" $ text "Why Palantype"
-  elClass "div" "paragraph" $
-    text
-      "Palantype allows you to type with lightning speed. \
-      \ It's a stenographic system in the wider sense. \
-      \ The most widespread of these systems is simply called stenography. \
-      \ Palantype has the advantage that it's more suitable for regular \
-      \keyboards. There are limitations, though."
-  el "h2" $ text "Requirements"
-  el "h3" $ text "Hardware"
-  elClass "div" "paragraph" $
-    text
-      "You can get started with your regular keyboard. \
-      \However, keyboards usually have limit of how many keys register \
-      \at the same time. Long term, you will need a keyboard that supports \
-      \N-Key roll-over (NKR) to type chords of up to ten keys. \
-      \In addition, a ortholinear layout as well as very sensitive keys \
-      \are preferable."
-  elClass "div" "paragraph" $
-    text
-      "You can play around with the keyboard above to see how much keys \
-      \register at the same time with your hardware."
+  el "section" $ do
+    el "h1" $ text "Introduction"
+    el "h2" $ text "Why Palantype"
+    elClass "div" "paragraph" $
+      text
+        "Palantype allows you to type with lightning speed. \
+        \ It's a stenographic system in the wider sense. \
+        \ The most widespread of these systems is simply called stenography. \
+        \ Palantype has the advantage that it's more suitable for regular \
+        \keyboards. There are limitations, though."
+    el "h2" $ text "Requirements"
+    el "h3" $ text "Hardware"
+    elClass "div" "paragraph" $
+      text
+        "You can get started with your regular keyboard. \
+        \However, keyboards usually have limit of how many keys register \
+        \at the same time. Long term, you will need a keyboard that supports \
+        \N-Key roll-over (NKR) to type chords of up to ten keys. \
+        \In addition, a ortholinear layout as well as very sensitive keys \
+        \are preferable."
+    elClass "div" "paragraph" $
+      text
+        "You can play around with the keyboard above to see how much keys \
+        \register at the same time with your hardware."
 
-  el "h3" $ text "Software"
-  elClass "div" "paragraph" $ do
-    text "All of this is made possible by the "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
-    text ". The software "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/plover/") $ text "Plover"
-    text
-      " is part of the project and is all you need to get serious. \
-      \As long as you practice here, you don't need Plover. \
-      \Once you installed and configured Plover however, you can upload your \
-      \Plover configuration here to practice with the same key map."
+    el "h3" $ text "Software"
+    elClass "div" "paragraph" $ do
+      text "All of this is made possible by the "
+      elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
+      text ". The software "
+      elAttr "a" ("href" =: "http://www.openstenoproject.org/plover/") $ text "Plover"
+      text
+        " is part of the project and is all you need to get serious. \
+        \As long as you practice here, you don't need Plover. \
+        \Once you installed and configured Plover however, you can upload your \
+        \Plover configuration here to practice with the same key map."
 
-  eChord <- asks envEChord
-  let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
-      eChordSTART = void $ filter (== chordSTART) eChord
+    eChord <- asks envEChord
+    let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
+        eChordSTART = void $ filter (== chordSTART) eChord
 
-  elClass "div" "start" $ do
-    (btn, _) <- elClass' "button" "start" $ text "Get Started!"
-    let eStart = leftmost [eChordSTART, domEvent Click btn]
-    updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
-    setRoute $ eStart $> FrontendRoute_Main :/ ()
+    elClass "div" "start" $ do
+      (btn, _) <- elClass' "button" "start" $ text "Get Started!"
+      let eStart = leftmost [eChordSTART, domEvent Click btn]
+      updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
+      setRoute $ eStart $> FrontendRoute_Main :/ ()
 
-  elClass "div" "paragraph" $ do
-    text "Instead of clicking the button, try to input "
-    el "code" $ text "START"
-    text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
-         \finding the next key while holding down. The chord is only registered \
-         \once you release all the keys."
+    elClass "div" "paragraph" $ do
+      text "Instead of clicking the button, try to input "
+      el "code" $ text "START"
+      text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
+           \finding the next key while holding down. The chord is only registered \
+           \once you release all the keys."
   elFooter
 
 -- 1.1
 
 data WalkState = WalkState
-  { wsCounter  :: Int,
-    wsMMistake :: Maybe (Int, PTChord),
-    wsDone     :: Maybe Bool
+  { wsCounter  :: Int
+  , wsMMistake :: Maybe (Int, PTChord)
+  , wsDone     :: Maybe Bool
   }
 
-stage1_1 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+stage1_1
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 stage1_1 = do
-  Env {..} <- ask
+  el "section" $ do
+    Env {..} <- ask
 
-  el "h1" $ text "Stage 1"
-  el "h2" $ text "The palan order"
-  el "h3" $ text "Task 1"
-  elClass "div" "paragraph" $
-    text
-      "Palantype relies on chords. A chord means: \
-      \You press up to ten keys at the same time. \
-      \The order in which you press down does not matter. \
-      \Instead, all the letters of one chord will appear in palan order. \
-      \Therefore, you will learn the palan alphabet in its proper order now."
-  elClass "div" "paragraph" $
-    text "Type the following steno letters in order, one after another."
-  elClass "div" "paragraph" $
-    text
-      "Some letters occur twice, the first time for your left hand \
-      \and the second time for your right hand."
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 1"
+    elClass "div" "paragraph" $
+      text
+        "Palantype relies on chords. A chord means: \
+        \You press up to ten keys at the same time. \
+        \The order in which you press down does not matter. \
+        \Instead, all the letters of one chord will appear in palan order. \
+        \Therefore, you will learn the Palantype Alphabet in its proper order now."
+    elClass "div" "paragraph" $
+      text "Type the following steno letters in order, one after another."
+    elClass "div" "paragraph" $
+      text
+        "Some letters occur twice, the first time for your left hand \
+        \and the second time for your right hand."
 
-  eDone <- taskAlphabet True
-  elCongraz eDone envMNext
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+
+    eDone <- taskAlphabet True
+    elCongraz eDone envMNext
 
   elFooter
 
 -- 1.2
 
-stage1_2 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+stage1_2
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 stage1_2 = do
-  Env {..} <- ask
+  el "section" $ do
+    Env {..} <- ask
 
-  el "h1" $ text "Stage 1"
-  el "h2" $ text "The palan order"
-  el "h3" $ text "Task 2"
-  el "span" $
-    text
-      "Again, type the letters in the palan order. \
-      \But now, without seeing them. \
-      \Learn to remember the correct order by \
-      \pronouncing each letter while you type it!"
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 2"
+    el "span" $
+      text
+        "Again, type the letters in the Palantype Alphabet. \
+        \But now, without seeing them. \
+        \Learn to remember the correct order by \
+        \pronouncing each letter while you type it!"
 
-  eDone <- taskAlphabet False
-  elCongraz eDone envMNext
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+
+    eDone <- taskAlphabet False
+    elCongraz eDone envMNext
 
   elFooter
 
 -- 1.3
 
-stage1_3 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+stage1_3
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 stage1_3 = do
-  Env {..} <- ask
+  el "section" $ do
+    Env {..} <- ask
 
-  el "h1" $ text "Stage 1"
-  el "h2" $ text "The palan order"
-  el "h3" $ text "Task 3"
-  elClass "div" "paragraph" $
-    text
-      "How about you type the letters in palan order \
-      \without the virtual keyboard? \
-      \Again, get used to remembering them!"
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 3"
+    elClass "div" "paragraph" $
+      text
+        "How about you type the letters in palan order \
+        \without the virtual keyboard? \
+        \Again, get used to remembering them!"
 
-  ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ False)
 
-  eDone <- taskAlphabet True
-  elCongraz eDone envMNext
+    eDone <- taskAlphabet True
+    elCongraz eDone envMNext
 
   elFooter
 
 -- 1.4
 
-stage1_4 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+stage1_4
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 stage1_4 = do
-  Env {..} <- ask
+  el "section" $ do
+    Env {..} <- ask
 
-  el "h1" $ text "Stage 1"
-  el "h2" $ text "The palan order"
-  el "h3" $ text "Task 4"
-  elClass "div" "paragraph" $
-    text
-      "And for maximum difficulty, type the letters in palan \
-      \order without seeing neither the letters nor the keyboard!"
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 4"
+    elClass "div" "paragraph" $
+      text
+        "And for maximum difficulty, type the letters in palan \
+        \order without seeing neither the letters nor the keyboard!"
 
-  eDone <- taskAlphabet False
-  elCongraz eDone envMNext
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+
+    eDone <- taskAlphabet False
+    elCongraz eDone envMNext
 
   elFooter
 
-taskAlphabet ::
-  forall t (m :: * -> *).
-  ( DomBuilder t m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    PostBuild t m
-  ) =>
-  Bool ->
-  m (Event t ())
+taskAlphabet
+  :: forall t (m :: * -> *).
+  ( DomBuilder t m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , PostBuild t m
+  )
+  => Bool
+  -> m (Event t ())
 taskAlphabet showAlphabet = do
   Env {..} <- ask
 
@@ -370,39 +384,28 @@ taskAlphabet showAlphabet = do
 
           step :: PTChord -> WalkState -> WalkState
           step w ws@WalkState {..} = case (unPTChord w, wsMMistake, wsDone) of
-            (_, _, Just True) ->
-              ws
-                { wsDone = Just False,
-                  wsCounter = 0
-                } -- reset after done
-            _
-              | wsCounter == len - 1 ->
-                ws
-                  { wsDone = Just True,
-                    wsCounter = wsCounter + 1
-                  } -- done
-            (_, Just _, _) ->
-              ws
-                { wsCounter = 0,
-                  wsMMistake = Nothing
-                } -- reset after mistake
-            ([l], _, _)
-              | ptAlphabet !! wsCounter == l ->
-                ws
-                  { wsDone = Nothing,
-                    wsCounter = wsCounter + 1
-                  } -- correct
-            (ls, _, _) ->
-              ws
-                { wsDone = Nothing,
-                  wsMMistake =
-                    Just (wsCounter, PTChord ls)
-                } -- mistake
-          stepInitial =
-            WalkState
-              { wsCounter = 0,
-                wsMMistake = Nothing,
-                wsDone = Nothing
+            (_, _, Just True) -> ws { wsDone = Just False
+                                    , wsCounter = 0
+                                    } -- reset after done
+            _ | wsCounter == len - 1 ->
+                                 ws { wsDone = Just True
+                                    , wsCounter = wsCounter + 1
+                                    } -- done
+            (_, Just _, _) ->    ws { wsCounter = 0
+                                    , wsMMistake = Nothing
+                                    } -- reset after mistake
+            ([l], _, _) | ptAlphabet !! wsCounter == l ->
+                                 ws { wsDone = Nothing
+                                    , wsCounter = wsCounter + 1
+                                    } -- correct
+            (ls, _, _) ->        ws { wsDone = Nothing
+                                    , wsMMistake = Just (wsCounter, PTChord ls)
+                                    } -- mistake
+
+          stepInitial = WalkState
+              { wsCounter = 0
+              , wsMMistake = Nothing
+              , wsDone = Nothing
               }
 
       dynWalk <- foldDyn step stepInitial envEChord
@@ -427,7 +430,7 @@ taskAlphabet showAlphabet = do
           Just (_, w) ->
             elClass "div" "red small" $
               text $
-                "You typed " <> showChord w
+                "You typed " <> showChord' w
                   <> ". Any key to start over."
           Nothing -> blank
 
@@ -442,138 +445,231 @@ taskAlphabet showAlphabet = do
 -- stage 1.5
 
 data StenoLettersState = StenoLettersState
-  { slsCounter  :: Int,
-    slsMMistake :: Maybe (Int, PTChord),
-    slsDone     :: Maybe Bool
+  { slsCounter  :: Int
+  , slsMMistake :: Maybe (Int, PTChord)
+  , slsDone     :: Maybe Bool
+  , slsLetters  :: [PTChar]
   }
 
-stage1_5 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+taskLetters
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , PostBuild t m
+  , Prerender js t m
+  )
+  => Dynamic t [PTChar]
+  -> m (Event t ())
+taskLetters dynLetters = do
+
+  eChord <- asks envEChord
+
+  eStdGen <- prerenderSimple $ do
+    ePb <- getPostBuild
+    performEvent $ ePb $> liftIO newStdGen
+
+  fmap switchDyn $ widgetHold (loadingScreen $> never) $ eStdGen <&> \stdGen -> do
+    dynSimple $ dynLetters <&> \letters -> mdo
+      let len = length letters
+
+          step :: PTChord -> StenoLettersState -> StenoLettersState
+          step chord ls@StenoLettersState {..} =
+            case (unPTChord chord, slsMMistake, slsDone) of
+              (_, _, Just True) ->
+                               let letters' =
+                                     evalRand (shuffleM slsLetters) stdGen
+                               in  ls { slsDone = Just False
+                                      , slsCounter = 0
+                                      , slsLetters = letters'
+                                      } -- reset after done
+              _ | slsCounter == len - 1 ->
+                                   ls { slsDone = Just True
+                                      , slsCounter = slsCounter + 1
+                                      } -- done
+              (_, Just _, _) ->    ls { slsCounter = 0
+                                      , slsMMistake = Nothing
+                                      } -- reset after mistake
+              ([l], _, _) | slsLetters !! slsCounter == l ->
+                                   ls { slsDone = Nothing
+                                      , slsCounter = slsCounter + 1
+                                      } -- correct
+              (wrong, _, _) ->     ls { slsDone = Nothing
+                                      , slsMMistake =
+                                          Just (slsCounter, PTChord wrong)
+                                      } -- mistake
+
+          stepInitial =
+            StenoLettersState
+              { slsCounter = 0
+              , slsMMistake = Nothing
+              , slsDone = Nothing
+              , slsLetters = evalRand (shuffleM letters) stdGen
+              }
+
+      dynStenoLetters <- foldDyn step stepInitial eChord
+
+      let eDone = catMaybes $ updated $ slsDone <$> dynStenoLetters
+
+      dyn_ $
+        dynStenoLetters <&> \StenoLettersState {..} -> do
+          let clsMistake = case slsMMistake of
+                Nothing -> ""
+                Just _  -> "bgRed"
+          el "pre" $ elClass "code" clsMistake $
+            text $ showKey $ slsLetters !! slsCounter
+          el "span" $ do
+            el "strong" $ text (Text.pack $ show slsCounter)
+            text " / "
+            text (Text.pack $ show len)
+
+      let eMMistake = slsMMistake <$> updated dynStenoLetters
+      widgetHold_ blank $
+        eMMistake <&> \case
+          Just (_, chord) ->
+            elClass "div" "red small" $ text $
+              "You typed " <> showChord' chord <> ". Any key to start over."
+          Nothing -> blank
+
+      dynDone <- holdDyn False eDone
+      dyn_ $ dynDone <&> \bDone -> when bDone $
+        elClass "div" "small anthrazit" $
+          text "Cleared. Press any key to start over."
+
+      pure $ void $ filter id eDone
+
+stage1_5
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
 stage1_5 = do
-  Env {..} <- ask
+  el "section" $ do
+    Env {..} <- ask
 
-  el "h1" $ text "Stage 1"
-  el "h2" $ text "The palan order"
-  el "h3" $ text "Task 5"
-  elClass "div" "paragraph" $
-    text
-      "You get the virtual keyboard back. Feel free, to toggle it anytime. \
-      \You can even use ASDF to do that. This is a chord that just exists \
-      \for this purpose here on this website."
-  elClass "div" "paragraph" $
-    text
-      "In order to be prepared for Stage 2, you should be able \
-      \to do this task without the virtual keyboard."
-  elClass "div" "paragraph" $
-    text "Type every steno letter as it appears!"
-  elClass "div" "paragraph" $ do
-    text
-      "The consonants and the plus sign appear twice. \
-      \They are distinguished by "
-    el "code" $ text "-"
-    text ". "
-    el "code" $ text "S-"
-    text " is typed with the left hand, "
-    el "code" $ text "-S"
-    text " is typed with the right hand."
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 5"
+    elClass "div" "paragraph" $ do
+      text "You get the virtual keyboard back. Feel free, to toggle it anytime. \
+           \You can even use "
+      el "code" $ text "STFL"
+      text "to do that. This is a chord that just exists \
+           \for this purpose here on this website. \
+           \It doesn't have a meaning, so it hopefully doesn't interfere."
+    elClass "div" "paragraph" $
+      text "Type every steno letter as it appears!"
+    elClass "div" "paragraph" $ do
+      text "The - symbol is used to distinguish between letters that appear \
+           \twice. In this task, you will only need your left hand. Thus \
+           \some letters have a trailing -."
 
-  ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
-  dynEStdGen <- prerender (pure never) $ performEvent $ ePb $> liftIO newStdGen
-  eStdGen <- switchHold never $ updated dynEStdGen
-  dynStdGen <- holdDyn (mkStdGen 0) eStdGen
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-  let dynAlphabet = Map.keys . pcfgMapStenoKeys . stPloverCfg <$> envDynState
-  eDone <-
-    dynSimple $ zipDyn dynAlphabet dynStdGen <&>
-      \(ptAlphabet, stdGen) -> mdo
-        let lsLetters = evalRand (shuffleM $ mconcat $ replicate 1 ptAlphabet) stdGen
-            len = length lsLetters
+    let dynLeftHand
+          =   filter isLeftHand
+            . Map.keys
+            . pcfgMapStenoKeys
+            . stPloverCfg
+          <$> envDynState
 
-            step :: PTChord -> StenoLettersState -> StenoLettersState
-            step chord ls@StenoLettersState {..} =
-              case (unPTChord chord, slsMMistake, slsDone) of
-                (_, _, Just True) ->
-                  ls
-                    { slsDone = Just False,
-                      slsCounter = 0
-                    } -- reset after done
-                _
-                  | slsCounter == len - 1 ->
-                    ls
-                      { slsDone = Just True,
-                        slsCounter = slsCounter + 1
-                      } -- done
-                (_, Just _, _) ->
-                  ls
-                    { slsCounter = 0,
-                      slsMMistake = Nothing
-                    } -- reset after mistake
-                ([l], _, _)
-                  | lsLetters !! slsCounter == l ->
-                    ls
-                      { slsDone = Nothing,
-                        slsCounter = slsCounter + 1
-                      } -- correct
-                (wrong, _, _) ->
-                  ls
-                    { slsDone = Nothing,
-                      slsMMistake =
-                        Just (slsCounter, PTChord wrong)
-                    } -- mistake
-            stepInitial =
-              StenoLettersState
-                { slsCounter = 0,
-                  slsMMistake = Nothing,
-                  slsDone = Nothing
-                }
+    eDone <- taskLetters dynLeftHand
 
-        dynStenoLetters <- foldDyn step stepInitial envEChord
+    elCongraz eDone envMNext
 
-        let eDone = catMaybes $ updated $ slsDone <$> dynStenoLetters
+  elFooter
 
-        dyn_ $
-          dynStenoLetters <&> \StenoLettersState {..} -> do
-            let clsMistake = case slsMMistake of
-                  Nothing -> ""
-                  Just _  -> "bgRed"
-            el "pre" $ elClass "code" clsMistake $
-              text $ showKey $ lsLetters !! slsCounter
-            el "span" $ do
-              el "strong" $ text (Text.pack $ show slsCounter)
-              text " / "
-              text (Text.pack $ show len)
+stage1_6
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  ) => m ()
+stage1_6 = do
+  el "section" $ do
+    Env {..} <- ask
 
-        let eMMistake = slsMMistake <$> updated dynStenoLetters
-        widgetHold_ blank $
-          eMMistake <&> \case
-            Just (_, chord) ->
-              elClass "div" "red small" $
-                text $
-                  "You typed " <> showChord chord
-                    <> ". Any key to start over."
-            Nothing -> blank
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 6"
+    elClass "div" "paragraph" $ do
+      text "Switching hands now. The leading - symbol indicates that the letter \
+           \is on your right-hand side."
+    elClass "div" "paragraph" $ do
+      text "Type every steno letter as it appears!"
 
-        dynDone <- holdDyn False eDone
-        dyn_ $ dynDone <&> \bDone ->
-          when bDone $
-            elClass "div" "small anthrazit" $
-              text "Cleared. Press any key to start over."
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-        pure $ void $ filter id eDone
+    let dynRightHand
+          =   filter isRightHand
+            . Map.keys
+            . pcfgMapStenoKeys
+            . stPloverCfg
+          <$> envDynState
 
-  elCongraz eDone envMNext
+    eDone <- taskLetters dynRightHand
+
+    elCongraz eDone envMNext
+  elFooter
+
+stage1_7
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  ) => m ()
+stage1_7 = do
+  el "section" $ do
+    Env {..} <- ask
+
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Task 7"
+    elClass "div" "paragraph" $ do
+      text "Before your continue with this last task of Stage 1: There is a \
+           \table of contents on the left. Use it to jump back to any of the \
+           \previous exercises to practice some more."
+    elClass "div" "paragraph" $ do
+      text "For the next stage, you should have some muscle memory for every \
+           \key. Be sure to complete this task without the keyboard, too."
+    elClass "div" "paragraph" $ do
+      text "Type every steno letter as it appears!"
+
+    ePb <- getPostBuild
+    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+
+    let dynAlphabet
+          =   Map.keys
+            . pcfgMapStenoKeys
+            . stPloverCfg
+          <$> envDynState
+
+    eDone <- taskLetters dynAlphabet
+
+    elCongraz eDone envMNext
   elFooter
 
 stage2_1 ::
@@ -590,6 +686,7 @@ stage2_1 ::
   ) =>
   m ()
 stage2_1 = do
-  Env {..} <- ask
-
+  el "section" $ do
+    Env {..} <- ask
+    blank
   elFooter

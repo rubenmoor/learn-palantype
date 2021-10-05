@@ -24,6 +24,7 @@ library
                , obelisk-frontend
                , obelisk-generated-static
                , obelisk-route
+               , random
                , random-shuffle
                , reflex-dom
                , servant-reflex

@@ -37,6 +37,7 @@ data Env t = Env
   { envDynState :: Dynamic t State
   , envEChord   :: Event t PTChord
   , envMPrev    :: Maybe Stage
+  , envCurrent  :: Stage
   , envMNext    :: Maybe Stage
   }
 
@@ -115,6 +116,8 @@ data Stage
   | Stage1_3
   | Stage1_4
   | Stage1_5
+  | Stage1_6
+  | Stage1_7
   | Stage2_1
   deriving (Eq, Ord, Generic)
 
@@ -131,6 +134,8 @@ instance Show Stage where
   show Stage1_3     = "Stage 1.3"
   show Stage1_4     = "Stage 1.4"
   show Stage1_5     = "Stage 1.5"
+  show Stage1_6     = "Stage 1.6"
+  show Stage1_7     = "Stage 1.7"
   show Stage2_1     = "Stage 2.1"
 
 stageUrl :: Stage -> R FrontendRoute
@@ -141,4 +146,6 @@ stageUrl = \case
   Stage1_3 -> FrontendRoute_Stage1_3 :/ ()
   Stage1_4 -> FrontendRoute_Stage1_4 :/ ()
   Stage1_5 -> FrontendRoute_Stage1_5 :/ ()
+  Stage1_6 -> FrontendRoute_Stage1_6 :/ ()
+  Stage1_7 -> FrontendRoute_Stage1_7 :/ ()
   Stage2_1 -> FrontendRoute_Stage2_1 :/ ()

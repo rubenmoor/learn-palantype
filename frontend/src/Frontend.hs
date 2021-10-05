@@ -28,7 +28,7 @@ import qualified Data.Text.Lazy.Encoding     as Lazy
 import           GHCJS.DOM                   (currentWindowUnchecked)
 import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
-import           Home                        (loadingScreen, message, settings,
+import           Home                        (message, settings,
                                               stenoInput)
 import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
@@ -36,15 +36,16 @@ import           Obelisk.Route               (R)
 import           Obelisk.Route.Frontend      (RoutedT,
                                               SetRoute (setRoute), mapRoutedT,
                                               subRoute_)
-import           Reflex.Dom                  (EventWriterT, dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
+import           Reflex.Dom                  (elClass, EventWriterT, dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
                                               Prerender (prerender),
                                               Reflex(Dynamic, Event, updated), blank,
                                               def, el, elAttr, foldDyn,
                                               leftmost, prerender_,
                                               runEventWriterT, tailE, text,
                                               widgetHold_, (=:))
-import           Stage                       (introduction, stage1_1, stage1_2, stage1_3,
+import           Stage                       (stage1_7, stage1_6, introduction, stage1_1, stage1_2, stage1_3,
                                               stage1_4, stage1_5, stage2_1)
+import Shared (loadingScreen)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -80,34 +81,42 @@ frontendBody = mdo
     liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
   (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
-    settings
-    message
-    eChord <- stenoInput
-    let setEnv
-          :: forall a.
-             Maybe Stage
-          -> Maybe Stage
-          -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) ()
-          -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) ()
-        setEnv mPrev mNext =
-          mapRoutedT (withReaderT $ \_ -> Env
-            { envDynState = dynState
-            , envEChord = eChord
-            , envMPrev = mPrev
-            , envMNext = mNext
-            })
-    subRoute_ $ \case
-      FrontendRoute_Main ->
-        dyn_ $ dynState <&> \st -> do
-          ePb <- getPostBuild
-          setRoute $ ePb $> stageUrl (stProgress st)
-      FrontendRoute_Introduction -> setEnv Nothing (Just Stage1_1) introduction
-      FrontendRoute_Stage1_1 -> setEnv (Just Introduction) (Just Stage1_2) stage1_1
-      FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) (Just Stage1_3) stage1_2
-      FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) (Just Stage1_4) stage1_3
-      FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) (Just Stage1_5) stage1_4
-      FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) (Just Stage2_1) stage1_5
-      FrontendRoute_Stage2_1 -> setEnv (Just Stage1_5) Nothing         stage2_1
+
+    elClass "div" "box" $ do
+      eChord <- el "header" $ do
+        settings
+        message
+        stenoInput
+
+      let setEnv
+            :: forall a.
+               Maybe Stage
+            -> Stage
+            -> Maybe Stage
+            -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) ()
+            -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) ()
+          setEnv mPrev current mNext =
+            mapRoutedT (withReaderT $ \_ -> Env
+              { envDynState = dynState
+              , envEChord = eChord
+              , envMPrev = mPrev
+              , envCurrent = current
+              , envMNext = mNext
+              })
+      subRoute_ $ \case
+        FrontendRoute_Main ->
+          dyn_ $ dynState <&> \st -> do
+            ePb <- getPostBuild
+            setRoute $ ePb $> stageUrl (stProgress st)
+        FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
+        FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) stage1_1
+        FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) stage1_2
+        FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) stage1_3
+        FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) stage1_4
+        FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) stage1_5
+        FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) stage1_6
+        FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) stage1_7
+        FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         stage2_1
   blank
 
 frontendHead

@@ -1,16 +1,16 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Common.Alphabet where
 
-import           Data.Aeson   (ToJSONKey, FromJSONKey, FromJSON, ToJSON)
+import           Data.Aeson   (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import           Data.List    (sort)
+import           Data.Set     (Set)
+import qualified Data.Set     as Set
 import           Data.Text    (Text)
+import qualified Data.Text    as Text
 import           GHC.Generics (Generic)
-import Data.Set (Set)
-import qualified Data.Set as Set
-import Data.List (sort)
-import qualified Data.Text as Text
 
 -- SCPTH+MFRNLYOEAUI^NLCMFRPT+SH
 data PTChar =
@@ -129,6 +129,76 @@ instance Read PTChar where
       _   -> []
     _ -> []
 
+isLeftHand :: PTChar -> Bool
+isLeftHand = \case
+  LeftS      -> True
+  LeftC      -> True
+  LeftP      -> True
+  LeftT      -> True
+  LeftH      -> True
+  LeftCross  -> True
+  LeftM      -> True
+  LeftF      -> True
+  LeftR      -> True
+  LeftN      -> True
+  LeftL      -> True
+  LeftY      -> True
+  LeftO      -> True
+  LeftE      -> True
+  LeftPipe   -> True
+  RightPipe  -> False
+  RightA     -> False
+  RightU     -> False
+  MiddleI    -> True
+  RightPoint -> False
+  RightN     -> False
+  RightL     -> False
+  RightC     -> False
+  RightM     -> False
+  RightF     -> False
+  RightR     -> False
+  RightP     -> False
+  RightT     -> False
+  RightCross -> False
+  RightS     -> False
+  RightH     -> False
+  RightE     -> False
+
+isRightHand :: PTChar -> Bool
+isRightHand = \case
+  LeftS      -> False
+  LeftC      -> False
+  LeftP      -> False
+  LeftT      -> False
+  LeftH      -> False
+  LeftCross  -> False
+  LeftM      -> False
+  LeftF      -> False
+  LeftR      -> False
+  LeftN      -> False
+  LeftL      -> False
+  LeftY      -> False
+  LeftO      -> False
+  LeftE      -> False
+  LeftPipe   -> False
+  RightPipe  -> True
+  RightA     -> True
+  RightU     -> True
+  MiddleI    -> True
+  RightPoint -> True
+  RightN     -> True
+  RightL     -> True
+  RightC     -> True
+  RightM     -> True
+  RightF     -> True
+  RightR     -> True
+  RightP     -> True
+  RightT     -> True
+  RightCross -> True
+  RightS     -> True
+  RightH     -> True
+  RightE     -> True
+
 newtype PTChord = PTChord { unPTChord :: [PTChar] }
   deriving (Eq, Ord)
 
@@ -136,9 +206,11 @@ newtype PTChord = PTChord { unPTChord :: [PTChar] }
 mkPTChord :: Set PTChar -> PTChord
 mkPTChord = PTChord . sort . Set.toList
 
--- TODO: proper use of '-'
 showChord :: PTChord -> Text
 showChord = Text.unwords . fmap showLetter . unPTChord
+
+showChord' :: PTChord -> Text
+showChord' = Text.unwords . fmap showKey . unPTChord
 
 showKey :: PTChar -> Text
 showKey = \case

@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
@@ -25,7 +26,7 @@ import           Control.Monad               ((=<<), unless, when, (<=<))
 import           Control.Monad.Fix           (MonadFix)
 import           Control.Monad.IO.Class      (MonadIO (liftIO))
 import           Control.Monad.Reader        (MonadReader, asks)
-import           Data.Bool                   (Bool (..), not)
+import           Data.Bool                   (bool, Bool (..), not)
 import           Data.Default                (Default (def))
 import           Data.Either                 (Either (..))
 import           Data.Foldable               (Foldable (foldl, null), concat)
@@ -55,7 +56,7 @@ import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
 import           Obelisk.Route.Frontend      (pattern (:/), R,
                                               SetRoute (setRoute))
-import           Reflex.Dom                  (delay, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom                  (elDynClass, delay, DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
@@ -65,7 +66,7 @@ import           Reflex.Dom                  (delay, DomBuilder (DomBuilderSpace
                                               MonadHold (holdDyn),
                                               PerformEvent (performEvent_), prerender,
                                               PostBuild (getPostBuild),
-                                              Prerender,
+                                              Prerender(Client),
                                               Reflex (Dynamic, Event, never, updated),
                                               blank, dyn, dyn_, el, el', elAttr,
                                               elClass, elClass', elDynAttr,
@@ -79,49 +80,39 @@ import           Reflex.Dom                  (delay, DomBuilder (DomBuilderSpace
                                               keydown, keyup, leftmost,
                                               mergeWith, prerender_,
                                               preventDefault, splitDynPure,
-                                              switchHold, text, wrapDomEvent, switchDyn,
+                                              text, wrapDomEvent, switchDyn,
                                               (=:), _element_raw, _inputElement_element, _el_element)
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (iFa, reqFailure, whenJust, dynSimple, prerenderSimple)
 import           State                       (EStateUpdate, Message (..),
                                               State (..), updateState)
 import Data.Witherable (Filterable(filter))
+import Data.Eq (Eq((==)))
 
 default (Text)
 
-loadingScreen ::
-  DomBuilder t m =>
-  m ()
-loadingScreen =
-  elClass "div" "mkOverlay" $ do
-    iFa "fas fa-spinner fa-spin"
-    text " Loading ..."
-
-elFileInput ::
-  DomBuilder t m =>
-  Event t Text ->
-  m (Event t File)
+elFileInput
+  :: DomBuilder t m
+  => Event t Text
+  -> m (Event t File)
 elFileInput eSet = do
-  i <-
-    inputElement $
-      def
-        & inputElementConfig_setValue
-        .~ eSet
+  i <- inputElement $ def
+        & inputElementConfig_setValue .~ eSet
         & inputElementConfig_elementConfig
           . elementConfig_initialAttributes
-        .~ ("type" =: "file" <> "accept" =: "text/cfg")
+          .~ ("type" =: "file" <> "accept" =: "text/cfg")
 
   let eFiles = _inputElement_files i
   pure $ mapMaybe listToMaybe $ updated eFiles
 
-message ::
-  forall t (m :: * -> *).
-  ( DomBuilder t m,
-    PostBuild t m,
-    MonadReader (Dynamic t State) m,
-    EventWriter t EStateUpdate m
-  ) =>
-  m ()
+message
+  :: forall t (m :: * -> *).
+  ( DomBuilder t m
+  , PostBuild t m
+  , MonadReader (Dynamic t State) m
+  , EventWriter t EStateUpdate m
+  )
+  => m ()
 message = do
   dynMsg <- asks (stMsg <$>)
   dyn_ $ dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
@@ -137,17 +128,17 @@ if' :: Monoid a => Bool -> a -> a
 if' True x  = x
 if' False _ = mempty
 
-settings ::
-  forall t js (m :: * -> *).
-  ( DomBuilder t m,
-    PostBuild t m,
-    Prerender js t m,
-    SetRoute t (R FrontendRoute) m,
-    EventWriter t EStateUpdate m,
-    MonadReader (Dynamic t State) m,
-    MonadFix m
-  ) =>
-  m ()
+settings
+  :: forall t js (m :: * -> *).
+  ( DomBuilder t m
+  , PostBuild t m
+  , Prerender js t m
+  , SetRoute t (R FrontendRoute) m
+  , EventWriter t EStateUpdate m
+  , MonadReader (Dynamic t State) m
+  , MonadFix m
+  )
+  => m ()
 settings = do
   eFile <- elClass "div" "dropdown" $ do
     elClass "span" "dropdown-button" $ iFa "fas fa-cog"
@@ -193,48 +184,46 @@ settings = do
         ["Palantype", "Possum Palantype", "Possum Palantype German"]
       isCompatible system = system `elem` compatibleSystems
 
-  updateState $
-    eReqSuccess <&> \ploverCfg@PloverCfg {..} ->
-      appEndo $
-        mconcat
-          [ Endo $ field @"stPloverCfg" .~ ploverCfg,
-            if' (not $ null pcfgUnrecognizedQwertys) $
-              let msgCaption = "Unrecognized qwerty keys"
-                  msgBody =
-                    "Your key map contains unrecognized entries:\n"
-                      <> Text.intercalate
-                        "\n"
-                        (Text.pack <$> pcfgUnrecognizedQwertys)
-               in Endo $ field @"stMsg" .~ Just Message {..},
-            if' (not $ null pcfgUnrecognizedStenos) $
-              let msgCaption = "Unrecognized steno keys"
-                  msgBody =
-                    "Your key map contains unrecognized entries:\n"
-                      <> Text.intercalate
-                        "\n"
-                        (Text.pack <$> pcfgUnrecognizedStenos)
-               in Endo $ field @"stMsg" .~ Just Message {..},
-            if' (not $ isCompatible pcfgSystem) $
-              let msgCaption = "Incompatible system"
-                  msgBody =
-                    "Your system is " <> pcfgSystem
-                      <> "\nCompatible systems at the moment are\n"
-                      <> Text.intercalate "\n" compatibleSystems
-               in Endo $ field @"stMsg" .~ Just Message {..}
-          ]
+  updateState $ eReqSuccess <&> \ploverCfg@PloverCfg {..} ->
+    appEndo $ mconcat
+      [ Endo $ field @"stPloverCfg" .~ ploverCfg
+      , if' (not $ null pcfgUnrecognizedQwertys) $
+          let msgCaption = "Unrecognized qwerty keys"
+              msgBody =
+                "Your key map contains unrecognized entries:\n"
+                  <> Text.intercalate
+                    "\n"
+                    (Text.pack <$> pcfgUnrecognizedQwertys)
+           in Endo $ field @"stMsg" .~ Just Message {..}
+      , if' (not $ null pcfgUnrecognizedStenos) $
+          let msgCaption = "Unrecognized steno keys"
+              msgBody =
+                "Your key map contains unrecognized entries:\n"
+                  <> Text.intercalate
+                    "\n"
+                    (Text.pack <$> pcfgUnrecognizedStenos)
+           in Endo $ field @"stMsg" .~ Just Message {..}
+      , if' (not $ isCompatible pcfgSystem) $
+          let msgCaption = "Incompatible system"
+              msgBody =
+                "Your system is " <> pcfgSystem
+                  <> "\nCompatible systems at the moment are\n"
+                  <> Text.intercalate "\n" compatibleSystems
+           in Endo $ field @"stMsg" .~ Just Message {..}
+      ]
 
   dynShowKeyboard <- asks (stShowKeyboard <$>)
-  dyn_ $
-    dynShowKeyboard <&> \showKeyboard -> do
-      (s, _) <-
-        if showKeyboard
-          then
-            elClass' "span" "btnToggleKeyboard keyboardVisible" $
-              iFa "far fa-keyboard"
-          else
-            elClass' "span" "btnToggleKeyboard keyboardHidden" $
-              iFa "fas fa-keyboard"
-      updateState $ domEvent Click s $> (field @"stShowKeyboard" %~ not)
+  dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
+    (s, _) <-
+      if showKeyboard
+        then
+          elClass' "span" "btnToggleKeyboard keyboardVisible" $
+            iFa "far fa-keyboard"
+        else
+          elClass' "span" "btnToggleKeyboard keyboardHidden" $
+            iFa "fas fa-keyboard"
+
+    updateState $ domEvent Click s $> (field @"stShowKeyboard" %~ not)
 
   setRoute $ eReqSuccess $> FrontendRoute_Main :/ ()
 
@@ -245,6 +234,7 @@ data KeyState
 stenoInput
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
+  , EventWriter t EStateUpdate (Client m)
   , MonadHold t m
   , MonadReader (Dynamic t State) m
   , PostBuild t m
@@ -290,10 +280,9 @@ stenoInput = do
             splitDynPure $
               dynInput <&> \(keys, _, release) -> (keys, release)
 
-      dyn_ $
-        dynShowKeyboard <&> \visible ->
-          when visible $
-            elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
+      let dynClass = bool "displayNone" "" <$> dynShowKeyboard
+      elDynClass "div" dynClass $
+        elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
       kbInput <- elStenoOutput dynPressedKeys
 
@@ -307,7 +296,12 @@ stenoInput = do
       ePb <- delay 0.1 =<< getPostBuild
       performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-      pure $ catMaybes $ updated dynChord
+      let eChord = catMaybes $ updated dynChord
+          chordSTFL = mkPTChord [LeftS, LeftT, LeftF, LeftL]
+          eChordSTFL = filter (== chordSTFL) eChord
+      updateState $ eChordSTFL $> (field @"stShowKeyboard" %~ not)
+
+      pure eChord
 
 elPTKeyboard
   :: forall t (m :: * -> *).
@@ -399,6 +393,7 @@ elStenoOutput dynPressedKeys = mdo
             else (showChord $ mkPTChord pressedKeys, "class" =: Nothing)
       eChange = leftmost [eFocus, eTyping]
       eSetValue = fst <$> eChange
+
   i <-
     inputElement $
       ( def :: InputElementConfig EventResult t (DomBuilderSpace m))

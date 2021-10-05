@@ -49,6 +49,8 @@ data FrontendRoute :: * -> * where
   FrontendRoute_Stage1_3 :: FrontendRoute ()
   FrontendRoute_Stage1_4 :: FrontendRoute ()
   FrontendRoute_Stage1_5 :: FrontendRoute ()
+  FrontendRoute_Stage1_6 :: FrontendRoute ()
+  FrontendRoute_Stage1_7 :: FrontendRoute ()
   FrontendRoute_Stage2_1 :: FrontendRoute ()
   -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
 
@@ -68,6 +70,8 @@ fullRouteEncoder = mkFullRouteEncoder
       FrontendRoute_Stage1_3 -> PathSegment "stage1-3" $ unitEncoder mempty
       FrontendRoute_Stage1_4 -> PathSegment "stage1-4" $ unitEncoder mempty
       FrontendRoute_Stage1_5 -> PathSegment "stage1-5" $ unitEncoder mempty
+      FrontendRoute_Stage1_6 -> PathSegment "stage1-6" $ unitEncoder mempty
+      FrontendRoute_Stage1_7 -> PathSegment "stage1-7" $ unitEncoder mempty
       FrontendRoute_Stage2_1 -> PathSegment "stage2-1" $ unitEncoder mempty
   )
 
