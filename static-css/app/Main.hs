@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
+import           Clay          (bsInset, yellow, borderSpacing, paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
                                 Css, Cursor (cursor), None (none),
                                 Other (other), a, absolute, after, alignItems,
                                 backgroundColor, block, blue, body, bold,
@@ -38,6 +38,8 @@ import           Data.Function (($))
 import           GHC.IO        (IO)
 import           GHC.Num       (Num ((*), (+), (-)))
 import           System.IO     (putStrLn)
+import Control.Applicative (Applicative(pure))
+import Data.Monoid (Monoid(mempty))
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -143,6 +145,7 @@ main = putCss $ do
       ":focus-visible" & outline none (px 0) transparent
 
   td # ".gap" ? visibility hidden
+
   div # ".keyboard" ? do
     width $ px keyboardWidth
     height $ px keyboardHeight
@@ -150,12 +153,15 @@ main = putCss $ do
 
     span # ".system" ? do
       position absolute
-      top $ px $ keyboardHeight - 32
-      left $ px 12
+      top $ px 12
+      left $ px 0
       fontSize $ pt 12
       color anthrazit
+      textAlign center
+      width $ px keyboardWidth
 
     table ? do
+      borderSpacing $ px 4
       width $ px keyboardWidth
       height $ px keyboardHeight
       borderRadius (px 8) (px 8) (px 8) (px 8)
@@ -172,8 +178,15 @@ main = putCss $ do
         width $ pct 8.33
         height $ pct 25
         textAlign center
+        let shadow = bsColor anthrazit $ shadowWithSpread (px 4) (px 4) (px 8) (px 0)
+        boxShadow $ pure shadow
 
-        ".pressed" & backgroundColor lightblue
+        ".pressed" & do
+          color blue
+          boxShadow $ pure none
+        let shadowInset = bsInset $ bsColor (rgb 220 220 255) $ shadowWithSpread (px 0) (px 0) (px 8) (px 6)
+        ".homerow" & boxShadow [shadow, shadowInset]
+        ".pressed.homerow" & boxShadow (pure shadowInset)
 
         div ? do
           ".steno" & do

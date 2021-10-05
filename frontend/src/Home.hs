@@ -316,47 +316,48 @@ elPTKeyboard stenoKeys dynPressedKeys system =
   elClass "div" "keyboard" $ do
     el "table" $ do
       el "tr" $ do
-        elCell LeftC "1"
-        elCell LeftP "1"
-        elCell LeftM "1"
-        elCell LeftN "1"
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        elCell LeftP "1" False
+        elCell LeftM "1" False
+        elCell LeftN "1" False
         elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell RightN "1"
-        elCell RightM "1"
-        elCell RightP "1"
-        elCell RightH "1"
+        elCell RightN "1" False
+        elCell RightM "1" False
+        elCell RightP "1" False
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
       el "tr" $ do
-        elCell LeftS "1"
-        elCell LeftT "1"
-        elCell LeftF "1"
-        elCell LeftL "1"
+        elCell LeftC "1" False
+        elCell LeftT "1" True
+        elCell LeftF "1" True
+        elCell LeftL "1" True
         elAttr "td" ("colspan" =: "3" <> "class" =: "gap") blank
-        elCell RightE "1"
-        elCell RightL "1"
-        elCell RightF "1"
-        elCell RightT "1"
-        elCell RightS "1"
+        elCell RightE "1" False
+        elCell RightL "1" True
+        elCell RightF "1" True
+        elCell RightT "1" True
+        elCell RightH "1" False
       el "tr" $ do
-        elCell LeftCross "1"
-        elCell LeftH "1"
-        elCell LeftR "1"
-        elCell LeftY "1"
-        elCell LeftO "1"
-        elCell MiddleI "2"
-        elCell RightA "1"
-        elCell RightC "1"
-        elCell RightR "1"
-        elCell RightCross "1"
-        elCell RightPoint "1"
+        elCell LeftS "1" True
+        elCell LeftH "1" False
+        elCell LeftR "1" False
+        elCell LeftY "1" False
+        elCell LeftO "1" False
+        elCell MiddleI "2" False
+        elCell RightA "1" False
+        elCell RightC "1" False
+        elCell RightR "1" False
+        elCell RightCross "1" False
+        elCell RightS "1" True
       el "tr" $ do
-        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell LeftE "1"
-        elCell LeftPipe "1"
-        elCell RightPipe "1"
-        elCell RightU "1"
+        elCell LeftCross "4" False
+        elCell LeftE "1" True
+        elCell LeftPipe "1" False
+        elCell RightPipe "1" False
+        elCell RightU "1" True
+        elCell RightPoint "4" False
     elClass "span" "system" $ text system
   where
-    elCell cell colspan =
+    elCell cell colspan isHomerow =
       let mQwertyKeys = Map.lookup cell stenoKeys
 
           showQwerties Nothing   = ""
@@ -365,9 +366,11 @@ elPTKeyboard stenoKeys dynPressedKeys system =
           attrs =
             dynPressedKeys <&> \set' ->
               "colspan" =: colspan
-                <> if Set.member cell set'
-                  then "class" =: "pressed"
-                  else mempty
+                <> case (Set.member cell set', isHomerow) of
+                     (True , True ) -> "class" =: "pressed homerow"
+                     (True , False) -> "class" =: "pressed"
+                     (False, True ) -> "class" =: "homerow"
+                     (False, False) -> mempty
        in if Map.member cell stenoKeys
             then elDynAttr "td" attrs $ do
               elClass "div" "steno " $ text $ showLetter cell
