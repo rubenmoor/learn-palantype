@@ -13,50 +13,49 @@
 
 module Stage where
 
-import           Common.Alphabet        (isRightHand, isLeftHand, PTChar (..), PTChord (..), mkPTChord,
-                                         showChord', showKey, showLetter)
+import           Common.Alphabet        (PTChar (..), PTChord (..), isLeftHand,
+                                         isRightHand, mkPTChord, showChord',
+                                         showKey, showLetter)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
 import           Control.Lens           ((%~), (.~), (<&>))
-import           Control.Monad          ((=<<), unless, when)
+import           Control.Monad          (when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Random   (runRand, StdGen, evalRand, mkStdGen, newStdGen)
+import           Control.Monad.Random   (evalRand, newStdGen)
 import           Control.Monad.Reader   (MonadReader (ask), asks)
 import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
 import           Data.Foldable          (Foldable (length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (Functor(fmap), void, ($>))
+import           Data.Functor           (Functor (fmap), void, ($>))
 import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
-import           Data.List              (replicate, zip, (!!))
+import           Data.List              (zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
-import           Data.Monoid            (Monoid (mconcat))
 import           Data.Ord               (Ord ((>)))
 import           Data.Semigroup         (Semigroup ((<>)))
 import qualified Data.Text              as Text
-import           Data.Time.Clock        (diffTimeToPicoseconds, getCurrentTime,
-                                         utctDayTime)
-import           Data.Tuple             (fst)
 import           Data.Witherable        (Filterable (catMaybes, filter))
-import           GHC.Num                (Num ((+), (-)), fromInteger)
+import           GHC.Num                (Num ((+), (-)))
 import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (TriggerEvent, PerformEvent, delay, widgetHold, DomBuilder, EventName (Click),
+import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          MonadHold (holdDyn),
                                          PostBuild (getPostBuild),
                                          Prerender (prerender),
-                                         Reflex(Dynamic, Event, never, updated), blank,
-                                         dyn, dynText, dyn_, el, elAttr,
-                                         elClass, elClass', elDynClass, foldDyn,
+                                         Reflex (Dynamic, Event, never, updated), blank,
+                                         dynText, dyn_, el, elAttr, elClass,
+                                         elClass', elDynClass, foldDyn,
                                          leftmost, performEvent, switchDyn,
-                                         text, widgetHold_, zipDyn, (=:))
-import           Shared                 (loadingScreen, prerenderSimple, dynSimple, iFa, whenJust)
+                                         text, widgetHold, widgetHold_,
+                                         (=:))
+import           Shared                 (dynSimple, iFa, loadingScreen,
+                                         prerenderSimple, whenJust)
 import           State                  (EStateUpdate, Env (..), Stage (..),
                                          State (..), stageUrl, updateState)
 import           System.Random.Shuffle  (shuffleM)
@@ -152,9 +151,10 @@ introduction = do
     elClass "div" "paragraph" $
       text
         "Palantype allows you to type with lightning speed. \
-        \ It's a stenographic system in the wider sense. \
-        \ The most widespread of these systems is simply called stenography. \
-        \ Palantype has the advantage that it's more suitable for regular \
+        \It's a stenographic system in the wider sense. \
+        \The most widespread of these systems is simply called steno. \
+        \Any steno-style system requires quite a bit of learning. \
+        \Palantype has the advantage that it's more suitable for regular \
         \keyboards. There are limitations, though."
     el "h2" $ text "Requirements"
     el "h3" $ text "Hardware"
@@ -182,6 +182,12 @@ introduction = do
         \As long as you practice here, you don't need Plover. \
         \Once you installed and configured Plover however, you can upload your \
         \Plover configuration here to practice with the same key map."
+    elClass "div" "paragraph" $ do
+      text "Be sure to check out additional information on "
+      elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html") $ text "learning Palantype"
+      text " and the "
+      elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
+      text "."
 
     eChord <- asks envEChord
     let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
