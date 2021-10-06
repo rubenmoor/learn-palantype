@@ -1,24 +1,27 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE KindSignatures    #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Client where
 
+import           Common.Alphabet     (PTChord)
 import           Common.Api          (PloverCfg, RoutesApi)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
 import           Data.Either         (Either)
 import           Data.Functor        ((<$>))
 import           Data.Proxy          (Proxy (Proxy))
+import           Data.String         (String)
 import           Data.Text           (Text)
 import           Reflex.Dom          (Prerender (Client, prerender),
                                       Reflex (Dynamic, Event, never), constDyn,
                                       switchDyn)
+import           Servant.API         ((:<|>) (..))
 import           Servant.Common.Req  (ReqResult)
 import           Servant.Reflex      (BaseUrl (BasePath), SupportsServantReflex,
                                       client)
-import Data.String (String)
 
 postRender
   :: (Prerender js t m, Monad m)
@@ -32,7 +35,13 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () PloverCfg))
 
-postConfigNew =
+postParseSteno
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text String)
+  -> Event t ()
+  -> m (Event t (ReqResult () [PTChord]))
+
+postConfigNew :<|> postParseSteno =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

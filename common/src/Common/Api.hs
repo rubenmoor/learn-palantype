@@ -8,7 +8,7 @@
 
 module Common.Api where
 
-import           Common.Alphabet (PTChar)
+import           Common.Alphabet (PTChord, PTChar)
 import           Common.Keys     (fromPlover)
 import           Data.Aeson      (FromJSON, ToJSON)
 import           Data.Default    (Default (..))
@@ -17,11 +17,14 @@ import           Data.Map        (Map)
 import qualified Data.Map        as Map
 import           Data.Text       (Text)
 import           GHC.Generics    (Generic)
-import           Servant.API     ((:>), JSON, PlainText, Post, ReqBody)
+import           Servant.API     ((:<|>), (:>), JSON, PlainText, Post, ReqBody)
 import           Text.Read       (readMaybe)
 import           Web.KeyCode     (Key)
 
-type RoutesApi = "api" :> "config" :> "new" :> ReqBody '[PlainText] String  :> Post '[JSON] PloverCfg
+type RoutesApi = "api" :>
+     ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] PloverCfg
+  :<|> "parse"  :> "steno" :> ReqBody '[PlainText] String :> Post '[JSON] [PTChord]
+     )
 
 data PloverCfg = PloverCfg
   { pcfgMapStenoKeys        :: Map PTChar [String] -- recognized steno keys

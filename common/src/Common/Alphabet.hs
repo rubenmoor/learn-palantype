@@ -12,7 +12,7 @@ import           Data.Text    (Text)
 import qualified Data.Text    as Text
 import           GHC.Generics (Generic)
 
--- SCPTH+MFRNLYOEAUI^NLCMFRPT+SH
+-- SCPTH+MFRNLYOE||AUI^NLCMFRPT+SHe
 data PTChar =
     LeftS
   | LeftC
@@ -200,7 +200,10 @@ isRightHand = \case
   RightE     -> True
 
 newtype PTChord = PTChord { unPTChord :: [PTChar] }
-  deriving (Eq, Ord)
+  deriving (Generic, Eq, Ord)
+
+instance ToJSON PTChord
+instance FromJSON PTChord
 
 -- make sure the chord have the letters sorted
 mkPTChord :: Set PTChar -> PTChord

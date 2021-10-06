@@ -27,6 +27,7 @@ library
                , random
                , random-shuffle
                , reflex-dom
+               , servant
                , servant-reflex
                , text
                , time

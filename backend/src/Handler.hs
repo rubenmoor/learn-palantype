@@ -1,14 +1,20 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Handler
   ( handlers
   ) where
 
-import           Common.Api            (PloverCfg (..), RoutesApi, keyMapToPloverCfg)
-import           Control.Applicative   (Applicative (pure, (<*>)))
-import           Control.Monad         (foldM, unless)
+import           Common.Alphabet       (PTChord (..), PTChar (..))
+import           Common.Api            (PloverCfg (..), RoutesApi,
+                                        keyMapToPloverCfg)
+import           Control.Applicative   (Alternative((<|>)), Applicative((*>), pure, (<*>)))
+import           Control.Monad         (Monad((>>), fail), when, foldM, unless)
 import           Control.Monad.Except  (MonadError (throwError), runExcept)
 import           Data.Aeson            (FromJSON (..), Value (Array))
 import qualified Data.Aeson            as Json
@@ -20,7 +26,7 @@ import           Data.Either           (Either (..))
 import           Data.Eq               ((==))
 import           Data.Foldable         (Foldable (toList))
 import           Data.Function         (($))
-import           Data.Functor          ((<$>))
+import           Data.Functor          (void, (<$>))
 import           Data.Map              (Map)
 import qualified Data.Map              as Map
 import           Data.Monoid           ((<>))
@@ -28,13 +34,27 @@ import           Data.String           (String)
 import           Data.Text             (Text)
 import qualified Data.Text             as Text
 import           GHC.Show              (Show (show))
+import           Servant               ((:<|>) (..))
 import           Servant.Server        (HasServer (ServerT),
                                         ServantErr (errBody), err400)
 import qualified Servant.Server        as Snap (throwError)
 import           Snap.Core             (Snap)
+import Text.Parsec (eof, space, updateState, try, many1, spaces, sepBy1, anyChar, setState, char, Parsec, oneOf, getState, letter, runParser)
+import Data.Char (Char)
+import Data.Ord (Ord((<)))
+import Data.Maybe (Maybe(..))
+import Control.Category (Category((.)))
+import Data.List ((!!), drop, findIndex)
+import Data.Tuple (fst)
+import GHC.Num (Num((+)))
+import Data.Bool (Bool(..))
+import Control.Monad (Monad((>>=)))
+import Prelude (Applicative((<*)), snd)
 
 handlers :: ServerT RoutesApi '[] Snap
-handlers = handleConfigNew
+handlers =
+       handleConfigNew
+  :<|> handleParseSteno
 
 newtype KeysMapJSON = KeysMapJSON { unKeysMapJSON :: Map String [String]}
 
@@ -79,3 +99,67 @@ handleConfigNew str = do
       pure $ keyMapToPloverCfg stenoKeys
                                (Text.pack system)
                                (Text.pack machine)
+
+parserChord :: Parsec String ([(Char, PTChar)], Bool) [PTChar]
+parserChord = do
+
+  let lsChars =
+        [ ('S', LeftS)
+        , ('C', LeftC)
+        , ('P', LeftP)
+        , ('T', LeftT)
+        , ('H', LeftH)
+        , ('+', LeftCross)
+        , ('M', LeftM)
+        , ('F', LeftF)
+        , ('R', LeftR)
+        , ('N', LeftN)
+        , ('L', LeftL)
+        , ('Y', LeftY)
+        , ('O', LeftO)
+        , ('E', LeftE)
+        , ('|', LeftPipe)
+        , ('|', RightPipe)
+        , ('A', RightA)
+        , ('U', RightU)
+        , ('I', MiddleI)
+        , ('^', RightPoint)
+        , ('N', RightN)
+        , ('L', RightL)
+        , ('C', RightC)
+        , ('M', RightM)
+        , ('F', RightF)
+        , ('R', RightR)
+        , ('P', RightP)
+        , ('T', RightT)
+        , ('+', RightCross)
+        , ('S', RightS)
+        , ('H', RightH)
+        , ('e', RightE)
+        ]
+  setState (lsChars, False)
+
+  let parserKey = do
+        (ls, _) <- getState
+        c <- anyChar
+        case findIndex ((==) c . fst) ls of
+            Nothing -> fail "malformed"
+            Just i  -> do
+              updateState $ (drop (i + 1) ls,) . snd
+              pure $ snd $ ls !! i
+
+      parserHypen = do
+        (ls, foundHyphen) <- getState
+        when foundHyphen $ fail "malformed"
+        void $ char '-'
+        setState (drop 15 ls, True)
+  many1 (try parserKey <|> (parserHypen *> parserKey))
+
+
+handleParseSteno :: String -> Snap [PTChord]
+handleParseSteno str = do
+  let  parser = spaces >> sepBy1 parserChord (many1 space) <* eof
+  case runParser parser ([], False) "client request" str of
+    Left err -> Snap.throwError $
+      err400 { errBody = Lazy.fromStrict $ Char8.pack $ show err }
+    Right ls -> pure $ PTChord <$> ls
