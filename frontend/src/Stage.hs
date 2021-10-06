@@ -39,7 +39,7 @@ import           Data.List              (zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
 import           Data.Ord               (Ord ((>)))
-import           Data.Semigroup         (Semigroup ((<>)))
+import           Data.Semigroup         (Endo(..), Semigroup ((<>)))
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)))
@@ -55,12 +55,14 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          leftmost, performEvent, switchDyn,
                                          text, widgetHold, widgetHold_,
                                          (=:), Prerender)
-import           Shared                 (dynSimple, iFa, loadingScreen,
+import           Shared                 (if', dynSimple, iFa, loadingScreen,
                                          prerenderSimple, whenJust)
 import           State                  (EStateUpdate, Env (..), Stage (..),
                                          State (..), stageUrl, updateState, Navigation (..))
 import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
+import Data.Monoid (Monoid(mconcat))
+import qualified Data.Set as Set
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -94,9 +96,9 @@ elCongraz
   , SetRoute t (R FrontendRoute) m
   )
   => Event t ()
-  -> Maybe Stage
+  -> Navigation
   -> m ()
-elCongraz eDone mNxt = mdo
+elCongraz eDone Navigation{..} = mdo
 
   eChord <- asks envEChord
 
@@ -113,15 +115,19 @@ elCongraz eDone mNxt = mdo
         elClass "div" "congraz" $ do
           el "div" $ text "Task cleared!"
           el "div" $ iFa "fas fa-check-circle"
-          whenJust mNxt $ \nxt -> do
+          whenJust navMNext $ \nxt -> do
             (elACont, _) <- elClass "div" "anthrazit" $ do
               text "Type "
               el "code" $ text "CON"
               text " to continue to "
               elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
             let eContinue = leftmost [eChordCON, domEvent Click elACont]
-            updateState $ eContinue $>
-              (field @"stProgress" %~ \s -> if nxt > s then nxt else s)
+            updateState $ eContinue $> appEndo (mconcat
+              [ Endo $ field @"stProgress" %~ \s -> if nxt > s then nxt else s
+              , Endo $ field @"stCleared" %~ Set.insert navCurrent
+              , if' (nxt == Stage2_1) $
+                  Endo $ field @"stTOCShowStage2" .~ True
+              ])
             setRoute $ eContinue $> FrontendRoute_Main :/ ()
           el "div" $ do
             el "span" $ text "("
@@ -195,7 +201,11 @@ introduction = do
   elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"
     let eStart = leftmost [eChordSTART, domEvent Click btn]
-    updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
+    updateState $ eStart $> appEndo (mconcat
+      [ Endo $ field @"stProgress" .~ Stage1_1
+      , Endo $ field @"stCleared" %~ Set.insert (navCurrent envNavigation)
+      , Endo $ field @"stTOCShowStage1" .~ True
+      ])
     setRoute $ eStart $> FrontendRoute_Main :/ ()
 
   elClass "div" "paragraph" $ do
@@ -250,7 +260,7 @@ stage1_1 = do
   updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
   eDone <- taskAlphabet True
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 -- 1.2
@@ -284,7 +294,7 @@ stage1_2 = do
   updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
   eDone <- taskAlphabet False
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 -- 1.3
@@ -317,21 +327,19 @@ stage1_3 = do
   updateState $ ePb $> (field @"stShowKeyboard" .~ False)
 
   eDone <- taskAlphabet True
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 -- 1.4
 
 stage1_4
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
-  , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
@@ -351,7 +359,7 @@ stage1_4 = do
   updateState $ ePb $> (field @"stShowKeyboard" .~ False)
 
   eDone <- taskAlphabet False
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 taskAlphabet
@@ -579,7 +587,7 @@ stage1_5 = do
 
   eDone <- taskLetters dynLeftHand
 
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 stage1_6
@@ -591,7 +599,6 @@ stage1_6
   , MonadReader (Env t) m
   , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   ) => m Navigation
 stage1_6 = do
@@ -619,7 +626,7 @@ stage1_6 = do
 
   eDone <- taskLetters dynRightHand
 
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 stage1_7
@@ -661,7 +668,7 @@ stage1_7 = do
 
   eDone <- taskLetters dynAlphabet
 
-  elCongraz eDone $ navMNext envNavigation
+  elCongraz eDone envNavigation
   pure envNavigation
 
 stage2_1

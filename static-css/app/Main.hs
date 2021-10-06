@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (bsInset, yellow, borderSpacing, paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
+import           Clay          (lineHeight, li, ul, listStyleType, paddingTop, h3, darkblue, h2, overflowClip, bsInset, yellow, borderSpacing, paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
                                 Css, Cursor (cursor), None (none),
                                 Other (other), a, absolute, after, alignItems,
                                 backgroundColor, block, blue, body, bold,
@@ -18,7 +18,7 @@ import           Clay          (bsInset, yellow, borderSpacing, paddingRight, pa
                                 green, header, height, hidden, hover, i,
                                 important, inlineBlock, inlineFlex, input,
                                 justifyContent, left, lightblue, lightgray,
-                                lightgreen, lightgrey, linear, margin,
+                                lightgreen, linear, margin,
                                 marginBottom, marginRight, marginTop, maxWidth,
                                 minHeight, minWidth, opacity, outline, overflow,
                                 padding, paddingBottom, pct, pointer, position,
@@ -32,7 +32,7 @@ import           Clay          (bsInset, yellow, borderSpacing, paddingRight, pa
                                 visited, white, whiteSpace, width, zIndex,
                                 ( # ), (&), (?), (^=), (|>))
 import           Clay.Border   (borderBottom)
-import           Clay.Flexbox  (nowrap)
+import           Clay.Flexbox  (row, nowrap)
 import qualified Clay.Media    as Media
 import           Data.Function (($))
 import           GHC.IO        (IO)
@@ -44,8 +44,14 @@ import Data.Monoid (Monoid(mempty))
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
 
+myLightgray :: Color
+myLightgray = rgb 230 230 230
+
 colorLink :: Color
 colorLink = blue
+
+colorLinkVisited :: Color
+colorLinkVisited = rgb 64 103 124
 
 main :: IO ()
 main = putCss $ do
@@ -59,10 +65,13 @@ main = putCss $ do
         textDecoration none
         color colorLink
       ":hover" & textDecoration underline
+      visited & color colorLinkVisited
       ".normalLink" & do
         color colorLink
         cursor pointer
     height $ pct 100
+    h2 ? color darkblue
+    h3 ? color anthrazit
   star ? boxSizing borderBox
 
   -- flex layout
@@ -78,19 +87,44 @@ main = putCss $ do
     -- already the default? flexBasis auto
 
   div # ".row" ? do
-    -- TODO: not sure if needed
-    -- display flex
-    -- flexFlow column nowrap
+    display flex
+    flexFlow row nowrap
     flexGrow 1
     flexShrink 1
+    overflowY hidden
 
   section # ".content" ? do
     overflowY auto
     paddingLeft $ em 1
     paddingRight $ em 1
+    height $ pct 100
 
   section # ".toc" ? do
-    pure ()
+    marginTop $ em 0.83
+    paddingLeft $ px 12
+    paddingTop $ px 12
+    flexShrink 0
+    div ? marginRight (px 12)
+    ul ? do
+      listStyleType none
+      margin (px 0) (px 0) (px 0) (px 0)
+      padding (px 0) (px 0) (px 0) (px 0)
+      li ? do
+        lineHeight $ em 1.8
+        ".stage" & do
+          marginTop $ em 0.2
+          i ? do
+            color anthrazit
+            fontSize $ pt 18
+        span ? do
+          paddingLeft $ px 8
+          paddingRight $ px 8
+          color gray
+        i ? do
+          color green
+          paddingLeft $ px 8
+          paddingRight $ px 8
+          fontSize $ pt 14
 
   footer ? do
     flexGrow 0
@@ -118,7 +152,7 @@ main = putCss $ do
     maxWidth $ px 418
     borderRadius (px 12) (px 12) (px 12) (px 12)
     backgroundColor anthrazit
-    color lightgrey
+    color myLightgray
     fontSize (pt 12)
     padding (px 12) (px 12) (px 12) (px 12)
     position absolute
@@ -169,7 +203,7 @@ main = putCss $ do
       width $ px keyboardWidth
       height $ px keyboardHeight
       borderRadius (px 8) (px 8) (px 8) (px 8)
-      backgroundColor lightgray
+      backgroundColor myLightgray
       padding (px keyboardPadding)
               (px keyboardPadding)
               (px keyboardPadding)
@@ -201,13 +235,17 @@ main = putCss $ do
             color gray
             marginTop $ px (-6)
 
-  span # ".btnToggleKeyboard" ? do
+  span # ".btnHeader" ? do
     color gray
     fontSize $ pt 24
     padding (px 8) (px 8) (px 8) (px 8)
     ".keyboardVisible" & do
-      backgroundColor lightgray
+      backgroundColor myLightgray
       color white
+
+  span # ".btn" ? do
+    color gray
+    fontSize $ pt 24
 
   div # ".dropdown" ? do
     position relative
@@ -248,13 +286,14 @@ main = putCss $ do
   ".bgWhite" ? backgroundColor white
   ".bgGreen" ? backgroundColor lightgreen
   ".bgRed" ? backgroundColor red
+  ".bgLightgray" ? backgroundColor myLightgray
   ".fgTransparent" ? color transparent
   ".red" ? color red
   ".small" ? fontSize (pt 12)
   ".anthrazit" ? color anthrazit
 
   pre ? do
-    backgroundColor lightgray
+    backgroundColor myLightgray
     width $ other "fit-content"
     borderRadius (px 4) (px 4) (px 4) (px 4)
     padding (px 6) (px 6) (px 6) (px 6)

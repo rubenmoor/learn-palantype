@@ -4,9 +4,8 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -16,24 +15,24 @@ module Home where
 
 import           Client                      (postConfigNew, postRender)
 import           Common.Alphabet             (PTChar (..), PTChord (..),
-                                              mkPTChord, showChord, showKey, showLetter)
+                                              mkPTChord, showChord, showLetter)
 import           Common.Api                  (PloverCfg (..))
-import           Common.Route                (FrontendRoute (FrontendRoute_Main))
+import           Common.Route                (FrontendRoute (..))
 import           Control.Applicative         (Applicative (..))
 import           Control.Category            (Category ((.)))
 import           Control.Lens.Setter         ((%~), (.~))
-import           Control.Monad               ((=<<), unless, when, (<=<))
+import           Control.Monad               ((<=<), (=<<))
 import           Control.Monad.Fix           (MonadFix)
-import           Control.Monad.IO.Class      (MonadIO (liftIO))
-import           Control.Monad.Reader        (MonadReader, asks)
-import           Data.Bool                   (bool, Bool (..), not)
+import           Control.Monad.Reader        (MonadReader (ask), asks)
+import           Data.Bool                   (Bool (..), bool, not)
 import           Data.Default                (Default (def))
 import           Data.Either                 (Either (..))
+import           Data.Eq                     (Eq ((==)))
 import           Data.Foldable               (Foldable (foldl, null), concat)
 import           Data.Function               (const, ($), (&))
 import           Data.Functor                (fmap, void, ($>), (<$>), (<&>))
 import           Data.Generics.Product       (field)
-import           Data.List                   (elem, sort)
+import           Data.List                   (elem)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (Maybe (..), listToMaybe)
@@ -46,17 +45,17 @@ import           Data.String                 (String, unwords)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
 import           Data.Tuple                  (fst, snd)
-import           Data.Witherable             (Filterable (catMaybes, mapMaybe))
+import           Data.Witherable             (Filterable (catMaybes, filter, mapMaybe))
 import           GHCJS.DOM.EventM            (on)
 import           GHCJS.DOM.FileReader        (getResult, load, newFileReader,
                                               readAsText)
 import           GHCJS.DOM.HTMLElement       (focus)
-import           GHCJS.DOM.Types             (File, HTMLInputElement (..), uncheckedCastTo)
+import           GHCJS.DOM.Types             (File)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
-import           Obelisk.Route.Frontend      (pattern (:/), R,
-                                              SetRoute (setRoute))
-import           Reflex.Dom                  (elDynClass, delay, DomBuilder (DomBuilderSpace, inputElement),
+import           Obelisk.Route.Frontend      (R, RouteToUrl, SetRoute,
+                                              routeLink)
+import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
@@ -64,12 +63,14 @@ import           Reflex.Dom                  (elDynClass, delay, DomBuilder (Dom
                                               InputElement (..),
                                               InputElementConfig,
                                               MonadHold (holdDyn),
-                                              PerformEvent (performEvent_), prerender,
+                                              PerformEvent (performEvent_),
                                               PostBuild (getPostBuild),
-                                              Prerender(Client),
-                                              Reflex (Dynamic, Event, never, updated),
-                                              blank, dyn, dyn_, el, el', elAttr,
-                                              elClass, elClass', elDynAttr,
+                                              Prerender (Client),
+                                              Reflex (Dynamic, Event, updated),
+                                              blank, delay, dyn_, el, el',
+                                              elAttr, elAttr', elClass,
+                                              elClass', elDynAttr, elDynClass,
+                                              elDynClass',
                                               elementConfig_eventSpec,
                                               elementConfig_initialAttributes,
                                               elementConfig_modifyAttributes,
@@ -78,16 +79,17 @@ import           Reflex.Dom                  (elDynClass, delay, DomBuilder (Dom
                                               inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
                                               keydown, keyup, leftmost,
-                                              mergeWith, prerender_,
-                                              preventDefault, splitDynPure,
-                                              text, wrapDomEvent, switchDyn,
-                                              (=:), _element_raw, _inputElement_element, _el_element)
+                                              mergeWith, preventDefault,
+                                              splitDynPure, text, wrapDomEvent,
+                                              (=:), _el_element, _element_raw,
+                                              _inputElement_element)
 import           Servant.Common.Req          (reqSuccess)
-import           Shared                      (iFa, reqFailure, whenJust, dynSimple, prerenderSimple)
+import           Shared                      (dynSimple, iFa, prerenderSimple,
+                                              reqFailure, whenJust, if')
 import           State                       (EStateUpdate, Message (..),
-                                              State (..), updateState)
-import Data.Witherable (Filterable(filter))
-import Data.Eq (Eq((==)))
+                                              Stage (..), State (..),
+                                              stageDescription, stageUrl,
+                                              updateState)
 
 default (Text)
 
@@ -124,22 +126,35 @@ message = do
           el "div" $ text msgCaption
           el "span" $ text msgBody
 
-if' :: Monoid a => Bool -> a -> a
-if' True x  = x
-if' False _ = mempty
-
 settings
   :: forall t js (m :: * -> *).
   ( DomBuilder t m
   , PostBuild t m
   , Prerender js t m
-  , SetRoute t (R FrontendRoute) m
   , EventWriter t EStateUpdate m
   , MonadReader (Dynamic t State) m
   , MonadFix m
   )
   => m ()
 settings = do
+  dynState <- ask
+
+
+  -- button to toggle keyboard
+  let dynShowKeyboard = stShowKeyboard <$> dynState
+  dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
+    (s, _) <-
+      if showKeyboard
+        then
+          elClass' "span" "btnHeader keyboardVisible" $
+            iFa "far fa-keyboard"
+        else
+          elClass' "span" "btnHeader keyboardHidden" $
+            iFa "fas fa-keyboard"
+
+    updateState $ domEvent Click s $> (field @"stShowKeyboard" %~ not)
+
+  -- button to show configuration dropdown
   eFile <- elClass "div" "dropdown" $ do
     elClass "span" "dropdown-button" $ iFa "fas fa-cog"
     elClass "div" "dropdown-content" $ mdo
@@ -211,21 +226,6 @@ settings = do
                   <> Text.intercalate "\n" compatibleSystems
            in Endo $ field @"stMsg" .~ Just Message {..}
       ]
-
-  dynShowKeyboard <- asks (stShowKeyboard <$>)
-  dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
-    (s, _) <-
-      if showKeyboard
-        then
-          elClass' "span" "btnToggleKeyboard keyboardVisible" $
-            iFa "far fa-keyboard"
-        else
-          elClass' "span" "btnToggleKeyboard keyboardHidden" $
-            iFa "fas fa-keyboard"
-
-    updateState $ domEvent Click s $> (field @"stShowKeyboard" %~ not)
-
-  setRoute $ eReqSuccess $> FrontendRoute_Main :/ ()
 
 data KeyState
   = KeyStateDown PTChar
@@ -417,3 +417,99 @@ elStenoOutput dynPressedKeys = mdo
                                Keydown
                                (const preventDefault)
   pure i
+
+-- Table of Contents
+
+toc
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadReader (Dynamic t State) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => Dynamic t Stage
+  -> m ()
+toc dynCurrent = elClass "section" "toc" $ do
+
+  dynState <- ask
+  let dynShowTOC = stShowTOC <$> dynState
+      dynShowStage1 = stTOCShowStage1 <$> dynState
+      dynShowStage2 = stTOCShowStage2 <$> dynState
+      dynShowStage3 = stTOCShowStage3 <$> dynState
+  -- button to toggle TOC
+  dyn_ $ dynShowTOC <&> \showTOC -> do
+    (s, _) <-
+      if showTOC
+        then
+          elAttr' "span"
+            (  "class" =: "btn TOCVisible"
+            <> "title" =: "Hide Table of Contents"
+            )
+            $ iFa "fas fa-times"
+        else
+          elAttr' "span"
+            (  "class" =: "btn TOCHidden"
+            <> "title" =: "Show Table of Contents"
+            )
+            $ iFa "fas fa-bars"
+
+    updateState $ domEvent Click s $> (field @"stShowTOC" %~ not)
+
+  let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
+  elDynClass "div" dynClassDisplay $ do
+    let dynCleared = stCleared <$> dynState
+    dyn_ $ dynCleared <&> \cleared -> do
+
+      let elLi stage = do
+            let dynClass = bool "" "bgLightgray" . (== stage) <$> dynCurrent
+            elDynClass "li" dynClass $ do
+              if stage `Set.member` cleared
+                then iFa "fas fa-check"
+                else el "span" $ text "○"
+              routeLink (stageUrl stage) $ text $ stageDescription stage
+
+      el "ul" $ do
+
+        elLi Introduction
+
+        elClass "li" "stage" $ do
+
+          let dynClass =
+                bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage1
+          (e, _) <- elDynClass' "i" dynClass blank
+          let eClick = domEvent Click e
+          updateState $ eClick $> (field @"stTOCShowStage1" %~ not)
+
+          text "Stage 1: The Palantype Alphabet"
+
+        let dynClassUl1 =
+              bool "displayNone" "" <$> dynShowStage1
+
+        elDynClass "ul" dynClassUl1 $ do
+
+          elLi Stage1_1
+          elLi Stage1_2
+          elLi Stage1_3
+          elLi Stage1_4
+          elLi Stage1_5
+          elLi Stage1_6
+          elLi Stage1_7
+
+        elClass "li" "stage" $ do
+
+          let dynClass =
+                bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage2
+          (e, _) <- elDynClass' "i" dynClass blank
+          let eClick = domEvent Click e
+          updateState $ eClick $> (field @"stTOCShowStage2" %~ not)
+
+          text "Stage 2: Syllables and chords"
+
+        let dynClassUl2 =
+              bool "displayNone" "" <$> dynShowStage1
+
+        elDynClass "ul" dynClassUl2 $ do
+          elLi Stage2_1

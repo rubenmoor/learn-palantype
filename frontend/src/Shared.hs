@@ -1,40 +1,44 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecursiveDo       #-}
 
 module Shared where
 
 import           Control.Applicative (Applicative (pure), (<$>))
 import           Control.Category    (Category ((.)))
+import           Control.Monad       ((=<<))
 import           Control.Monad.Fix   (MonadFix)
-import           Data.Bool           (Bool, not)
+import           Data.Bool           (Bool (..), not)
 import           Data.Function       (const, ($))
 import           Data.Functor        (void)
-import           Data.Maybe          (fromMaybe, Maybe (..))
-import           Data.Monoid         ((<>))
+import           Data.Maybe          (Maybe (..), fromMaybe)
+import           Data.Monoid         (Monoid (mempty), (<>))
 import           Data.Text           (Text, unwords)
 import qualified Data.Text           as Text
 import           Data.Tuple          (fst)
-import           Reflex.Dom          (elClass, widgetHold, PostBuild, NotReady, Adjustable, dyn, switchHold, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom          (Adjustable,
+                                      DomBuilder (DomBuilderSpace, inputElement),
                                       Element, EventName (Click), EventResult,
                                       HasDomEvent (domEvent),
                                       InputElement (_inputElement_checked, _inputElement_value),
                                       InputElementConfig, MonadHold (holdDyn),
-                                      Reflex(never, Dynamic, Event, current, updated),
+                                      NotReady, PostBuild,
+                                      Prerender (Client, prerender),
+                                      Reflex (Dynamic, Event, current, never, updated),
                                       XhrResponse (..), attachWith, blank, def,
-                                      el, el', elAttr, elAttr', elClass',
-                                      elementConfig_initialAttributes, ffor,
-                                      inputElementConfig_elementConfig,
+                                      dyn, el, el', elAttr, elAttr', elClass,
+                                      elClass', elementConfig_initialAttributes,
+                                      ffor, inputElementConfig_elementConfig,
                                       inputElementConfig_initialChecked,
                                       inputElementConfig_setChecked, leftmost,
-                                      text, (&), (.~), (=:), switchDyn, Prerender (prerender, Client))
+                                      switchDyn, switchHold, text, widgetHold,
+                                      (&), (.~), (=:))
 import           Servant.Common.Req  (ReqResult (..))
-import Control.Monad (Monad, (=<<))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -154,3 +158,7 @@ loadingScreen =
   elClass "div" "mkOverlay" $ do
     iFa "fas fa-spinner fa-spin"
     text " Loading ..."
+
+if' :: Monoid a => Bool -> a -> a
+if' True x  = x
+if' False _ = mempty

@@ -25,6 +25,8 @@ import           Data.Functor        (Functor (fmap))
 import           Data.Maybe          (Maybe (..))
 import           Data.Ord            (Ord)
 import           Data.Semigroup      (Semigroup (..))
+import           Data.Set            (Set)
+import qualified Data.Set as         Set
 import           Data.Text           (Text)
 import           GHC.Generics        (Generic)
 import           Obelisk.Route       (pattern (:/), R)
@@ -34,15 +36,15 @@ import           Text.Show           (Show (..))
 -- environment for frontend pages
 
 data Env t = Env
-  { envDynState :: Dynamic t State
-  , envEChord   :: Event t PTChord
+  { envDynState   :: Dynamic t State
+  , envEChord     :: Event t PTChord
   , envNavigation :: Navigation
   }
 
 data Navigation = Navigation
   { navMPrevious :: Maybe Stage
-  , navCurrent :: Stage
-  , navMNext :: Maybe Stage
+  , navCurrent   :: Stage
+  , navMNext     :: Maybe Stage
   }
 
 -- frontend application state
@@ -60,10 +62,15 @@ instance Semigroup EStateUpdate where
 
 data State = State
   { -- stSession :: Session
-    stPloverCfg    :: PloverCfg
-  , stMsg          :: Maybe Message
-  , stShowKeyboard :: Bool
-  , stProgress     :: Stage
+    stPloverCfg     :: PloverCfg
+  , stMsg           :: Maybe Message
+  , stShowKeyboard  :: Bool
+  , stShowTOC       :: Bool
+  , stProgress      :: Stage
+  , stCleared       :: Set Stage
+  , stTOCShowStage1 :: Bool
+  , stTOCShowStage2 :: Bool
+  , stTOCShowStage3 :: Bool
   } deriving (Generic)
 
 instance FromJSON State where
@@ -71,7 +78,12 @@ instance FromJSON State where
     State <$> o .: "ploverCfg"
           <*> pure Nothing -- don't expect a persisted message
           <*> o .: "keyboard"
+          <*> o .: "TOC"
           <*> o .: "progress"
+          <*> o .: "cleared"
+          <*> o .: "TOCShowStage1"
+          <*> o .: "TOCShowStage2"
+          <*> o .: "TOCShowStage3"
   parseJSON invalid =
     prependFailure "parsing State failed, " $ typeMismatch "Object" invalid
 
@@ -81,7 +93,12 @@ instance ToJSON State where
     [ "ploverCfg" .= stPloverCfg
     -- stMsg: never persist messages
     , "keyboard" .= stShowKeyboard
+    , "TOC"      .= stShowTOC
     , "progress" .= stProgress
+    , "cleared"  .= stCleared
+    , "stTOCShowStage1" .= stTOCShowStage1
+    , "stTOCShowStage2" .= stTOCShowStage2
+    , "stTOCShowStage3" .= stTOCShowStage3
     ]
 
 instance Default State where
@@ -89,7 +106,12 @@ instance Default State where
     { stPloverCfg = def
     , stMsg = Nothing
     , stShowKeyboard = True
+    , stShowTOC = False
     , stProgress = def
+    , stCleared = Set.empty
+    , stTOCShowStage1 = False
+    , stTOCShowStage2 = False
+    , stTOCShowStage3 = False
     }
 
 updateState ::
@@ -153,3 +175,15 @@ stageUrl = \case
   Stage1_6 -> FrontendRoute_Stage1_6 :/ ()
   Stage1_7 -> FrontendRoute_Stage1_7 :/ ()
   Stage2_1 -> FrontendRoute_Stage2_1 :/ ()
+
+stageDescription :: Stage -> Text
+stageDescription = \case
+  Introduction -> "Introduction"
+  Stage1_1 -> "Task 1: Type the letters"
+  Stage1_2 -> "Task 2: Memorize the order"
+  Stage1_3 -> "Task 3: Type the letters blindly"
+  Stage1_4 -> "Task 4: Memorize the order blindly"
+  Stage1_5 -> "Task 5: Memorize the left hand"
+  Stage1_6 -> "Task 6: Memorize the right hand"
+  Stage1_7 -> "Task 7: Memorize them all"
+  Stage2_1 -> "Task 1: Learn your first chords"
