@@ -1,11 +1,11 @@
 {-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE RecursiveDo           #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeApplications      #-}
@@ -15,8 +15,9 @@
 module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
-import           State                       (Stage(..),  EStateUpdate (..), State (..),
-                                              stageUrl, Env(..), Navigation (..))
+import           State                       (EStateUpdate (..), Env (..),
+                                              Navigation (..), Stage (..),
+                                              State (..), stageUrl)
 
 import           Common.Route                (FrontendRoute (..))
 import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
@@ -29,24 +30,27 @@ import qualified Data.Text.Lazy.Encoding     as Lazy
 import           GHCJS.DOM                   (currentWindowUnchecked)
 import           GHCJS.DOM.Storage           (getItem, setItem)
 import           GHCJS.DOM.Window            (getLocalStorage)
-import           Home                        (toc, message, settings,
-                                              stenoInput)
+import           Home                        (message, settings, stenoInput,
+                                              toc)
 import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
 import           Obelisk.Route               (R)
-import           Obelisk.Route.Frontend      (subRoute, RoutedT,
-                                              SetRoute (setRoute), mapRoutedT,
-                                              subRoute_)
-import           Reflex.Dom                  (elClass, EventWriterT, dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
+import           Obelisk.Route.Frontend      (RoutedT, SetRoute (setRoute),
+                                              mapRoutedT, subRoute, subRoute_)
+import           Reflex.Dom                  (EventWriterT,
+                                              PerformEvent (performEvent_),
+                                              PostBuild (getPostBuild),
                                               Prerender (prerender),
-                                              Reflex(Dynamic, Event, updated), blank,
-                                              def, el, elAttr, foldDyn,
-                                              leftmost, prerender_,
-                                              runEventWriterT, tailE, text,
-                                              widgetHold_, (=:))
-import           Stage                       (stage1_7, stage1_6, introduction, stage1_1, stage1_2, stage1_3,
-                                              stage1_4, stage1_5, stage2_1, elFooter)
-import Shared (loadingScreen)
+                                              Reflex (Dynamic, Event, updated),
+                                              blank, def, dyn_, el, elAttr,
+                                              elClass, foldDyn, leftmost,
+                                              prerender_, runEventWriterT,
+                                              tailE, text, widgetHold_, (=:))
+import           Shared                      (loadingScreen)
+import Page.Introduction (introduction)
+import qualified Page.Stage1 as Stage1
+import qualified Page.Stage2 as Stage2
+import Page.Common (elFooter)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -119,14 +123,14 @@ frontendBody = mdo
                 pure $ Navigation Nothing Stage1_1 Nothing
 
               FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
-              FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) stage1_1
-              FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) stage1_2
-              FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) stage1_3
-              FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) stage1_4
-              FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) stage1_5
-              FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) stage1_6
-              FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) stage1_7
-              FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         stage2_1
+              FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
+              FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
+              FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
+              FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
+              FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
+              FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
+              FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
+              FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         Stage2.exercise1
           pure dynNavigation
       dyn_ $ dynNavigation <&> elFooter
   blank

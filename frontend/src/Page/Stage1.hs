@@ -1,28 +1,27 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
-module Stage where
+module Page.Stage1 where
 
 import           Common.Alphabet        (PTChar (..), PTChord (..), isLeftHand,
-                                         isRightHand, mkPTChord, showChord',
-                                         showKey, showLetter)
+                                         isRightHand, showChord', showKey,
+                                         showLetter)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
-import           Control.Lens           ((%~), (.~), (<&>))
+import           Control.Lens           ((.~), (<&>))
 import           Control.Monad          (when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class (liftIO)
@@ -38,185 +37,29 @@ import           Data.Int               (Int)
 import           Data.List              (zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
-import           Data.Ord               (Ord((<), (>)))
-import           Data.Semigroup         (Endo(..), Semigroup ((<>)))
+import           Data.Ord               (Ord ((<), (>)))
+import           Data.Semigroup         (Semigroup ((<>)))
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)))
-import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
-                                         SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (DomBuilder, EventName (Click),
-                                         EventWriter, HasDomEvent (domEvent),
+import           Obelisk.Route.Frontend (R, SetRoute)
+import           Page.Common            (elCongraz)
+import           Reflex.Dom             (DomBuilder, EventWriter,
                                          MonadHold (holdDyn),
-                                         PostBuild (getPostBuild),
-                                         Reflex (Dynamic, Event, never, updated), blank,
-                                         dynText, dyn_, el, elAttr, elClass,
-                                         elClass', elDynClass, foldDyn,
-                                         leftmost, performEvent,
-                                         text, widgetHold_,
-                                         (=:), Prerender)
-import           Shared                 (widgetHoldSimple, if', dynSimple, iFa,
-                                         prerenderSimple, whenJust)
-import           State                  (EStateUpdate, Env (..), Stage (..),
-                                         State (..), stageUrl, updateState, Navigation (..))
+                                         PostBuild (getPostBuild), Prerender,
+                                         Reflex (Dynamic, Event, updated),
+                                         blank, dynText, dyn_, el, elClass,
+                                         elDynClass, foldDyn, performEvent,
+                                         text, widgetHold_)
+import           Shared                 (dynSimple, prerenderSimple,
+                                         widgetHoldSimple)
+import           State                  (EStateUpdate, Env (..),
+                                         Navigation (..), State (..),
+                                         updateState)
 import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
-import Data.Monoid (Monoid(mconcat))
-import qualified Data.Set as Set
 
-elFooter
-  :: forall js t (m :: * -> *).
-  ( DomBuilder t m
-  , Prerender js t m
-  , RouteToUrl (R FrontendRoute) m
-  , SetRoute t (R FrontendRoute) m
-  )
-  => Navigation
-  -> m ()
-elFooter Navigation{..} = el "footer" $ do
-  whenJust navMPrevious $ \prv -> do
-    elClass "div" "floatLeft" $ do
-      text "< "
-      routeLink (stageUrl prv) $ text $ Text.pack $ show prv
-  text $ Text.pack $ show navCurrent
-  whenJust navMNext $ \nxt -> do
-    elClass "div" "floatRight" $ do
-      routeLink (stageUrl nxt) $ text $ Text.pack $ show nxt
-      text " >"
-  elClass "br" "clearBoth" blank
-
-elCongraz
-  :: forall t (m :: * -> *).
-  ( DomBuilder t m
-  , EventWriter t EStateUpdate m
-  , MonadFix m
-  , MonadHold t m
-  , MonadReader (Env t) m
-  , PostBuild t m
-  , SetRoute t (R FrontendRoute) m
-  )
-  => Event t ()
-  -> Navigation
-  -> m ()
-elCongraz eDone Navigation{..} = mdo
-
-  eChord <- asks envEChord
-
-  let chordCON = mkPTChord [LeftC, LeftO, RightN]
-      chordBACK = mkPTChord [LeftP, LeftCross, RightA, RightC]
-      eChordCON = void $ filter (== chordCON) eChord
-      eChordBACK = void $ filter (== chordBACK) eChord
-
-  dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
-  eBack <- dynSimple $ dynShowCongraz <&> \case
-    False -> pure never
-    True ->
-      elClass "div" "mkOverlay" $
-        elClass "div" "congraz" $ do
-          el "div" $ text "Task cleared!"
-          el "div" $ iFa "fas fa-check-circle"
-          whenJust navMNext $ \nxt -> do
-            (elACont, _) <- elClass "div" "anthrazit" $ do
-              text "Type "
-              el "code" $ text "CON"
-              text " to continue to "
-              elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
-            let eContinue = leftmost [eChordCON, domEvent Click elACont]
-            updateState $ eContinue $> appEndo (mconcat
-              [ Endo $ field @"stProgress" %~ \s -> if nxt > s then nxt else s
-              , Endo $ field @"stCleared" %~ Set.insert navCurrent
-              , if' (nxt == Stage2_1) $
-                  Endo $ field @"stTOCShowStage2" .~ True
-              ])
-            setRoute $ eContinue $> FrontendRoute_Main :/ ()
-          el "div" $ do
-            el "span" $ text "("
-            (elABack, _) <- elClass' "a" "normalLink" $ text "back"
-            text " "
-            el "code" $ text "P+AC"
-            el "span" $ text ")"
-            pure $ leftmost [eChordBACK, domEvent Click elABack]
-  blank
-
--- introduction
-
-introduction
-  :: forall t (m :: * -> *).
-  ( DomBuilder t m
-  , EventWriter t EStateUpdate m
-  , MonadReader (Env t) m
-  , SetRoute t (R FrontendRoute) m
-  )
-  => m Navigation
-introduction = do
-
-  Env{..} <- ask
-
-  el "h1" $ text "Introduction"
-  el "h2" $ text "Why Palantype"
-  elClass "div" "paragraph" $
-    text
-      "Palantype allows you to type with lightning speed. \
-      \It's a stenographic system in the wider sense. \
-      \The most widespread of these systems is simply called steno. \
-      \Any steno-style system requires quite a bit of learning. \
-      \Palantype has the advantage that it's more suitable for regular \
-      \keyboards. There are limitations, though."
-  el "h2" $ text "Requirements"
-  el "h3" $ text "Hardware"
-  elClass "div" "paragraph" $
-    text
-      "You can get started with your regular keyboard. \
-      \However, keyboards usually have limit of how many keys register \
-      \at the same time. Long term, you will need a keyboard that supports \
-      \N-Key roll-over (NKR) to type chords of up to ten keys. \
-      \In addition, a ortholinear layout as well as very sensitive keys \
-      \are preferable."
-  elClass "div" "paragraph" $
-    text
-      "You can play around with the keyboard above to see how much keys \
-      \register at the same time with your hardware."
-
-  el "h3" $ text "Software"
-  elClass "div" "paragraph" $ do
-    text "All of this is made possible by the "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
-    text ". The software "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/plover/") $ text "Plover"
-    text
-      " is part of the project and is all you need to get serious. \
-      \As long as you practice here, you don't need Plover. \
-      \Once you installed and configured Plover however, you can upload your \
-      \Plover configuration here to practice with the same key map."
-  elClass "div" "paragraph" $ do
-    text "Be sure to check out additional information on "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html") $ text "learning Palantype"
-    text " and the "
-    elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
-    text "."
-
-  let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
-      eChordSTART = void $ filter (== chordSTART) envEChord
-
-  elClass "div" "start" $ do
-    (btn, _) <- elClass' "button" "start" $ text "Get Started!"
-    let eStart = leftmost [eChordSTART, domEvent Click btn]
-    updateState $ eStart $> appEndo (mconcat
-      [ Endo $ field @"stProgress" .~ Stage1_1
-      , Endo $ field @"stCleared" %~ Set.insert (navCurrent envNavigation)
-      , Endo $ field @"stTOCShowStage1" .~ True
-      ])
-    setRoute $ eStart $> FrontendRoute_Main :/ ()
-
-  elClass "div" "paragraph" $ do
-    text "Instead of clicking the button, try to input "
-    el "code" $ text "START"
-    text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
-         \finding the next key while holding down. The chord is only registered \
-         \once you release all the keys."
-  pure envNavigation
-
--- 1.1
+-- exercise 1
 
 data WalkState = WalkState
   { wsCounter  :: Int
@@ -224,7 +67,7 @@ data WalkState = WalkState
   , wsDone     :: Maybe Bool
   }
 
-stage1_1
+exercise1
   :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -235,7 +78,7 @@ stage1_1
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
-stage1_1 = do
+exercise1 = do
 
   Env {..} <- ask
 
@@ -265,7 +108,7 @@ stage1_1 = do
 
 -- 1.2
 
-stage1_2
+exercise2
   :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -276,7 +119,7 @@ stage1_2
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
-stage1_2 = do
+exercise2 = do
 
   Env {..} <- ask
 
@@ -299,7 +142,7 @@ stage1_2 = do
 
 -- 1.3
 
-stage1_3
+exercise3
   :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -310,7 +153,7 @@ stage1_3
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
-stage1_3 = do
+exercise3 = do
 
   Env {..} <- ask
 
@@ -332,7 +175,7 @@ stage1_3 = do
 
 -- 1.4
 
-stage1_4
+exercise4
   :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -343,7 +186,7 @@ stage1_4
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
-stage1_4 = do
+exercise4 = do
 
   Env {..} <- ask
 
@@ -543,7 +386,7 @@ taskLetters dynLetters = do
 
       pure $ void $ filter id eDone
 
-stage1_5
+exercise5
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -555,7 +398,7 @@ stage1_5
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
-stage1_5 = do
+exercise5 = do
 
   Env {..} <- ask
 
@@ -591,7 +434,7 @@ stage1_5 = do
   elCongraz eDone envNavigation
   pure envNavigation
 
-stage1_6
+exercise6
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -602,7 +445,7 @@ stage1_6
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   ) => m Navigation
-stage1_6 = do
+exercise6 = do
 
   Env {..} <- ask
 
@@ -630,7 +473,7 @@ stage1_6 = do
   elCongraz eDone envNavigation
   pure envNavigation
 
-stage1_7
+exercise7
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
@@ -641,7 +484,7 @@ stage1_7
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   ) => m Navigation
-stage1_7 = do
+exercise7 = do
 
   Env {..} <- ask
 
@@ -670,21 +513,4 @@ stage1_7 = do
   eDone <- taskLetters dynAlphabet
 
   elCongraz eDone envNavigation
-  pure envNavigation
-
-stage2_1
-  :: forall js t (m :: * -> *).
-  ( DomBuilder t m
-  , EventWriter t EStateUpdate m
-  , MonadFix m
-  , MonadHold t m
-  , MonadReader (Env t) m
-  , Prerender js t m
-  , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
-  , SetRoute t (R FrontendRoute) m
-  )
-  => m Navigation
-stage2_1 = do
-  Env {..} <- ask
   pure envNavigation

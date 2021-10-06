@@ -276,15 +276,15 @@ stenoInput = do
                                    , Set.empty
                                    , Nothing
                                    ) eKeyChange
-      let (dynPressedKeys, dynChord) =
-            splitDynPure $
-              dynInput <&> \(keys, _, release) -> (keys, release)
+      let dynPressedKeys = dynInput <&> \(keys, _   , _      ) -> keys
+          dynDownKeys    = dynInput <&> \(_   , down, _      ) -> down
+          dynChord       = dynInput <&> \(_   , _   , release) -> release
 
       let dynClass = bool "displayNone" "" <$> dynShowKeyboard
       elDynClass "div" dynClass $
         elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
-      kbInput <- elStenoOutput dynPressedKeys
+      kbInput <- elStenoOutput dynDownKeys
 
       -- TODO: doesn't seem to have the desired effect
       let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
@@ -384,13 +384,13 @@ elStenoOutput
   )
   => Dynamic t (Set PTChar)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
-elStenoOutput dynPressedKeys = mdo
+elStenoOutput dynDownKeys = mdo
   let eFocus =
         updated (_inputElement_hasFocus i) <&> \case
           True -> ("Type!", "class" =: Just "anthrazit")
           False -> ("Click me!", "class" =: Just "red")
       eTyping =
-        updated dynPressedKeys <&> \pressedKeys ->
+        updated dynDownKeys <&> \pressedKeys ->
           if Set.null pressedKeys
             then ("...",                             "class" =: Nothing)
             else (showChord $ mkPTChord pressedKeys, "class" =: Nothing)
