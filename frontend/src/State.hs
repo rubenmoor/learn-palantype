@@ -36,9 +36,13 @@ import           Text.Show           (Show (..))
 data Env t = Env
   { envDynState :: Dynamic t State
   , envEChord   :: Event t PTChord
-  , envMPrev    :: Maybe Stage
-  , envCurrent  :: Stage
-  , envMNext    :: Maybe Stage
+  , envNavigation :: Navigation
+  }
+
+data Navigation = Navigation
+  { navMPrevious :: Maybe Stage
+  , navCurrent :: Stage
+  , navMNext :: Maybe Stage
   }
 
 -- frontend application state

@@ -75,22 +75,26 @@ main = putCss $ do
   header ? do
     flexGrow 0
     flexShrink 1
-    flexBasis auto
+    -- already the default? flexBasis auto
 
-  section ? do
-    display flex
-    flexFlow column nowrap
+  div # ".row" ? do
+    -- TODO: not sure if needed
+    -- display flex
+    -- flexFlow column nowrap
     flexGrow 1
     flexShrink 1
-    flexBasis auto
+
+  section # ".content" ? do
     overflowY auto
     paddingLeft $ em 1
     paddingRight $ em 1
 
+  section # ".toc" ? do
+    pure ()
+
   footer ? do
     flexGrow 0
     flexShrink 1
-    flexBasis auto
     boxShadow [bsColor (rgba 0 0 0 0.2) $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)]
     fontSize $ pt 14
     padding (px 12) (px 12) (px 12) (px 12)

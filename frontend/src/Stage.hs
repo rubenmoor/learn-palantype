@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
@@ -47,37 +49,35 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          MonadHold (holdDyn),
                                          PostBuild (getPostBuild),
-                                         Prerender (prerender),
                                          Reflex (Dynamic, Event, never, updated), blank,
                                          dynText, dyn_, el, elAttr, elClass,
                                          elClass', elDynClass, foldDyn,
                                          leftmost, performEvent, switchDyn,
                                          text, widgetHold, widgetHold_,
-                                         (=:))
+                                         (=:), Prerender)
 import           Shared                 (dynSimple, iFa, loadingScreen,
                                          prerenderSimple, whenJust)
 import           State                  (EStateUpdate, Env (..), Stage (..),
-                                         State (..), stageUrl, updateState)
+                                         State (..), stageUrl, updateState, Navigation (..))
 import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
 
 elFooter
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , MonadReader (Env t) m
   , Prerender js t m
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
-elFooter = el "footer" $ do
-  Env {..} <- ask
-  whenJust envMPrev $ \prv -> do
+  => Navigation
+  -> m ()
+elFooter Navigation{..} = el "footer" $ do
+  whenJust navMPrevious $ \prv -> do
     elClass "div" "floatLeft" $ do
       text "< "
       routeLink (stageUrl prv) $ text $ Text.pack $ show prv
-  text $ Text.pack $ show envCurrent
-  whenJust envMNext $ \nxt -> do
+  text $ Text.pack $ show navCurrent
+  whenJust navMNext $ \nxt -> do
     elClass "div" "floatRight" $ do
       routeLink (stageUrl nxt) $ text $ Text.pack $ show nxt
       text " >"
@@ -135,77 +135,76 @@ elCongraz eDone mNxt = mdo
 -- introduction
 
 introduction
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
-  , Prerender js t m
   , MonadReader (Env t) m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 introduction = do
-  el "section" $ do
-    el "h1" $ text "Introduction"
-    el "h2" $ text "Why Palantype"
-    elClass "div" "paragraph" $
-      text
-        "Palantype allows you to type with lightning speed. \
-        \It's a stenographic system in the wider sense. \
-        \The most widespread of these systems is simply called steno. \
-        \Any steno-style system requires quite a bit of learning. \
-        \Palantype has the advantage that it's more suitable for regular \
-        \keyboards. There are limitations, though."
-    el "h2" $ text "Requirements"
-    el "h3" $ text "Hardware"
-    elClass "div" "paragraph" $
-      text
-        "You can get started with your regular keyboard. \
-        \However, keyboards usually have limit of how many keys register \
-        \at the same time. Long term, you will need a keyboard that supports \
-        \N-Key roll-over (NKR) to type chords of up to ten keys. \
-        \In addition, a ortholinear layout as well as very sensitive keys \
-        \are preferable."
-    elClass "div" "paragraph" $
-      text
-        "You can play around with the keyboard above to see how much keys \
-        \register at the same time with your hardware."
 
-    el "h3" $ text "Software"
-    elClass "div" "paragraph" $ do
-      text "All of this is made possible by the "
-      elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
-      text ". The software "
-      elAttr "a" ("href" =: "http://www.openstenoproject.org/plover/") $ text "Plover"
-      text
-        " is part of the project and is all you need to get serious. \
-        \As long as you practice here, you don't need Plover. \
-        \Once you installed and configured Plover however, you can upload your \
-        \Plover configuration here to practice with the same key map."
-    elClass "div" "paragraph" $ do
-      text "Be sure to check out additional information on "
-      elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html") $ text "learning Palantype"
-      text " and the "
-      elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
-      text "."
+  Env{..} <- ask
 
-    eChord <- asks envEChord
-    let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
-        eChordSTART = void $ filter (== chordSTART) eChord
+  el "h1" $ text "Introduction"
+  el "h2" $ text "Why Palantype"
+  elClass "div" "paragraph" $
+    text
+      "Palantype allows you to type with lightning speed. \
+      \It's a stenographic system in the wider sense. \
+      \The most widespread of these systems is simply called steno. \
+      \Any steno-style system requires quite a bit of learning. \
+      \Palantype has the advantage that it's more suitable for regular \
+      \keyboards. There are limitations, though."
+  el "h2" $ text "Requirements"
+  el "h3" $ text "Hardware"
+  elClass "div" "paragraph" $
+    text
+      "You can get started with your regular keyboard. \
+      \However, keyboards usually have limit of how many keys register \
+      \at the same time. Long term, you will need a keyboard that supports \
+      \N-Key roll-over (NKR) to type chords of up to ten keys. \
+      \In addition, a ortholinear layout as well as very sensitive keys \
+      \are preferable."
+  elClass "div" "paragraph" $
+    text
+      "You can play around with the keyboard above to see how much keys \
+      \register at the same time with your hardware."
 
-    elClass "div" "start" $ do
-      (btn, _) <- elClass' "button" "start" $ text "Get Started!"
-      let eStart = leftmost [eChordSTART, domEvent Click btn]
-      updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
-      setRoute $ eStart $> FrontendRoute_Main :/ ()
+  el "h3" $ text "Software"
+  elClass "div" "paragraph" $ do
+    text "All of this is made possible by the "
+    elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
+    text ". The software "
+    elAttr "a" ("href" =: "http://www.openstenoproject.org/plover/") $ text "Plover"
+    text
+      " is part of the project and is all you need to get serious. \
+      \As long as you practice here, you don't need Plover. \
+      \Once you installed and configured Plover however, you can upload your \
+      \Plover configuration here to practice with the same key map."
+  elClass "div" "paragraph" $ do
+    text "Be sure to check out additional information on "
+    elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html") $ text "learning Palantype"
+    text " and the "
+    elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
+    text "."
 
-    elClass "div" "paragraph" $ do
-      text "Instead of clicking the button, try to input "
-      el "code" $ text "START"
-      text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
-           \finding the next key while holding down. The chord is only registered \
-           \once you release all the keys."
-  elFooter
+  let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
+      eChordSTART = void $ filter (== chordSTART) envEChord
+
+  elClass "div" "start" $ do
+    (btn, _) <- elClass' "button" "start" $ text "Get Started!"
+    let eStart = leftmost [eChordSTART, domEvent Click btn]
+    updateState $ eStart $> (field @"stProgress" .~ Stage1_1)
+    setRoute $ eStart $> FrontendRoute_Main :/ ()
+
+  elClass "div" "paragraph" $ do
+    text "Instead of clicking the button, try to input "
+    el "code" $ text "START"
+    text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
+         \finding the next key while holding down. The chord is only registered \
+         \once you release all the keys."
+  pure envNavigation
 
 -- 1.1
 
@@ -216,119 +215,110 @@ data WalkState = WalkState
   }
 
 stage1_1
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
-  , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 stage1_1 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 1"
-    elClass "div" "paragraph" $
-      text
-        "Palantype relies on chords. A chord means: \
-        \You press up to ten keys at the same time. \
-        \The order in which you press down does not matter. \
-        \Instead, all the letters of one chord will appear in palan order. \
-        \Therefore, you will learn the Palantype Alphabet in its proper order now."
-    elClass "div" "paragraph" $
-      text "Type the following steno letters in order, one after another."
-    elClass "div" "paragraph" $
-      text
-        "Some letters occur twice, the first time for your left hand \
-        \and the second time for your right hand."
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 1"
+  elClass "div" "paragraph" $
+    text
+      "Palantype relies on chords. A chord means: \
+      \You press up to ten keys at the same time. \
+      \The order in which you press down does not matter. \
+      \Instead, all the letters of one chord will appear in palan order. \
+      \Therefore, you will learn the Palantype Alphabet in its proper order now."
+  elClass "div" "paragraph" $
+    text "Type the following steno letters in order, one after another."
+  elClass "div" "paragraph" $
+    text
+      "Some letters occur twice, the first time for your left hand \
+      \and the second time for your right hand."
 
-    eDone <- taskAlphabet True
-    elCongraz eDone envMNext
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-  elFooter
+  eDone <- taskAlphabet True
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 -- 1.2
 
 stage1_2
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
-  , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 stage1_2 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 2"
-    el "span" $
-      text
-        "Again, type the letters in the Palantype Alphabet. \
-        \But now, without seeing them. \
-        \Learn to remember the correct order by \
-        \pronouncing each letter while you type it!"
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 2"
+  el "span" $
+    text
+      "Again, type the letters in the Palantype Alphabet. \
+      \But now, without seeing them. \
+      \Learn to remember the correct order by \
+      \pronouncing each letter while you type it!"
 
-    eDone <- taskAlphabet False
-    elCongraz eDone envMNext
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-  elFooter
+  eDone <- taskAlphabet False
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 -- 1.3
 
 stage1_3
-  :: forall js t (m :: * -> *).
+  :: forall t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t EStateUpdate m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
-  , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 stage1_3 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 3"
-    elClass "div" "paragraph" $
-      text
-        "How about you type the letters in palan order \
-        \without the virtual keyboard? \
-        \Again, get used to remembering them!"
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 3"
+  elClass "div" "paragraph" $
+    text
+      "How about you type the letters in palan order \
+      \without the virtual keyboard? \
+      \Again, get used to remembering them!"
 
-    eDone <- taskAlphabet True
-    elCongraz eDone envMNext
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ False)
 
-  elFooter
+  eDone <- taskAlphabet True
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 -- 1.4
 
@@ -344,26 +334,25 @@ stage1_4
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 stage1_4 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 4"
-    elClass "div" "paragraph" $
-      text
-        "And for maximum difficulty, type the letters in palan \
-        \order without seeing neither the letters nor the keyboard!"
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 4"
+  elClass "div" "paragraph" $
+    text
+      "And for maximum difficulty, type the letters in palan \
+      \order without seeing neither the letters nor the keyboard!"
 
-    eDone <- taskAlphabet False
-    elCongraz eDone envMNext
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ False)
 
-  elFooter
+  eDone <- taskAlphabet False
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 taskAlphabet
   :: forall t (m :: * -> *).
@@ -554,46 +543,44 @@ stage1_5
   , MonadReader (Env t) m
   , Prerender js t m
   , PostBuild t m
-  , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => m ()
+  => m Navigation
 stage1_5 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 5"
-    elClass "div" "paragraph" $ do
-      text "You get the virtual keyboard back. Feel free, to toggle it anytime. \
-           \You can even use "
-      el "code" $ text "STFL"
-      text "to do that. This is a chord that just exists \
-           \for this purpose here on this website. \
-           \It doesn't have a meaning, so it hopefully doesn't interfere."
-    elClass "div" "paragraph" $
-      text "Type every steno letter as it appears!"
-    elClass "div" "paragraph" $ do
-      text "The - symbol is used to distinguish between letters that appear \
-           \twice. In this task, you will only need your left hand. Thus \
-           \some letters have a trailing -."
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 5"
+  elClass "div" "paragraph" $ do
+    text "You get the virtual keyboard back. Feel free, to toggle it anytime. \
+         \You can even use "
+    el "code" $ text "STFL"
+    text "to do that. This is a chord that just exists \
+         \for this purpose here on this website. \
+         \It doesn't have a meaning, so it hopefully doesn't interfere."
+  elClass "div" "paragraph" $
+    text "Type every steno letter as it appears!"
+  elClass "div" "paragraph" $ do
+    text "The - symbol is used to distinguish between letters that appear \
+         \twice. In this task, you will only need your left hand. Thus \
+         \some letters have a trailing -."
 
-    let dynLeftHand
-          =   filter isLeftHand
-            . Map.keys
-            . pcfgMapStenoKeys
-            . stPloverCfg
-          <$> envDynState
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-    eDone <- taskLetters dynLeftHand
+  let dynLeftHand
+        =   filter isLeftHand
+          . Map.keys
+          . pcfgMapStenoKeys
+          . stPloverCfg
+        <$> envDynState
 
-    elCongraz eDone envMNext
+  eDone <- taskLetters dynLeftHand
 
-  elFooter
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 stage1_6
   :: forall js t (m :: * -> *).
@@ -606,34 +593,34 @@ stage1_6
   , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
-  ) => m ()
+  ) => m Navigation
 stage1_6 = do
-  el "section" $ do
-    Env {..} <- ask
 
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 6"
-    elClass "div" "paragraph" $ do
-      text "Switching hands now. The leading - symbol indicates that the letter \
-           \is on your right-hand side."
-    elClass "div" "paragraph" $ do
-      text "Type every steno letter as it appears!"
+  Env {..} <- ask
 
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 6"
+  elClass "div" "paragraph" $ do
+    text "Switching hands now. The leading - symbol indicates that the letter \
+         \is on your right-hand side."
+  elClass "div" "paragraph" $ do
+    text "Type every steno letter as it appears!"
 
-    let dynRightHand
-          =   filter isRightHand
-            . Map.keys
-            . pcfgMapStenoKeys
-            . stPloverCfg
-          <$> envDynState
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
 
-    eDone <- taskLetters dynRightHand
+  let dynRightHand
+        =   filter isRightHand
+          . Map.keys
+          . pcfgMapStenoKeys
+          . stPloverCfg
+        <$> envDynState
 
-    elCongraz eDone envMNext
-  elFooter
+  eDone <- taskLetters dynRightHand
+
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
 
 stage1_7
   :: forall js t (m :: * -> *).
@@ -644,55 +631,52 @@ stage1_7
   , MonadReader (Env t) m
   , Prerender js t m
   , PostBuild t m
+  , SetRoute t (R FrontendRoute) m
+  ) => m Navigation
+stage1_7 = do
+
+  Env {..} <- ask
+
+  el "h1" $ text "Stage 1"
+  el "h2" $ text "The Palantype Alphabet"
+  el "h3" $ text "Task 7"
+  elClass "div" "paragraph" $ do
+    text "Before your continue with this last task of Stage 1: There is a \
+         \table of contents on the left. Use it to jump back to any of the \
+         \previous exercises to practice some more."
+  elClass "div" "paragraph" $ do
+    text "For the next stage, you should have some muscle memory for every \
+         \key. Be sure to complete this task without the keyboard, too."
+  elClass "div" "paragraph" $ do
+    text "Type every steno letter as it appears!"
+
+  ePb <- getPostBuild
+  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+
+  let dynAlphabet
+        =   Map.keys
+          . pcfgMapStenoKeys
+          . stPloverCfg
+        <$> envDynState
+
+  eDone <- taskLetters dynAlphabet
+
+  elCongraz eDone $ navMNext envNavigation
+  pure envNavigation
+
+stage2_1
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t EStateUpdate m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , Prerender js t m
+  , PostBuild t m
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
-  ) => m ()
-stage1_7 = do
-  el "section" $ do
-    Env {..} <- ask
-
-    el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Task 7"
-    elClass "div" "paragraph" $ do
-      text "Before your continue with this last task of Stage 1: There is a \
-           \table of contents on the left. Use it to jump back to any of the \
-           \previous exercises to practice some more."
-    elClass "div" "paragraph" $ do
-      text "For the next stage, you should have some muscle memory for every \
-           \key. Be sure to complete this task without the keyboard, too."
-    elClass "div" "paragraph" $ do
-      text "Type every steno letter as it appears!"
-
-    ePb <- getPostBuild
-    updateState $ ePb $> (field @"stShowKeyboard" .~ True)
-
-    let dynAlphabet
-          =   Map.keys
-            . pcfgMapStenoKeys
-            . stPloverCfg
-          <$> envDynState
-
-    eDone <- taskLetters dynAlphabet
-
-    elCongraz eDone envMNext
-  elFooter
-
-stage2_1 ::
-  forall js t (m :: * -> *).
-  ( DomBuilder t m,
-    EventWriter t EStateUpdate m,
-    MonadFix m,
-    MonadHold t m,
-    MonadReader (Env t) m,
-    Prerender js t m,
-    PostBuild t m,
-    RouteToUrl (R FrontendRoute) m,
-    SetRoute t (R FrontendRoute) m
-  ) =>
-  m ()
+  )
+  => m Navigation
 stage2_1 = do
-  el "section" $ do
-    Env {..} <- ask
-    blank
-  elFooter
+  Env {..} <- ask
+  pure envNavigation

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
@@ -15,12 +16,12 @@ module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
 import           State                       (Stage(..),  EStateUpdate (..), State (..),
-                                              stageUrl, Env(..))
+                                              stageUrl, Env(..), Navigation (..))
 
 import           Common.Route                (FrontendRoute (..))
 import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
 import qualified Data.Aeson                  as Aeson
-import           Data.Functor                (($>), (<&>))
+import           Data.Functor                (void, ($>), (<&>))
 import           Data.Maybe                  (fromMaybe)
 import           Data.Text                   (Text)
 import qualified Data.Text.Lazy              as Lazy
@@ -33,7 +34,7 @@ import           Home                        (message, settings,
 import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
 import           Obelisk.Route               (R)
-import           Obelisk.Route.Frontend      (RoutedT,
+import           Obelisk.Route.Frontend      (subRoute, RoutedT,
                                               SetRoute (setRoute), mapRoutedT,
                                               subRoute_)
 import           Reflex.Dom                  (elClass, EventWriterT, dyn_, PostBuild(getPostBuild), PerformEvent (performEvent_),
@@ -44,7 +45,7 @@ import           Reflex.Dom                  (elClass, EventWriterT, dyn_, PostB
                                               runEventWriterT, tailE, text,
                                               widgetHold_, (=:))
 import           Stage                       (stage1_7, stage1_6, introduction, stage1_1, stage1_2, stage1_3,
-                                              stage1_4, stage1_5, stage2_1)
+                                              stage1_4, stage1_5, stage2_1, elFooter)
 import Shared (loadingScreen)
 
 frontend :: Frontend (R FrontendRoute)
@@ -88,35 +89,40 @@ frontendBody = mdo
         message
         stenoInput
 
-      let setEnv
-            :: forall a.
-               Maybe Stage
-            -> Stage
-            -> Maybe Stage
-            -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) ()
-            -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) ()
-          setEnv mPrev current mNext =
-            mapRoutedT (withReaderT $ \_ -> Env
-              { envDynState = dynState
-              , envEChord = eChord
-              , envMPrev = mPrev
-              , envCurrent = current
-              , envMNext = mNext
-              })
-      subRoute_ $ \case
-        FrontendRoute_Main ->
-          dyn_ $ dynState <&> \st -> do
-            ePb <- getPostBuild
-            setRoute $ ePb $> stageUrl (stProgress st)
-        FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
-        FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) stage1_1
-        FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) stage1_2
-        FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) stage1_3
-        FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) stage1_4
-        FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) stage1_5
-        FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) stage1_6
-        FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) stage1_7
-        FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         stage2_1
+      elClass "div" "row" $ do
+        elClass "section" "toc" $ do
+          text "TOC"
+        let setEnv
+              :: forall a.
+                 Maybe Stage
+              -> Stage
+              -> Maybe Stage
+              -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) Navigation
+              -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) Navigation
+            setEnv navMPrevious navCurrent navMNext =
+              mapRoutedT (withReaderT $ \_ -> Env
+                { envDynState = dynState
+                , envEChord = eChord
+                , envNavigation = Navigation{..}
+                })
+        dynNavigation <-
+          elClass "section" "content" $ subRoute $ \case
+            FrontendRoute_Main -> do
+              dyn_ $ dynState <&> \st -> do
+                ePb <- getPostBuild
+                setRoute $ ePb $> stageUrl (stProgress st)
+              pure $ Navigation Nothing Stage1_1 Nothing
+            FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
+            FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) stage1_1
+            FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) stage1_2
+            FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) stage1_3
+            FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) stage1_4
+            FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) stage1_5
+            FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) stage1_6
+            FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) stage1_7
+            FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         stage2_1
+        dyn_ $ dynNavigation <&> elFooter
+        blank
   blank
 
 frontendHead
@@ -125,7 +131,7 @@ frontendHead
   )
   => RoutedT t (R FrontendRoute) m ()
 frontendHead = do
-  el "title" $ text "Palantype ftw"
+  el "title" $ text "Palantype"
   elAttr "link"
     (  "href" =: static @"main.css"
     <> "type" =: "text/css"
