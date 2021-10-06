@@ -509,7 +509,7 @@ toc dynCurrent = elClass "section" "toc" $ do
           text "Stage 2: Syllables and chords"
 
         let dynClassUl2 =
-              bool "displayNone" "" <$> dynShowStage1
+              bool "displayNone" "" <$> dynShowStage2
 
         elDynClass "ul" dynClassUl2 $ do
           elLi Stage2_1

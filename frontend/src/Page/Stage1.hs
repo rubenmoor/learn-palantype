@@ -84,7 +84,7 @@ exercise1 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 1"
+  el "h3" $ text "Exercise 1"
   elClass "div" "paragraph" $
     text
       "Palantype relies on chords. A chord means: \
@@ -125,7 +125,7 @@ exercise2 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 2"
+  el "h3" $ text "Exercise 2"
   el "span" $
     text
       "Again, type the letters in the Palantype Alphabet. \
@@ -159,7 +159,7 @@ exercise3 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 3"
+  el "h3" $ text "Exercise 3"
   elClass "div" "paragraph" $
     text
       "How about you type the letters in palan order \
@@ -192,7 +192,7 @@ exercise4 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 4"
+  el "h3" $ text "Exercise 4"
   elClass "div" "paragraph" $
     text
       "And for maximum difficulty, type the letters in palan \
@@ -404,7 +404,7 @@ exercise5 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 5"
+  el "h3" $ text "Exercise 5"
   elClass "div" "paragraph" $ do
     text "You get the virtual keyboard back. Feel free, to toggle it anytime. \
          \You can even use "
@@ -451,7 +451,7 @@ exercise6 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 6"
+  el "h3" $ text "Exercise 6"
   elClass "div" "paragraph" $ do
     text "Switching hands now. The leading - symbol indicates that the letter \
          \is on your right-hand side."
@@ -490,14 +490,14 @@ exercise7 = do
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
-  el "h3" $ text "Task 7"
+  el "h3" $ text "Exercise 7"
   elClass "div" "paragraph" $ do
-    text "Before your continue with this last task of Stage 1: There is a \
+    text "Before your continue with this last exercise of Stage 1: There is a \
          \table of contents on the left. Use it to jump back to any of the \
          \previous exercises to practice some more."
   elClass "div" "paragraph" $ do
     text "For the next stage, you should have some muscle memory for every \
-         \key. Be sure to complete this task without the keyboard, too."
+         \key. Be sure to complete this exercise without the keyboard, too."
   elClass "div" "paragraph" $ do
     text "Type every steno letter as it appears!"
 
