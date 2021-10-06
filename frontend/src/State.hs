@@ -73,33 +73,8 @@ data State = State
   , stTOCShowStage3 :: Bool
   } deriving (Generic)
 
-instance FromJSON State where
-  parseJSON (Object o) =
-    State <$> o .: "ploverCfg"
-          <*> pure Nothing -- don't expect a persisted message
-          <*> o .: "keyboard"
-          <*> o .: "TOC"
-          <*> o .: "progress"
-          <*> o .: "cleared"
-          <*> o .: "TOCShowStage1"
-          <*> o .: "TOCShowStage2"
-          <*> o .: "TOCShowStage3"
-  parseJSON invalid =
-    prependFailure "parsing State failed, " $ typeMismatch "Object" invalid
-
-instance ToJSON State where
-  toJSON State{..} =
-    object
-    [ "ploverCfg" .= stPloverCfg
-    -- stMsg: never persist messages
-    , "keyboard" .= stShowKeyboard
-    , "TOC"      .= stShowTOC
-    , "progress" .= stProgress
-    , "cleared"  .= stCleared
-    , "stTOCShowStage1" .= stTOCShowStage1
-    , "stTOCShowStage2" .= stTOCShowStage2
-    , "stTOCShowStage3" .= stTOCShowStage3
-    ]
+instance FromJSON State
+instance ToJSON State
 
 instance Default State where
   def = State
@@ -124,7 +99,11 @@ updateState event =
 data Message = Message
   { msgCaption :: Text
   , msgBody    :: Text
-  }
+  } deriving (Generic)
+
+instance FromJSON Message
+instance ToJSON Message
+
 -- -- Session
 --
 -- data Session
