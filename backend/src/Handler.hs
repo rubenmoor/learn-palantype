@@ -153,12 +153,16 @@ parserChord = do
         when foundHyphen $ fail "malformed"
         void $ char '-'
         setState (drop 15 ls, True)
-  many1 (try parserKey <|> (parserHypen *> parserKey))
+  many1 ( try parserKey <|> (parserHypen *> parserKey))
 
 
 handleParseSteno :: String -> Snap [PTChord]
 handleParseSteno str = do
-  let  parser = spaces >> sepBy1 parserChord (many1 space) <* eof
+  let  parser
+         =  spaces
+         >> sepBy1 parserChord
+              (void (many1 space) <|> void (char '/'))
+         <* eof
   case runParser parser ([], False) "client request" str of
     Left err -> Snap.throwError $
       err400 { errBody = Lazy.fromStrict $ Char8.pack $ show err }

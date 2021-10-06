@@ -284,3 +284,6 @@ showLetter = \case
   RightS -> "S"
   RightH -> "H"
   RightE -> "e"
+
+ulfts :: PTChord
+ulfts = PTChord [RightU, RightL, RightF, RightT, RightS]
