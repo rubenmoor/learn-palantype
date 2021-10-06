@@ -32,13 +32,13 @@ import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
 import           Data.Foldable          (Foldable (length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (Functor (fmap), void, ($>))
+import           Data.Functor           (void, ($>))
 import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
 import           Data.List              (zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
-import           Data.Ord               (Ord ((>)))
+import           Data.Ord               (Ord((<), (>)))
 import           Data.Semigroup         (Endo(..), Semigroup ((<>)))
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes, filter))
@@ -52,10 +52,10 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          Reflex (Dynamic, Event, never, updated), blank,
                                          dynText, dyn_, el, elAttr, elClass,
                                          elClass', elDynClass, foldDyn,
-                                         leftmost, performEvent, switchDyn,
-                                         text, widgetHold, widgetHold_,
+                                         leftmost, performEvent,
+                                         text, widgetHold_,
                                          (=:), Prerender)
-import           Shared                 (if', dynSimple, iFa, loadingScreen,
+import           Shared                 (widgetHoldSimple, if', dynSimple, iFa,
                                          prerenderSimple, whenJust)
 import           State                  (EStateUpdate, Env (..), Stage (..),
                                          State (..), stageUrl, updateState, Navigation (..))
@@ -381,12 +381,12 @@ taskAlphabet showAlphabet = do
           . stPloverCfg
           <$> envDynState
 
-  dynSimple $
-    dynAlphabet <&> \ptAlphabet -> do
-      let len = length ptAlphabet
+  dynSimple $ dynAlphabet <&> \ptAlphabet -> do
+    let len = length ptAlphabet
 
-          step :: PTChord -> WalkState -> WalkState
-          step w ws@WalkState {..} = case (unPTChord w, wsMMistake, wsDone) of
+        step :: PTChord -> WalkState -> WalkState
+        step chord ws@WalkState {..} =
+          case (unPTChord chord, wsMMistake, wsDone) of
             (_, _, Just True) -> ws { wsDone = Just False
                                     , wsCounter = 0
                                     } -- reset after done
@@ -405,45 +405,45 @@ taskAlphabet showAlphabet = do
                                     , wsMMistake = Just (wsCounter, PTChord ls)
                                     } -- mistake
 
-          stepInitial = WalkState
-              { wsCounter = 0
-              , wsMMistake = Nothing
-              , wsDone = Nothing
-              }
+        stepInitial = WalkState
+            { wsCounter = 0
+            , wsMMistake = Nothing
+            , wsDone = Nothing
+            }
 
-      dynWalk <- foldDyn step stepInitial envEChord
-      let eDone = catMaybes $ wsDone <$> updated dynWalk
+    dynWalk <- foldDyn step stepInitial envEChord
+    let eDone = catMaybes $ wsDone <$> updated dynWalk
 
-      el "pre" $
-        el "code" $ do
-          let clsLetter = if showAlphabet then "" else "fgTransparent"
-          for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
-            let dynCls =
-                  dynWalk <&> \WalkState {..} -> case wsMMistake of
-                    Just (j, _) -> if i == j then "bgRed" else clsLetter
-                    Nothing -> if wsCounter > i then "bgGreen" else clsLetter
-            elDynClass "span" dynCls $ text $ showLetter c
-      el "span" $ do
-        dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
-        text $ " / " <> Text.pack (show len)
+    el "pre" $
+      el "code" $ do
+        let clsLetter = if showAlphabet then "" else "fgTransparent"
+        for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
+          let dynCls =
+                dynWalk <&> \WalkState {..} -> case wsMMistake of
+                  Just (j, _) -> if i == j then "bgRed" else clsLetter
+                  Nothing -> if wsCounter > i then "bgGreen" else clsLetter
+          elDynClass "span" dynCls $ text $ showLetter c
+    el "span" $ do
+      dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
+      text $ " / " <> Text.pack (show len)
 
-      let eMistake = wsMMistake <$> updated dynWalk
-      widgetHold_ blank $
-        eMistake <&> \case
-          Just (_, w) ->
-            elClass "div" "red small" $
-              text $
-                "You typed " <> showChord' w
-                  <> ". Any key to start over."
-          Nothing -> blank
+    let eMistake = wsMMistake <$> updated dynWalk
+    widgetHold_ blank $
+      eMistake <&> \case
+        Just (_, w) ->
+          elClass "div" "red small" $
+            text $
+              "You typed " <> showChord' w
+                <> ". Any key to start over."
+        Nothing -> blank
 
-      dynDone <- holdDyn False eDone
-      dyn_ $
-        dynDone <&> \bDone ->
-          when bDone $
-            elClass "div" "small anthrazit" $ text "Cleared. Press any key to start over."
+    dynDone <- holdDyn False eDone
+    dyn_ $
+      dynDone <&> \bDone ->
+        when bDone $
+          elClass "div" "small anthrazit" $ text "Cleared. Press any key to start over."
 
-      pure $ void $ filter id eDone
+    pure $ void $ filter id eDone
 
 -- stage 1.5
 
@@ -473,7 +473,7 @@ taskLetters dynLetters = do
     ePb <- getPostBuild
     performEvent $ ePb $> liftIO newStdGen
 
-  fmap switchDyn $ widgetHold (loadingScreen $> never) $ eStdGen <&> \stdGen -> do
+  widgetHoldSimple $ eStdGen <&> \stdGen -> do
     dynSimple $ dynLetters <&> \letters -> mdo
       let len = length letters
 
@@ -513,15 +513,16 @@ taskLetters dynLetters = do
 
       dynStenoLetters <- foldDyn step stepInitial eChord
 
-      let eDone = catMaybes $ updated $ slsDone <$> dynStenoLetters
+      let eDone = catMaybes $ slsDone <$> updated dynStenoLetters
 
       dyn_ $
         dynStenoLetters <&> \StenoLettersState {..} -> do
           let clsMistake = case slsMMistake of
                 Nothing -> ""
                 Just _  -> "bgRed"
-          el "pre" $ elClass "code" clsMistake $
-            text $ showKey $ slsLetters !! slsCounter
+          when (slsCounter < len) $
+            el "pre" $ elClass "code" clsMistake $
+              text $ showKey $ slsLetters !! slsCounter
           el "span" $ do
             el "strong" $ text (Text.pack $ show slsCounter)
             text " / "
