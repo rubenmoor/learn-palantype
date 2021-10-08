@@ -14,10 +14,19 @@ library
                , ConfigFile
                , containers
                , frontend
+               , gerippe
+               , monad-logger
                , mtl
+               , mysql
+               , network
                , obelisk-backend
                , obelisk-route
+               , persistent
+               , persistent-mysql
+               , persistent-template
                , parsec
+               , resource-pool
+               , resourcet
                , servant-snap
                , snap-core
                , text
@@ -25,6 +34,7 @@ library
       Backend
   other-modules:
       Handler
+      DbAdapter
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable backend

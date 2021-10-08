@@ -5,7 +5,7 @@
 
 module Backend where
 
-import           Common.Api      (RoutesApi)
+import           Common.Api      (Routes, RoutesApi)
 import           Common.Route    (BackendRoute (BackendRoute_Api, BackendRoute_Missing),
                                   FrontendRoute, fullRouteEncoder)
 import           Data.Typeable   (Proxy (..))
@@ -17,7 +17,7 @@ import           Snap.Core       (Snap)
 import Handler (handlers)
 
 serveApi :: Snap ()
-serveApi = serveSnapWithContext (Proxy :: Proxy RoutesApi) EmptyContext handlers
+serveApi = serveSnapWithContext (Proxy :: Proxy Routes) EmptyContext handlers
 
 backend :: Backend BackendRoute FrontendRoute
 backend = Backend

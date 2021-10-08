@@ -1,60 +1,66 @@
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 
 module Handler
   ( handlers
   ) where
 
-import           Common.Alphabet       (PTChord (..), PTChar (..))
-import           Common.Api            (PloverCfg (..), RoutesApi,
-                                        keyMapToPloverCfg)
-import           Control.Applicative   (Alternative((<|>)), Applicative((*>), pure, (<*>)))
-import           Control.Monad         (Monad((>>), fail), when, foldM, unless)
-import           Control.Monad.Except  (MonadError (throwError), runExcept)
-import           Data.Aeson            (FromJSON (..), Value (Array))
-import qualified Data.Aeson            as Json
-import           Data.Aeson.Types      (Parser, typeMismatch)
-import qualified Data.ByteString.Char8 as Char8
-import qualified Data.ByteString.Lazy  as Lazy
-import qualified Data.ConfigFile       as CfgParser
-import           Data.Either           (Either (..))
-import           Data.Eq               ((==))
-import           Data.Foldable         (Foldable (toList))
-import           Data.Function         (($))
-import           Data.Functor          (void, (<$>))
-import           Data.Map              (Map)
-import qualified Data.Map              as Map
-import           Data.Monoid           ((<>))
-import           Data.String           (String)
-import           Data.Text             (Text)
-import qualified Data.Text             as Text
-import           GHC.Show              (Show (show))
-import           Servant               ((:<|>) (..))
-import           Servant.Server        (HasServer (ServerT),
-                                        ServantErr (errBody), err400)
-import qualified Servant.Server        as Snap (throwError)
-import           Snap.Core             (Snap)
-import Text.Parsec (eof, space, updateState, try, many1, spaces, sepBy1, anyChar, setState, char, Parsec, oneOf, getState, letter, runParser)
-import Data.Char (Char)
-import Data.Ord (Ord((<)))
-import Data.Maybe (Maybe(..))
-import Control.Category (Category((.)))
-import Data.List ((!!), drop, findIndex)
-import Data.Tuple (fst)
-import GHC.Num (Num((+)))
-import Data.Bool (Bool(..))
-import Control.Monad (Monad((>>=)))
-import Prelude (Applicative((<*)), snd)
+import           Common.Alphabet         (PTChar (..), PTChord (..))
+import           Common.Api              (Hs (..), PloverCfg (..), Routes, keyMapToPloverCfg)
+import           Control.Applicative     (Alternative ((<|>)),
+                                          Applicative (pure, (*>), (<*>)))
+import           Control.Category        (Category ((.)))
+import           Control.Monad           (Monad (fail), foldM, unless,
+                                          when)
+import           Control.Monad.Except    (MonadError (throwError), runExcept)
+import           Data.Aeson              (FromJSON (..), Value (Array))
+import qualified Data.Aeson              as Json
+import           Data.Aeson.Types        (Parser, typeMismatch)
+import           Data.Bool               (Bool (..))
+import qualified Data.ByteString.Char8   as Char8
+import qualified Data.ByteString.Lazy    as Lazy
+import           Data.Char               (Char)
+import qualified Data.ConfigFile         as CfgParser
+import           Data.Either             (Either (..))
+import           Data.Eq                 ((==))
+import           Data.Foldable           (concat, Foldable (toList))
+import           Data.Function           (($))
+import           Data.Functor            (void, (<$>))
+import           Data.List               (drop, findIndex, (!!))
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
+import           Data.Maybe              (Maybe (..))
+import           Data.Monoid             ((<>))
+import           Data.String             (String)
+import           Data.Text               (Text)
+import qualified Data.Text               as Text
+import qualified Data.Text.Lazy          as TextLazy
+import qualified Data.Text.Lazy.Encoding as TextLazy
+import           Data.Traversable        (for)
+import           Data.Tuple              (fst)
+import           GHC.Num                 (Num ((+)))
+import           GHC.Show                (Show (show))
+import           Prelude                 (Applicative ((<*)), snd)
+import           Servant                 ((:<|>) (..))
+import           Servant.Server          (HasServer (ServerT),
+                                          ServantErr (errBody), err400)
+import qualified Servant.Server          as Snap (throwError)
+import           Snap.Core               (Snap)
+import           Text.Parsec             (Parsec, anyChar, char, eof, getState, many1, runParser,
+                                          sepBy1, setState, try,
+                                          updateState)
 
-handlers :: ServerT RoutesApi '[] Snap
+handlers :: ServerT Routes '[] Snap
 handlers =
-       handleConfigNew
-  :<|> handleParseSteno
+  (      handleConfigNew
+    :<|> handleLookupSteno
+  )
+  :<|> handleStenoExpressions
 
 newtype KeysMapJSON = KeysMapJSON { unKeysMapJSON :: Map String [String]}
 
@@ -155,15 +161,35 @@ parserChord = do
         setState (drop 15 ls, True)
   many1 ( try parserKey <|> (parserHypen *> parserKey))
 
-
-handleParseSteno :: String -> Snap [PTChord]
-handleParseSteno str = do
-  let  parser
-         =  spaces
-         >> sepBy1 parserChord
-              (void (many1 space) <|> void (char '/'))
-         <* eof
+parseSteno :: String -> Either Text [PTChord]
+parseSteno str = do
+  let  parser = sepBy1 parserChord (char '/') <* eof
   case runParser parser ([], False) "client request" str of
-    Left err -> Snap.throwError $
-      err400 { errBody = Lazy.fromStrict $ Char8.pack $ show err }
-    Right ls -> pure $ PTChord <$> ls
+    -- Left err -> Snap.throwError $
+    --   err400 { errBody = Lazy.fromStrict $ Char8.pack $ show err }
+    Left  err -> Left  $ Text.pack $ show err
+    Right ls  -> Right $ PTChord <$> ls
+
+handleLookupSteno :: [Text] -> Snap [PTChord]
+handleLookupSteno str = do
+  -- look up in database
+  -- unless found:
+  --   parse
+  --   if fail: snap error
+  --   else   : store to database
+  --            return
+  ls <-
+    for str $ \s -> do
+      -- TODO: database lookup
+      case parseSteno (Text.unpack s) of
+        Left  err -> Snap.throwError $
+          err400 { errBody = TextLazy.encodeUtf8 $ TextLazy.fromStrict err }
+        Right chords -> do
+          -- TODO: store in db
+          pure chords
+  pure $ concat ls
+
+handleStenoExpressions :: Snap Hs
+handleStenoExpressions = pure $ Hs ""
+  -- TODO: get all from database
+  --       render file

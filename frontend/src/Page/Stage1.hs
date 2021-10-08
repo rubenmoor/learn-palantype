@@ -4,7 +4,6 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
@@ -38,7 +37,7 @@ import           Data.List              (zip, (!!))
 import qualified Data.Map               as Map
 import           Data.Maybe             (Maybe (..))
 import           Data.Ord               (Ord ((<), (>)))
-import           Data.Semigroup         (Semigroup ((<>)))
+import           Data.Semigroup         (Endo (..), Semigroup ((<>)))
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)))
@@ -53,7 +52,7 @@ import           Reflex.Dom             (DomBuilder, EventWriter,
                                          text, widgetHold_)
 import           Shared                 (dynSimple, prerenderSimple,
                                          widgetHoldSimple)
-import           State                  (EStateUpdate, Env (..),
+import           State                  (Env (..),
                                          Navigation (..), State (..),
                                          updateState)
 import           System.Random.Shuffle  (shuffleM)
@@ -70,7 +69,7 @@ data WalkState = WalkState
 exercise1
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -100,7 +99,7 @@ exercise1 = do
       \and the second time for your right hand."
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   eDone <- taskAlphabet True
   elCongraz eDone envNavigation
@@ -111,7 +110,7 @@ exercise1 = do
 exercise2
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -134,7 +133,7 @@ exercise2 = do
       \pronouncing each letter while you type it!"
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   eDone <- taskAlphabet False
   elCongraz eDone envNavigation
@@ -145,7 +144,7 @@ exercise2 = do
 exercise3
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -167,7 +166,7 @@ exercise3 = do
       \Again, get used to remembering them!"
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ False]
 
   eDone <- taskAlphabet True
   elCongraz eDone envNavigation
@@ -178,7 +177,7 @@ exercise3 = do
 exercise4
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -199,7 +198,7 @@ exercise4 = do
       \order without seeing neither the letters nor the keyboard!"
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ False)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ False]
 
   eDone <- taskAlphabet False
   elCongraz eDone envNavigation
@@ -389,7 +388,7 @@ taskLetters dynLetters = do
 exercise5
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -420,7 +419,7 @@ exercise5 = do
          \some letters have a trailing -."
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   let dynLeftHand
         =   filter isLeftHand
@@ -437,7 +436,7 @@ exercise5 = do
 exercise6
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -459,7 +458,7 @@ exercise6 = do
     text "Type every steno letter as it appears!"
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   let dynRightHand
         =   filter isRightHand
@@ -476,7 +475,7 @@ exercise6 = do
 exercise7
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -502,7 +501,7 @@ exercise7 = do
     text "Type every steno letter as it appears!"
 
   ePb <- getPostBuild
-  updateState $ ePb $> (field @"stShowKeyboard" .~ True)
+  updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   let dynAlphabet
         =   Map.keys

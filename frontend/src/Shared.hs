@@ -1,44 +1,55 @@
+{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module Shared where
 
-import           Control.Applicative (Applicative (pure), (<$>))
-import           Control.Category    (Category ((.)))
-import           Control.Monad       ((=<<))
-import           Control.Monad.Fix   (MonadFix)
-import           Data.Bool           (Bool (..), not)
-import           Data.Function       (const, ($))
-import           Data.Functor        (void)
-import           Data.Maybe          (Maybe (..), fromMaybe)
-import           Data.Monoid         (Monoid (mempty), (<>))
-import           Data.Text           (Text, unwords)
-import qualified Data.Text           as Text
-import           Data.Tuple          (fst)
-import           Reflex.Dom          (Adjustable,
-                                      DomBuilder (DomBuilderSpace, inputElement),
-                                      Element, EventName (Click), EventResult,
-                                      HasDomEvent (domEvent),
-                                      InputElement (_inputElement_checked, _inputElement_value),
-                                      InputElementConfig, MonadHold (holdDyn),
-                                      NotReady, PostBuild,
-                                      Prerender (Client, prerender),
-                                      Reflex (Dynamic, Event, current, never, updated),
-                                      XhrResponse (..), attachWith, blank, def,
-                                      dyn, el, el', elAttr, elAttr', elClass,
-                                      elClass', elementConfig_initialAttributes,
-                                      ffor, inputElementConfig_elementConfig,
-                                      inputElementConfig_initialChecked,
-                                      inputElementConfig_setChecked, leftmost,
-                                      switchDyn, switchHold, text, widgetHold,
-                                      (&), (.~), (=:))
-import           Servant.Common.Req  (ReqResult (..))
+import           Client                (RequestResult (..), postLookupSteno,
+                                        request)
+import           Common.Alphabet       (PTChord (PTChord))
+import           Control.Applicative   (Applicative (pure), (<$>))
+import           Control.Category      (Category ((.)))
+import           Control.Lens          ((.~))
+import           Control.Monad         ((=<<))
+import           Control.Monad.Fix     (MonadFix)
+import           Data.Bool             (Bool (..), not)
+import           Data.Either           (Either (..))
+import           Data.Function         (const, ($))
+import           Data.Functor          (void, ($>), (<&>))
+import           Data.Generics.Product (field)
+import qualified Data.Map              as Map
+import           Data.Maybe            (Maybe (..))
+import           Data.Monoid           (Monoid (mempty), (<>))
+import           Data.Semigroup        (Endo (Endo))
+import           Data.Text             (Text, unwords)
+import qualified Data.Text             as Text
+import           Data.Traversable      (for)
+import           Data.Tuple            (fst)
+import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace, inputElement),
+                                        Element, EventName (Click), EventResult,
+                                        EventWriter, HasDomEvent (domEvent),
+                                        InputElement (_inputElement_checked, _inputElement_value),
+                                        InputElementConfig, MonadHold (holdDyn),
+                                        NotReady, PostBuild (getPostBuild),
+                                        Prerender (Client, prerender),
+                                        Reflex (Dynamic, Event, current, never, updated),
+                                        attachWith, blank, constDyn, def, dyn,
+                                        el, el', elAttr, elAttr', elClass,
+                                        elClass',
+                                        elementConfig_initialAttributes, ffor,
+                                        inputElementConfig_elementConfig,
+                                        inputElementConfig_initialChecked,
+                                        inputElementConfig_setChecked, leftmost,
+                                        switchDyn, switchHold, text, widgetHold,
+                                        (&), (.~), (=:))
+import           State                 (Message (..), State (..), updateState)
+import qualified StenoExpressions
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -108,12 +119,6 @@ checkbox initial description = mdo
         eClickCB = attachWith (const . not) (current dynCbChecked) eToggle
     holdDyn initial eClickCB
 
-reqFailure :: ReqResult tag a -> Maybe Text
-reqFailure = \case
-  ResponseSuccess {}        -> Nothing
-  ResponseFailure _ str xhr -> Just $ str <> fromMaybe "" (_xhrResponse_responseText xhr)
-  RequestFailure  _ str     -> Just str
-
 whenJust ::
   forall a t.
   Applicative t =>
@@ -162,3 +167,29 @@ loadingScreen =
 if' :: Monoid a => Bool -> a -> a
 if' True x  = x
 if' False _ = mempty
+
+lookupSteno
+  :: forall js t (m :: * -> *).
+  ( EventWriter t (Endo State) m
+  , PostBuild t m
+  , Prerender js t m
+  )
+  => Text
+  -> m (Event t [PTChord])
+lookupSteno str = do
+  ePb <- getPostBuild
+  let words = Text.words str
+      mChords = for words $ \w ->
+        Map.lookup w StenoExpressions.dict
+  case mChords of
+    Just chords -> pure $ ePb $> chords
+    Nothing     -> do
+      RequestResult{..} <- request $ postLookupSteno (constDyn $ Right words) ePb
+
+      updateState $ rrEFailure <&> \err ->
+        let msgCaption = "Internal error"
+            msgBody = "Could not parse steno code: \n"
+                   <> str <> "\n" <> err
+        in  [field @"stMsg" .~ Just Message{..}]
+
+      pure rrESuccess

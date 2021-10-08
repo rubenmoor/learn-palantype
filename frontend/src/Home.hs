@@ -4,7 +4,6 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
@@ -13,13 +12,13 @@
 
 module Home where
 
-import           Client                      (postConfigNew, postRender)
+import           Client                      (reqFailure, postConfigNew, postRender)
 import           Common.Alphabet             (PTChar (..), PTChord (..),
                                               mkPTChord, showChord, showLetter)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (..))
 import           Control.Applicative         (Applicative (..))
-import           Control.Category            (Category ((.)))
+import           Control.Category            (Category(id, (.)))
 import           Control.Lens.Setter         ((%~), (.~))
 import           Control.Monad               ((<=<), (=<<))
 import           Control.Monad.Fix           (MonadFix)
@@ -36,7 +35,7 @@ import           Data.List                   (elem)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (Maybe (..), listToMaybe)
-import           Data.Monoid                 (Monoid (mconcat, mempty), (<>))
+import           Data.Monoid                 (Monoid (mempty), (<>))
 import           Data.Proxy                  (Proxy (..))
 import           Data.Semigroup              (Endo (..))
 import           Data.Set                    (Set)
@@ -79,14 +78,12 @@ import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, input
                                               inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
                                               keydown, keyup, leftmost,
-                                              mergeWith, preventDefault,
-                                              splitDynPure, text, wrapDomEvent,
-                                              (=:), _el_element, _element_raw,
-                                              _inputElement_element)
+                                              mergeWith, preventDefault, text, wrapDomEvent,
+                                              (=:))
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (dynSimple, iFa, prerenderSimple,
-                                              reqFailure, whenJust, if')
-import           State                       (EStateUpdate, Message (..),
+                                              whenJust)
+import           State                       (Message (..),
                                               Stage (..), State (..),
                                               stageDescription, stageUrl,
                                               updateState)
@@ -112,7 +109,7 @@ message
   ( DomBuilder t m
   , PostBuild t m
   , MonadReader (Dynamic t State) m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   )
   => m ()
 message = do
@@ -122,7 +119,7 @@ message = do
     in  elClass "div" "msgOverlay" $ do
           (elClose, _) <- spanClose
           let eClose = domEvent Click elClose
-          updateState $ eClose $> (field @"stMsg" .~ Nothing)
+          updateState $ eClose $> [field @"stMsg" .~ Nothing]
           el "div" $ text msgCaption
           el "span" $ text msgBody
 
@@ -131,7 +128,7 @@ settings
   ( DomBuilder t m
   , PostBuild t m
   , Prerender js t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadReader (Dynamic t State) m
   , MonadFix m
   )
@@ -152,7 +149,7 @@ settings = do
           elClass' "span" "btnHeader keyboardHidden" $
             iFa "fas fa-keyboard"
 
-    updateState $ domEvent Click s $> (field @"stShowKeyboard" %~ not)
+    updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
 
   -- button to show configuration dropdown
   eFile <- elClass "div" "dropdown" $ do
@@ -164,11 +161,11 @@ settings = do
       eReset <- do
         (spanResetConfig, _) <- el' "span" $ text "Reset to default configuration"
         let eReset' = domEvent Click spanResetConfig
-        updateState $ eReset $> (field @"stPloverCfg" .~ def)
+        updateState $ eReset $> [field @"stPloverCfg" .~ def]
         pure eReset'
 
       (e, _) <- el' "span" $ text "Reset progress"
-      updateState $ domEvent Click e $> (field @"stProgress" .~ def)
+      updateState $ domEvent Click e $> [field @"stProgress" .~ def]
 
       pure eFile'
 
@@ -192,39 +189,37 @@ settings = do
     eReqFailure <&> \str ->
       let msgCaption = "Error when loading file"
           msgBody = "Did you upload a proper .cfg file?\n" <> str
-       in (field @"stMsg" .~ Just Message {..})
-            . (field @"stPloverCfg" .~ def)
+       in [ field @"stMsg" .~ Just Message {..}
+          , field @"stPloverCfg" .~ def
+          ]
 
   let compatibleSystems =
         ["Palantype", "Possum Palantype", "Possum Palantype German"]
       isCompatible system = system `elem` compatibleSystems
 
   updateState $ eReqSuccess <&> \ploverCfg@PloverCfg {..} ->
-    appEndo $ mconcat
-      [ Endo $ field @"stPloverCfg" .~ ploverCfg
-      , if' (not $ null pcfgUnrecognizedQwertys) $
-          let msgCaption = "Unrecognized qwerty keys"
-              msgBody =
-                "Your key map contains unrecognized entries:\n"
-                  <> Text.intercalate
-                    "\n"
-                    (Text.pack <$> pcfgUnrecognizedQwertys)
-           in Endo $ field @"stMsg" .~ Just Message {..}
-      , if' (not $ null pcfgUnrecognizedStenos) $
-          let msgCaption = "Unrecognized steno keys"
-              msgBody =
-                "Your key map contains unrecognized entries:\n"
-                  <> Text.intercalate
-                    "\n"
-                    (Text.pack <$> pcfgUnrecognizedStenos)
-           in Endo $ field @"stMsg" .~ Just Message {..}
-      , if' (not $ isCompatible pcfgSystem) $
-          let msgCaption = "Incompatible system"
-              msgBody =
-                "Your system is " <> pcfgSystem
-                  <> "\nCompatible systems at the moment are\n"
-                  <> Text.intercalate "\n" compatibleSystems
-           in Endo $ field @"stMsg" .~ Just Message {..}
+      [ field @"stPloverCfg" .~ ploverCfg
+      , if null pcfgUnrecognizedQwertys then id
+        else let msgCaption = "Unrecognized qwerty keys"
+                 msgBody =
+                   "Your key map contains unrecognized entries:\n"
+                     <> Text.intercalate "\n"
+                          (Text.pack <$> pcfgUnrecognizedQwertys)
+             in field @"stMsg" .~ Just Message {..}
+      , if null pcfgUnrecognizedStenos then id
+        else let msgCaption = "Unrecognized steno keys"
+                 msgBody =
+                      "Your key map contains unrecognized entries:\n"
+                   <> Text.intercalate "\n"
+                        (Text.pack <$> pcfgUnrecognizedStenos)
+             in field @"stMsg" .~ Just Message {..}
+      , if isCompatible pcfgSystem then id
+        else let msgCaption = "Incompatible system"
+                 msgBody =
+                      "Your system is " <> pcfgSystem
+                   <> "\nCompatible systems at the moment are\n"
+                   <> Text.intercalate "\n" compatibleSystems
+             in field @"stMsg" .~ Just Message {..}
       ]
 
 data KeyState
@@ -234,7 +229,7 @@ data KeyState
 stenoInput
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate (Client m)
+  , EventWriter t (Endo State) (Client m)
   , MonadHold t m
   , MonadReader (Dynamic t State) m
   , PostBuild t m
@@ -297,9 +292,9 @@ stenoInput = do
       performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
       let eChord = catMaybes $ updated dynChord
-          chordSTFL = mkPTChord [LeftS, LeftT, LeftF, LeftL]
+          chordSTFL = mkPTChord $ Set.fromList [LeftS, LeftT, LeftF, LeftL]
           eChordSTFL = filter (== chordSTFL) eChord
-      updateState $ eChordSTFL $> (field @"stShowKeyboard" %~ not)
+      updateState $ eChordSTFL $> [field @"stShowKeyboard" %~ not]
 
       pure eChord
 
@@ -423,7 +418,7 @@ elStenoOutput dynDownKeys = mdo
 toc
   :: forall js t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadReader (Dynamic t State) m
   , Prerender js t m
   , PostBuild t m
@@ -456,7 +451,7 @@ toc dynCurrent = elClass "section" "toc" $ do
             )
             $ iFa "fas fa-bars"
 
-    updateState $ domEvent Click s $> (field @"stShowTOC" %~ not)
+    updateState $ domEvent Click s $> [field @"stShowTOC" %~ not]
 
   let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
   elDynClass "div" dynClassDisplay $ do
@@ -481,7 +476,7 @@ toc dynCurrent = elClass "section" "toc" $ do
                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage1
           (e, _) <- elDynClass' "i" dynClass blank
           let eClick = domEvent Click e
-          updateState $ eClick $> (field @"stTOCShowStage1" %~ not)
+          updateState $ eClick $> [field @"stTOCShowStage1" %~ not]
 
           text "Stage 1: The Palantype Alphabet"
 
@@ -504,7 +499,7 @@ toc dynCurrent = elClass "section" "toc" $ do
                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage2
           (e, _) <- elDynClass' "i" dynClass blank
           let eClick = domEvent Click e
-          updateState $ eClick $> (field @"stTOCShowStage2" %~ not)
+          updateState $ eClick $> [field @"stTOCShowStage2" %~ not]
 
           text "Stage 2: Syllables and chords"
 

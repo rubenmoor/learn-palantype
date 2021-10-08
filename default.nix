@@ -27,14 +27,24 @@ let reflex-dom-framework = pkgs.fetchFromGitHub {
     });
     # clay = pkgs.haskellPackages.callHackage "clay" "0.13.3" {};
 in
-  with obelisk;
-  project ./. ({ ... }: {
+  with pkgs.haskell.lib;
+  obelisk.project ./. ({ ... }: {
     android.applicationId = "systems.obsidian.obelisk.examples.minimal";
     android.displayName = "Obelisk Minimal Example";
     ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
     ios.bundleName = "Obelisk Minimal Example";
+
     staticFiles = import ./static.nix { inherit pkgs; };
+
     overrides = self: super: {
+
+      gerippe = dontHaddock (self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "gerippe";
+        rev = "5dedac304b5378eea912f7ce1055793ee108d713";
+        sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
+      }) {});
+
       reflex-dom = self.callCabal2nix "reflex-dom" (reflex-dom-framework + /reflex-dom) {};
       reflex-dom-core = pkgs.haskell.lib.dontCheck (
         self.callCabal2nix "reflex-dom-core" (
@@ -47,7 +57,7 @@ in
         rev = "20e2621cc2eca5fe38f8a01c7a159b0b9be524ea";
         sha256 = "0aqyk04yg39xj40aj86hr6gwbzvj6i2fxi8zznmfl5fay8l96b4g";
       }) {};
-      servant-snap = pkgs.haskell.lib.dontCheck (self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
+      servant-snap = dontCheck (self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";

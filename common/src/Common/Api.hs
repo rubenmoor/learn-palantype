@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveGeneric     #-}
@@ -17,14 +18,25 @@ import           Data.Map        (Map)
 import qualified Data.Map        as Map
 import           Data.Text       (Text)
 import           GHC.Generics    (Generic)
-import           Servant.API     ((:<|>), (:>), JSON, PlainText, Post, ReqBody)
+import           Servant.API     (Get, (:<|>), (:>), JSON, PlainText, Post, ReqBody)
 import           Text.Read       (readMaybe)
 import           Web.KeyCode     (Key)
+import Servant.API.ContentTypes (MimeRender (..))
 
 type RoutesApi = "api" :>
      ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] PloverCfg
-  :<|> "parse"  :> "steno" :> ReqBody '[PlainText] String :> Post '[JSON] [PTChord]
+  :<|> "lookup" :> "steno" :> ReqBody '[JSON] [Text] :> Post '[JSON] [PTChord]
      )
+
+type Routes = RoutesApi :<|> RouteStenoExpressionsHs
+
+type RouteStenoExpressionsHs =
+  "StenoExpressions.hs" :> Get '[PlainText] Hs
+
+newtype Hs = Hs { unHs :: Text }
+
+instance MimeRender PlainText Hs where
+  mimeRender p = mimeRender p . unHs
 
 data PloverCfg = PloverCfg
   { pcfgMapStenoKeys        :: Map PTChar [String] -- recognized steno keys

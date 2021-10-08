@@ -24,6 +24,7 @@ library
                , obelisk-frontend
                , obelisk-generated-static
                , obelisk-route
+               , parsec
                , random
                , random-shuffle
                , reflex-dom
@@ -43,6 +44,7 @@ library
     Page.Stage1
     Page.Stage2
     State
+    StenoExpressions
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable frontend

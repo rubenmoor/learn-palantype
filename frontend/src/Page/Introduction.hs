@@ -3,7 +3,6 @@
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
@@ -32,14 +31,14 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          el, elAttr, elClass, elClass',
                                          leftmost, text, (=:))
-import           State                  (EStateUpdate, Env (..),
+import           State                  (State, Env (..),
                                          Navigation (..), Stage (..),
                                          updateState)
 
 introduction
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadReader (Env t) m
   , SetRoute t (R FrontendRoute) m
   )
@@ -91,17 +90,17 @@ introduction = do
     elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
     text "."
 
-  let chordSTART = mkPTChord [LeftS, LeftT, RightA, RightR, RightT]
+  let chordSTART = mkPTChord $ Set.fromList [LeftS, LeftT, RightA, RightR, RightT]
       eChordSTART = void $ filter (== chordSTART) envEChord
 
   elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"
     let eStart = leftmost [eChordSTART, domEvent Click btn]
-    updateState $ eStart $> appEndo (mconcat
-      [ Endo $ field @"stProgress" .~ Stage1_1
-      , Endo $ field @"stCleared" %~ Set.insert (navCurrent envNavigation)
-      , Endo $ field @"stTOCShowStage1" .~ True
-      ])
+    updateState $ eStart $>
+      [ field @"stProgress" .~ Stage1_1
+      , field @"stCleared" %~ Set.insert (navCurrent envNavigation)
+      , field @"stTOCShowStage1" .~ True
+      ]
     setRoute $ eStart $> FrontendRoute_Main :/ ()
 
   elClass "div" "paragraph" $ do

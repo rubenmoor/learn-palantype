@@ -1,0 +1,6 @@
+{
+    "paramDbHost": "localhost",
+    "paramDbUser": "palantype.com",
+    "paramDbPassword": "palantype.com",
+    "paramDbDatabase": "palantype"
+}

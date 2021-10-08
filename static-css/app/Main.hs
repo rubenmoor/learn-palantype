@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay          (lineHeight, li, ul, listStyleType, paddingTop, h3, darkblue, h2, overflowClip, bsInset, yellow, borderSpacing, paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
+import           Clay          (keyframes, Normal(normal), ease, infinite, animation, lineHeight, li, ul, listStyleType, paddingTop, h3, darkblue, h2, overflowClip, bsInset, yellow, borderSpacing, paddingRight, paddingLeft, html, Initial(initial), footer, overflowY, All (all), Auto (auto), Center (center), Color,
                                 Css, Cursor (cursor), None (none),
                                 Other (other), a, absolute, after, alignItems,
                                 backgroundColor, block, blue, body, bold,
@@ -327,3 +327,7 @@ main = putCss $ do
     cursor pointer
 
   ".displayNone" ? display none
+
+  ".blinking" ? animation "blink" (sec 1) linear (sec 0) infinite normal none
+
+  keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]

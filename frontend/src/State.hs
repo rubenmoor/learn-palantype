@@ -1,10 +1,10 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms   #-}
-{-# LANGUAGE RecordWildCards   #-}
 
 module State where
 
@@ -12,26 +12,26 @@ module State where
 import           Common.Alphabet     (PTChord)
 import           Common.Api          (PloverCfg)
 import           Common.Route        (FrontendRoute (..))
-import           Control.Applicative (Applicative (pure, (<*>)), (<$>))
+import           Control.Applicative ((<$>))
 import           Control.Category    (Category ((.)))
-import           Data.Aeson          (FromJSON (..), KeyValue ((.=)),
-                                      ToJSON (..), Value (..), object, (.:))
-import           Data.Aeson.Types    (prependFailure, typeMismatch)
+import           Data.Aeson          (FromJSON (..),
+                                      ToJSON (..))
 import           Data.Bool           (Bool (..))
 import           Data.Default        (Default (..))
 import           Data.Eq             (Eq)
 import           Data.Function       (($))
-import           Data.Functor        (Functor (fmap))
 import           Data.Maybe          (Maybe (..))
 import           Data.Ord            (Ord)
-import           Data.Semigroup      (Semigroup (..))
+import           Data.Semigroup      (Endo (..))
 import           Data.Set            (Set)
 import qualified Data.Set as         Set
 import           Data.Text           (Text)
 import           GHC.Generics        (Generic)
 import           Obelisk.Route       (pattern (:/), R)
-import           Reflex.Dom          (EventWriter (..), Reflex (Dynamic, Event))
+import           Reflex.Dom          (EventWriter (..), Reflex(Dynamic, Event))
 import           Text.Show           (Show (..))
+import Data.List (map)
+import Data.Foldable (Foldable(foldMap))
 
 -- environment for frontend pages
 
@@ -49,14 +49,14 @@ data Navigation = Navigation
 
 -- frontend application state
 
-newtype EStateUpdate
-  = EStateUpdate { unEStateUpdate :: State -> State }
-
-instance Semigroup EStateUpdate where
-  u <> v =
-    let u' = unEStateUpdate u
-        v' = unEStateUpdate v
-    in  EStateUpdate $ v' . u'
+-- newtype EStateUpdate
+--   = EStateUpdate { unEStateUpdate :: State -> State }
+--
+-- instance Semigroup EStateUpdate where
+--   u <> v =
+--     let u' = unEStateUpdate u
+--         v' = unEStateUpdate v
+--     in  EStateUpdate $ v' . u'
 
 -- State
 
@@ -91,10 +91,13 @@ instance Default State where
 
 updateState ::
   ( Reflex t
-  , EventWriter t EStateUpdate m
-  ) => Event t (State -> State) -> m ()
+  , EventWriter t (Endo State) m
+  , Foldable l
+  )
+  => Event t (l (State -> State))
+  -> m ()
 updateState event =
-  tellEvent $ fmap EStateUpdate event
+  tellEvent $ foldMap Endo <$> event
 
 data Message = Message
   { msgCaption :: Text

@@ -15,14 +15,13 @@
 module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
-import           State                       (EStateUpdate (..), Env (..),
-                                              Navigation (..), Stage (..),
-                                              State (..), stageUrl)
+import           State                       (Env (..), Navigation (..),
+                                              Stage (..), State (..), stageUrl)
 
 import           Common.Route                (FrontendRoute (..))
 import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
 import qualified Data.Aeson                  as Aeson
-import           Data.Functor                (void, ($>), (<&>))
+import           Data.Functor                (($>), (<&>))
 import           Data.Maybe                  (fromMaybe)
 import           Data.Text                   (Text)
 import qualified Data.Text.Lazy              as Lazy
@@ -36,21 +35,22 @@ import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
 import           Obelisk.Route               (R)
 import           Obelisk.Route.Frontend      (RoutedT, SetRoute (setRoute),
-                                              mapRoutedT, subRoute, subRoute_)
+                                              mapRoutedT, subRoute)
+import           Page.Common                 (elFooter)
+import           Page.Introduction           (introduction)
+import qualified Page.Stage1                 as Stage1
+import qualified Page.Stage2                 as Stage2
 import           Reflex.Dom                  (EventWriterT,
                                               PerformEvent (performEvent_),
                                               PostBuild (getPostBuild),
                                               Prerender (prerender),
-                                              Reflex (Dynamic, Event, updated),
+                                              Reflex (Dynamic, updated),
                                               blank, def, dyn_, el, elAttr,
                                               elClass, foldDyn, leftmost,
                                               prerender_, runEventWriterT,
                                               tailE, text, widgetHold_, (=:))
 import           Shared                      (loadingScreen)
-import Page.Introduction (introduction)
-import qualified Page.Stage1 as Stage1
-import qualified Page.Stage2 as Stage2
-import Page.Common (elFooter)
+import Data.Semigroup (Endo (..))
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -69,15 +69,15 @@ frontendBody = mdo
       getState s = getItem s key
       setState d s = setItem s key d
 
-  dynLoadState <- prerender (pure $ EStateUpdate $ const def) $ do
+  dynLoadState <- prerender (pure $ Endo $ const def) $ do
     mStr <- liftJSM (currentWindowUnchecked >>= getLocalStorage >>= getState)
     let mState = mStr >>= Aeson.decode . Lazy.encodeUtf8. Lazy.fromStrict
-    pure $ EStateUpdate $ const $ fromMaybe def mState
+    pure $ Endo $ const $ fromMaybe def mState
 
   let eLoaded = updated dynLoadState
   widgetHold_ loadingScreen $ eLoaded $> blank
 
-  dynState <- foldDyn unEStateUpdate def $ leftmost [eLoaded, eStateUpdate]
+  dynState <- foldDyn appEndo def $ leftmost [eLoaded, eStateUpdate]
 
   -- TODO: persist application state on visibility change (when hidden)
   eUpdated <- tailE $ updated dynState
@@ -103,8 +103,8 @@ frontendBody = mdo
                    Maybe Stage
                 -> Stage
                 -> Maybe Stage
-                -> RoutedT t a (ReaderT (Env t) (EventWriterT t EStateUpdate m)) Navigation
-                -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t EStateUpdate m)) Navigation
+                -> RoutedT t a (ReaderT (Env t) (EventWriterT t (Endo State) m)) Navigation
+                -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) Navigation
               setEnv navMPrevious navCurrent navMNext =
                 mapRoutedT (withReaderT $ \_ -> Env
                   { envDynState = dynState

@@ -4,34 +4,44 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Page.Common where
 
-import           Common.Alphabet        (PTChar (..), mkPTChord)
+import           Common.Alphabet        (PTChar (..), PTChord (..), mkPTChord)
 import           Common.Route           (FrontendRoute (..))
-import           Control.Applicative    (Applicative (pure))
+import           Control.Applicative    (Alternative ((<|>)),
+                                         Applicative (pure, (*>), (<*)))
+import           Control.Category       (Category (id, (.)))
 import           Control.Lens           ((%~), (.~), (<&>))
+import           Control.Monad          (Monad((>>), fail), when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Data.Bool              (Bool (..))
+import           Data.Char              (Char)
+import           Data.Either            (Either (..))
 import           Data.Eq                (Eq ((==)))
 import           Data.Function          (($))
-import           Data.Functor           (void, ($>))
+import           Data.Functor           (void, ($>), (<$>))
 import           Data.Generics.Product  (field)
-import           Data.Monoid            (Monoid (mconcat))
+import           Data.List              (drop, findIndex, (!!))
+import           Data.Maybe             (Maybe (..))
 import           Data.Ord               (Ord ((>)))
-import           Data.Semigroup         (Endo (..))
+import           Data.Semigroup         (Semigroup((<>)), Endo (..))
 import qualified Data.Set               as Set
+import           Data.String            (String)
+import           Data.Text              (Text)
 import qualified Data.Text              as Text
+import           Data.Tuple             (fst, snd)
 import           Data.Witherable        (Filterable (filter))
+import           GHC.Num                (Num ((+)))
 import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
                                          SetRoute (setRoute), routeLink)
 import           Reflex.Dom             (DomBuilder, EventName (Click),
@@ -40,11 +50,15 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          PostBuild (getPostBuild), Prerender,
                                          Reflex (Event, never), blank, el,
                                          elClass, elClass', leftmost, text)
-import           Shared                 (dynSimple, iFa, if', whenJust)
-import           State                  (EStateUpdate, Env (..),
-                                         Navigation (..), Stage (..), stageUrl,
-                                         updateState)
+import           Shared                 (dynSimple, iFa, whenJust)
+import           State                  (Message (..), Env (..), Navigation (..), Stage (..),
+                                         State, stageUrl, updateState)
+import           Text.Parsec            (space, spaces, Parsec, anyChar, char, eof, getState,
+                                         many1, runParser, sepBy1, setState,
+                                         try)
+import qualified Text.Parsec            as Parsec
 import           Text.Show              (Show (show))
+import Data.Foldable (concat)
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -70,7 +84,7 @@ elFooter Navigation{..} = el "footer" $ do
 elCongraz
   :: forall t (m :: * -> *).
   ( DomBuilder t m
-  , EventWriter t EStateUpdate m
+  , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
   , MonadReader (Env t) m
@@ -84,8 +98,8 @@ elCongraz eDone Navigation{..} = mdo
 
   eChord <- asks envEChord
 
-  let chordCON = mkPTChord [LeftC, LeftO, RightN]
-      chordBACK = mkPTChord [LeftP, LeftCross, RightA, RightC]
+  let chordCON = mkPTChord $ Set.fromList [LeftC, LeftO, RightN]
+      chordBACK = mkPTChord $ Set.fromList [LeftP, LeftCross, RightA, RightC]
       eChordCON = void $ filter (== chordCON) eChord
       eChordBACK = void $ filter (== chordBACK) eChord
 
@@ -104,12 +118,13 @@ elCongraz eDone Navigation{..} = mdo
               text " to continue to "
               elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
             let eContinue = leftmost [eChordCON, domEvent Click elACont]
-            updateState $ eContinue $> appEndo (mconcat
-              [ Endo $ field @"stProgress" %~ \s -> if nxt > s then nxt else s
-              , Endo $ field @"stCleared" %~ Set.insert navCurrent
-              , if' (nxt == Stage2_1) $
-                  Endo $ field @"stTOCShowStage2" .~ True
-              ])
+            updateState $ eContinue $>
+              [ field @"stProgress" %~ \s -> if nxt > s then nxt else s
+              , field @"stCleared" %~ Set.insert navCurrent
+              , if nxt == Stage2_1
+                  then field @"stTOCShowStage2" .~ True
+                  else id
+              ]
             setRoute $ eContinue $> FrontendRoute_Main :/ ()
           el "div" $ do
             el "span" $ text "("
@@ -119,3 +134,88 @@ elCongraz eDone Navigation{..} = mdo
             el "span" $ text ")"
             pure $ leftmost [eChordBACK, domEvent Click elABack]
   blank
+
+parserChord :: Parsec String ([(Char, PTChar)], Bool) PTChord
+parserChord = do
+
+  let lsChars =
+        [ ('S', LeftS)
+        , ('C', LeftC)
+        , ('P', LeftP)
+        , ('T', LeftT)
+        , ('H', LeftH)
+        , ('+', LeftCross)
+        , ('M', LeftM)
+        , ('F', LeftF)
+        , ('R', LeftR)
+        , ('N', LeftN)
+        , ('L', LeftL)
+        , ('Y', LeftY)
+        , ('O', LeftO)
+        , ('E', LeftE)
+        , ('|', LeftPipe)
+        , ('|', RightPipe)
+        , ('A', RightA)
+        , ('U', RightU)
+        , ('I', MiddleI)
+        , ('^', RightPoint)
+        , ('N', RightN)
+        , ('L', RightL)
+        , ('C', RightC)
+        , ('M', RightM)
+        , ('F', RightF)
+        , ('R', RightR)
+        , ('P', RightP)
+        , ('T', RightT)
+        , ('+', RightCross)
+        , ('S', RightS)
+        , ('H', RightH)
+        , ('e', RightE)
+        ]
+  setState (lsChars, False)
+
+  let parserKey = do
+        (ls, _) <- getState
+        c <- anyChar
+        case findIndex ((==) c . fst) ls of
+            Nothing -> fail "malformed"
+            Just i  -> do
+              Parsec.updateState $ (drop (i + 1) ls,) . snd
+              pure $ snd $ ls !! i
+
+      parserHypen = do
+        (ls, foundHyphen) <- getState
+        when foundHyphen $ fail "malformed"
+        void $ char '-'
+        setState (drop 15 ls, True)
+  PTChord <$> many1 ( try parserKey <|> (parserHypen *> parserKey))
+
+parserWord :: Parsec String ([(Char, PTChar)], Bool) [PTChord]
+parserWord = sepBy1 parserChord (char '/')
+
+parserSentence :: Parsec String ([(Char, PTChar)], Bool) [[PTChord]]
+parserSentence = spaces >> sepBy1 parserWord (many1 space) <* eof
+
+parseSteno :: String -> Either Text [PTChord]
+parseSteno str =
+  case runParser parserSentence ([], False) "frontend steno code" str of
+    Left  err -> Left  $ Text.pack $ show err
+    Right ls  -> Right $ concat ls
+
+parseStenoOrError
+  :: forall t (m :: * -> *).
+  ( PostBuild t m
+  , EventWriter t (Endo State) m
+  )
+  => Text
+  -> m [PTChord]
+parseStenoOrError str =
+  case parseSteno $ Text.unpack str of
+    Right words -> pure words
+    Left  err   -> do
+      ePb <- getPostBuild
+      let msgCaption = "Internal error"
+          msgBody    = "Could not parse steno code: " <> str
+                    <> "\n" <> err
+      updateState $ ePb $> [field @"stMsg" .~ Just Message{..}]
+      pure []
