@@ -210,10 +210,10 @@ mkPTChord :: Set PTChar -> PTChord
 mkPTChord = PTChord . sort . Set.toList
 
 showChord :: PTChord -> Text
-showChord = Text.unwords . fmap showLetter . unPTChord
+showChord = Text.concat . fmap showLetter . unPTChord
 
 showChord' :: PTChord -> Text
-showChord' = Text.unwords . fmap showKey . unPTChord
+showChord' = Text.concat . fmap showKey . unPTChord
 
 showKey :: PTChar -> Text
 showKey = \case

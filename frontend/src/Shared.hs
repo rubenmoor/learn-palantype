@@ -49,7 +49,6 @@ import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace,
                                         switchDyn, switchHold, text, widgetHold,
                                         (&), (.~), (=:))
 import           State                 (Message (..), State (..), updateState)
-import qualified StenoExpressions
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -163,33 +162,3 @@ loadingScreen =
   elClass "div" "mkOverlay" $ do
     iFa "fas fa-spinner fa-spin"
     text " Loading ..."
-
-if' :: Monoid a => Bool -> a -> a
-if' True x  = x
-if' False _ = mempty
-
-lookupSteno
-  :: forall js t (m :: * -> *).
-  ( EventWriter t (Endo State) m
-  , PostBuild t m
-  , Prerender js t m
-  )
-  => Text
-  -> m (Event t [PTChord])
-lookupSteno str = do
-  ePb <- getPostBuild
-  let words = Text.words str
-      mChords = for words $ \w ->
-        Map.lookup w StenoExpressions.dict
-  case mChords of
-    Just chords -> pure $ ePb $> chords
-    Nothing     -> do
-      RequestResult{..} <- request $ postLookupSteno (constDyn $ Right words) ePb
-
-      updateState $ rrEFailure <&> \err ->
-        let msgCaption = "Internal error"
-            msgBody = "Could not parse steno code: \n"
-                   <> str <> "\n" <> err
-        in  [field @"stMsg" .~ Just Message{..}]
-
-      pure rrESuccess

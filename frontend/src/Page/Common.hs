@@ -53,12 +53,13 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
 import           Shared                 (dynSimple, iFa, whenJust)
 import           State                  (Message (..), Env (..), Navigation (..), Stage (..),
                                          State, stageUrl, updateState)
-import           Text.Parsec            (space, spaces, Parsec, anyChar, char, eof, getState,
+import           Text.Parsec            ((<?>), oneOf, space, spaces, Parsec, anyChar, char, eof, getState,
                                          many1, runParser, sepBy1, setState,
                                          try)
 import qualified Text.Parsec            as Parsec
 import           Text.Show              (Show (show))
 import Data.Foldable (concat)
+import Control.Monad (MonadPlus(mzero))
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -98,9 +99,7 @@ elCongraz eDone Navigation{..} = mdo
 
   eChord <- asks envEChord
 
-  let chordCON = mkPTChord $ Set.fromList [LeftC, LeftO, RightN]
-      chordBACK = mkPTChord $ Set.fromList [LeftP, LeftCross, RightA, RightC]
-      eChordCON = void $ filter (== chordCON) eChord
+  let eChordCON = void $ filter (== chordCON) eChord
       eChordBACK = void $ filter (== chordBACK) eChord
 
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
@@ -176,19 +175,23 @@ parserChord = do
 
   let parserKey = do
         (ls, _) <- getState
-        c <- anyChar
+        c <- oneOf $ fst <$> lsChars
         case findIndex ((==) c . fst) ls of
-            Nothing -> fail "malformed"
+            Nothing -> mzero
             Just i  -> do
               Parsec.updateState $ (drop (i + 1) ls,) . snd
               pure $ snd $ ls !! i
 
       parserHypen = do
         (ls, foundHyphen) <- getState
-        when foundHyphen $ fail "malformed"
+        when foundHyphen mzero
         void $ char '-'
         setState (drop 15 ls, True)
-  PTChord <$> many1 ( try parserKey <|> (parserHypen *> parserKey))
+
+  PTChord <$> many1
+    (   parserKey
+    <|> (parserHypen *> parserKey)
+    )
 
 parserWord :: Parsec String ([(Char, PTChar)], Bool) [PTChord]
 parserWord = sepBy1 parserChord (char '/')
@@ -208,14 +211,20 @@ parseStenoOrError
   , EventWriter t (Endo State) m
   )
   => Text
-  -> m [PTChord]
+  -> m (Maybe [PTChord])
 parseStenoOrError str =
   case parseSteno $ Text.unpack str of
-    Right words -> pure words
+    Right words -> pure $ Just words
     Left  err   -> do
       ePb <- getPostBuild
       let msgCaption = "Internal error"
           msgBody    = "Could not parse steno code: " <> str
                     <> "\n" <> err
       updateState $ ePb $> [field @"stMsg" .~ Just Message{..}]
-      pure []
+      pure Nothing
+
+chordCON :: PTChord
+chordCON = mkPTChord $ Set.fromList [LeftC, LeftO, RightN]
+
+chordBACK :: PTChord
+chordBACK = mkPTChord $ Set.fromList [LeftP, LeftCross, RightA, RightC]

@@ -130,7 +130,8 @@ frontendBody = mdo
               FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
               FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
               FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
-              FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 Nothing         Stage2.exercise1
+              FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
+              FrontendRoute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 Nothing         Stage2.exercise2
           pure dynNavigation
       dyn_ $ dynNavigation <&> elFooter
   blank

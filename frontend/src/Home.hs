@@ -470,15 +470,15 @@ toc dynCurrent = elClass "section" "toc" $ do
 
         elLi Introduction
 
-        elClass "li" "stage" $ do
+        (s1, _) <- elClass' "li" "stage" $ do
 
           let dynClass =
                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage1
-          (e, _) <- elDynClass' "i" dynClass blank
-          let eClick = domEvent Click e
-          updateState $ eClick $> [field @"stTOCShowStage1" %~ not]
-
+          elDynClass "i" dynClass blank
           text "Stage 1: The Palantype Alphabet"
+
+        let eClickS1 = domEvent Click s1
+        updateState $ eClickS1 $> [field @"stTOCShowStage1" %~ not]
 
         let dynClassUl1 =
               bool "displayNone" "" <$> dynShowStage1
@@ -493,18 +493,19 @@ toc dynCurrent = elClass "section" "toc" $ do
           elLi Stage1_6
           elLi Stage1_7
 
-        elClass "li" "stage" $ do
+        (s2, _) <- elClass' "li" "stage" $ do
 
           let dynClass =
                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage2
-          (e, _) <- elDynClass' "i" dynClass blank
-          let eClick = domEvent Click e
-          updateState $ eClick $> [field @"stTOCShowStage2" %~ not]
-
+          elDynClass "i" dynClass blank
           text "Stage 2: Syllables and chords"
+
+        let eClickS2 = domEvent Click s2
+        updateState $ eClickS2 $> [field @"stTOCShowStage2" %~ not]
 
         let dynClassUl2 =
               bool "displayNone" "" <$> dynShowStage2
 
         elDynClass "ul" dynClassUl2 $ do
           elLi Stage2_1
+          elLi Stage2_2

@@ -112,6 +112,7 @@ main = putCss $ do
       li ? do
         lineHeight $ em 1.8
         ".stage" & do
+          cursor pointer
           marginTop $ em 0.2
           i ? do
             color anthrazit
@@ -328,6 +329,6 @@ main = putCss $ do
 
   ".displayNone" ? display none
 
-  ".blinking" ? animation "blink" (sec 1) linear (sec 0) infinite normal none
+  ".blinking" ? animation "blink" (sec 1) ease (sec 0) infinite normal none
 
   keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]

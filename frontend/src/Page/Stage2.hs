@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -16,34 +17,43 @@ import           Common.Alphabet        (PTChord, showChord, ulfts)
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
-import           Control.Lens           ((.~), (<&>))
-import           Control.Monad          (when, (=<<))
+import           Control.Lens           ((%~), (.~), (<&>))
+import           Control.Monad          (when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Reader   (MonadReader (ask))
 import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
 import           Data.Foldable          (Foldable (length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (void)
+import           Data.Functor           (void, ($>))
+import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
 import           Data.List              (zip, (!!))
 import           Data.Maybe             (Maybe (..))
 import           Data.Ord               (Ord ((>)))
 import           Data.Semigroup         (Endo)
+import qualified Data.Set               as Set
+import           Data.Text              (Text)
 import qualified Data.Text              as Text
 import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)))
-import           Obelisk.Route.Frontend (R, RouteToUrl, SetRoute (setRoute))
-import           Page.Common            (elCongraz,
+import           Obelisk.Route.Frontend (pattern (:/), R,
+                                         SetRoute (setRoute))
+import           Page.Common            (chordBACK, chordCON, elCongraz,
                                          parseStenoOrError)
-import           Reflex.Dom             (DomBuilder, EventWriter,
+import           Reflex.Dom             (DomBuilder, EventName (Click),
+                                         EventWriter, HasDomEvent (domEvent),
                                          MonadHold (holdDyn),
-                                         PostBuild (getPostBuild), Prerender,
-                                         Reflex (Event, updated), blank, dyn_, el, elAttr, elClass,
-                                         elDynClass, foldDyn, text, widgetHold_,
-                                         (=:))
-import           State                  (Env (..),
-                                         Navigation (..), State)
+                                         PostBuild (getPostBuild),
+                                         Reflex (Event, updated), blank, dyn_,
+                                         el, elAttr, elClass, elClass',
+                                         elDynClass, foldDyn, leftmost, never,
+                                         text, widgetHold_, (=:))
+import           Shared                 (whenJust)
+import           State                  (Env (..), Navigation (..),
+                                         Stage (Stage1_1), State (..), stageUrl,
+                                         updateState)
+import           Text.Show              (Show (show))
 
 exercise1
   :: forall t (m :: * -> *).
@@ -64,21 +74,84 @@ exercise1 = do
   el "h2" $ text "Syllables and chords"
   el "h3" $ text "Exercise 1"
   elClass "div" "paragraph" $ do
+    text "You probably have noticed that on the virtual keyboard some keys \
+         \are highlighted blue. These keys are called home row. \
+         \The idea is that there is a resting position for your hands, where \
+         \every finger is placed on one key of home row."
+  elClass "div" "paragraph" $ do
+    text "From this resting position your fingers can find any key, without \
+          \any need to look down on your keyboard, so your eyes can stay on \
+          \the screen all the time."
+  elClass "div" "paragraph" $ do
+    text "In case you have been looking on your fingers during the exercises, \
+         \it's probably a good idea to get used to home row now. \
+         \Simply repeat Stage 1 until you can do all the exercises without \
+         \looking down. Just orient yourself once in the beginning!"
+
+  let eChordCON = void $ filter (== chordCON) envEChord
+      eChordBACK = void $ filter (== chordBACK) envEChord
+
+  elABack <- elClass "div" "paragraph" $ do
+    text "Type "
+    el "code" $ text "BACK"
+    text " to "
+    (e, _) <- elClass' "a" "normalLink" $ text "back to Exercise 1.1"
+    text " to practice home row."
+    pure e
+
+  let eBack = leftmost [eChordBACK, domEvent Click elABack]
+  setRoute $ eBack $> stageUrl Stage1_1
+  updateState $ eBack $> [field @"stProgress" .~ Stage1_1]
+
+  let Navigation{..} = envNavigation
+  whenJust navMNext $ \nxt -> do
+    (elACont, _) <- elClass "div" "anthrazit" $ do
+      text "Type "
+      el "code" $ text "CON"
+      text " to continue to "
+      elClass' "a" "normalLink" $ text $ Text.pack $ show nxt
+    let eContinue = leftmost [eChordCON, domEvent Click elACont]
+    updateState $ eContinue $>
+      [ field @"stProgress" %~ \s -> if nxt > s then nxt else s
+      , field @"stCleared" %~ Set.insert navCurrent
+      ]
+    setRoute $ eContinue $> FrontendRoute_Main :/ ()
+
+  pure envNavigation
+
+exercise2
+  :: forall t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t (Endo State) m
+  , MonadFix m
+  , MonadHold t m
+  , MonadReader (Env t) m
+  , PostBuild t m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m Navigation
+exercise2 = do
+
+  Env {..} <- ask
+
+  el "h1" $ text "Stage 2"
+  el "h2" $ text "Syllables and chords"
+  el "h3" $ text "Exercise 2"
+  elClass "div" "paragraph" $ do
     text "We can begin with actually typing sentences now. \
          \How about this one sentences I found in the "
     elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html")
       $ text "Palantype Tutorial"
     text " of the Open Steno Project:"
 
-    let steno = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/+SI T+OC+ ^"
-        txt = "The quick brown fox jumps over the lazy dog ."
+    let stenoStr = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
+        txt      = "The quick brown fox jumps over the lazy dog ."
 
-    el "blockquote" $
-      el "table" $ do
-        el "tr" $
-          for_ (Text.words txt)   $ el "td" . text
-        el "tr" $
-          for_ (Text.words steno) $ el "td" . el "pre" . el "code" . text
+    mChords <- parseStenoOrError stenoStr
+    eDone <-
+      case mChords of
+        Just chords -> walkWords (Text.words txt) chords
+        Nothing     -> pure never
 
     elClass "div" "paragraph" $ do
       text "Each word is one chord, except the word \"lazy\". You will \
@@ -93,8 +166,6 @@ exercise1 = do
       el "code" $ text "ULFTS"
       text ". It is the homerow of your right hand and deletes your last \
            \input. Now you can correct your mistakes!"
-
-    eDone <- walkWords =<< parseStenoOrError steno
 
     elCongraz eDone envNavigation
 
@@ -114,9 +185,10 @@ walkWords
   , MonadReader (Env t) m
   , PostBuild t m
   )
-  => [PTChord]
+  => [Text]
+  -> [PTChord]
   -> m (Event t ())
-walkWords chords = do
+walkWords words chords = do
   Env {..} <- ask
 
   let len = length chords
@@ -153,20 +225,24 @@ walkWords chords = do
   dynWalk <- foldDyn step stepInitial envEChord
   let eDone = catMaybes $ wsDone <$> updated dynWalk
 
-  el "pre" $
-    el "code" $ do
-      for_ (zip [0 :: Int ..] chords) $ \(i, c) -> do
-        let dynCls = dynWalk <&> \WalkState {..} ->
-              case wsMMistake of
-                Just j  -> if i == j then "bgRed" else ""
-                Nothing -> if wsCounter > i then "bgGreen" else ""
-        elDynClass "span" dynCls $ text $ showChord c
+  el "blockquote" $
+    el "table" $ do
+       el "tr" $
+         for_ words $ el "td" . text
+       el "tr" $ do
+         for_ (zip [0 :: Int ..] chords) $ \(i, c) -> do
+           let dynCls = dynWalk <&> \WalkState {..} ->
+                 case wsMMistake of
+                   Just j  -> if i == j then "bgRed" else ""
+                   Nothing -> if wsCounter > i then "bgGreen" else ""
+           el "td" $ elDynClass "pre" dynCls $
+             el "code" $ text $ showChord c
 
-  let eMistake = wsMMistake <$> updated dynWalk
-  widgetHold_ blank $ eMistake <&> \case
-      Just _ ->
-        elClass "code" "blinking" $ text "ULFTS"
-      Nothing -> blank
+         el "td" $ do
+           let eMistake = wsMMistake <$> updated dynWalk
+           widgetHold_ blank $ eMistake <&> \case
+               Just _  -> elClass "code" "blinking" $ text " ULFTS"
+               Nothing -> blank
 
   dynDone <- holdDyn False eDone
   dyn_ $ dynDone <&> \bDone -> when bDone $

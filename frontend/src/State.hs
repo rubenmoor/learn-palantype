@@ -127,6 +127,7 @@ data Stage
   | Stage1_6
   | Stage1_7
   | Stage2_1
+  | Stage2_2
   deriving (Eq, Ord, Generic)
 
 instance ToJSON Stage
@@ -145,6 +146,7 @@ instance Show Stage where
   show Stage1_6     = "Stage 1.6"
   show Stage1_7     = "Stage 1.7"
   show Stage2_1     = "Stage 2.1"
+  show Stage2_2     = "Stage 2.2"
 
 stageUrl :: Stage -> R FrontendRoute
 stageUrl = \case
@@ -157,15 +159,17 @@ stageUrl = \case
   Stage1_6 -> FrontendRoute_Stage1_6 :/ ()
   Stage1_7 -> FrontendRoute_Stage1_7 :/ ()
   Stage2_1 -> FrontendRoute_Stage2_1 :/ ()
+  Stage2_2 -> FrontendRoute_Stage2_2 :/ ()
 
 stageDescription :: Stage -> Text
 stageDescription = \case
   Introduction -> "Introduction"
-  Stage1_1 -> "Task 1: Type the letters"
-  Stage1_2 -> "Task 2: Memorize the order"
-  Stage1_3 -> "Task 3: Type the letters blindly"
-  Stage1_4 -> "Task 4: Memorize the order blindly"
-  Stage1_5 -> "Task 5: Memorize the left hand"
-  Stage1_6 -> "Task 6: Memorize the right hand"
-  Stage1_7 -> "Task 7: Memorize them all"
-  Stage2_1 -> "Task 1: Learn your first chords"
+  Stage1_1 -> "Ex. 1: Type the letters"
+  Stage1_2 -> "Ex. 2: Memorize the order"
+  Stage1_3 -> "Ex. 3: Type the letters blindly"
+  Stage1_4 -> "Ex. 4: Memorize the order blindly"
+  Stage1_5 -> "Ex. 5: Memorize the left hand"
+  Stage1_6 -> "Ex. 6: Memorize the right hand"
+  Stage1_7 -> "Ex. 7: Memorize them all"
+  Stage2_1 -> "Ex. 1: Make use of home row"
+  Stage2_2 -> "Ex. 2: Learn your first chords"
