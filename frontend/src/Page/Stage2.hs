@@ -93,9 +93,9 @@ exercise1 = do
 
   elABack <- elClass "div" "paragraph" $ do
     text "Type "
-    el "code" $ text "BACK"
+    el "code" $ text $ showChord chordBACK
     text " to "
-    (e, _) <- elClass' "a" "normalLink" $ text "back to Exercise 1.1"
+    (e, _) <- elClass' "a" "normalLink" $ text "go back to Exercise 1.1"
     text " to practice home row."
     pure e
 
@@ -107,7 +107,7 @@ exercise1 = do
   whenJust navMNext $ \nxt -> do
     (elACont, _) <- elClass "div" "anthrazit" $ do
       text "Type "
-      el "code" $ text "CON"
+      el "code" $ text $ showChord chordCON
       text " to continue to "
       elClass' "a" "normalLink" $ text $ Text.pack $ show nxt
     let eContinue = leftmost [eChordCON, domEvent Click elACont]
@@ -144,7 +144,7 @@ exercise2 = do
       $ text "Palantype Tutorial"
     text " of the Open Steno Project:"
 
-    let stenoStr = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
+    let stenoStr = "-TH CFIC P+RAUN FOCS +YUMPS OEFR -TH LE^/S+I T+OC+ ^"
         txt      = "The quick brown fox jumps over the lazy dog ."
 
     mChords <- parseStenoOrError stenoStr
@@ -158,7 +158,7 @@ exercise2 = do
            \ have to strike "
       el "code" $ text "LE^"
       text " and "
-      el "code" $ text "+SI"
+      el "code" $ text "S+I"
       text " separately. This is what the /-symbol means."
 
     elClass "div" "paragraph" $ do
@@ -203,7 +203,7 @@ walkWords words chords = do
                             ws { wsDone = Just True
                                , wsCounter = wsCounter + 1
                                } -- done
-          (Just _, _) | chord == ulfts ->
+          _ | chord == ulfts ->
                             ws { wsMMistake = Nothing
                                , wsCounter = wsCounter - 1
                                }  -- undo stroke
