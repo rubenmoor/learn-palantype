@@ -134,77 +134,6 @@ elCongraz eDone Navigation{..} = mdo
             pure $ leftmost [eChordBACK, domEvent Click elABack]
   blank
 
-parserChord :: Parsec String ([(Char, PTChar)], Bool) PTChord
-parserChord = do
-
-  let lsChars =
-        [ ('S', LeftS)
-        , ('C', LeftC)
-        , ('P', LeftP)
-        , ('T', LeftT)
-        , ('H', LeftH)
-        , ('+', LeftCross)
-        , ('M', LeftM)
-        , ('F', LeftF)
-        , ('R', LeftR)
-        , ('N', LeftN)
-        , ('L', LeftL)
-        , ('Y', LeftY)
-        , ('O', LeftO)
-        , ('E', LeftE)
-        , ('|', LeftPipe)
-        , ('|', RightPipe)
-        , ('A', RightA)
-        , ('U', RightU)
-        , ('I', MiddleI)
-        , ('^', RightPoint)
-        , ('N', RightN)
-        , ('L', RightL)
-        , ('C', RightC)
-        , ('M', RightM)
-        , ('F', RightF)
-        , ('R', RightR)
-        , ('P', RightP)
-        , ('T', RightT)
-        , ('+', RightCross)
-        , ('S', RightS)
-        , ('H', RightH)
-        , ('e', RightE)
-        ]
-  setState (lsChars, False)
-
-  let parserKey = do
-        (ls, _) <- getState
-        c <- oneOf $ fst <$> lsChars
-        case findIndex ((==) c . fst) ls of
-            Nothing -> mzero
-            Just i  -> do
-              Parsec.updateState $ (drop (i + 1) ls,) . snd
-              pure $ snd $ ls !! i
-
-      parserHypen = do
-        (ls, foundHyphen) <- getState
-        when foundHyphen mzero
-        void $ char '-'
-        setState (drop 15 ls, True)
-
-  PTChord <$> many1
-    (   parserKey
-    <|> (parserHypen *> parserKey)
-    )
-
-parserWord :: Parsec String ([(Char, PTChar)], Bool) [PTChord]
-parserWord = sepBy1 parserChord (char '/')
-
-parserSentence :: Parsec String ([(Char, PTChar)], Bool) [[PTChord]]
-parserSentence = spaces >> sepBy1 parserWord (many1 space) <* eof
-
-parseSteno :: String -> Either Text [PTChord]
-parseSteno str =
-  case runParser parserSentence ([], False) "frontend steno code" str of
-    Left  err -> Left  $ Text.pack $ show err
-    Right ls  -> Right $ concat ls
-
 parseStenoOrError
   :: forall t (m :: * -> *).
   ( PostBuild t m
@@ -213,7 +142,7 @@ parseStenoOrError
   => Text
   -> m (Maybe [PTChord])
 parseStenoOrError str =
-  case parseSteno $ Text.unpack str of
+  case parseRawSteno str of
     Right words -> pure $ Just words
     Left  err   -> do
       ePb <- getPostBuild

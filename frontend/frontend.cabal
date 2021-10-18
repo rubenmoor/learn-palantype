@@ -5,34 +5,36 @@ build-type: Simple
 
 library
   hs-source-dirs: src
-  build-depends: base
-               , aeson
-               , common
-               , containers
-               , data-default
-               , generic-lens
-               , ghcjs-dom
+  build-depends:
+     base
+   , aeson
+   , common
+   , containers
+   , data-default
+   , generic-lens
+   , ghcjs-dom
 
-               -- jsaddle needed for
-               -- eval
-               -- liftJSM
-               , jsaddle 
-               , lens
-               , MonadRandom
-               , mtl
-               , obelisk-executable-config-lookup
-               , obelisk-frontend
-               , obelisk-generated-static
-               , obelisk-route
-               , parsec
-               , random
-               , random-shuffle
-               , reflex-dom
-               , servant
-               , servant-reflex
-               , text
-               , time
-               , witherable
+   -- jsaddle needed for
+   -- eval
+   -- liftJSM
+   , jsaddle 
+   , lens
+   , MonadRandom
+   , mtl
+   , my-palantype
+   , obelisk-executable-config-lookup
+   , obelisk-frontend
+   , obelisk-generated-static
+   , obelisk-route
+   , parsec
+   , random
+   , random-shuffle
+   , reflex-dom
+   , servant
+   , servant-reflex
+   , text
+   , time
+   , witherable
   exposed-modules:
     Frontend
   other-modules:
@@ -49,13 +51,14 @@ library
 executable frontend
   main-is: main.hs
   hs-source-dirs: src-bin
-  build-depends: base
-               , common
-               , obelisk-frontend
-               , obelisk-route
-               , reflex-dom
-               , obelisk-generated-static
-               , frontend
+  build-depends:
+      base
+    , common
+    , obelisk-frontend
+    , obelisk-route
+    , reflex-dom
+    , obelisk-generated-static
+    , frontend
   ghc-options: -threaded -O -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -fno-show-valid-hole-fits
   if impl(ghcjs)
     ghc-options: -dedupe
