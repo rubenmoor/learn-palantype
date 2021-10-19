@@ -20,9 +20,8 @@ import           Data.Text       (Text)
 import           GHC.Generics    (Generic)
 import           Servant.API     ((:>), JSON, PlainText, Post, ReqBody)
 import           Web.KeyCode     (Key)
-import qualified Palantype.EN.Keys as EN
 import Palantype.Common.RawSteno (RawSteno, parseStenoKey)
-import Palantype.Common (Palantype)
+import Palantype.Common (Palantype, KeyIndex, keyIndex)
 import Palantype.EN (pEN)
 
 type RoutesApi = "api" :>
@@ -33,12 +32,12 @@ type Routes = RoutesApi
 
 data PloverCfg = PloverCfg
   -- recognized steno keys: Map (raw steno) [plover key code]
-  { pcfgMapStenoKeys        :: Map RawSteno [Text]
+  { pcfgMapStenoKeys        :: Map KeyIndex [Text]
   -- raw steno key codes that failed to parse
   , pcfgUnrecognizedStenos  :: [RawSteno]
   -- [(Web.KeyCode, raw steno code)]
-  , pcfgLsKeySteno          :: [(Key, RawSteno)]
-  -- qwerty keys in the plover format that failed to parse
+  , pcfgLsKeySteno          :: [(Key, KeyIndex)]
+  -- plover key codes that failed to parse
   , pcfgUnrecognizedQwertys :: [Text]
   , pcfgSystem              :: Text
   , pcfgMachine             :: Text
@@ -101,20 +100,20 @@ keyMapToPloverCfg
   -> PloverCfg
 keyMapToPloverCfg _ stenoKeys pcfgSystem pcfgMachine =
   let acc (lsKeySteno, mapStenoKeys, lsUSteno, lsUQwerty) (rawSteno, plovers) =
-        let stenoExists = isRight (parseStenoKey rawSteno :: Either Text key)
+        let eIKey = keyIndex <$> (parseStenoKey rawSteno :: Either Text key)
             lsEQwerty = fromPlover <$> plovers
             lsQwerty = rights lsEQwerty
-            lsKeySteno' = case (not $ null lsQwerty, stenoExists) of
-              (True, True) -> ((, rawSteno) <$> lsQwerty) ++ lsKeySteno
-              (_    , _  ) -> lsKeySteno
+            lsKeySteno' = case (not $ null lsQwerty, eIKey) of
+              (True, Right iKey) -> ((, iKey) <$> lsQwerty) ++ lsKeySteno
+              (_   , _         ) -> lsKeySteno
             mapStenoKeys' =
-              if stenoExists
-                then Map.insert rawSteno plovers mapStenoKeys
-                else mapStenoKeys
-            lsUSteno' = case stenoExists of
-              True  -> lsUSteno
-              False | rawSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
-              False -> rawSteno : lsUSteno
+              case eIKey of
+                Right iKey -> Map.insert iKey plovers mapStenoKeys
+                Left  _    -> mapStenoKeys
+            lsUSteno' = case eIKey of
+              Right _  -> lsUSteno
+              Left  _ | rawSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
+              Left  _ -> rawSteno : lsUSteno
             lsUQwerty' = lefts lsEQwerty ++ lsUQwerty
         in (lsKeySteno', mapStenoKeys', lsUSteno', lsUQwerty')
 

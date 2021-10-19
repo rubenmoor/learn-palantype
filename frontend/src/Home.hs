@@ -87,6 +87,7 @@ import           State                       (Message (..),
                                               updateState)
 import Data.Char (Char)
 import Palantype.Common.RawSteno (RawSteno(..))
+import Palantype.Common (KeyIndex(..))
 
 default (Text)
 
@@ -222,8 +223,8 @@ settings = do
       ]
 
 data KeyState
-  = KeyStateDown Char
-  | KeyStateUp Char
+  = KeyStateDown KeyIndex
+  | KeyStateUp KeyIndex
 
 stenoInput
   :: forall js t (m :: * -> *).
@@ -241,19 +242,17 @@ stenoInput = do
   dynSimple $ dynPloverCfg <&> \PloverCfg {..} -> do
     prerenderSimple $ elClass "div" "stenoInput" $ mdo
       let keyChanges =
-            pcfgLsKeySteno <&> \(qwertyKey, raw) ->
-              -- TODO: key index with typeable?
-              let chr = Text.head $ Text.replace "-" "" $ unRawSteno raw
-              in  [ keydown qwertyKey kbInput $> [KeyStateDown chr]
-                  , keyup   qwertyKey kbInput $> [KeyStateUp   chr]
-                  ]
+            pcfgLsKeySteno <&> \(qwertyKey, kI) ->
+              [ keydown qwertyKey kbInput $> [KeyStateDown kI]
+              , keyup   qwertyKey kbInput $> [KeyStateUp   kI]
+              ]
 
           eKeyChange = mergeWith (<>) $ concat keyChanges
 
           register
             :: [KeyState]
-            -> (Set Char, Set Char, Maybe RawSteno)
-            -> (Set Char, Set Char, Maybe RawSteno)
+            -> (Set KeyIndex, Set KeyIndex, Maybe RawSteno)
+            -> (Set KeyIndex, Set KeyIndex, Maybe RawSteno)
           register es (keys, word, _) =
             let setKeys' = foldl accDownUp keys es
                 (word', release') =
@@ -293,8 +292,7 @@ stenoInput = do
       performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
       let eChord = catMaybes $ updated dynChord
-          chordSTFL = mkPTChord $ Set.fromList [LeftS, LeftT, LeftF, LeftL]
-          eChordSTFL = filter (== chordSTFL) eChord
+          eChordSTFL = filter (== "STFL") eChord
       updateState $ eChordSTFL $> [field @"stShowKeyboard" %~ not]
 
       pure eChord

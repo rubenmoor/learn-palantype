@@ -23,6 +23,7 @@ import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
 import qualified Data.Aeson                  as Aeson
 import           Data.Functor                (($>), (<&>))
 import           Data.Maybe                  (fromMaybe)
+import           Data.Semigroup              (Endo (..))
 import           Data.Text                   (Text)
 import qualified Data.Text.Lazy              as Lazy
 import qualified Data.Text.Lazy.Encoding     as Lazy
@@ -44,13 +45,12 @@ import           Reflex.Dom                  (EventWriterT,
                                               PerformEvent (performEvent_),
                                               PostBuild (getPostBuild),
                                               Prerender (prerender),
-                                              Reflex (Dynamic, updated),
-                                              blank, def, dyn_, el, elAttr,
-                                              elClass, foldDyn, leftmost,
-                                              prerender_, runEventWriterT,
-                                              tailE, text, widgetHold_, (=:))
+                                              Reflex (Dynamic, updated), blank,
+                                              def, dyn_, el, elAttr, elClass,
+                                              foldDyn, leftmost, prerender_,
+                                              runEventWriterT, tailE, text,
+                                              widgetHold_, (=:))
 import           Shared                      (loadingScreen)
-import Data.Semigroup (Endo (..))
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
