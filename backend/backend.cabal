@@ -7,29 +7,31 @@ library
   hs-source-dirs: src
   if impl(ghcjs)
     buildable: False
-  build-depends: base
-               , aeson
-               , bytestring
-               , common
-               , ConfigFile
-               , containers
-               , frontend
-               , gerippe
-               , monad-logger
-               , mtl
-               , mysql
-               , network
-               , obelisk-backend
-               , obelisk-route
-               , persistent
-               , persistent-mysql
-               , persistent-template
-               , parsec
-               , resource-pool
-               , resourcet
-               , servant-snap
-               , snap-core
-               , text
+  build-depends:
+      base
+    , aeson
+    , bytestring
+    , common
+    , ConfigFile
+    , containers
+    , frontend
+    , gerippe
+    , monad-logger
+    , mtl
+    , mysql
+    , my-palantype
+    , network
+    , obelisk-backend
+    , obelisk-route
+    , persistent
+    , persistent-mysql
+    , persistent-template
+    , parsec
+    , resource-pool
+    , resourcet
+    , servant-snap
+    , snap-core
+    , text
   exposed-modules:
       Backend
   other-modules:

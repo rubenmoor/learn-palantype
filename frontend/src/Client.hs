@@ -9,7 +9,6 @@
 
 module Client where
 
-import           Common.Alphabet     (PTChord)
 import           Common.Api          (PloverCfg, RoutesApi)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
@@ -60,13 +59,7 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () PloverCfg))
 
-postLookupSteno
-  :: SupportsServantReflex t m
-  => Dynamic t (Either Text [Text])
-  -> Event t ()
-  -> m (Event t (ReqResult () [PTChord]))
-
-postConfigNew :<|> postLookupSteno =
+postConfigNew =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

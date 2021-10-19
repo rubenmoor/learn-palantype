@@ -13,7 +13,6 @@
 
 module Page.Stage2 where
 
-import           Common.Alphabet        (PTChord, showChord, ulfts)
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
@@ -23,7 +22,7 @@ import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.Reader   (MonadReader (ask))
 import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
-import           Data.Foldable          (Foldable (length), for_)
+import           Data.Foldable          (Foldable(elem, length), for_)
 import           Data.Function          (($))
 import           Data.Functor           (void, ($>))
 import           Data.Generics.Product  (field)
@@ -39,7 +38,7 @@ import           Data.Witherable        (Filterable (catMaybes, filter))
 import           GHC.Num                (Num ((+), (-)))
 import           Obelisk.Route.Frontend (pattern (:/), R,
                                          SetRoute (setRoute))
-import           Page.Common            (chordBACK, chordCON, elCongraz,
+import           Page.Common            (elCongraz,
                                          parseStenoOrError)
 import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
@@ -54,6 +53,14 @@ import           State                  (Env (..), Navigation (..),
                                          Stage (Stage1_1), State (..), stageUrl,
                                          updateState)
 import           Text.Show              (Show (show))
+import Palantype.Common (Palantype, Chord)
+import Palantype.EN (pEN)
+import Palantype.Common.RawSteno (RawSteno (..))
+import TextShow (TextShow(showt))
+
+-- TODO: internationalization
+ulfts :: RawSteno
+ulfts = "ULFTS"
 
 exercise1
   :: forall t (m :: * -> *).
@@ -88,8 +95,8 @@ exercise1 = do
          \Simply repeat Stage 1 until you can do all the exercises without \
          \looking down. Just orient yourself once in the beginning!"
 
-  let eChordCON = void $ filter (== chordCON) envEChord
-      eChordBACK = void $ filter (== chordBACK) envEChord
+  let eChordCON = void $ filter (== "CON") envEChord
+      eChordBACK = void $ filter (== "P+AC") envEChord
 
   elABack <- elClass "div" "paragraph" $ do
     text "Type "
@@ -144,14 +151,12 @@ exercise2 = do
       $ text "Palantype Tutorial"
     text " of the Open Steno Project:"
 
-    let stenoStr = "-TH CFIC P+RAUN FOCS +YUMPS OEFR -TH LE^/S+I T+OC+ ^"
-        txt      = "The quick brown fox jumps over the lazy dog ."
+    let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
+        txt = "The quick brown fox jumps over the lazy dog ."
 
-    mChords <- parseStenoOrError stenoStr
     eDone <-
-      case mChords of
-        Just chords -> walkWords (Text.words txt) chords
-        Nothing     -> pure never
+      walkWords (Text.words txt)
+              $ RawSteno <$> Text.split (`elem` [' ', '/']) raw
 
     elClass "div" "paragraph" $ do
       text "Each word is one chord, except the word \"lazy\". You will \
@@ -163,7 +168,7 @@ exercise2 = do
 
     elClass "div" "paragraph" $ do
       text "Let me introduce yet another useful chord: "
-      el "code" $ text "ULFTS"
+      el "code" $ text $ showt ulfts
       text ". It is the homerow of your right hand and deletes your last \
            \input. Now you can correct your mistakes!"
 
@@ -178,7 +183,7 @@ data WalkState = WalkState
   }
 
 walkWords
-  :: forall t (m :: * -> *).
+  :: forall k t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
   , MonadHold t m
@@ -186,14 +191,14 @@ walkWords
   , PostBuild t m
   )
   => [Text]
-  -> [PTChord]
+  -> [RawSteno]
   -> m (Event t ())
 walkWords words chords = do
   Env {..} <- ask
 
   let len = length chords
 
-      step :: PTChord -> WalkState -> WalkState
+      step :: RawSteno -> WalkState -> WalkState
       step chord ws@WalkState {..} =
         case (wsMMistake, wsDone) of
           (_, Just True) -> ws { wsDone = Just False
@@ -236,7 +241,7 @@ walkWords words chords = do
                    Just j  -> if i == j then "bgRed" else ""
                    Nothing -> if wsCounter > i then "bgGreen" else ""
            el "td" $ elDynClass "pre" dynCls $
-             el "code" $ text $ showChord c
+             el "code" $ text $ showt c
 
          el "td" $ do
            let eMistake = wsMMistake <$> updated dynWalk

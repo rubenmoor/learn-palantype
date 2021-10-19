@@ -12,7 +12,6 @@
 
 module Page.Introduction where
 
-import           Common.Alphabet        (PTChar (..), mkPTChord)
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure))
 import           Control.Lens           ((%~), (.~))
@@ -34,6 +33,7 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
 import           State                  (State, Env (..),
                                          Navigation (..), Stage (..),
                                          updateState)
+import Palantype.Common.RawSteno (parseChordLenient)
 
 introduction
   :: forall t (m :: * -> *).
@@ -90,8 +90,7 @@ introduction = do
     elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
     text "."
 
-  let chordSTART = mkPTChord $ Set.fromList [LeftS, LeftT, RightA, RightR, RightT]
-      eChordSTART = void $ filter (== chordSTART) envEChord
+  let eChordSTART = void $ filter (== "SDA~T") envEChord
 
   elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"

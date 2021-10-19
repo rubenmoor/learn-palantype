@@ -9,7 +9,6 @@
 module State where
 
 -- import           Common.Auth      (SessionData)
-import           Common.Alphabet     (PTChord)
 import           Common.Api          (PloverCfg)
 import           Common.Route        (FrontendRoute (..))
 import           Control.Applicative ((<$>))
@@ -32,12 +31,16 @@ import           Reflex.Dom          (EventWriter (..), Reflex(Dynamic, Event))
 import           Text.Show           (Show (..))
 import Data.List (map)
 import Data.Foldable (Foldable(foldMap))
+import Palantype.Common.RawSteno (RawSteno)
 
 -- environment for frontend pages
 
 data Env t = Env
   { envDynState   :: Dynamic t State
-  , envEChord     :: Event t PTChord
+
+  -- ideally, envEChord would have the type `Event t (Chord k)`
+  -- however, that requires a choice of k (e.g. k ~ DE.Key)
+  , envEChord     :: Event t RawSteno
   , envNavigation :: Navigation
   }
 

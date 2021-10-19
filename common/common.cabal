@@ -5,18 +5,19 @@ build-type: Simple
 
 library
   hs-source-dirs: src
-  build-depends: base
-               , aeson
-               , containers
-               , data-default
-               , keycode
-               , mtl
-               , obelisk-route
-               , servant
-               , text
+  build-depends:
+      base
+    , aeson
+    , containers
+    , data-default
+    , keycode
+    , mtl
+    , my-palantype
+    , obelisk-route
+    , servant
+    , text
   exposed-modules:
-    Common.Alphabet
     Common.Api
-    Common.Keys
+    Common.PloverAdapter
     Common.Route
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits

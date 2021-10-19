@@ -15,7 +15,6 @@
 
 module Page.Common where
 
-import           Common.Alphabet        (PTChar (..), PTChord (..), mkPTChord)
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Alternative ((<|>)),
                                          Applicative (pure, (*>), (<*)))
@@ -60,6 +59,11 @@ import qualified Text.Parsec            as Parsec
 import           Text.Show              (Show (show))
 import Data.Foldable (concat)
 import Control.Monad (MonadPlus(mzero))
+import Palantype.Common (Palantype, Chord)
+import Palantype.Common.RawSteno (RawSteno, parseSteno)
+import Data.Tagged (Tagged (..))
+import Data.Proxy (Proxy(Proxy))
+import TextShow (showt)
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -99,8 +103,8 @@ elCongraz eDone Navigation{..} = mdo
 
   eChord <- asks envEChord
 
-  let eChordCON = void $ filter (== chordCON) eChord
-      eChordBACK = void $ filter (== chordBACK) eChord
+  let eChordCON = void $ filter (== "GDON") eChord
+      eChordBACK = void $ filter (== "BAK") eChord
 
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
   eBack <- dynSimple $ dynShowCongraz <&> \case
@@ -134,26 +138,93 @@ elCongraz eDone Navigation{..} = mdo
             pure $ leftmost [eChordBACK, domEvent Click elABack]
   blank
 
+-- parserChord :: Parsec String ([(Char, PTChar)], Bool) PTChord
+-- parserChord = do
+--
+--   let lsChars =
+--         [ ('S', LeftS)
+--         , ('C', LeftC)
+--         , ('P', LeftP)
+--         , ('T', LeftT)
+--         , ('H', LeftH)
+--         , ('+', LeftCross)
+--         , ('M', LeftM)
+--         , ('F', LeftF)
+--         , ('R', LeftR)
+--         , ('N', LeftN)
+--         , ('L', LeftL)
+--         , ('Y', LeftY)
+--         , ('O', LeftO)
+--         , ('E', LeftE)
+--         , ('|', LeftPipe)
+--         , ('|', RightPipe)
+--         , ('A', RightA)
+--         , ('U', RightU)
+--         , ('I', MiddleI)
+--         , ('^', RightPoint)
+--         , ('N', RightN)
+--         , ('L', RightL)
+--         , ('C', RightC)
+--         , ('M', RightM)
+--         , ('F', RightF)
+--         , ('R', RightR)
+--         , ('P', RightP)
+--         , ('T', RightT)
+--         , ('+', RightCross)
+--         , ('S', RightS)
+--         , ('H', RightH)
+--         , ('e', RightE)
+--         ]
+--   setState (lsChars, False)
+--
+--   let parserKey = do
+--         (ls, _) <- getState
+--         c <- oneOf $ fst <$> lsChars
+--         case findIndex ((==) c . fst) ls of
+--             Nothing -> mzero
+--             Just i  -> do
+--               Parsec.updateState $ (drop (i + 1) ls,) . snd
+--               pure $ snd $ ls !! i
+--
+--       parserHypen = do
+--         (ls, foundHyphen) <- getState
+--         when foundHyphen mzero
+--         void $ char '-'
+--         setState (drop 15 ls, True)
+--
+--   PTChord <$> many1
+--     (   parserKey
+--     <|> (parserHypen *> parserKey)
+--     )
+--
+-- parserWord :: Parsec String ([(Char, PTChar)], Bool) [PTChord]
+-- parserWord = sepBy1 parserChord (char '/')
+--
+-- parserSentence :: Parsec String ([(Char, PTChar)], Bool) [[PTChord]]
+-- parserSentence = spaces >> sepBy1 parserWord (many1 space) <* eof
+--
+-- parseSteno :: String -> Either Text [PTChord]
+-- parseSteno str =
+--   case runParser parserSentence ([], False) "frontend steno code" str of
+--     Left  err -> Left  $ Text.pack $ show err
+--     Right ls  -> Right $ concat ls
+
 parseStenoOrError
-  :: forall t (m :: * -> *).
-  ( PostBuild t m
-  , EventWriter t (Endo State) m
+  :: forall proxy key t (m :: * -> *).
+  ( EventWriter t (Endo State) m
+  , Palantype key
+  , PostBuild t m
   )
-  => Text
-  -> m (Maybe [PTChord])
-parseStenoOrError str =
-  case parseRawSteno str of
+  => proxy key
+  -> RawSteno
+  -> m (Maybe [Chord key])
+parseStenoOrError _ raw =
+  case parseSteno raw of
     Right words -> pure $ Just words
     Left  err   -> do
       ePb <- getPostBuild
       let msgCaption = "Internal error"
-          msgBody    = "Could not parse steno code: " <> str
+          msgBody    = "Could not parse steno code: " <> showt raw
                     <> "\n" <> err
       updateState $ ePb $> [field @"stMsg" .~ Just Message{..}]
       pure Nothing
-
-chordCON :: PTChord
-chordCON = mkPTChord $ Set.fromList [LeftC, LeftO, RightN]
-
-chordBACK :: PTChord
-chordBACK = mkPTChord $ Set.fromList [LeftP, LeftCross, RightA, RightC]

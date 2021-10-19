@@ -1,13 +1,14 @@
 {-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Common.Keys where
+module Common.PloverAdapter where
 
 import           Data.Either (Either (..))
-import           Data.String (String)
 import           Web.KeyCode (Key (..))
+import Data.Text (Text)
 
-fromPlover :: String -> Either String Key
+fromPlover :: Text -> Either Text Key
 fromPlover = \case
   "BackSpace" -> Right Backspace
   "Tab"       -> Right Tab

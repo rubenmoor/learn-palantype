@@ -13,8 +13,6 @@
 module Home where
 
 import           Client                      (reqFailure, postConfigNew, postRender)
-import           Common.Alphabet             (PTChar (..), PTChord (..),
-                                              mkPTChord, showChord, showLetter)
 import           Common.Api                  (PloverCfg (..))
 import           Common.Route                (FrontendRoute (..))
 import           Control.Applicative         (Applicative (..))
@@ -31,7 +29,7 @@ import           Data.Foldable               (Foldable (foldl, null), concat)
 import           Data.Function               (const, ($), (&))
 import           Data.Functor                (fmap, void, ($>), (<$>), (<&>))
 import           Data.Generics.Product       (field)
-import           Data.List                   (elem)
+import           Data.List                   (sort, elem)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (Maybe (..), listToMaybe)
@@ -87,6 +85,8 @@ import           State                       (Message (..),
                                               Stage (..), State (..),
                                               stageDescription, stageUrl,
                                               updateState)
+import Data.Char (Char)
+import Palantype.Common.RawSteno (RawSteno(..))
 
 default (Text)
 
@@ -203,15 +203,14 @@ settings = do
         else let msgCaption = "Unrecognized qwerty keys"
                  msgBody =
                    "Your key map contains unrecognized entries:\n"
-                     <> Text.intercalate "\n"
-                          (Text.pack <$> pcfgUnrecognizedQwertys)
+                     <> Text.intercalate "\n" pcfgUnrecognizedQwertys
              in field @"stMsg" .~ Just Message {..}
       , if null pcfgUnrecognizedStenos then id
         else let msgCaption = "Unrecognized steno keys"
                  msgBody =
                       "Your key map contains unrecognized entries:\n"
                    <> Text.intercalate "\n"
-                        (Text.pack <$> pcfgUnrecognizedStenos)
+                        (unRawSteno <$> pcfgUnrecognizedStenos)
              in field @"stMsg" .~ Just Message {..}
       , if isCompatible pcfgSystem then id
         else let msgCaption = "Incompatible system"
@@ -223,8 +222,8 @@ settings = do
       ]
 
 data KeyState
-  = KeyStateDown PTChar
-  | KeyStateUp PTChar
+  = KeyStateDown Char
+  | KeyStateUp Char
 
 stenoInput
   :: forall js t (m :: * -> *).
@@ -235,29 +234,31 @@ stenoInput
   , PostBuild t m
   , Prerender js t m
   )
-  => m (Event t PTChord)
+  => m (Event t RawSteno)
 stenoInput = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   dynShowKeyboard <- asks (stShowKeyboard <$>)
   dynSimple $ dynPloverCfg <&> \PloverCfg {..} -> do
     prerenderSimple $ elClass "div" "stenoInput" $ mdo
       let keyChanges =
-            pcfgLsKeySteno <&> \(qwertyKey, stenoKey) ->
-              [ keydown qwertyKey kbInput $> [KeyStateDown stenoKey]
-              , keyup   qwertyKey kbInput $> [KeyStateUp stenoKey]
-              ]
+            pcfgLsKeySteno <&> \(qwertyKey, raw) ->
+              -- TODO: key index with typeable?
+              let chr = Text.head $ Text.replace "-" "" $ unRawSteno raw
+              in  [ keydown qwertyKey kbInput $> [KeyStateDown chr]
+                  , keyup   qwertyKey kbInput $> [KeyStateUp   chr]
+                  ]
 
           eKeyChange = mergeWith (<>) $ concat keyChanges
 
-          register ::
-            [KeyState] ->
-            (Set PTChar, Set PTChar, Maybe PTChord) ->
-            (Set PTChar, Set PTChar, Maybe PTChord)
+          register
+            :: [KeyState]
+            -> (Set Char, Set Char, Maybe RawSteno)
+            -> (Set Char, Set Char, Maybe RawSteno)
           register es (keys, word, _) =
             let setKeys' = foldl accDownUp keys es
                 (word', release') =
                   if Set.null setKeys'
-                    then (Set.empty, Just $ mkPTChord word)
+                    then (Set.empty, Just $ RawSteno $ Text.pack $ sort $ Set.elems word)
                     else (foldl accDown word es, Nothing)
              in (setKeys', word', release')
             where
@@ -303,8 +304,8 @@ elPTKeyboard
   ( DomBuilder t m
   , PostBuild t m
   )
-  => Map PTChar [String]
-  -> Dynamic t (Set PTChar)
+  => Map RawSteno [Text]
+  -> Dynamic t (Set Char)
   -> Text
   -> m ()
 elPTKeyboard stenoKeys dynPressedKeys system =
@@ -326,7 +327,6 @@ elPTKeyboard stenoKeys dynPressedKeys system =
         elCell LeftF "1" True
         elCell LeftL "1" True
         elAttr "td" ("colspan" =: "3" <> "class" =: "gap") blank
-        elCell RightE "1" False
         elCell RightL "1" True
         elCell RightF "1" True
         elCell RightT "1" True
@@ -347,7 +347,6 @@ elPTKeyboard stenoKeys dynPressedKeys system =
         elCell LeftCross "4" False
         elCell LeftE "1" True
         elCell LeftPipe "1" False
-        elCell RightPipe "1" False
         elCell RightU "1" True
         elCell RightPoint "4" False
     elClass "span" "system" $ text system
@@ -377,7 +376,7 @@ elStenoOutput
   ( DomBuilder t m
   , MonadFix m
   )
-  => Dynamic t (Set PTChar)
+  => Dynamic t (Set Char)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynDownKeys = mdo
   let eFocus =

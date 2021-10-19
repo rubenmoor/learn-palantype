@@ -10,9 +10,8 @@
 
 module Shared where
 
-import           Client                (RequestResult (..), postLookupSteno,
+import           Client                (RequestResult (..),
                                         request)
-import           Common.Alphabet       (PTChord (PTChord))
 import           Control.Applicative   (Applicative (pure), (<$>))
 import           Control.Category      (Category ((.)))
 import           Control.Lens          ((.~))

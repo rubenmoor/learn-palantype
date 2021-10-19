@@ -6,44 +6,40 @@
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TupleSections     #-}
 {-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Common.Api where
 
-import           Common.Alphabet (PTChord, PTChar)
-import           Common.Keys     (fromPlover)
+import           Common.PloverAdapter     (fromPlover)
 import           Data.Aeson      (FromJSON, ToJSON)
 import           Data.Default    (Default (..))
-import           Data.Either     (lefts, rights)
+import           Data.Either     (isRight, lefts, rights)
 import           Data.Map        (Map)
 import qualified Data.Map        as Map
 import           Data.Text       (Text)
 import           GHC.Generics    (Generic)
-import           Servant.API     (Get, (:<|>), (:>), JSON, PlainText, Post, ReqBody)
-import           Text.Read       (readMaybe)
+import           Servant.API     ((:>), JSON, PlainText, Post, ReqBody)
 import           Web.KeyCode     (Key)
-import Servant.API.ContentTypes (MimeRender (..))
+import qualified Palantype.EN.Keys as EN
+import Palantype.Common.RawSteno (RawSteno, parseStenoKey)
+import Palantype.Common (Palantype)
+import Palantype.EN (pEN)
 
 type RoutesApi = "api" :>
      ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] PloverCfg
-  :<|> "lookup" :> "steno" :> ReqBody '[JSON] [Text] :> Post '[JSON] [PTChord]
      )
 
-type Routes = RoutesApi :<|> RouteStenoExpressionsHs
-
-type RouteStenoExpressionsHs =
-  "StenoExpressions.hs" :> Get '[PlainText] Hs
-
-newtype Hs = Hs { unHs :: Text }
-
-instance MimeRender PlainText Hs where
-  mimeRender p = mimeRender p . unHs
+type Routes = RoutesApi
 
 data PloverCfg = PloverCfg
-  { pcfgMapStenoKeys        :: Map PTChar [String] -- recognized steno keys
-  , pcfgUnrecognizedStenos  :: [String] -- steno keys that failed to parse
-  , pcfgLsKeySteno          :: [(Key, PTChar)]
-  , pcfgUnrecognizedQwertys :: [String] -- qwerty keys in the plover format
-                                        -- that failed to parse
+  -- recognized steno keys: Map (raw steno) [plover key code]
+  { pcfgMapStenoKeys        :: Map RawSteno [Text]
+  -- raw steno key codes that failed to parse
+  , pcfgUnrecognizedStenos  :: [RawSteno]
+  -- [(Web.KeyCode, raw steno code)]
+  , pcfgLsKeySteno          :: [(Key, RawSteno)]
+  -- qwerty keys in the plover format that failed to parse
+  , pcfgUnrecognizedQwertys :: [Text]
   , pcfgSystem              :: Text
   , pcfgMachine             :: Text
   }
@@ -59,9 +55,9 @@ instance FromJSON Key
 -- from http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html
 --
 instance Default PloverCfg where
-  def = keyMapToPloverCfg lsStenoKeys "Palantype" "keyboard"
+  def = keyMapToPloverCfg pEN lsStenoKeys "Palantype" "keyboard"
     where
-      lsStenoKeys :: [(String, [String])]
+      lsStenoKeys :: [(RawSteno, [Text])]
       lsStenoKeys =
         [ ("P-", ["2"])
         , ("M-", ["3"])
@@ -89,32 +85,36 @@ instance Default PloverCfg where
         , ("-S", [";"])
         , ("+-", ["z", "x", "c"])
         , ("E-", ["v"])
-        , ("I ", ["b"])
+        , ("I", ["b"])
         , ("-U", ["n"])
         , ("-^", ["m", ",", ".", "/"])
         ]
 
 
 keyMapToPloverCfg
-  :: [(String, [String])]
+  :: forall proxy key.
+  ( Palantype key )
+  => proxy key
+  -> [(RawSteno, [Text])]
   -> Text
   -> Text
   -> PloverCfg
-keyMapToPloverCfg stenoKeys pcfgSystem pcfgMachine =
-  let acc (lsKeySteno, mapStenoKeys, lsUSteno, lsUQwerty) (strSteno, plovers) =
-        let mSteno = readMaybe strSteno
+keyMapToPloverCfg _ stenoKeys pcfgSystem pcfgMachine =
+  let acc (lsKeySteno, mapStenoKeys, lsUSteno, lsUQwerty) (rawSteno, plovers) =
+        let stenoExists = isRight (parseStenoKey rawSteno :: Either Text key)
             lsEQwerty = fromPlover <$> plovers
             lsQwerty = rights lsEQwerty
-            lsKeySteno' = case (lsQwerty, mSteno) of
-              (qwertys@(_:_), Just steno) -> ((, steno) <$> qwertys) ++ lsKeySteno
-              _                           -> lsKeySteno
-            mapStenoKeys' = case mSteno of
-              Just steno -> Map.insert steno plovers mapStenoKeys
-              Nothing    -> mapStenoKeys
-            lsUSteno' = case mSteno of
-              Just _  -> lsUSteno
-              Nothing | strSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
-              Nothing -> strSteno : lsUSteno
+            lsKeySteno' = case (not $ null lsQwerty, stenoExists) of
+              (True, True) -> ((, rawSteno) <$> lsQwerty) ++ lsKeySteno
+              (_    , _  ) -> lsKeySteno
+            mapStenoKeys' =
+              if stenoExists
+                then Map.insert rawSteno plovers mapStenoKeys
+                else mapStenoKeys
+            lsUSteno' = case stenoExists of
+              True  -> lsUSteno
+              False | rawSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
+              False -> rawSteno : lsUSteno
             lsUQwerty' = lefts lsEQwerty ++ lsUQwerty
         in (lsKeySteno', mapStenoKeys', lsUSteno', lsUQwerty')
 
