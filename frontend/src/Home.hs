@@ -63,7 +63,7 @@ import           Page.Introduction           (introduction)
 import qualified Page.Stage1                 as Stage1
 import qualified Page.Stage2                 as Stage2
 import           Palantype.Common            (Chord (..), KeyIndex (..),
-                                              Palantype (fromIndex), mkChord)
+                                              Palantype(keyCode, fromIndex), mkChord)
 import           Palantype.Common.RawSteno   (RawSteno (..), parseChordLenient)
 import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
@@ -420,6 +420,8 @@ elKeyboardEN stenoKeys dynPressedKeys =
         elCell stenoKeys dynPressedKeys 15 "1" True
         -- 16: not in use
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        -- 17: not in use
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
         elCell stenoKeys dynPressedKeys 18 "1" False
         elCell stenoKeys dynPressedKeys 19 "1" True
         elCell stenoKeys dynPressedKeys 20 "1" False
@@ -440,19 +442,23 @@ elCell
   -> m1 ()
 elCell stenoKeys dynPressedKeys i colspan isHomerow =
   case Map.lookup i stenoKeys of
-    Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+    Nothing       -> elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
     Just qwerties -> do
-      let attrs =
+      let k = fromIndex i
+          inactive = keyCode k == '_'
+          attrs =
             dynPressedKeys <&> \set' ->
               "colspan" =: colspan
-                <> case (Set.member (fromIndex i) set', isHomerow) of
-                     (True , True ) -> "class" =: "pressed homerow"
-                     (True , False) -> "class" =: "pressed"
-                     (False, True ) -> "class" =: "homerow"
-                     (False, False) -> mempty
+                <> case (Set.member k set', isHomerow, inactive) of
+                     (True , _    , True) -> "class" =: "pressed inactive"
+                     (False, _    , True) -> "class" =: "inactive"
+                     (True , True , _   ) -> "class" =: "pressed homerow"
+                     (True , False, _   ) -> "class" =: "pressed"
+                     (False, True , _   ) -> "class" =: "homerow"
+                     (False, False, _   ) -> mempty
       elDynAttr "td" attrs $ do
-        elClass "div" "steno " $ text $ showt $ (fromIndex :: KeyIndex -> key) i
-        elClass "div" "qwerty " $ text $ Text.unwords qwerties
+        elClass "div" "steno" $ text $ showt k
+        elClass "div" "qwerty" $ text $ Text.unwords qwerties
 
 elStenoOutput
   :: forall key t (m :: * -> *).

@@ -226,6 +226,11 @@ main = putCss $ do
         let shadowInset = bsInset $ bsColor (rgb 220 220 255) $ shadowWithSpread (px 0) (px 0) (px 8) (px 6)
         ".homerow" & boxShadow [shadow, shadowInset]
         ".pressed.homerow" & boxShadow (pure shadowInset)
+        ".inactive" & do
+          backgroundColor myLightgray
+          color anthrazit
+          div # ".steno" ? visibility hidden
+        ".inactive.pressed" & boxShadow (pure none)
 
         div ? do
           ".steno" & do
