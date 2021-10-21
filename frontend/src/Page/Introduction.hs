@@ -21,7 +21,6 @@ import           Data.Eq                (Eq ((==)))
 import           Data.Function          (($))
 import           Data.Functor           (void, ($>))
 import           Data.Generics.Product  (field)
-import           Data.Monoid            (Monoid (mconcat))
 import           Data.Semigroup         (Endo (..))
 import qualified Data.Set               as Set
 import           Data.Witherable        (Filterable (filter))

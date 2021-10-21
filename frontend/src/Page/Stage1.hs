@@ -13,11 +13,11 @@
 
 module Page.Stage1 where
 
-import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
+import           Common.Api             (PloverSystemCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
 import           Control.Category       (Category (id, (.)))
-import           Control.Lens           ((.~), (<&>))
+import           Control.Lens           (non, At(at), view, (.~), (<&>), _Wrapped')
 import           Control.Monad          (when)
 import           Control.Monad.Fix      (MonadFix)
 import           Control.Monad.IO.Class (liftIO)
@@ -56,6 +56,7 @@ import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
 import           TextShow              (showt)
 import Palantype.Common (Finger(..), Palantype(toFinger),  Chord (..), fromIndex)
+import Data.Default (Default(def))
 
 -- exercise 1
 
@@ -220,11 +221,13 @@ taskAlphabet
   -> m (Event t ())
 taskAlphabet showAlphabet = do
   Env {..} <- ask
+  let Navigation{..} = envNavigation
 
   let dynAlphabet =
           fmap fromIndex
         . Map.keys
         . pcfgMapStenoKeys
+        . view (_Wrapped' . at navLang . non def)
         . stPloverCfg
         <$> envDynState
 
@@ -410,6 +413,7 @@ exercise5
 exercise5 = do
 
   Env {..} <- ask
+  let Navigation {..} = envNavigation
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
@@ -437,6 +441,7 @@ exercise5 = do
           . fmap fromIndex
           . Map.keys
           . pcfgMapStenoKeys
+          . view (_Wrapped' . at navLang . non def)
           . stPloverCfg
         <$> envDynState
 
@@ -460,6 +465,7 @@ exercise6
 exercise6 = do
 
   Env {..} <- ask
+  let Navigation {..} = envNavigation
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
@@ -479,6 +485,7 @@ exercise6 = do
           . fmap fromIndex
           . Map.keys
           . pcfgMapStenoKeys
+          . view (_Wrapped' . at navLang . non def)
           . stPloverCfg
         <$> envDynState
 
@@ -502,6 +509,7 @@ exercise7
 exercise7 = do
 
   Env {..} <- ask
+  let Navigation {..} = envNavigation
 
   el "h1" $ text "Stage 1"
   el "h2" $ text "The Palantype Alphabet"
@@ -523,6 +531,7 @@ exercise7 = do
         =   fmap fromIndex
           . Map.keys
           . pcfgMapStenoKeys
+          . view (_Wrapped' . at navLang . non def)
           . stPloverCfg
         <$> envDynState
 

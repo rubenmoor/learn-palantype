@@ -10,12 +10,14 @@ library
     , aeson
     , containers
     , data-default
+    , lens
     , keycode
     , mtl
     , my-palantype
     , obelisk-route
     , servant
     , text
+    , text-show
   exposed-modules:
     Common.Api
     Common.PloverAdapter

@@ -1,36 +1,61 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TupleSections     #-}
-{-# LANGUAGE TypeOperators     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeOperators              #-}
 
 module Common.Api where
 
-import           Common.PloverAdapter     (fromPlover)
-import           Data.Aeson      (FromJSON, ToJSON)
-import           Data.Default    (Default (..))
-import           Data.Either     (isRight, lefts, rights)
-import           Data.Map        (Map)
-import qualified Data.Map        as Map
-import           Data.Text       (Text)
-import           GHC.Generics    (Generic)
-import           Servant.API     ((:>), JSON, PlainText, Post, ReqBody)
-import           Web.KeyCode     (Key)
-import Palantype.Common.RawSteno (RawSteno, parseStenoKey)
-import Palantype.Common (Palantype, KeyIndex, keyIndex)
-import Palantype.EN (pEN)
+import           Common.PloverAdapter      (fromPlover)
+import           Control.Lens.Wrapped      (Wrapped)
+import           Data.Aeson                (FromJSON, FromJSONKey, ToJSON,
+                                            ToJSONKey)
+import           Data.Default              (Default (..))
+import           Data.Either               (lefts, rights)
+import           Data.Map                  (Map)
+import qualified Data.Map                  as Map
+import           Data.Text                 (Text)
+import           GHC.Generics              (Generic)
+import           Palantype.Common          (KeyIndex)
+import           Palantype.Common.RawSteno (RawSteno)
+import           Servant.API               ((:>), JSON, PlainText, Post,
+                                            ReqBody)
+import           TextShow                  (TextShow (..), fromText)
+import           Web.KeyCode               (Key)
 
 type RoutesApi = "api" :>
-     ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] PloverCfg
+     ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
      )
 
 type Routes = RoutesApi
 
-data PloverCfg = PloverCfg
+data Lang = EN | DE
+  deriving (Eq, Generic, Ord)
+
+instance FromJSON Lang
+instance ToJSON Lang
+instance FromJSONKey Lang
+instance ToJSONKey Lang
+
+instance TextShow Lang where
+  showb = \case
+    EN -> fromText "Palantype"
+    DE -> fromText "Palantype DE"
+
+newtype PloverCfg = PloverCfg { unPloverCfg :: Map Lang PloverSystemCfg }
+  deriving (Generic, ToJSON, FromJSON)
+
+instance Wrapped PloverCfg
+
+data PloverSystemCfg = PloverSystemCfg
   -- recognized steno keys: Map (raw steno) [plover key code]
   { pcfgMapStenoKeys        :: Map KeyIndex [Text]
   -- raw steno key codes that failed to parse
@@ -39,13 +64,48 @@ data PloverCfg = PloverCfg
   , pcfgLsKeySteno          :: [(Key, KeyIndex)]
   -- plover key codes that failed to parse
   , pcfgUnrecognizedQwertys :: [Text]
-  , pcfgSystem              :: Text
   , pcfgMachine             :: Text
   }
-  deriving (Generic)
+  deriving (Eq, Generic)
 
-instance ToJSON PloverCfg
-instance FromJSON PloverCfg
+instance ToJSON PloverSystemCfg
+instance FromJSON PloverSystemCfg
+
+instance Default PloverSystemCfg where
+  def = keyMapToPloverCfg lsStenoKeys [] "keyboard"
+    where
+        lsStenoKeys :: [(KeyIndex, [Text])]
+        lsStenoKeys =
+          [ (3 , ["2"])
+          , (7 , ["3"])
+          , (10, ["4"])
+          , (22, ["8"])
+          , (25, ["9"])
+          , (28, ["0"])
+          , (2 , ["q"])
+          , (4 , ["w"])
+          , (8 , ["e"])
+          , (11, ["r"])
+          , (23, ["u"])
+          , (26, ["i"])
+          , (29, ["o"])
+          , (32, ["p"])
+          , (1 , ["a"])
+          , (5 , ["s"])
+          , (9 , ["d"])
+          , (12, ["f"])
+          , (14, ["g"])
+          , (18, ["h"])
+          , (24, ["j"])
+          , (27, ["k"])
+          , (30, ["l"])
+          , (31, [";"])
+          , (6 , ["z", "x", "c"])
+          , (15, ["v"])
+          , (20, ["b"])
+          , (19, ["n"])
+          , (21, ["m", ",", ".", "/"])
+          ]
 
 instance ToJSON Key
 instance FromJSON Key
@@ -54,69 +114,42 @@ instance FromJSON Key
 -- from http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html
 --
 instance Default PloverCfg where
-  def = keyMapToPloverCfg pEN lsStenoKeys "Palantype" "keyboard"
-    where
-      lsStenoKeys :: [(RawSteno, [Text])]
-      lsStenoKeys =
-        [ ("P-", ["2"])
-        , ("M-", ["3"])
-        , ("N-", ["4"])
-        , ("-N", ["8"])
-        , ("-M", ["9"])
-        , ("-P", ["0"])
-        , ("C-", ["q"])
-        , ("T-", ["w"])
-        , ("F-", ["e"])
-        , ("L-", ["r"])
-        , ("-L", ["u"])
-        , ("-F", ["i"])
-        , ("-T", ["o"])
-        , ("-H", ["p"])
-        , ("S-", ["a"])
-        , ("H-", ["s"])
-        , ("R-", ["d"])
-        , ("Y-", ["f"])
-        , ("O-", ["g"])
-        , ("-A", ["h"])
-        , ("-C", ["j"])
-        , ("-R", ["k"])
-        , ("-+", ["l"])
-        , ("-S", [";"])
-        , ("+-", ["z", "x", "c"])
-        , ("E-", ["v"])
-        , ("I", ["b"])
-        , ("-U", ["n"])
-        , ("-^", ["m", ",", ".", "/"])
-        ]
-
+  def = PloverCfg $ Map.fromList
+          [ (EN, def)
+          , (DE, def)
+          ]
 
 keyMapToPloverCfg
-  :: forall proxy key.
-  ( Palantype key )
-  => proxy key
-  -> [(RawSteno, [Text])]
+  :: [(KeyIndex, [Text])]
+  -> [RawSteno]
   -> Text
-  -> Text
-  -> PloverCfg
-keyMapToPloverCfg _ stenoKeys pcfgSystem pcfgMachine =
-  let acc (lsKeySteno, mapStenoKeys, lsUSteno, lsUQwerty) (rawSteno, plovers) =
-        let eIKey = keyIndex <$> (parseStenoKey rawSteno :: Either Text key)
-            lsEQwerty = fromPlover <$> plovers
+  -> PloverSystemCfg
+keyMapToPloverCfg lsIndexPlover pcfgUnrecognizedStenos pcfgMachine =
+  let acc (lsKeySteno, mapStenoKeys, lsUQwerty) (i, plovers) =
+        let lsEQwerty = fromPlover <$> plovers
             lsQwerty = rights lsEQwerty
-            lsKeySteno' = case (not $ null lsQwerty, eIKey) of
-              (True, Right iKey) -> ((, iKey) <$> lsQwerty) ++ lsKeySteno
-              (_   , _         ) -> lsKeySteno
-            mapStenoKeys' =
-              case eIKey of
-                Right iKey -> Map.insert iKey plovers mapStenoKeys
-                Left  _    -> mapStenoKeys
-            lsUSteno' = case eIKey of
-              Right _  -> lsUSteno
-              Left  _ | rawSteno `elem` ["no-op", "arpeggiate"] -> lsUSteno
-              Left  _ -> rawSteno : lsUSteno
+            lsKeySteno' =
+              if null lsQwerty
+                then lsKeySteno
+                else ((, i) <$> lsQwerty) ++ lsKeySteno
+            mapStenoKeys' = Map.insert i plovers mapStenoKeys
             lsUQwerty' = lefts lsEQwerty ++ lsUQwerty
-        in (lsKeySteno', mapStenoKeys', lsUSteno', lsUQwerty')
+        in (lsKeySteno', mapStenoKeys', lsUQwerty')
 
-      (pcfgLsKeySteno, pcfgMapStenoKeys, pcfgUnrecognizedStenos, pcfgUnrecognizedQwertys) =
-        foldl acc ([], Map.empty, [], []) stenoKeys
-  in  PloverCfg{..}
+      (pcfgLsKeySteno, pcfgMapStenoKeys, pcfgUnrecognizedQwertys) =
+        foldl acc ([], Map.empty, []) lsIndexPlover
+  in  PloverSystemCfg{..}
+
+-- getPloverSystemCfg
+--   :: Lang
+--   -> PloverCfg
+--   -> PloverSystemCfg
+-- getPloverSystemCfg lang cfg = cfg ^. _Wrapped' . at lang . non def
+--   -- unPloverCfg pcfg ! lang
+--
+-- setPloverSystemCfg
+--   :: Lang
+--   -> PloverSystemCfg
+--   -> PloverCfg
+--   -> PloverCfg
+-- setPloverSystemCfg lang systemCfg = _Wrapped' %~ (ix lang .~ systemCfg)

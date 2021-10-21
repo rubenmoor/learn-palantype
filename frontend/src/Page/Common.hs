@@ -10,60 +10,47 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Page.Common where
 
-import           Common.Route           (FrontendRoute (..))
-import           Control.Applicative    (Alternative ((<|>)),
-                                         Applicative (pure, (*>), (<*)))
-import           Control.Category       (Category (id, (.)))
-import           Control.Lens           ((%~), (.~), (<&>))
-import           Control.Monad          (Monad((>>), fail), when)
-import           Control.Monad.Fix      (MonadFix)
-import           Control.Monad.Reader   (MonadReader, asks)
-import           Data.Bool              (Bool (..))
-import           Data.Char              (Char)
-import           Data.Either            (Either (..))
-import           Data.Eq                (Eq ((==)))
-import           Data.Function          (($))
-import           Data.Functor           (void, ($>), (<$>))
-import           Data.Generics.Product  (field)
-import           Data.List              (drop, findIndex, (!!))
-import           Data.Maybe             (Maybe (..))
-import           Data.Ord               (Ord ((>)))
-import           Data.Semigroup         (Semigroup((<>)), Endo (..))
-import qualified Data.Set               as Set
-import           Data.String            (String)
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
-import           Data.Tuple             (fst, snd)
-import           Data.Witherable        (Filterable (filter))
-import           GHC.Num                (Num ((+)))
-import           Obelisk.Route.Frontend (pattern (:/), R, RouteToUrl,
-                                         SetRoute (setRoute), routeLink)
-import           Reflex.Dom             (DomBuilder, EventName (Click),
-                                         EventWriter, HasDomEvent (domEvent),
-                                         MonadHold (holdDyn),
-                                         PostBuild (getPostBuild), Prerender,
-                                         Reflex (Event, never), blank, el,
-                                         elClass, elClass', leftmost, text)
-import           Shared                 (dynSimple, iFa, whenJust)
-import           State                  (Lang (..), Message (..), Env (..), Navigation (..), Stage (..),
-                                         State, stageUrl, updateState)
-import           Text.Parsec            ((<?>), oneOf, space, spaces, Parsec, anyChar, char, eof, getState,
-                                         many1, runParser, sepBy1, setState,
-                                         try)
-import qualified Text.Parsec            as Parsec
-import           Text.Show              (Show (show))
-import Data.Foldable (concat)
-import Control.Monad (MonadPlus(mzero))
-import Palantype.Common (Palantype, Chord)
-import Palantype.Common.RawSteno (RawSteno, parseSteno, parseChordLenient)
-import Data.Proxy (Proxy(Proxy))
-import TextShow (showt)
-import qualified Data.Map as Map
+import           Common.Api                (Lang)
+import           Common.Route              (FrontendRoute (..))
+import           Control.Applicative       (Applicative (pure))
+import           Control.Category          (Category (id))
+import           Control.Lens              ((%~), (.~), (<&>))
+import           Control.Monad.Fix         (MonadFix)
+import           Control.Monad.Reader      (MonadReader, asks)
+import           Data.Bool                 (Bool (..))
+import           Data.Either               (Either (..))
+import           Data.Eq                   (Eq ((==)))
+import           Data.Function             (($))
+import           Data.Functor              (void, ($>))
+import           Data.Generics.Product     (field)
+import qualified Data.Map                  as Map
+import           Data.Maybe                (Maybe (..))
+import           Data.Ord                  (Ord ((>)))
+import           Data.Semigroup            (Endo (..), Semigroup ((<>)))
+import qualified Data.Set                  as Set
+import qualified Data.Text                 as Text
+import           Data.Witherable           (Filterable (filter))
+import           Obelisk.Route.Frontend    (pattern (:/), R, RouteToUrl,
+                                            SetRoute (setRoute), routeLink)
+import           Palantype.Common          (Chord, Palantype)
+import           Palantype.Common.RawSteno (RawSteno, parseChordLenient,
+                                            parseSteno)
+import           Reflex.Dom                (DomBuilder, EventName (Click),
+                                            EventWriter, HasDomEvent (domEvent),
+                                            MonadHold (holdDyn),
+                                            PostBuild (getPostBuild), Prerender,
+                                            Reflex (Event, never), blank, el,
+                                            elClass, elClass', leftmost, text)
+import           Shared                    (dynSimple, iFa, whenJust)
+import           State                     (Env (..), Message (..),
+                                            Navigation (..), Stage (..), State,
+                                            stageUrl, updateState)
+import           Text.Show                 (Show (show))
+import           TextShow                  (showt)
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -103,9 +90,6 @@ elCongraz
   -> m ()
 elCongraz eDone Navigation{..} = mdo
 
-  -- TODO: reader?
-  let lang = EN
-
   eChord <- asks envEChord
 
   let eChordCON = void $ filter (== parseChordLenient "GDON") eChord
@@ -128,7 +112,7 @@ elCongraz eDone Navigation{..} = mdo
             let eContinue = leftmost [eChordCON, domEvent Click elACont]
             updateState $ eContinue $>
               [ field @"stProgress" %~
-                  Map.update (\s -> if nxt > s then Just nxt else Just s) lang
+                  Map.update (\s -> if nxt > s then Just nxt else Just s) navLang
               , field @"stCleared" %~ Set.insert navCurrent
               , if nxt == Stage2_1
                   then field @"stTOCShowStage2" .~ True

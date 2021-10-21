@@ -3,42 +3,32 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
 
 module Shared where
 
-import           Client                (RequestResult (..),
-                                        request)
 import           Control.Applicative   (Applicative (pure), (<$>))
 import           Control.Category      (Category ((.)))
 import           Control.Lens          ((.~))
 import           Control.Monad         ((=<<))
 import           Control.Monad.Fix     (MonadFix)
 import           Data.Bool             (Bool (..), not)
-import           Data.Either           (Either (..))
 import           Data.Function         (const, ($))
-import           Data.Functor          (void, ($>), (<&>))
-import           Data.Generics.Product (field)
-import qualified Data.Map              as Map
+import           Data.Functor          (void)
 import           Data.Maybe            (Maybe (..))
-import           Data.Monoid           (Monoid (mempty), (<>))
-import           Data.Semigroup        (Endo (Endo))
+import           Data.Monoid           ((<>))
 import           Data.Text             (Text, unwords)
 import qualified Data.Text             as Text
-import           Data.Traversable      (for)
 import           Data.Tuple            (fst)
 import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace, inputElement),
-                                        Element, EventName (Click), EventResult,
-                                        EventWriter, HasDomEvent (domEvent),
+                                        Element, EventName (Click), EventResult, HasDomEvent (domEvent),
                                         InputElement (_inputElement_checked, _inputElement_value),
                                         InputElementConfig, MonadHold (holdDyn),
-                                        NotReady, PostBuild (getPostBuild),
+                                        NotReady, PostBuild,
                                         Prerender (Client, prerender),
                                         Reflex (Dynamic, Event, current, never, updated),
-                                        attachWith, blank, constDyn, def, dyn,
+                                        attachWith, blank, def, dyn,
                                         el, el', elAttr, elAttr', elClass,
                                         elClass',
                                         elementConfig_initialAttributes, ffor,
@@ -46,8 +36,7 @@ import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace,
                                         inputElementConfig_initialChecked,
                                         inputElementConfig_setChecked, leftmost,
                                         switchDyn, switchHold, text, widgetHold,
-                                        (&), (.~), (=:))
-import           State                 (Message (..), State (..), updateState)
+                                        (&), (=:))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank

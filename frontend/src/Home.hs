@@ -1,12 +1,10 @@
-{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
-{-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE PolyKinds           #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -14,15 +12,21 @@
 
 module Home where
 
-import           Client                      (reqFailure, postConfigNew, postRender)
-import           Common.Api                  (PloverCfg (..))
-import           Common.Route                (FrontendRoute (..))
+import           Client                      (postConfigNew, postRender,
+                                              reqFailure)
+import           Common.Api                  (Lang (..),
+                                              PloverSystemCfg (..))
+import           Common.Route                (FrontendRoute (..),
+                                              FrontendSubroute_Stage (..))
 import           Control.Applicative         (Applicative (..))
-import           Control.Category            (Category(id, (.)))
+import           Control.Category            (Category (id, (.)))
+import           Control.Lens                (At (at), Ixed (ix), non, view)
 import           Control.Lens.Setter         ((%~), (.~))
+import           Control.Lens.Wrapped        (_Wrapped')
 import           Control.Monad               ((<=<), (=<<))
 import           Control.Monad.Fix           (MonadFix)
-import           Control.Monad.Reader        (MonadReader (ask), asks)
+import           Control.Monad.Reader        (MonadReader (ask), ReaderT, asks,
+                                              withReaderT)
 import           Data.Bool                   (Bool (..), bool, not)
 import           Data.Default                (Default (def))
 import           Data.Either                 (Either (..))
@@ -31,7 +35,6 @@ import           Data.Foldable               (Foldable (foldl, null), concat)
 import           Data.Function               (const, ($), (&))
 import           Data.Functor                (fmap, void, ($>), (<$>), (<&>))
 import           Data.Generics.Product       (field)
-import           Data.List                   (elem)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (Maybe (..), listToMaybe)
@@ -52,12 +55,21 @@ import           GHCJS.DOM.HTMLElement       (focus)
 import           GHCJS.DOM.Types             (File)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
-import           Obelisk.Route.Frontend      (pattern (:/), dynRouteLink, R, RouteToUrl, SetRoute,
-                                              routeLink)
+import           Obelisk.Route.Frontend      (R, RouteToUrl,
+                                              RoutedT, SetRoute,
+                                              mapRoutedT, routeLink, subRoute)
+import           Page.Common                 (elFooter)
+import           Page.Introduction           (introduction)
+import qualified Page.Stage1                 as Stage1
+import qualified Page.Stage2                 as Stage2
+import           Palantype.Common            (Chord (..), KeyIndex (..),
+                                              Palantype (fromIndex), mkChord)
+import           Palantype.Common.RawSteno   (RawSteno (..), parseChordLenient)
 import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
                                               EventName (Click, Keydown),
                                               EventResult, EventWriter,
+                                              EventWriterT,
                                               HasDomEvent (domEvent),
                                               InputElement (..),
                                               InputElementConfig,
@@ -77,21 +89,16 @@ import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, input
                                               inputElementConfig_initialValue,
                                               inputElementConfig_setValue,
                                               keydown, keyup, leftmost,
-                                              mergeWith, preventDefault, text, wrapDomEvent,
-                                              (=:))
+                                              mergeWith, preventDefault, text,
+                                              wrapDomEvent, (=:))
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (dynSimple, iFa, prerenderSimple,
                                               whenJust)
-import           State                       (Lang, Message (..),
-                                              Stage (..), State (..),
-                                              stageDescription, stageUrl,
-                                              updateState)
-import Palantype.Common.RawSteno (parseChordLenient, RawSteno(..))
-import Palantype.Common (mkChord, Chord (..), Palantype(fromIndex), KeyIndex(..))
-import TextShow (TextShow(showt))
-import qualified Palantype.EN.Keys as EN
-import Data.Proxied (dataTypeOfProxied)
-import Data.Typeable (typeRep)
+import           State                       (Env (..), Message (..),
+                                              Navigation (..), Stage (..),
+                                              State (..), stageDescription,
+                                              stageUrl, updateState)
+import           TextShow                    (TextShow (showt))
 
 default (Text)
 
@@ -160,9 +167,11 @@ settings = do
   eFile <- elClass "div" "dropdown" $ do
     elClass "span" "dropdown-button" $ iFa "fas fa-cog"
     elClass "div" "dropdown-content" $ mdo
+
       eFile' <- elClass "span" "hiddenFileInput" $ do
         text "Upload your plover.cfg"
         elFileInput $ eReset $> ""
+
       eReset <- do
         (spanResetConfig, _) <- el' "span" $ text "Reset to default configuration"
         let eReset' = domEvent Click spanResetConfig
@@ -173,7 +182,6 @@ settings = do
       updateState $ domEvent Click e $> [field @"stProgress" .~ def]
 
       pure eFile'
-
 
   eReqResult <- postRender $ do
     fileReader <- liftJSM newFileReader
@@ -198,12 +206,8 @@ settings = do
           , field @"stPloverCfg" .~ def
           ]
 
-  let compatibleSystems =
-        ["Palantype", "Possum Palantype", "Possum Palantype German"]
-      isCompatible system = system `elem` compatibleSystems
-
-  updateState $ eReqSuccess <&> \ploverCfg@PloverCfg {..} ->
-      [ field @"stPloverCfg" .~ ploverCfg
+  updateState $ eReqSuccess <&> \(lang, systemCfg@PloverSystemCfg {..}) ->
+      [ field @"stPloverCfg" %~ (_Wrapped' %~ ix lang .~ systemCfg)
       , if null pcfgUnrecognizedQwertys then id
         else let msgCaption = "Unrecognized qwerty keys"
                  msgBody =
@@ -217,13 +221,6 @@ settings = do
                    <> Text.intercalate "\n"
                         (unRawSteno <$> pcfgUnrecognizedStenos)
              in field @"stMsg" .~ Just Message {..}
-      , if isCompatible pcfgSystem then id
-        else let msgCaption = "Incompatible system"
-                 msgBody =
-                      "Your system is " <> pcfgSystem
-                   <> "\nCompatible systems at the moment are\n"
-                   <> Text.intercalate "\n" compatibleSystems
-             in field @"stMsg" .~ Just Message {..}
       ]
 
 data KeyState key
@@ -231,7 +228,7 @@ data KeyState key
   | KeyStateUp key
 
 stenoInput
-  :: forall js (proxy :: * -> *) key t (m :: * -> *).
+  :: forall js key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) (Client m)
   , MonadHold t m
@@ -240,12 +237,12 @@ stenoInput
   , PostBuild t m
   , Prerender js t m
   )
-  => proxy key
+  => Lang
   -> m (Event t (Chord key))
-stenoInput p = do
+stenoInput lang = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   dynShowKeyboard <- asks (stShowKeyboard <$>)
-  dynSimple $ dynPloverCfg <&> \PloverCfg {..} -> do
+  dynSimple $ dynPloverCfg <&> view (_Wrapped' . at lang . non def) <&> \PloverSystemCfg {..} ->
     prerenderSimple $ elClass "div" "stenoInput" $ mdo
       let keyChanges =
             pcfgLsKeySteno <&> \(qwertyKey, kI) ->
@@ -286,9 +283,9 @@ stenoInput p = do
         -- a bit of a hack to switch to the original Palantype keyboard layout
         -- for English
         -- that original layout I will consider the exception
-        if typeRep p == typeRep (Proxy :: Proxy EN.Key)
-           then elPTKeyboardEN pcfgMapStenoKeys dynPressedKeys pcfgSystem
-           else elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
+        case lang of
+           EN -> elKeyboardEN pcfgMapStenoKeys dynPressedKeys
+           _  -> elKeyboard pcfgMapStenoKeys dynPressedKeys lang
 
       kbInput <- elStenoOutput dynDownKeys
 
@@ -308,7 +305,7 @@ stenoInput p = do
 
       pure eChord
 
-elPTKeyboard
+elKeyboard
   :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , Palantype key
@@ -316,9 +313,9 @@ elPTKeyboard
   )
   => Map KeyIndex [Text]
   -> Dynamic t (Set key)
-  -> Text
+  -> Lang
   -> m ()
-elPTKeyboard stenoKeys dynPressedKeys system =
+elKeyboard stenoKeys dynPressedKeys lang =
   elClass "div" "keyboard" $ do
     el "table" $ do
       el "tr" $ do
@@ -367,12 +364,13 @@ elPTKeyboard stenoKeys dynPressedKeys system =
         elCell stenoKeys dynPressedKeys 20 "1" False
 
         elCell stenoKeys dynPressedKeys 21 "2" False
-    elClass "span" "system" $ text system
+    elClass "span" "system" $ text $ showt lang
 
 -- | original Palantype keyboard layout
 -- | unfortunately the keys don't follow the simple order
 -- | of top row, home row, bottom row
-elPTKeyboardEN
+-- | therefore, I treat the original palantype layout as the exception
+elKeyboardEN
   :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , Palantype key
@@ -380,9 +378,8 @@ elPTKeyboardEN
   )
   => Map KeyIndex [Text]
   -> Dynamic t (Set key)
-  -> Text
   -> m ()
-elPTKeyboardEN stenoKeys dynPressedKeys system =
+elKeyboardEN stenoKeys dynPressedKeys =
   elClass "div" "keyboard" $ do
     el "table" $ do
       el "tr" $ do
@@ -427,7 +424,7 @@ elPTKeyboardEN stenoKeys dynPressedKeys system =
         elCell stenoKeys dynPressedKeys 19 "1" True
         elCell stenoKeys dynPressedKeys 20 "1" False
         elCell stenoKeys dynPressedKeys 21 "2" False
-    elClass "span" "system" $ text system
+    elClass "span" "system" $ text $ showt EN
 
 elCell
   :: forall key t (m1 :: * -> *).
@@ -442,24 +439,20 @@ elCell
   -> Bool
   -> m1 ()
 elCell stenoKeys dynPressedKeys i colspan isHomerow =
-  let mQwertyKeys = Map.lookup i stenoKeys
-
-      showQwerties Nothing   = ""
-      showQwerties (Just ks) = Text.unwords ks
-
-      attrs =
-        dynPressedKeys <&> \set' ->
-          "colspan" =: colspan
-            <> case (Set.member (fromIndex i) set', isHomerow) of
-                 (True , True ) -> "class" =: "pressed homerow"
-                 (True , False) -> "class" =: "pressed"
-                 (False, True ) -> "class" =: "homerow"
-                 (False, False) -> mempty
-   in if Map.member i stenoKeys
-        then elDynAttr "td" attrs $ do
-          elClass "div" "steno " $ text $ showt $ (fromIndex :: KeyIndex -> key) i
-          elClass "div" "qwerty " $ text $ showQwerties mQwertyKeys
-        else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+  case Map.lookup i stenoKeys of
+    Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+    Just qwerties -> do
+      let attrs =
+            dynPressedKeys <&> \set' ->
+              "colspan" =: colspan
+                <> case (Set.member (fromIndex i) set', isHomerow) of
+                     (True , True ) -> "class" =: "pressed homerow"
+                     (True , False) -> "class" =: "pressed"
+                     (False, True ) -> "class" =: "homerow"
+                     (False, False) -> mempty
+      elDynAttr "td" attrs $ do
+        elClass "div" "steno " $ text $ showt $ (fromIndex :: KeyIndex -> key) i
+        elClass "div" "qwerty " $ text $ Text.unwords qwerties
 
 elStenoOutput
   :: forall key t (m :: * -> *).
@@ -600,3 +593,76 @@ toc lang dynCurrent = elClass "section" "toc" $ do
         elDynClass "ul" dynClassUl2 $ do
           elLi Stage2_1
           elLi Stage2_2
+
+landingPage
+  :: forall js t (m :: * -> *).
+  ( DomBuilder t m
+  , EventWriter t (Endo State) m
+  , MonadReader (Dynamic t State) m
+  , Prerender js t m
+  , PostBuild t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => m ()
+landingPage = do
+  (elEN, _) <- el' "button" $ text "EN"
+  (elDE, _) <- el' "button" $ text "DE"
+  let eClickEN = domEvent Click elEN $> EN
+      eClickDE = domEvent Click elDE $> DE
+  updateState $ leftmost [eClickEN, eClickDE] <&> \lang ->
+    [ field @"stMLang" .~ Just lang ]
+
+stages
+  :: forall js key (proxy :: * -> *) t (m :: * -> *).
+  ( DomBuilder t m
+  , MonadHold t m
+  , MonadFix m
+  , Palantype key
+  , PostBuild t m
+  , Prerender js t m
+  , RouteToUrl (R FrontendRoute) m
+  , SetRoute t (R FrontendRoute) m
+  )
+  => proxy key
+  -> Lang
+  -> RoutedT t (R FrontendSubroute_Stage) (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+stages _ navLang =
+  elClass "div" "box" $ do
+    eChord <- el "header" $ do
+      settings
+      message
+      stenoInput navLang
+
+    dynNavigation <-
+      elClass "div" "row" $ mdo
+
+        toc navLang $ navCurrent <$> dynNavigation
+
+        let setEnv
+              :: forall a.
+                 Maybe Stage
+              -> Stage
+              -> Maybe Stage
+              -> RoutedT t a (ReaderT (Env t key) (EventWriterT t (Endo State) m)) Navigation
+              -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) Navigation
+            setEnv navMPrevious navCurrent navMNext =
+              mapRoutedT (withReaderT $ \dynState -> Env
+                           { envDynState = dynState
+                           , envEChord = eChord
+                           , envNavigation = Navigation{..}
+                           })
+        dynNavigation <-
+          elClass "section" "content" $ subRoute $ \case
+            FrontendSubroute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
+            FrontendSubroute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
+            FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
+            FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
+            FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
+            FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
+            FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
+            FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
+            FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
+            FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 Nothing         Stage2.exercise2
+        pure dynNavigation
+    dyn_ $ dynNavigation <&> elFooter navLang

@@ -9,7 +9,7 @@
 
 module Client where
 
-import           Common.Api          (PloverCfg, RoutesApi)
+import           Common.Api          (PloverSystemCfg, RoutesApi, Lang)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
 import           Data.Either         (Either)
@@ -21,7 +21,6 @@ import           Data.Witherable     (Filterable (mapMaybe))
 import           Reflex.Dom          (Prerender (Client, prerender),
                                       Reflex (Dynamic, Event, never), constDyn,
                                       switchDyn, XhrResponse (..), )
-import           Servant.API         ((:<|>) (..))
 import           Servant.Common.Req  (ReqResult(..),  reqSuccess)
 import           Servant.Reflex      (BaseUrl (BasePath), SupportsServantReflex,
                                       client)
@@ -57,7 +56,7 @@ postConfigNew
   :: SupportsServantReflex t m
   => Dynamic t (Either Text String)
   -> Event t ()
-  -> m (Event t (ReqResult () PloverCfg))
+  -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
 postConfigNew =
   client (Proxy :: Proxy RoutesApi)

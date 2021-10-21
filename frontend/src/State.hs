@@ -9,11 +9,10 @@
 module State where
 
 -- import           Common.Auth      (SessionData)
-import           Common.Api          (PloverCfg)
-import           Common.Route        (FrontendRoute (..), FrontendRouteStage (..))
+import           Common.Api          (PloverCfg, Lang (..))
+import           Common.Route        (FrontendRoute (..), FrontendSubroute_Stage (..))
 import           Control.Applicative ((<$>))
-import           Control.Category    (Category ((.)))
-import           Data.Aeson          (ToJSONKey, FromJSONKey, FromJSON (..),
+import           Data.Aeson          (FromJSON (..),
                                       ToJSON (..))
 import           Data.Bool           (Bool (..))
 import           Data.Default        (Default (..))
@@ -29,11 +28,10 @@ import           GHC.Generics        (Generic)
 import           Obelisk.Route       (pattern (:/), R)
 import           Reflex.Dom          (EventWriter (..), Reflex(Dynamic, Event))
 import           Text.Show           (Show (..))
-import Data.List (map)
 import Data.Foldable (Foldable(foldMap))
-import Palantype.Common.RawSteno (RawSteno)
 import Palantype.Common (Chord)
 import Data.Map (Map)
+import qualified Data.Map as Map
 
 -- environment for frontend pages
 
@@ -85,12 +83,13 @@ instance ToJSON State
 
 instance Default State where
   def = State
-    { stPloverCfg = def
+    { stCleared = Set.empty
+    , stMLang = Nothing
     , stMsg = Nothing
+    , stPloverCfg = def
+    , stProgress = Map.fromList [(EN, Introduction), (DE, Introduction)]
     , stShowKeyboard = True
     , stShowTOC = False
-    , stProgress = def
-    , stCleared = Set.empty
     , stTOCShowStage1 = False
     , stTOCShowStage2 = False
     , stTOCShowStage3 = False
@@ -113,14 +112,6 @@ data Message = Message
 
 instance FromJSON Message
 instance ToJSON Message
-
-data Lang = EN | DE
-  deriving (Eq, Generic, Ord)
-
-instance FromJSON Lang
-instance ToJSON Lang
-instance FromJSONKey Lang
-instance ToJSONKey Lang
 
 -- -- Session
 --
@@ -172,16 +163,16 @@ stageUrl lang stage =
         EN -> FrontendRoute_EN
         DE -> FrontendRoute_DE
       r2 = case stage of
-        Introduction -> FrontendRoute_Introduction
-        Stage1_1 -> FrontendRoute_Stage1_1
-        Stage1_2 -> FrontendRoute_Stage1_2
-        Stage1_3 -> FrontendRoute_Stage1_3
-        Stage1_4 -> FrontendRoute_Stage1_4
-        Stage1_5 -> FrontendRoute_Stage1_5
-        Stage1_6 -> FrontendRoute_Stage1_6
-        Stage1_7 -> FrontendRoute_Stage1_7
-        Stage2_1 -> FrontendRoute_Stage2_1
-        Stage2_2 -> FrontendRoute_Stage2_2
+        Introduction -> FrontendSubroute_Introduction
+        Stage1_1 -> FrontendSubroute_Stage1_1
+        Stage1_2 -> FrontendSubroute_Stage1_2
+        Stage1_3 -> FrontendSubroute_Stage1_3
+        Stage1_4 -> FrontendSubroute_Stage1_4
+        Stage1_5 -> FrontendSubroute_Stage1_5
+        Stage1_6 -> FrontendSubroute_Stage1_6
+        Stage1_7 -> FrontendSubroute_Stage1_7
+        Stage2_1 -> FrontendSubroute_Stage2_1
+        Stage2_2 -> FrontendSubroute_Stage2_2
   in r1 :/ r2 :/ ()
 
 stageDescription :: Stage -> Text

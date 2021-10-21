@@ -1,36 +1,31 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
 
 module Handler
   ( handlers
   ) where
 
-import           Common.Api              (PloverCfg (..), Routes, keyMapToPloverCfg)
-import           Control.Applicative     (Alternative ((<|>)),
-                                          Applicative (pure, (*>), (<*>)))
+import           Common.Api              (Lang (..), PloverSystemCfg, Routes, keyMapToPloverCfg)
+import           Control.Applicative     (Applicative (pure, (<*>)))
 import           Control.Category        (Category ((.)))
-import           Control.Monad           (Monad (fail), foldM, unless,
-                                          when)
+import           Control.Monad           (foldM, unless)
 import           Control.Monad.Except    (MonadError (throwError), runExcept)
 import           Data.Aeson              (FromJSON (..), Value (Array))
 import qualified Data.Aeson              as Json
 import           Data.Aeson.Types        (Parser, typeMismatch)
-import           Data.Bool               (Bool (..))
 import qualified Data.ByteString.Char8   as Char8
 import qualified Data.ByteString.Lazy    as Lazy
-import           Data.Char               (Char)
 import qualified Data.ConfigFile         as CfgParser
-import           Data.Either             (Either (..))
+import           Data.Either             (either, Either (..))
 import           Data.Eq                 ((==))
-import           Data.Foldable           (concat, Foldable (toList))
-import           Data.Function           (($))
-import           Data.Functor            (void, (<$>))
-import           Data.List               (drop, findIndex, (!!))
+import           Data.Foldable           (Foldable(elem, foldl, toList))
+import           Data.Function           (const, ($))
+import           Data.Functor            ((<$>))
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
 import           Data.Maybe              (Maybe (..))
@@ -38,24 +33,15 @@ import           Data.Monoid             ((<>))
 import           Data.String             (String)
 import           Data.Text               (Text)
 import qualified Data.Text               as Text
-import qualified Data.Text.Lazy          as TextLazy
-import qualified Data.Text.Lazy.Encoding as TextLazy
-import           Data.Traversable        (for)
-import           Data.Tuple              (fst)
-import           GHC.Num                 (Num ((+)))
 import           GHC.Show                (Show (show))
-import           Prelude                 (Applicative ((<*)), snd)
-import           Servant                 ((:<|>) (..))
 import           Servant.Server          (HasServer (ServerT),
                                           ServantErr (errBody), err400)
 import qualified Servant.Server          as Snap (throwError)
 import           Snap.Core               (Snap)
-import           Text.Parsec             (Parsec, anyChar, char, eof, getState, many1, runParser,
-                                          sepBy1, setState, try,
-                                          updateState)
-import Palantype.Common.RawSteno (RawSteno)
-import Palantype.DE (pDE)
-import Palantype.EN (pEN)
+import Palantype.Common.RawSteno (parseStenoKey, RawSteno)
+import Palantype.Common (Palantype(keyIndex),  KeyIndex)
+import qualified Palantype.DE.Keys as DE
+import qualified Palantype.EN.Keys as EN
 
 handlers :: ServerT Routes '[] Snap
 handlers =
@@ -77,7 +63,7 @@ instance FromJSON KeysMapJSON where
     in  KeysMapJSON <$> map
   parseJSON invalid = typeMismatch "key map" invalid
 
-handleConfigNew :: String -> Snap PloverCfg
+handleConfigNew :: String -> Snap (Lang, PloverSystemCfg)
 handleConfigNew str = do
   let eCfg = runExcept $ do
 
@@ -101,7 +87,33 @@ handleConfigNew str = do
   case eCfg of
     Left err -> Snap.throwError $
       err400 { errBody = Lazy.fromStrict  $ Char8.pack $ show err }
-    Right (system, machine, stenoKeys) ->
-      pure $ case system of
-        "Palantype"    -> keyMapToPloverCfg pEN stenoKeys (Text.pack system) (Text.pack machine)
-        "Palantype DE" -> keyMapToPloverCfg pDE stenoKeys (Text.pack system) (Text.pack machine)
+    Right (system, machine, stenoKeys) -> do
+
+      lang <-
+        case system of
+          "Palantype"    -> pure EN
+          "Palantype DE" -> pure DE
+          _              -> Snap.throwError $
+            err400 { errBody = Lazy.fromStrict $ Char8.pack $
+                     "System " <> system <> " not implemented." }
+
+      let rawToIndex raw =
+            case lang of
+              EN -> either (const Nothing) (Just . keyIndex) $ parseStenoKey @EN.Key raw
+              DE -> either (const Nothing) (Just . keyIndex) $ parseStenoKey @DE.Key raw
+
+      let acc
+            :: ([(KeyIndex, [Text])], [RawSteno])
+            -> (RawSteno, [Text])
+            -> ([(KeyIndex, [Text])], [RawSteno])
+          acc (ls, uSteno) (raw, plovers) =
+            case rawToIndex raw of
+                  Just i  -> ((i, plovers) : ls, uSteno      )
+                  Nothing | raw `elem` ["no-op", "arpeggiate"] -> (ls, uSteno)
+                  Nothing -> (ls               , raw : uSteno)
+
+          (lsIndexPlovers, unrecognizedStenos) =
+            foldl acc ([], []) stenoKeys
+
+      pure (lang,
+        keyMapToPloverCfg lsIndexPlovers unrecognizedStenos (Text.pack machine))

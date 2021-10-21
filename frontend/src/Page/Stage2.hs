@@ -13,51 +13,49 @@
 
 module Page.Stage2 where
 
-import           Common.Route           (FrontendRoute (..))
-import           Control.Applicative    (Applicative (pure), (<$>))
-import           Control.Category       (Category (id, (.)))
-import           Control.Lens           ((%~), (.~), (<&>))
-import           Control.Monad          (when)
-import           Control.Monad.Fix      (MonadFix)
-import           Control.Monad.Reader   (MonadReader (ask))
-import           Data.Bool              (Bool (..))
-import           Data.Eq                (Eq ((==)))
-import           Data.Foldable          (Foldable(elem, length), for_)
-import           Data.Function          (($))
-import           Data.Functor           (void, ($>))
-import           Data.Generics.Product  (field)
-import           Data.Int               (Int)
-import           Data.List              (zip, (!!))
-import           Data.Maybe             (Maybe (..))
-import           Data.Ord               (Ord ((>)))
-import           Data.Semigroup         (Endo)
-import qualified Data.Set               as Set
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
-import           Data.Witherable        (Filterable (catMaybes, filter))
-import           GHC.Num                (Num ((+), (-)))
-import           Obelisk.Route.Frontend (pattern (:/), R,
-                                         SetRoute (setRoute))
-import           Page.Common            (elCongraz,
-                                         parseStenoOrError)
-import           Reflex.Dom             (DomBuilder, EventName (Click),
-                                         EventWriter, HasDomEvent (domEvent),
-                                         MonadHold (holdDyn),
-                                         PostBuild (getPostBuild),
-                                         Reflex (Event, updated), blank, dyn_,
-                                         el, elAttr, elClass, elClass',
-                                         elDynClass, foldDyn, leftmost, never,
-                                         text, widgetHold_, (=:))
-import           Shared                 (whenJust)
-import           State                  (Env (..), Navigation (..),
-                                         Stage (Stage1_1), State (..), stageUrl,
-                                         updateState)
-import           Text.Show              (Show (show))
-import Palantype.Common (Palantype, Chord)
-import Palantype.EN (pEN)
-import Palantype.Common.RawSteno (parseStenoLenient, parseChordLenient, RawSteno (..))
-import TextShow (TextShow(showt))
-import qualified Data.Map as Map
+import           Common.Route              (FrontendRoute (..))
+import           Control.Applicative       (Applicative (pure), (<$>))
+import           Control.Category          (Category (id, (.)))
+import           Control.Lens              ((%~), (<&>))
+import           Control.Monad             (when)
+import           Control.Monad.Fix         (MonadFix)
+import           Control.Monad.Reader      (MonadReader (ask))
+import           Data.Bool                 (Bool (..))
+import           Data.Eq                   (Eq ((==)))
+import           Data.Foldable             (Foldable (length), for_)
+import           Data.Function             (($))
+import           Data.Functor              (void, ($>))
+import           Data.Generics.Product     (field)
+import           Data.Int                  (Int)
+import           Data.List                 (zip, (!!))
+import qualified Data.Map                  as Map
+import           Data.Maybe                (Maybe (..))
+import           Data.Ord                  (Ord ((>)))
+import           Data.Semigroup            (Endo)
+import qualified Data.Set                  as Set
+import           Data.Text                 (Text)
+import qualified Data.Text                 as Text
+import           Data.Witherable           (Filterable (catMaybes, filter))
+import           GHC.Num                   (Num ((+), (-)))
+import           Obelisk.Route.Frontend    (pattern (:/), R,
+                                            SetRoute (setRoute))
+import           Page.Common               (elCongraz)
+import           Palantype.Common          (Chord, Palantype)
+import           Palantype.Common.RawSteno (RawSteno (..), parseChordLenient,
+                                            parseStenoLenient)
+import           Reflex.Dom                (DomBuilder, EventName (Click),
+                                            EventWriter, HasDomEvent (domEvent),
+                                            MonadHold (holdDyn), PostBuild,
+                                            Reflex (Event, updated), blank,
+                                            dyn_, el, elAttr, elClass, elClass',
+                                            elDynClass, foldDyn, leftmost, text,
+                                            widgetHold_, (=:))
+import           Shared                    (whenJust)
+import           State                     (Env (..), Navigation (..),
+                                            Stage (Stage1_1), State (..),
+                                            stageUrl, updateState)
+import           Text.Show                 (Show (show))
+import           TextShow                  (TextShow (showt))
 
 -- TODO: internationalization
 rawUlfts :: RawSteno
@@ -112,11 +110,11 @@ exercise1 = do
 
   let eBack = leftmost [eChordBACK, domEvent Click elABack]
       Navigation{..} = envNavigation
+
   setRoute $ eBack $> stageUrl navLang Stage1_1
   updateState $ eBack $>
     [field @"stProgress" %~ Map.update (\_ -> Just Stage1_1) navLang]
 
-  let Navigation{..} = envNavigation
   whenJust navMNext $ \nxt -> do
     (elACont, _) <- elClass "div" "anthrazit" $ do
       text "Type "
