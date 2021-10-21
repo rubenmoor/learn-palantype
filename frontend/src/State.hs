@@ -10,10 +10,10 @@ module State where
 
 -- import           Common.Auth      (SessionData)
 import           Common.Api          (PloverCfg)
-import           Common.Route        (FrontendRoute (..))
+import           Common.Route        (FrontendRoute (..), FrontendRouteStage (..))
 import           Control.Applicative ((<$>))
 import           Control.Category    (Category ((.)))
-import           Data.Aeson          (FromJSON (..),
+import           Data.Aeson          (ToJSONKey, FromJSONKey, FromJSON (..),
                                       ToJSON (..))
 import           Data.Bool           (Bool (..))
 import           Data.Default        (Default (..))
@@ -32,20 +32,23 @@ import           Text.Show           (Show (..))
 import Data.List (map)
 import Data.Foldable (Foldable(foldMap))
 import Palantype.Common.RawSteno (RawSteno)
+import Palantype.Common (Chord)
+import Data.Map (Map)
 
 -- environment for frontend pages
 
-data Env t = Env
+data Env t key = Env
   { envDynState   :: Dynamic t State
 
   -- ideally, envEChord would have the type `Event t (Chord k)`
   -- however, that requires a choice of k (e.g. k ~ DE.Key)
-  , envEChord     :: Event t RawSteno
+  , envEChord     :: Event t (Chord key)
   , envNavigation :: Navigation
   }
 
 data Navigation = Navigation
-  { navMPrevious :: Maybe Stage
+  { navLang      :: Lang
+  , navMPrevious :: Maybe Stage
   , navCurrent   :: Stage
   , navMNext     :: Maybe Stage
   }
@@ -65,12 +68,13 @@ data Navigation = Navigation
 
 data State = State
   { -- stSession :: Session
-    stPloverCfg     :: PloverCfg
+    stCleared       :: Set Stage
+  , stMLang         :: Maybe Lang
   , stMsg           :: Maybe Message
+  , stPloverCfg     :: PloverCfg
   , stShowKeyboard  :: Bool
   , stShowTOC       :: Bool
-  , stProgress      :: Stage
-  , stCleared       :: Set Stage
+  , stProgress      :: Map Lang Stage
   , stTOCShowStage1 :: Bool
   , stTOCShowStage2 :: Bool
   , stTOCShowStage3 :: Bool
@@ -109,6 +113,14 @@ data Message = Message
 
 instance FromJSON Message
 instance ToJSON Message
+
+data Lang = EN | DE
+  deriving (Eq, Generic, Ord)
+
+instance FromJSON Lang
+instance ToJSON Lang
+instance FromJSONKey Lang
+instance ToJSONKey Lang
 
 -- -- Session
 --
@@ -151,18 +163,26 @@ instance Show Stage where
   show Stage2_1     = "Stage 2.1"
   show Stage2_2     = "Stage 2.2"
 
-stageUrl :: Stage -> R FrontendRoute
-stageUrl = \case
-  Introduction -> FrontendRoute_Introduction :/ ()
-  Stage1_1 -> FrontendRoute_Stage1_1 :/ ()
-  Stage1_2 -> FrontendRoute_Stage1_2 :/ ()
-  Stage1_3 -> FrontendRoute_Stage1_3 :/ ()
-  Stage1_4 -> FrontendRoute_Stage1_4 :/ ()
-  Stage1_5 -> FrontendRoute_Stage1_5 :/ ()
-  Stage1_6 -> FrontendRoute_Stage1_6 :/ ()
-  Stage1_7 -> FrontendRoute_Stage1_7 :/ ()
-  Stage2_1 -> FrontendRoute_Stage2_1 :/ ()
-  Stage2_2 -> FrontendRoute_Stage2_2 :/ ()
+stageUrl
+  :: Lang
+  -> Stage
+  -> R FrontendRoute
+stageUrl lang stage =
+  let r1 = case lang of
+        EN -> FrontendRoute_EN
+        DE -> FrontendRoute_DE
+      r2 = case stage of
+        Introduction -> FrontendRoute_Introduction
+        Stage1_1 -> FrontendRoute_Stage1_1
+        Stage1_2 -> FrontendRoute_Stage1_2
+        Stage1_3 -> FrontendRoute_Stage1_3
+        Stage1_4 -> FrontendRoute_Stage1_4
+        Stage1_5 -> FrontendRoute_Stage1_5
+        Stage1_6 -> FrontendRoute_Stage1_6
+        Stage1_7 -> FrontendRoute_Stage1_7
+        Stage2_1 -> FrontendRoute_Stage2_1
+        Stage2_2 -> FrontendRoute_Stage2_2
+  in r1 :/ r2 :/ ()
 
 stageDescription :: Stage -> Text
 stageDescription = \case

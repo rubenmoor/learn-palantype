@@ -54,6 +54,8 @@ import           Text.Parsec             (Parsec, anyChar, char, eof, getState, 
                                           sepBy1, setState, try,
                                           updateState)
 import Palantype.Common.RawSteno (RawSteno)
+import Palantype.DE (pDE)
+import Palantype.EN (pEN)
 
 handlers :: ServerT Routes '[] Snap
 handlers =
@@ -100,10 +102,6 @@ handleConfigNew str = do
     Left err -> Snap.throwError $
       err400 { errBody = Lazy.fromStrict  $ Char8.pack $ show err }
     Right (system, machine, stenoKeys) ->
-      let pLang = case system of
-            "Palantype"    -> pEN
-            "Palantype DE" -> pDE
-      in pure $ keyMapToPloverCfg pLang
-                                  stenoKeys
-                                  (Text.pack system)
-                                  (Text.pack machine)
+      pure $ case system of
+        "Palantype"    -> keyMapToPloverCfg pEN stenoKeys (Text.pack system) (Text.pack machine)
+        "Palantype DE" -> keyMapToPloverCfg pDE stenoKeys (Text.pack system) (Text.pack machine)

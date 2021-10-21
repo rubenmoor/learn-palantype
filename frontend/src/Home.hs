@@ -1,4 +1,6 @@
+{-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
@@ -29,7 +31,7 @@ import           Data.Foldable               (Foldable (foldl, null), concat)
 import           Data.Function               (const, ($), (&))
 import           Data.Functor                (fmap, void, ($>), (<$>), (<&>))
 import           Data.Generics.Product       (field)
-import           Data.List                   (sort, elem)
+import           Data.List                   (elem)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (Maybe (..), listToMaybe)
@@ -38,7 +40,7 @@ import           Data.Proxy                  (Proxy (..))
 import           Data.Semigroup              (Endo (..))
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
-import           Data.String                 (String, unwords)
+import           Data.String                 (String)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as Text
 import           Data.Tuple                  (fst, snd)
@@ -50,7 +52,7 @@ import           GHCJS.DOM.HTMLElement       (focus)
 import           GHCJS.DOM.Types             (File)
 import           Language.Javascript.JSaddle (FromJSVal (fromJSVal),
                                               ToJSVal (toJSVal), liftJSM)
-import           Obelisk.Route.Frontend      (R, RouteToUrl, SetRoute,
+import           Obelisk.Route.Frontend      (pattern (:/), dynRouteLink, R, RouteToUrl, SetRoute,
                                               routeLink)
 import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, inputElement),
                                               DomSpace (addEventSpecFlags),
@@ -67,7 +69,6 @@ import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, input
                                               blank, delay, dyn_, el, el',
                                               elAttr, elAttr', elClass,
                                               elClass', elDynAttr, elDynClass,
-                                              elDynClass',
                                               elementConfig_eventSpec,
                                               elementConfig_initialAttributes,
                                               elementConfig_modifyAttributes,
@@ -81,13 +82,16 @@ import           Reflex.Dom                  (DomBuilder (DomBuilderSpace, input
 import           Servant.Common.Req          (reqSuccess)
 import           Shared                      (dynSimple, iFa, prerenderSimple,
                                               whenJust)
-import           State                       (Message (..),
+import           State                       (Lang, Message (..),
                                               Stage (..), State (..),
                                               stageDescription, stageUrl,
                                               updateState)
-import Data.Char (Char)
-import Palantype.Common.RawSteno (RawSteno(..))
-import Palantype.Common (KeyIndex(..))
+import Palantype.Common.RawSteno (parseChordLenient, RawSteno(..))
+import Palantype.Common (mkChord, Chord (..), Palantype(fromIndex), KeyIndex(..))
+import TextShow (TextShow(showt))
+import qualified Palantype.EN.Keys as EN
+import Data.Proxied (dataTypeOfProxied)
+import Data.Typeable (typeRep)
 
 default (Text)
 
@@ -222,42 +226,44 @@ settings = do
              in field @"stMsg" .~ Just Message {..}
       ]
 
-data KeyState
-  = KeyStateDown KeyIndex
-  | KeyStateUp KeyIndex
+data KeyState key
+  = KeyStateDown key
+  | KeyStateUp key
 
 stenoInput
-  :: forall js t (m :: * -> *).
+  :: forall js (proxy :: * -> *) key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) (Client m)
   , MonadHold t m
   , MonadReader (Dynamic t State) m
+  , Palantype key
   , PostBuild t m
   , Prerender js t m
   )
-  => m (Event t RawSteno)
-stenoInput = do
+  => proxy key
+  -> m (Event t (Chord key))
+stenoInput p = do
   dynPloverCfg <- asks (stPloverCfg <$>)
   dynShowKeyboard <- asks (stShowKeyboard <$>)
   dynSimple $ dynPloverCfg <&> \PloverCfg {..} -> do
     prerenderSimple $ elClass "div" "stenoInput" $ mdo
       let keyChanges =
             pcfgLsKeySteno <&> \(qwertyKey, kI) ->
-              [ keydown qwertyKey kbInput $> [KeyStateDown kI]
-              , keyup   qwertyKey kbInput $> [KeyStateUp   kI]
+              [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
+              , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
               ]
 
           eKeyChange = mergeWith (<>) $ concat keyChanges
 
           register
-            :: [KeyState]
-            -> (Set KeyIndex, Set KeyIndex, Maybe RawSteno)
-            -> (Set KeyIndex, Set KeyIndex, Maybe RawSteno)
+            :: [KeyState key]
+            -> (Set key, Set key, Maybe (Chord key))
+            -> (Set key, Set key, Maybe (Chord key))
           register es (keys, word, _) =
             let setKeys' = foldl accDownUp keys es
                 (word', release') =
                   if Set.null setKeys'
-                    then (Set.empty, Just $ RawSteno $ Text.pack $ sort $ Set.elems word)
+                    then (Set.empty, Just $ mkChord $ Set.elems word)
                     else (foldl accDown word es, Nothing)
              in (setKeys', word', release')
             where
@@ -277,7 +283,12 @@ stenoInput = do
 
       let dynClass = bool "displayNone" "" <$> dynShowKeyboard
       elDynClass "div" dynClass $
-        elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
+        -- a bit of a hack to switch to the original Palantype keyboard layout
+        -- for English
+        -- that original layout I will consider the exception
+        if typeRep p == typeRep (Proxy :: Proxy EN.Key)
+           then elPTKeyboardEN pcfgMapStenoKeys dynPressedKeys pcfgSystem
+           else elPTKeyboard pcfgMapStenoKeys dynPressedKeys pcfgSystem
 
       kbInput <- elStenoOutput dynDownKeys
 
@@ -292,18 +303,19 @@ stenoInput = do
       performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
       let eChord = catMaybes $ updated dynChord
-          eChordSTFL = filter (== "STFL") eChord
+          eChordSTFL = filter (== parseChordLenient "STFL") eChord
       updateState $ eChordSTFL $> [field @"stShowKeyboard" %~ not]
 
       pure eChord
 
 elPTKeyboard
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
+  , Palantype key
   , PostBuild t m
   )
-  => Map RawSteno [Text]
-  -> Dynamic t (Set Char)
+  => Map KeyIndex [Text]
+  -> Dynamic t (Set key)
   -> Text
   -> m ()
 elPTKeyboard stenoKeys dynPressedKeys system =
@@ -311,70 +323,151 @@ elPTKeyboard stenoKeys dynPressedKeys system =
     el "table" $ do
       el "tr" $ do
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        elCell LeftP "1" False
-        elCell LeftM "1" False
-        elCell LeftN "1" False
+        elCell stenoKeys dynPressedKeys 4 "1" False
+        elCell stenoKeys dynPressedKeys 7 "1" False
+        elCell stenoKeys dynPressedKeys 10 "1" False
         elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell RightN "1" False
-        elCell RightM "1" False
-        elCell RightP "1" False
+        elCell stenoKeys dynPressedKeys 21 "1" False
+        elCell stenoKeys dynPressedKeys 24 "1" False
+        elCell stenoKeys dynPressedKeys 27 "1" False
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
       el "tr" $ do
-        elCell LeftC "1" False
-        elCell LeftT "1" True
-        elCell LeftF "1" True
-        elCell LeftL "1" True
-        elAttr "td" ("colspan" =: "3" <> "class" =: "gap") blank
-        elCell RightL "1" True
-        elCell RightF "1" True
-        elCell RightT "1" True
-        elCell RightH "1" False
+        elCell stenoKeys dynPressedKeys 1 "1" False
+        elCell stenoKeys dynPressedKeys 5 "1" True
+        elCell stenoKeys dynPressedKeys 8 "1" True
+        elCell stenoKeys dynPressedKeys 11 "1" True
+        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 22 "1" True
+        elCell stenoKeys dynPressedKeys 25 "1" True
+        elCell stenoKeys dynPressedKeys 28 "1" True
+        elCell stenoKeys dynPressedKeys 30 "1" False
       el "tr" $ do
-        elCell LeftS "1" True
-        elCell LeftH "1" False
-        elCell LeftR "1" False
-        elCell LeftY "1" False
-        elCell LeftO "1" False
-        elCell MiddleI "2" False
-        elCell RightA "1" False
-        elCell RightC "1" False
-        elCell RightR "1" False
-        elCell RightCross "1" False
-        elCell RightS "1" True
+        elCell stenoKeys dynPressedKeys 2 "1" True
+        elCell stenoKeys dynPressedKeys 6 "1" False
+        elCell stenoKeys dynPressedKeys 9 "1" False
+        elCell stenoKeys dynPressedKeys 12 "1" False
+        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 23 "1" False
+        elCell stenoKeys dynPressedKeys 26 "1" False
+        elCell stenoKeys dynPressedKeys 29 "1" False
+        elCell stenoKeys dynPressedKeys 31 "1" True
       el "tr" $ do
-        elCell LeftCross "4" False
-        elCell LeftE "1" True
-        elCell LeftPipe "1" False
-        elCell RightU "1" True
-        elCell RightPoint "4" False
+        elCell stenoKeys dynPressedKeys 3 "2" False
+
+        -- left thumb
+        elCell stenoKeys dynPressedKeys 13 "1" False
+        elCell stenoKeys dynPressedKeys 14 "1" False
+        elCell stenoKeys dynPressedKeys 15 "1" True
+        elCell stenoKeys dynPressedKeys 16 "1" True
+
+        -- right thumb
+        elCell stenoKeys dynPressedKeys 17 "1" False
+        elCell stenoKeys dynPressedKeys 18 "1" False
+        elCell stenoKeys dynPressedKeys 19 "1" True
+        elCell stenoKeys dynPressedKeys 20 "1" False
+
+        elCell stenoKeys dynPressedKeys 21 "2" False
     elClass "span" "system" $ text system
-  where
-    elCell cell colspan isHomerow =
-      let mQwertyKeys = Map.lookup cell stenoKeys
 
-          showQwerties Nothing   = ""
-          showQwerties (Just ks) = Text.pack $ unwords ks
+-- | original Palantype keyboard layout
+-- | unfortunately the keys don't follow the simple order
+-- | of top row, home row, bottom row
+elPTKeyboardEN
+  :: forall key t (m :: * -> *).
+  ( DomBuilder t m
+  , Palantype key
+  , PostBuild t m
+  )
+  => Map KeyIndex [Text]
+  -> Dynamic t (Set key)
+  -> Text
+  -> m ()
+elPTKeyboardEN stenoKeys dynPressedKeys system =
+  elClass "div" "keyboard" $ do
+    el "table" $ do
+      el "tr" $ do
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 3 "1" False
+        elCell stenoKeys dynPressedKeys 7 "1" False
+        elCell stenoKeys dynPressedKeys 10 "1" False
+        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 22 "1" False
+        elCell stenoKeys dynPressedKeys 25 "1" False
+        elCell stenoKeys dynPressedKeys 28 "1" False
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+      el "tr" $ do
+        elCell stenoKeys dynPressedKeys 2 "1" False
+        elCell stenoKeys dynPressedKeys 4 "1" True
+        elCell stenoKeys dynPressedKeys 8 "1" True
+        elCell stenoKeys dynPressedKeys 11 "1" True
+        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 23 "1" True
+        elCell stenoKeys dynPressedKeys 26 "1" True
+        elCell stenoKeys dynPressedKeys 29 "1" True
+        elCell stenoKeys dynPressedKeys 32 "1" False
+      el "tr" $ do
+        elCell stenoKeys dynPressedKeys 1 "1" True
+        elCell stenoKeys dynPressedKeys 5 "1" False
+        elCell stenoKeys dynPressedKeys 9 "1" False
+        elCell stenoKeys dynPressedKeys 12 "1" False
+        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 24 "1" False
+        elCell stenoKeys dynPressedKeys 27 "1" False
+        elCell stenoKeys dynPressedKeys 30 "1" False
+        elCell stenoKeys dynPressedKeys 31 "1" True
+      el "tr" $ do
+        elCell stenoKeys dynPressedKeys 6 "2" False
+        -- 13: not in use
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 14 "1" False
+        elCell stenoKeys dynPressedKeys 15 "1" True
+        -- 16: not in use
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 18 "1" False
+        elCell stenoKeys dynPressedKeys 19 "1" True
+        elCell stenoKeys dynPressedKeys 20 "1" False
+        elCell stenoKeys dynPressedKeys 21 "2" False
+    elClass "span" "system" $ text system
 
-          attrs =
-            dynPressedKeys <&> \set' ->
-              "colspan" =: colspan
-                <> case (Set.member cell set', isHomerow) of
-                     (True , True ) -> "class" =: "pressed homerow"
-                     (True , False) -> "class" =: "pressed"
-                     (False, True ) -> "class" =: "homerow"
-                     (False, False) -> mempty
-       in if Map.member cell stenoKeys
-            then elDynAttr "td" attrs $ do
-              elClass "div" "steno " $ text $ showLetter cell
-              elClass "div" "qwerty " $ text $ showQwerties mQwertyKeys
-            else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+elCell
+  :: forall key t (m1 :: * -> *).
+  ( DomBuilder t m1
+  , Palantype key
+  , PostBuild t m1
+  )
+  => Map KeyIndex [Text]
+  -> Dynamic t (Set key)
+  -> KeyIndex
+  -> Text
+  -> Bool
+  -> m1 ()
+elCell stenoKeys dynPressedKeys i colspan isHomerow =
+  let mQwertyKeys = Map.lookup i stenoKeys
+
+      showQwerties Nothing   = ""
+      showQwerties (Just ks) = Text.unwords ks
+
+      attrs =
+        dynPressedKeys <&> \set' ->
+          "colspan" =: colspan
+            <> case (Set.member (fromIndex i) set', isHomerow) of
+                 (True , True ) -> "class" =: "pressed homerow"
+                 (True , False) -> "class" =: "pressed"
+                 (False, True ) -> "class" =: "homerow"
+                 (False, False) -> mempty
+   in if Map.member i stenoKeys
+        then elDynAttr "td" attrs $ do
+          elClass "div" "steno " $ text $ showt $ (fromIndex :: KeyIndex -> key) i
+          elClass "div" "qwerty " $ text $ showQwerties mQwertyKeys
+        else elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
 
 elStenoOutput
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
+  , Palantype key
   )
-  => Dynamic t (Set Char)
+  => Dynamic t (Set key)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynDownKeys = mdo
   let eFocus =
@@ -384,8 +477,8 @@ elStenoOutput dynDownKeys = mdo
       eTyping =
         updated dynDownKeys <&> \pressedKeys ->
           if Set.null pressedKeys
-            then ("...",                             "class" =: Nothing)
-            else (showChord $ mkPTChord pressedKeys, "class" =: Nothing)
+            then ("...",                                   "class" =: Nothing)
+            else (showt $ mkChord $ Set.elems pressedKeys, "class" =: Nothing)
       eChange = leftmost [eFocus, eTyping]
       eSetValue = fst <$> eChange
 
@@ -422,9 +515,10 @@ toc
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => Dynamic t Stage
+  => Lang
+  -> Dynamic t Stage
   -> m ()
-toc dynCurrent = elClass "section" "toc" $ do
+toc lang dynCurrent = elClass "section" "toc" $ do
 
   dynState <- ask
   let dynShowTOC = stShowTOC <$> dynState
@@ -461,7 +555,7 @@ toc dynCurrent = elClass "section" "toc" $ do
               if stage `Set.member` cleared
                 then iFa "fas fa-check"
                 else el "span" $ text "○"
-              routeLink (stageUrl stage) $ text $ stageDescription stage
+              routeLink (stageUrl lang stage) $ text $ stageDescription stage
 
       el "ul" $ do
 

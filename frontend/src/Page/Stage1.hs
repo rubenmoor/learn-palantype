@@ -13,9 +13,6 @@
 
 module Page.Stage1 where
 
-import           Common.Alphabet        (PTChar (..), PTChord (..), isLeftHand,
-                                         isRightHand, showChord', showKey,
-                                         showLetter)
 import           Common.Api             (PloverCfg (pcfgMapStenoKeys))
 import           Common.Route           (FrontendRoute (..))
 import           Control.Applicative    (Applicative (pure), (<$>))
@@ -28,9 +25,9 @@ import           Control.Monad.Random   (evalRand, newStdGen)
 import           Control.Monad.Reader   (MonadReader (ask), asks)
 import           Data.Bool              (Bool (..))
 import           Data.Eq                (Eq ((==)))
-import           Data.Foldable          (Foldable (length), for_)
+import           Data.Foldable          (Foldable(elem, length), for_)
 import           Data.Function          (($))
-import           Data.Functor           (void, ($>))
+import           Data.Functor           (void, ($>), Functor (fmap))
 import           Data.Generics.Product  (field)
 import           Data.Int               (Int)
 import           Data.List              (zip, (!!))
@@ -57,22 +54,25 @@ import           State                  (Env (..),
                                          updateState)
 import           System.Random.Shuffle  (shuffleM)
 import           Text.Show              (Show (show))
+import           TextShow              (showt)
+import Palantype.Common (Finger(..), Palantype(toFinger),  Chord (..), fromIndex)
 
 -- exercise 1
 
-data WalkState = WalkState
+data WalkState k = WalkState
   { wsCounter  :: Int
-  , wsMMistake :: Maybe (Int, PTChord)
+  , wsMMistake :: Maybe (Int, Chord k)
   , wsDone     :: Maybe Bool
   }
 
 exercise1
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -108,12 +108,13 @@ exercise1 = do
 -- 1.2
 
 exercise2
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -142,12 +143,13 @@ exercise2 = do
 -- 1.3
 
 exercise3
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -175,12 +177,13 @@ exercise3 = do
 -- 1.4
 
 exercise4
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -205,11 +208,12 @@ exercise4 = do
   pure envNavigation
 
 taskAlphabet
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   )
   => Bool
@@ -218,17 +222,18 @@ taskAlphabet showAlphabet = do
   Env {..} <- ask
 
   let dynAlphabet =
-        Map.keys
-          . pcfgMapStenoKeys
-          . stPloverCfg
-          <$> envDynState
+          fmap fromIndex
+        . Map.keys
+        . pcfgMapStenoKeys
+        . stPloverCfg
+        <$> envDynState
 
   dynSimple $ dynAlphabet <&> \ptAlphabet -> do
     let len = length ptAlphabet
 
-        step :: PTChord -> WalkState -> WalkState
-        step chord ws@WalkState {..} =
-          case (unPTChord chord, wsMMistake, wsDone) of
+        step :: Chord key -> WalkState key -> WalkState key
+        step (Chord ks) ws@WalkState {..} =
+          case (ks, wsMMistake, wsDone) of
             (_, _, Just True) -> ws { wsDone = Just False
                                     , wsCounter = 0
                                     } -- reset after done
@@ -244,7 +249,7 @@ taskAlphabet showAlphabet = do
                                     , wsCounter = wsCounter + 1
                                     } -- correct
             (ls, _, _) ->        ws { wsDone = Nothing
-                                    , wsMMistake = Just (wsCounter, PTChord ls)
+                                    , wsMMistake = Just (wsCounter, Chord ls)
                                     } -- mistake
 
         stepInitial = WalkState
@@ -264,7 +269,7 @@ taskAlphabet showAlphabet = do
                 dynWalk <&> \WalkState {..} -> case wsMMistake of
                   Just (j, _) -> if i == j then "bgRed" else clsLetter
                   Nothing -> if wsCounter > i then "bgGreen" else clsLetter
-          elDynClass "span" dynCls $ text $ showLetter c
+          elDynClass "span" dynCls $ text $ showt c
     el "span" $ do
       dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
       text $ " / " <> Text.pack (show len)
@@ -275,7 +280,7 @@ taskAlphabet showAlphabet = do
         Just (_, w) ->
           elClass "div" "red small" $
             text $
-              "You typed " <> showChord' w
+              "You typed " <> showt w
                 <> ". Any key to start over."
         Nothing -> blank
 
@@ -289,23 +294,24 @@ taskAlphabet showAlphabet = do
 
 -- stage 1.5
 
-data StenoLettersState = StenoLettersState
+data StenoLettersState k = StenoLettersState
   { slsCounter  :: Int
-  , slsMMistake :: Maybe (Int, PTChord)
+  , slsMMistake :: Maybe (Int, Chord k)
   , slsDone     :: Maybe Bool
-  , slsLetters  :: [PTChar]
+  , slsLetters  :: [k]
   }
 
 taskLetters
-  :: forall js t (m :: * -> *).
+  :: forall key js t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , Prerender js t m
   )
-  => Dynamic t [PTChar]
+  => Dynamic t [key]
   -> m (Event t ())
 taskLetters dynLetters = do
 
@@ -319,9 +325,12 @@ taskLetters dynLetters = do
     dynSimple $ dynLetters <&> \letters -> mdo
       let len = length letters
 
-          step :: PTChord -> StenoLettersState -> StenoLettersState
-          step chord ls@StenoLettersState {..} =
-            case (unPTChord chord, slsMMistake, slsDone) of
+          step
+            :: Chord key
+            -> StenoLettersState key
+            -> StenoLettersState key
+          step (Chord ks) ls@StenoLettersState {..} =
+            case (ks, slsMMistake, slsDone) of
               (_, _, Just True) ->
                                let letters' =
                                      evalRand (shuffleM slsLetters) stdGen
@@ -342,7 +351,7 @@ taskLetters dynLetters = do
                                       } -- correct
               (wrong, _, _) ->     ls { slsDone = Nothing
                                       , slsMMistake =
-                                          Just (slsCounter, PTChord wrong)
+                                          Just (slsCounter, Chord wrong)
                                       } -- mistake
 
           stepInitial =
@@ -364,7 +373,7 @@ taskLetters dynLetters = do
                 Just _  -> "bgRed"
           when (slsCounter < len) $
             el "pre" $ elClass "code" clsMistake $
-              text $ showKey $ slsLetters !! slsCounter
+              text $ showt $ slsLetters !! slsCounter
           el "span" $ do
             el "strong" $ text (Text.pack $ show slsCounter)
             text " / "
@@ -375,7 +384,7 @@ taskLetters dynLetters = do
         eMMistake <&> \case
           Just (_, chord) ->
             elClass "div" "red small" $ text $
-              "You typed " <> showChord' chord <> ". Any key to start over."
+              "You typed " <> showt chord <> ". Any key to start over."
           Nothing -> blank
 
       dynDone <- holdDyn False eDone
@@ -386,12 +395,13 @@ taskLetters dynLetters = do
       pure $ void $ filter id eDone
 
 exercise5
-  :: forall js t (m :: * -> *).
+  :: forall key js t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , Prerender js t m
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
@@ -421,8 +431,10 @@ exercise5 = do
   ePb <- getPostBuild
   updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
-  let dynLeftHand
-        =   filter isLeftHand
+  let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
+      dynLeftHand
+        =   filter (\k -> toFinger k `elem` fingersLeft)
+          . fmap fromIndex
           . Map.keys
           . pcfgMapStenoKeys
           . stPloverCfg
@@ -434,12 +446,13 @@ exercise5 = do
   pure envNavigation
 
 exercise6
-  :: forall js t (m :: * -> *).
+  :: forall key js t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , Prerender js t m
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
@@ -460,8 +473,10 @@ exercise6 = do
   ePb <- getPostBuild
   updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
-  let dynRightHand
-        =   filter isRightHand
+  let fingersRight = [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
+      dynRightHand
+        =   filter (\k -> toFinger k `elem` fingersRight)
+          . fmap fromIndex
           . Map.keys
           . pcfgMapStenoKeys
           . stPloverCfg
@@ -473,12 +488,13 @@ exercise6 = do
   pure envNavigation
 
 exercise7
-  :: forall js t (m :: * -> *).
+  :: forall js key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , Prerender js t m
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
@@ -504,7 +520,8 @@ exercise7 = do
   updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
   let dynAlphabet
-        =   Map.keys
+        =   fmap fromIndex
+          . Map.keys
           . pcfgMapStenoKeys
           . stPloverCfg
         <$> envDynState

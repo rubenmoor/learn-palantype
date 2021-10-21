@@ -34,12 +34,16 @@ import           State                  (State, Env (..),
                                          Navigation (..), Stage (..),
                                          updateState)
 import Palantype.Common.RawSteno (parseChordLenient)
+import qualified Data.Map as Map
+import Data.Maybe (Maybe(Just))
+import Palantype.Common (Palantype)
 
 introduction
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , SetRoute t (R FrontendRoute) m
   )
   => m Navigation
@@ -90,14 +94,16 @@ introduction = do
     elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
     text "."
 
-  let eChordSTART = void $ filter (== "SDA~T") envEChord
+  -- TODO lang
+  let eChordSTART = void $ filter (== parseChordLenient "SDA~T") envEChord
+      Navigation{..} = envNavigation
 
   elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"
     let eStart = leftmost [eChordSTART, domEvent Click btn]
     updateState $ eStart $>
-      [ field @"stProgress" .~ Stage1_1
-      , field @"stCleared" %~ Set.insert (navCurrent envNavigation)
+      [ field @"stProgress" %~ Map.update (\_ -> Just Stage1_1) navLang
+      , field @"stCleared" %~ Set.insert navCurrent
       , field @"stTOCShowStage1" .~ True
       ]
     setRoute $ eStart $> FrontendRoute_Main :/ ()

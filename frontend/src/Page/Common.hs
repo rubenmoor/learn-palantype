@@ -50,7 +50,7 @@ import           Reflex.Dom             (DomBuilder, EventName (Click),
                                          Reflex (Event, never), blank, el,
                                          elClass, elClass', leftmost, text)
 import           Shared                 (dynSimple, iFa, whenJust)
-import           State                  (Message (..), Env (..), Navigation (..), Stage (..),
+import           State                  (Lang (..), Message (..), Env (..), Navigation (..), Stage (..),
                                          State, stageUrl, updateState)
 import           Text.Parsec            ((<?>), oneOf, space, spaces, Parsec, anyChar, char, eof, getState,
                                          many1, runParser, sepBy1, setState,
@@ -60,10 +60,10 @@ import           Text.Show              (Show (show))
 import Data.Foldable (concat)
 import Control.Monad (MonadPlus(mzero))
 import Palantype.Common (Palantype, Chord)
-import Palantype.Common.RawSteno (RawSteno, parseSteno)
-import Data.Tagged (Tagged (..))
+import Palantype.Common.RawSteno (RawSteno, parseSteno, parseChordLenient)
 import Data.Proxy (Proxy(Proxy))
 import TextShow (showt)
+import qualified Data.Map as Map
 
 elFooter
   :: forall js t (m :: * -> *).
@@ -72,27 +72,29 @@ elFooter
   , RouteToUrl (R FrontendRoute) m
   , SetRoute t (R FrontendRoute) m
   )
-  => Navigation
+  => Lang
+  -> Navigation
   -> m ()
-elFooter Navigation{..} = el "footer" $ do
+elFooter lang Navigation{..} = el "footer" $ do
   whenJust navMPrevious $ \prv -> do
     elClass "div" "floatLeft" $ do
       text "< "
-      routeLink (stageUrl prv) $ text $ Text.pack $ show prv
+      routeLink (stageUrl lang prv) $ text $ Text.pack $ show prv
   text $ Text.pack $ show navCurrent
   whenJust navMNext $ \nxt -> do
     elClass "div" "floatRight" $ do
-      routeLink (stageUrl nxt) $ text $ Text.pack $ show nxt
+      routeLink (stageUrl lang nxt) $ text $ Text.pack $ show nxt
       text " >"
   elClass "br" "clearBoth" blank
 
 elCongraz
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -101,10 +103,13 @@ elCongraz
   -> m ()
 elCongraz eDone Navigation{..} = mdo
 
+  -- TODO: reader?
+  let lang = EN
+
   eChord <- asks envEChord
 
-  let eChordCON = void $ filter (== "GDON") eChord
-      eChordBACK = void $ filter (== "BAK") eChord
+  let eChordCON = void $ filter (== parseChordLenient "GDON") eChord
+      eChordBACK = void $ filter (== parseChordLenient "BAK") eChord
 
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
   eBack <- dynSimple $ dynShowCongraz <&> \case
@@ -122,7 +127,8 @@ elCongraz eDone Navigation{..} = mdo
               elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
             let eContinue = leftmost [eChordCON, domEvent Click elACont]
             updateState $ eContinue $>
-              [ field @"stProgress" %~ \s -> if nxt > s then nxt else s
+              [ field @"stProgress" %~
+                  Map.update (\s -> if nxt > s then Just nxt else Just s) lang
               , field @"stCleared" %~ Set.insert navCurrent
               , if nxt == Stage2_1
                   then field @"stTOCShowStage2" .~ True

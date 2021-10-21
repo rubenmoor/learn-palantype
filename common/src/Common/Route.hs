@@ -21,18 +21,20 @@ import Control.Category
 import           Data.Functor.Identity (Identity)
 import           Data.Text             (Text)
 
-import           Control.Category      (Category (id))
+import           Control.Category      (Category((.), id))
 import           Data.Either           (Either)
 import           Data.Function         (($))
-import           Data.Functor          ((<$>))
+import           Data.Functor          (Functor(fmap), (<$>))
 import           Data.List             (concat)
 import           Data.Monoid
 import           Data.Traversable      (mapM)
-import           Obelisk.Route         (pattern (:/), Encoder,
+import           Obelisk.Route         (maybeEncoder, pathComponentEncoder, pathSegmentEncoder, pattern (:/), Encoder,
                                         FullRoute (FullRoute_Backend), PageName,
                                         R, SegmentResult (PathEnd, PathSegment),
-                                        mkFullRouteEncoder, unitEncoder)
+                                        mkFullRouteEncoder, unitEncoder, singlePathSegmentEncoder)
 import           Obelisk.Route.TH      (deriveRouteComponent)
+import Data.Maybe (Maybe)
+import Control.Monad.Except (MonadError)
 
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
@@ -43,16 +45,20 @@ data BackendRoute :: * -> * where
 
 data FrontendRoute :: * -> * where
   FrontendRoute_Main :: FrontendRoute ()
-  FrontendRoute_Introduction :: FrontendRoute ()
-  FrontendRoute_Stage1_1 :: FrontendRoute ()
-  FrontendRoute_Stage1_2 :: FrontendRoute ()
-  FrontendRoute_Stage1_3 :: FrontendRoute ()
-  FrontendRoute_Stage1_4 :: FrontendRoute ()
-  FrontendRoute_Stage1_5 :: FrontendRoute ()
-  FrontendRoute_Stage1_6 :: FrontendRoute ()
-  FrontendRoute_Stage1_7 :: FrontendRoute ()
-  FrontendRoute_Stage2_1 :: FrontendRoute ()
-  FrontendRoute_Stage2_2 :: FrontendRoute ()
+  FrontendRoute_EN   :: FrontendRoute (R FrontendRouteStage)
+  FrontendRoute_DE   :: FrontendRoute (R FrontendRouteStage)
+
+data FrontendRouteStage :: * -> * where
+  FrontendRoute_Introduction :: FrontendRouteStage ()
+  FrontendRoute_Stage1_1 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_2 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_3 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_4 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_5 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_6 :: FrontendRouteStage ()
+  FrontendRoute_Stage1_7 :: FrontendRouteStage ()
+  FrontendRoute_Stage2_1 :: FrontendRouteStage ()
+  FrontendRoute_Stage2_2 :: FrontendRouteStage ()
   -- This type is used to define frontend routes, i.e. ones for which the backend will serve the frontend.
 
 fullRouteEncoder
@@ -65,6 +71,17 @@ fullRouteEncoder = mkFullRouteEncoder
   )
   (\case
       FrontendRoute_Main -> PathEnd $ unitEncoder mempty
+      FrontendRoute_EN   -> PathSegment "EN" encoderStage
+      FrontendRoute_DE   -> PathSegment "DE" encoderStage
+  )
+  where
+    encoderStage
+      :: forall (check :: * -> *) (parse :: * -> *).
+      ( MonadError Text check
+      , check ~ parse
+      )
+      => Encoder check parse (R FrontendRouteStage) PageName
+    encoderStage = pathComponentEncoder $ \case
       FrontendRoute_Introduction -> PathSegment "introduction" $ unitEncoder mempty
       FrontendRoute_Stage1_1 -> PathSegment "stage1-1" $ unitEncoder mempty
       FrontendRoute_Stage1_2 -> PathSegment "stage1-2" $ unitEncoder mempty
@@ -75,9 +92,10 @@ fullRouteEncoder = mkFullRouteEncoder
       FrontendRoute_Stage1_7 -> PathSegment "stage1-7" $ unitEncoder mempty
       FrontendRoute_Stage2_1 -> PathSegment "stage2-1" $ unitEncoder mempty
       FrontendRoute_Stage2_2 -> PathSegment "stage2-2" $ unitEncoder mempty
-  )
+
 
 concat <$> mapM deriveRouteComponent
   [ ''BackendRoute
   , ''FrontendRoute
+  , ''FrontendRouteStage
   ]

@@ -27,6 +27,7 @@ library
     , obelisk-generated-static
     , obelisk-route
     , parsec
+    , proxied
     , random
     , random-shuffle
     , reflex-dom

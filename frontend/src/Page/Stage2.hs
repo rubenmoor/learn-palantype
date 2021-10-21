@@ -55,20 +55,22 @@ import           State                  (Env (..), Navigation (..),
 import           Text.Show              (Show (show))
 import Palantype.Common (Palantype, Chord)
 import Palantype.EN (pEN)
-import Palantype.Common.RawSteno (RawSteno (..))
+import Palantype.Common.RawSteno (parseStenoLenient, parseChordLenient, RawSteno (..))
 import TextShow (TextShow(showt))
+import qualified Data.Map as Map
 
 -- TODO: internationalization
-ulfts :: RawSteno
-ulfts = "ULFTS"
+rawUlfts :: RawSteno
+rawUlfts = "ULFTS"
 
 exercise1
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -95,31 +97,36 @@ exercise1 = do
          \Simply repeat Stage 1 until you can do all the exercises without \
          \looking down. Just orient yourself once in the beginning!"
 
-  let eChordCON = void $ filter (== "CON") envEChord
-      eChordBACK = void $ filter (== "P+AC") envEChord
+  let rawCON = "CON"
+      eChordCON = void $ filter (== parseChordLenient rawCON) envEChord
+      rawBACK = "P+AC"
+      eChordBACK = void $ filter (== parseChordLenient rawBACK) envEChord
 
   elABack <- elClass "div" "paragraph" $ do
     text "Type "
-    el "code" $ text $ showChord chordBACK
+    el "code" $ text $ showt rawBACK
     text " to "
     (e, _) <- elClass' "a" "normalLink" $ text "go back to Exercise 1.1"
     text " to practice home row."
     pure e
 
   let eBack = leftmost [eChordBACK, domEvent Click elABack]
-  setRoute $ eBack $> stageUrl Stage1_1
-  updateState $ eBack $> [field @"stProgress" .~ Stage1_1]
+      Navigation{..} = envNavigation
+  setRoute $ eBack $> stageUrl navLang Stage1_1
+  updateState $ eBack $>
+    [field @"stProgress" %~ Map.update (\_ -> Just Stage1_1) navLang]
 
   let Navigation{..} = envNavigation
   whenJust navMNext $ \nxt -> do
     (elACont, _) <- elClass "div" "anthrazit" $ do
       text "Type "
-      el "code" $ text $ showChord chordCON
+      el "code" $ text $ showt rawCON
       text " to continue to "
       elClass' "a" "normalLink" $ text $ Text.pack $ show nxt
     let eContinue = leftmost [eChordCON, domEvent Click elACont]
     updateState $ eContinue $>
-      [ field @"stProgress" %~ \s -> if nxt > s then nxt else s
+      [ field @"stProgress" %~
+          Map.update (\s -> if nxt > s then Just nxt else Just s) navLang
       , field @"stCleared" %~ Set.insert navCurrent
       ]
     setRoute $ eContinue $> FrontendRoute_Main :/ ()
@@ -127,12 +134,13 @@ exercise1 = do
   pure envNavigation
 
 exercise2
-  :: forall t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , EventWriter t (Endo State) m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   , SetRoute t (R FrontendRoute) m
   )
@@ -155,8 +163,7 @@ exercise2 = do
         txt = "The quick brown fox jumps over the lazy dog ."
 
     eDone <-
-      walkWords (Text.words txt)
-              $ RawSteno <$> Text.split (`elem` [' ', '/']) raw
+      walkWords (Text.words txt) $ parseStenoLenient raw
 
     elClass "div" "paragraph" $ do
       text "Each word is one chord, except the word \"lazy\". You will \
@@ -168,7 +175,7 @@ exercise2 = do
 
     elClass "div" "paragraph" $ do
       text "Let me introduce yet another useful chord: "
-      el "code" $ text $ showt ulfts
+      el "code" $ text $ showt rawUlfts
       text ". It is the homerow of your right hand and deletes your last \
            \input. Now you can correct your mistakes!"
 
@@ -183,22 +190,24 @@ data WalkState = WalkState
   }
 
 walkWords
-  :: forall k t (m :: * -> *).
+  :: forall key t (m :: * -> *).
   ( DomBuilder t m
   , MonadFix m
   , MonadHold t m
-  , MonadReader (Env t) m
+  , MonadReader (Env t key) m
+  , Palantype key
   , PostBuild t m
   )
   => [Text]
-  -> [RawSteno]
+  -> [Chord key]
   -> m (Event t ())
 walkWords words chords = do
   Env {..} <- ask
 
-  let len = length chords
+  let ulfts = parseChordLenient rawUlfts
+      len = length chords
 
-      step :: RawSteno -> WalkState -> WalkState
+      step :: Chord key -> WalkState -> WalkState
       step chord ws@WalkState {..} =
         case (wsMMistake, wsDone) of
           (_, Just True) -> ws { wsDone = Just False

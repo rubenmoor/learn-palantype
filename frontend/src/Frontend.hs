@@ -16,9 +16,10 @@ module Frontend where
 
 import           Language.Javascript.JSaddle (liftJSM)
 import           State                       (Env (..), Navigation (..),
-                                              Stage (..), State (..), stageUrl)
+                                              Stage (..), State (..), stageUrl, updateState, Lang (..))
 
-import           Common.Route                (FrontendRoute (..))
+import           Common.Route                (FrontendRoute (..), FrontendRouteStage (..))
+import           Data.Generics.Product  (field)
 import           Control.Monad.Reader        (ReaderT (runReaderT), withReaderT)
 import qualified Data.Aeson                  as Aeson
 import           Data.Functor                (($>), (<&>))
@@ -26,6 +27,7 @@ import           Data.Maybe                  (fromMaybe)
 import           Data.Semigroup              (Endo (..))
 import           Data.Text                   (Text)
 import qualified Data.Text.Lazy              as Lazy
+import Control.Lens ((.~))
 import qualified Data.Text.Lazy.Encoding     as Lazy
 import           GHCJS.DOM                   (currentWindowUnchecked)
 import           GHCJS.DOM.Storage           (getItem, setItem)
@@ -36,7 +38,7 @@ import           Obelisk.Frontend            (Frontend (..), ObeliskWidget)
 import           Obelisk.Generated.Static    (static)
 import           Obelisk.Route               (R)
 import           Obelisk.Route.Frontend      (RoutedT, SetRoute (setRoute),
-                                              mapRoutedT, subRoute)
+                                              mapRoutedT, subRoute, subRoute_)
 import           Page.Common                 (elFooter)
 import           Page.Introduction           (introduction)
 import qualified Page.Stage1                 as Stage1
@@ -46,11 +48,15 @@ import           Reflex.Dom                  (EventWriterT,
                                               PostBuild (getPostBuild),
                                               Prerender (prerender),
                                               Reflex (Dynamic, updated), blank,
-                                              def, dyn_, el, elAttr, elClass,
+                                              def, dyn_, el, elAttr, elClass, el',
                                               foldDyn, leftmost, prerender_,
-                                              runEventWriterT, tailE, text,
-                                              widgetHold_, (=:))
-import           Shared                      (loadingScreen)
+                                              runEventWriterT, tailE, text, domEvent,
+                                              widgetHold_, (=:), EventName (Click))
+import           Shared                      (loadingScreen, whenJust)
+import qualified Data.Map as Map
+import Data.Data (Proxy(Proxy))
+import qualified Palantype.EN.Keys as EN
+import Palantype.Common (Palantype)
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -85,55 +91,62 @@ frontendBody = mdo
     let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
     liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
-  (_, eStateUpdate) <- mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
+  (_, eStateUpdate) <-
+    mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
+      elClass "div" "landing" $ do
+        subRoute_ $ \case
+          FrontendRoute_Main -> do
+            dyn_ $ dynState <&> \State{..} -> do
+              let mUrl = do
+                    lang <- stMLang
+                    stage <- Map.lookup lang stProgress
+                    pure $ stageUrl lang stage
+              whenJust mUrl $ \url -> do
+                ePb <- getPostBuild
+                setRoute $ ePb $> url
+            elEN <- el' "button" $ text "EN"
+            elDE <- el' "button" $ text "DE"
+            updateState $ domEvent Click elEN $> [ field @"stMLang" .~ Just EN ]
+            updateState $ domEvent Click elDE $> [ field @"stMLang" .~ Just DE ]
+          FrontendRoute_EN -> elClass "div" "box" $ do
 
-    elClass "div" "box" $ do
-      eChord <- el "header" $ do
-        settings
-        message
-        stenoInput
+            eChord <- el "header" $ do
+              settings
+              message
+              stenoInput (Proxy :: Proxy EN.Key)
 
-      dynNavigation <-
-        elClass "div" "row" $ mdo
+            dynNavigation <-
+              elClass "div" "row" $ mdo
 
-          toc $ navCurrent <$> dynNavigation
+                toc EN $ navCurrent <$> dynNavigation
 
-          let setEnv
-                :: forall a.
-                   Maybe Stage
-                -> Stage
-                -> Maybe Stage
-                -> RoutedT t a (ReaderT (Env t) (EventWriterT t (Endo State) m)) Navigation
-                -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) Navigation
-              setEnv navMPrevious navCurrent navMNext =
-                mapRoutedT (withReaderT $ \_ -> Env
-                  { envDynState = dynState
-                  , envEChord = eChord
-                  , envNavigation = Navigation{..}
-                  })
-          dynNavigation <-
-            elClass "section" "content" $ subRoute $ \case
-
-              FrontendRoute_Main -> do
-                dyn_ $ dynState <&> \st -> do
-                  ePb <- getPostBuild
-                  setRoute $ ePb $> stageUrl (stProgress st)
-
-                -- meaningless
-                pure $ Navigation Nothing Stage1_1 Nothing
-
-              FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
-              FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
-              FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
-              FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
-              FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
-              FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
-              FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
-              FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
-              FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
-              FrontendRoute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 Nothing         Stage2.exercise2
-          pure dynNavigation
-      dyn_ $ dynNavigation <&> elFooter
+                let setEnv
+                      :: Maybe Stage
+                      -> Stage
+                      -> Maybe Stage
+                      -> RoutedT t a (ReaderT (Env t EN.Key) (EventWriterT t (Endo State) m)) Navigation
+                      -> RoutedT t a (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) Navigation
+                    setEnv navMPrevious navCurrent navMNext =
+                      let navLang = EN
+                      in  mapRoutedT (withReaderT $ \_ -> Env
+                                       { envDynState = dynState
+                                       , envEChord = eChord
+                                       , envNavigation = Navigation{..}
+                                       })
+                dynNavigation <-
+                  elClass "section" "content" $ subRoute $ \case
+                    FrontendRoute_Introduction -> setEnv Nothing Introduction (Just Stage1_1) introduction
+                    FrontendRoute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
+                    FrontendRoute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
+                    FrontendRoute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
+                    FrontendRoute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
+                    FrontendRoute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
+                    FrontendRoute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
+                    FrontendRoute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
+                    FrontendRoute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
+                    FrontendRoute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 Nothing         Stage2.exercise2
+                pure dynNavigation
+            dyn_ $ dynNavigation <&> elFooter EN
   blank
 
 frontendHead
