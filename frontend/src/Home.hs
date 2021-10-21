@@ -355,7 +355,7 @@ elKeyboard stenoKeys dynPressedKeys lang =
         elCell stenoKeys dynPressedKeys 13 "1" False
         elCell stenoKeys dynPressedKeys 14 "1" False
         elCell stenoKeys dynPressedKeys 15 "1" True
-        elCell stenoKeys dynPressedKeys 16 "1" True
+        elCell stenoKeys dynPressedKeys 16 "1" False
 
         -- right thumb
         elCell stenoKeys dynPressedKeys 17 "1" False
@@ -363,7 +363,7 @@ elKeyboard stenoKeys dynPressedKeys lang =
         elCell stenoKeys dynPressedKeys 19 "1" True
         elCell stenoKeys dynPressedKeys 20 "1" False
 
-        elCell stenoKeys dynPressedKeys 21 "2" False
+        elCell stenoKeys dynPressedKeys 32 "2" False
     elClass "span" "system" $ text $ showt lang
 
 -- | original Palantype keyboard layout
