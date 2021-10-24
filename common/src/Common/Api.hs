@@ -123,7 +123,7 @@ instance Default PloverCfg where
           ]
     where
       -- | this is a copy of the default mapping for plover's
-      -- | Palantype plug-in
+      --   Palantype plug-in
       lsStenoKeysOrig :: [(KeyIndex, [Text])]
       lsStenoKeysOrig =
         [ (3 , ["2"])

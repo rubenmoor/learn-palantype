@@ -27,7 +27,7 @@ import           Control.Monad               ((<=<), (=<<))
 import           Control.Monad.Fix           (MonadFix)
 import           Control.Monad.Reader        (MonadReader (ask), ReaderT, asks,
                                               withReaderT)
-import           Data.Bool                   (Bool (..), bool, not)
+import           Data.Bool                   ((&&), Bool (..), bool, not)
 import           Data.Default                (Default (def))
 import           Data.Either                 (Either (..))
 import           Data.Eq                     (Eq ((==)))
@@ -44,7 +44,7 @@ import           Data.Semigroup              (Endo (..))
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
 import           Data.String                 (String)
-import           Data.Text                   (Text)
+import           Data.Text                   (unwords, words, Text)
 import qualified Data.Text                   as Text
 import           Data.Tuple                  (fst, snd)
 import           Data.Witherable             (Filterable (catMaybes, filter, mapMaybe))
@@ -320,50 +320,60 @@ elKeyboard stenoKeys dynPressedKeys lang =
     el "table" $ do
       el "tr" $ do
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 4 "1" False
-        elCell stenoKeys dynPressedKeys 7 "1" False
-        elCell stenoKeys dynPressedKeys 10 "1" False
-        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 21 "1" False
-        elCell stenoKeys dynPressedKeys 24 "1" False
-        elCell stenoKeys dynPressedKeys 27 "1" False
+        elCell stenoKeys dynPressedKeys 4 "1" False False
+        elCell stenoKeys dynPressedKeys 7 "1" False False
+        elCell stenoKeys dynPressedKeys 10 "1" False False
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 21 "1" False False
+        elCell stenoKeys dynPressedKeys 24 "1" False False
+        elCell stenoKeys dynPressedKeys 27 "1" False False
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 1 "1" False
-        elCell stenoKeys dynPressedKeys 5 "1" True
-        elCell stenoKeys dynPressedKeys 8 "1" True
-        elCell stenoKeys dynPressedKeys 11 "1" True
-        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 22 "1" True
-        elCell stenoKeys dynPressedKeys 25 "1" True
-        elCell stenoKeys dynPressedKeys 28 "1" True
-        elCell stenoKeys dynPressedKeys 30 "1" False
+        elCell stenoKeys dynPressedKeys 1 "1" False False
+        elCell stenoKeys dynPressedKeys 5 "1" True False
+        elCell stenoKeys dynPressedKeys 8 "1" True False
+        elCell stenoKeys dynPressedKeys 11 "1" True False
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 22 "1" True False
+        elCell stenoKeys dynPressedKeys 25 "1" True False
+        elCell stenoKeys dynPressedKeys 28 "1" True False
+        elCell stenoKeys dynPressedKeys 30 "1" False False
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 2 "1" True
-        elCell stenoKeys dynPressedKeys 6 "1" False
-        elCell stenoKeys dynPressedKeys 9 "1" False
-        elCell stenoKeys dynPressedKeys 12 "1" False
-        elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 23 "1" False
-        elCell stenoKeys dynPressedKeys 26 "1" False
-        elCell stenoKeys dynPressedKeys 29 "1" False
-        elCell stenoKeys dynPressedKeys 31 "1" True
+        elCell stenoKeys dynPressedKeys 2 "1" True False
+        elCell stenoKeys dynPressedKeys 6 "1" False False
+        elCell stenoKeys dynPressedKeys 9 "1" False False
+        elCell stenoKeys dynPressedKeys 12 "1" False False
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+        elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 23 "1" False False
+        elCell stenoKeys dynPressedKeys 26 "1" False False
+        elCell stenoKeys dynPressedKeys 29 "1" False False
+        elCell stenoKeys dynPressedKeys 31 "1" True False
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 3 "2" False
+        elCell stenoKeys dynPressedKeys 3 "1" False False
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
 
         -- left thumb
-        elCell stenoKeys dynPressedKeys 13 "1" False
-        elCell stenoKeys dynPressedKeys 14 "1" False
-        elCell stenoKeys dynPressedKeys 15 "1" True
-        elCell stenoKeys dynPressedKeys 16 "1" False
+        elCell stenoKeys dynPressedKeys 13 "1" False True
+        elCell stenoKeys dynPressedKeys 14 "1" False True
+        elCell stenoKeys dynPressedKeys 15 "1" True True
+        elCell stenoKeys dynPressedKeys 16 "1" False True
+
+        elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
 
         -- right thumb
-        elCell stenoKeys dynPressedKeys 17 "1" False
-        elCell stenoKeys dynPressedKeys 18 "1" False
-        elCell stenoKeys dynPressedKeys 19 "1" True
-        elCell stenoKeys dynPressedKeys 20 "1" False
+        elCell stenoKeys dynPressedKeys 17 "1" False True
+        elCell stenoKeys dynPressedKeys 18 "1" True True
+        elCell stenoKeys dynPressedKeys 19 "1" False True
+        elCell stenoKeys dynPressedKeys 20 "1" False True
 
-        elCell stenoKeys dynPressedKeys 32 "2" False
+        elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+        elCell stenoKeys dynPressedKeys 32 "1" False False
     elClass "span" "system" $ text $ showt lang
 
 -- | original Palantype keyboard layout
@@ -384,48 +394,48 @@ elKeyboardEN stenoKeys dynPressedKeys =
     el "table" $ do
       el "tr" $ do
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 3 "1" False
-        elCell stenoKeys dynPressedKeys 7 "1" False
-        elCell stenoKeys dynPressedKeys 10 "1" False
+        elCell stenoKeys dynPressedKeys 3 "1" False False
+        elCell stenoKeys dynPressedKeys 7 "1" False False
+        elCell stenoKeys dynPressedKeys 10 "1" False False
         elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 22 "1" False
-        elCell stenoKeys dynPressedKeys 25 "1" False
-        elCell stenoKeys dynPressedKeys 28 "1" False
+        elCell stenoKeys dynPressedKeys 22 "1" False False
+        elCell stenoKeys dynPressedKeys 25 "1" False False
+        elCell stenoKeys dynPressedKeys 28 "1" False False
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 2 "1" False
-        elCell stenoKeys dynPressedKeys 4 "1" True
-        elCell stenoKeys dynPressedKeys 8 "1" True
-        elCell stenoKeys dynPressedKeys 11 "1" True
+        elCell stenoKeys dynPressedKeys 2 "1" False False
+        elCell stenoKeys dynPressedKeys 4 "1" True False
+        elCell stenoKeys dynPressedKeys 8 "1" True False
+        elCell stenoKeys dynPressedKeys 11 "1" True False
         elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 23 "1" True
-        elCell stenoKeys dynPressedKeys 26 "1" True
-        elCell stenoKeys dynPressedKeys 29 "1" True
-        elCell stenoKeys dynPressedKeys 32 "1" False
+        elCell stenoKeys dynPressedKeys 23 "1" True False
+        elCell stenoKeys dynPressedKeys 26 "1" True False
+        elCell stenoKeys dynPressedKeys 29 "1" True False
+        elCell stenoKeys dynPressedKeys 32 "1" False False
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 1 "1" True
-        elCell stenoKeys dynPressedKeys 5 "1" False
-        elCell stenoKeys dynPressedKeys 9 "1" False
-        elCell stenoKeys dynPressedKeys 12 "1" False
+        elCell stenoKeys dynPressedKeys 1 "1" True False
+        elCell stenoKeys dynPressedKeys 5 "1" False False
+        elCell stenoKeys dynPressedKeys 9 "1" False False
+        elCell stenoKeys dynPressedKeys 12 "1" False False
         elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 24 "1" False
-        elCell stenoKeys dynPressedKeys 27 "1" False
-        elCell stenoKeys dynPressedKeys 30 "1" False
-        elCell stenoKeys dynPressedKeys 31 "1" True
+        elCell stenoKeys dynPressedKeys 24 "1" False False
+        elCell stenoKeys dynPressedKeys 27 "1" False False
+        elCell stenoKeys dynPressedKeys 30 "1" False False
+        elCell stenoKeys dynPressedKeys 31 "1" True False
       el "tr" $ do
-        elCell stenoKeys dynPressedKeys 6 "2" False
+        elCell stenoKeys dynPressedKeys 6 "2" False False
         -- 13: not in use
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 14 "1" False
-        elCell stenoKeys dynPressedKeys 15 "1" True
+        elCell stenoKeys dynPressedKeys 14 "1" False False
+        elCell stenoKeys dynPressedKeys 15 "1" True False
         -- 16: not in use
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
         -- 17: not in use
         elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        elCell stenoKeys dynPressedKeys 18 "1" False
-        elCell stenoKeys dynPressedKeys 19 "1" True
-        elCell stenoKeys dynPressedKeys 20 "1" False
-        elCell stenoKeys dynPressedKeys 21 "2" False
+        elCell stenoKeys dynPressedKeys 18 "1" False False
+        elCell stenoKeys dynPressedKeys 19 "1" True False
+        elCell stenoKeys dynPressedKeys 20 "1" False False
+        elCell stenoKeys dynPressedKeys 21 "2" False False
     elClass "span" "system" $ text $ showt EN
 
 elCell
@@ -439,8 +449,9 @@ elCell
   -> KeyIndex
   -> Text
   -> Bool
+  -> Bool
   -> m1 ()
-elCell stenoKeys dynPressedKeys i colspan isHomerow =
+elCell stenoKeys dynPressedKeys i colspan isHomerow isThumbrow =
   case Map.lookup i stenoKeys of
     Nothing       -> elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
     Just qwerties -> do
@@ -448,14 +459,20 @@ elCell stenoKeys dynPressedKeys i colspan isHomerow =
           inactive = keyCode k == '_'
           attrs =
             dynPressedKeys <&> \set' ->
-              "colspan" =: colspan
-                <> case (Set.member k set', isHomerow, inactive) of
-                     (True , _    , True) -> "class" =: "pressed inactive"
-                     (False, _    , True) -> "class" =: "inactive"
-                     (True , True , _   ) -> "class" =: "pressed homerow"
-                     (True , False, _   ) -> "class" =: "pressed"
-                     (False, True , _   ) -> "class" =: "homerow"
-                     (False, False, _   ) -> mempty
+              let lsClass = catMaybes
+                    [ if Set.member k set'         then Just "pressed" else Nothing
+                    , if isHomerow && not inactive then Just "homerow" else Nothing
+                    , if inactive                  then Just "inactive" else Nothing
+                    , if isThumbrow                then Just "thumbrow" else Nothing
+                    ]
+              in  "colspan" =: colspan <> "class" =: unwords lsClass
+                -- <> case (Set.member k set', isHomerow, inactive) of
+                --      (True , _    , True) -> "class" =: "pressed inactive"
+                --      (False, _    , True) -> "class" =: "inactive"
+                --      (True , True , _   ) -> "class" =: "pressed homerow"
+                --      (True , False, _   ) -> "class" =: "pressed"
+                --      (False, True , _   ) -> "class" =: "homerow"
+                --      (False, False, _   ) -> mempty
       elDynAttr "td" attrs $ do
         elClass "div" "steno" $ text $ showt k
         elClass "div" "qwerty" $ text $ Text.unwords qwerties

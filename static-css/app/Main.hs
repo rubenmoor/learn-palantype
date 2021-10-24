@@ -168,6 +168,7 @@ main = putCss $ do
   let keyboardWidth = 650
       keyboardHeight = 271
       keyboardPadding = 12
+      thumbrowOffset = 12
 
   div # ".stenoInput" ? do
     width $ px keyboardWidth
@@ -182,8 +183,6 @@ main = putCss $ do
       --backgroundColor transparent
       -- input # focus ? outline none (px 0) transparent
       ":focus-visible" & outline none (px 0) transparent
-
-  td # ".gap" ? visibility hidden
 
   div # ".keyboard" ? do
     width $ px keyboardWidth
@@ -207,18 +206,27 @@ main = putCss $ do
       backgroundColor myLightgray
       padding (px keyboardPadding)
               (px keyboardPadding)
-              (px keyboardPadding)
+              (px $ keyboardPadding + thumbrowOffset)
               (px keyboardPadding)
 
       td ? do
         borderRadius (px 4) (px 4) (px 4) (px 4)
         border solid (px 1) gray
         backgroundColor white
-        width $ pct 8.33
+        width $ pct 8.11
         height $ pct 25
         textAlign center
         let shadow = bsColor anthrazit $ shadowWithSpread (px 4) (px 4) (px 8) (px 0)
         boxShadow $ pure shadow
+
+        ".gap" & visibility hidden
+        ".handgap" & do
+          visibility hidden
+          width $ pct 2.70
+
+        ".thumbrow" & do
+          position relative
+          top (px 12)
 
         ".pressed" & do
           color blue
