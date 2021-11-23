@@ -86,7 +86,7 @@ instance Default PloverSystemCfg where
           , ( 8, ["e"])
           , ( 9, ["d"])
           , (10, ["4"])
-          , (11, ["e"])
+          , (11, ["r"])
           , (12, ["f"])
           , (13, ["c"])
           , (14, ["v"])
