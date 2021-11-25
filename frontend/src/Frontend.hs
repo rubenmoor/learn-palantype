@@ -86,7 +86,6 @@ frontendBody = mdo
 
   (_, eStateUpdate) <-
     mapRoutedT (runEventWriterT . flip runReaderT dynState ) $ do
-      elClass "div" "landing" $ do
         subRoute_ $ \case
           FrontendRoute_Main -> do
 
@@ -137,4 +136,8 @@ frontendHead = do
   elAttr "link"
     (  "rel" =: "stylesheet"
     <> "href" =: static @"FontAwesome/css/all.min.css"
+    ) blank
+  elAttr "link"
+    (  "rel" =: "stylesheet"
+    <> "href" =: static @"flag-icons-main/css/flag-icons.min.css"
     ) blank

@@ -21,7 +21,7 @@ import           Data.Eq                (Eq ((==)))
 import           Data.Function          (($))
 import           Data.Functor           (void, ($>))
 import           Data.Generics.Product  (field)
-import           Data.Semigroup         (Endo (..))
+import           Data.Semigroup         (Semigroup((<>)), Endo (..))
 import qualified Data.Set               as Set
 import           Data.Witherable        (Filterable (filter))
 import           Obelisk.Route.Frontend (pattern (:/), R, SetRoute (setRoute))
@@ -36,6 +36,8 @@ import Palantype.Common.RawSteno (parseChordLenient)
 import qualified Data.Map as Map
 import Data.Maybe (Maybe(Just))
 import Palantype.Common (Palantype)
+import Common.Api (Lang(..))
+import TextShow (TextShow(showt))
 
 introduction
   :: forall key t (m :: * -> *).
@@ -49,6 +51,7 @@ introduction
 introduction = do
 
   Env{..} <- ask
+  let Navigation{..} = envNavigation
 
   el "h1" $ text "Introduction"
   el "h2" $ text "Why Palantype"
@@ -94,8 +97,10 @@ introduction = do
     text "."
 
   -- TODO lang
-  let eChordSTART = void $ filter (== parseChordLenient "SDA~T") envEChord
-      Navigation{..} = envNavigation
+  let (rsStart, desc) = case navLang of
+        EN -> ("START", "S-, T-, A, -R, and -T")
+        DE -> ("SDAÜD", "S-, D-, A-, -Ü, -D")
+      eChordSTART = void $ filter (== parseChordLenient rsStart) envEChord
 
   elClass "div" "start" $ do
     (btn, _) <- elClass' "button" "start" $ text "Get Started!"
@@ -109,8 +114,8 @@ introduction = do
 
   elClass "div" "paragraph" $ do
     text "Instead of clicking the button, try to input "
-    el "code" $ text "START"
-    text " by pressing S-, T-, A, -R, and -T all at once. Take your time \
+    el "code" $ text $ showt rsStart
+    text $ " by pressing " <> desc <> " all at once. Take your time \
          \finding the next key while holding down. The chord is only registered \
          \once you release all the keys."
   pure envNavigation

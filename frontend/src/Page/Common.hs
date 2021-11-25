@@ -14,7 +14,7 @@
 
 module Page.Common where
 
-import           Common.Api                (Lang)
+import           Common.Api                (Lang(..))
 import           Common.Route              (FrontendRoute (..))
 import           Control.Applicative       (Applicative (pure))
 import           Control.Category          (Category (id))
@@ -92,8 +92,11 @@ elCongraz eDone Navigation{..} = mdo
 
   eChord <- asks envEChord
 
-  let eChordCON = void $ filter (== parseChordLenient "GDON") eChord
-      eChordBACK = void $ filter (== parseChordLenient "BAK") eChord
+  let (rsCon, rsBack) = case navLang of
+        DE -> ("GDON", "BÄK")
+        EN -> ("CON", "P+AC")
+      eChordCon = void $ filter (== parseChordLenient rsCon) eChord
+      eChordBack = void $ filter (== parseChordLenient rsBack) eChord
 
   dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
   eBack <- dynSimple $ dynShowCongraz <&> \case
@@ -106,10 +109,10 @@ elCongraz eDone Navigation{..} = mdo
           whenJust navMNext $ \nxt -> do
             (elACont, _) <- elClass "div" "anthrazit" $ do
               text "Type "
-              el "code" $ text "CON"
+              el "code" $ text $ showt rsCon
               text " to continue to "
               elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
-            let eContinue = leftmost [eChordCON, domEvent Click elACont]
+            let eContinue = leftmost [eChordCon, domEvent Click elACont]
             updateState $ eContinue $>
               [ field @"stProgress" %~
                   Map.update (\s -> if nxt > s then Just nxt else Just s) navLang
@@ -123,9 +126,9 @@ elCongraz eDone Navigation{..} = mdo
             el "span" $ text "("
             (elABack, _) <- elClass' "a" "normalLink" $ text "back"
             text " "
-            el "code" $ text "P+AC"
+            el "code" $ text $ showt rsBack
             el "span" $ text ")"
-            pure $ leftmost [eChordBACK, domEvent Click elABack]
+            pure $ leftmost [eChordBack, domEvent Click elABack]
   blank
 
 -- parserChord :: Parsec String ([(Char, PTChar)], Bool) PTChord

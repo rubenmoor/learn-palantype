@@ -8,6 +8,7 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Home where
@@ -42,8 +43,7 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      ( (&&)
-                                                , Bool(..)
+import           Data.Bool                      ( Bool(..)
                                                 , bool
                                                 , not
                                                 )
@@ -69,9 +69,7 @@ import qualified Data.Map.Strict               as Map
 import           Data.Maybe                     ( Maybe(..)
                                                 , listToMaybe
                                                 )
-import           Data.Monoid                    ( (<>)
-                                                , Monoid(mempty)
-                                                )
+import           Data.Monoid                    ( (<>) )
 import           Data.Proxy                     ( Proxy(..) )
 import           Data.Semigroup                 ( Endo(..) )
 import           Data.Set                       ( Set )
@@ -79,7 +77,6 @@ import qualified Data.Set                      as Set
 import           Data.String                    ( String )
 import           Data.Text                      ( Text
                                                 , unwords
-                                                , words
                                                 )
 import qualified Data.Text                     as Text
 import           Data.Tuple                     ( fst
@@ -103,10 +100,12 @@ import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
                                                 , ToJSVal(toJSVal)
                                                 , liftJSM
                                                 )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Generated.Static       ( static )
+import           Obelisk.Route.Frontend         ( pattern (:/)
+                                                , R
                                                 , RouteToUrl
                                                 , RoutedT
-                                                , SetRoute
+                                                , SetRoute(setRoute)
                                                 , mapRoutedT
                                                 , routeLink
                                                 , subRoute
@@ -231,6 +230,7 @@ settings
        , EventWriter t (Endo State) m
        , MonadReader (Dynamic t State) m
        , MonadFix m
+       , SetRoute t (R FrontendRoute) m
        )
     => m ()
 settings = do
@@ -264,8 +264,13 @@ settings = do
                 updateState $ eReset $> [field @"stPloverCfg" .~ def]
                 pure eReset'
 
-            (e, _) <- el' "span" $ text "Reset progress"
-            updateState $ domEvent Click e $> [field @"stProgress" .~ def]
+            (eRP, _) <- el' "span" $ text "Reset progress"
+            updateState $ domEvent Click eRP $> [field @"stProgress" .~ def]
+
+            (eRL, _) <- el' "span" $ text "Reset language"
+            let eClickRL = domEvent Click eRL
+            updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
+            setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
             pure eFile'
 
@@ -396,9 +401,12 @@ stenoInput lang = do
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
                     let eChord = catMaybes $ updated dynChord
-                        eChordSTFL =
-                            filter (== parseChordLenient "STFL") eChord
-                    updateState $ eChordSTFL $> [field @"stShowKeyboard" %~ not]
+                        rsTK = case lang of
+                          DE -> "BDJN"
+                          EN -> "STFL"
+                        eChordToggle =
+                            filter (== parseChordLenient rsTK) eChord
+                    updateState $ eChordToggle $> [field @"stShowKeyboard" %~ not]
 
                     pure eChord
 
@@ -436,7 +444,7 @@ elKeyboard stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 28 "1" "homerow"
             elCell stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 3 "1" "pinkyYOffset"
+            elCell stenoKeys dynPressedKeys 3  "1" "pinkyYOffset"
             elCell stenoKeys dynPressedKeys 6  "1" ""
             elCell stenoKeys dynPressedKeys 9  "1" ""
             elCell stenoKeys dynPressedKeys 12 "1" ""
@@ -549,13 +557,6 @@ elCell stenoKeys dynPressedKeys i colspan strCls =
                             ]
                     in  "colspan" =: colspan <> "class" =: unwords
                             (strCls : lsClass)
-                      -- <> case (Set.member k set', isHomerow, inactive) of
-                      --      (True , _    , True) -> "class" =: "pressed inactive"
-                      --      (False, _    , True) -> "class" =: "inactive"
-                      --      (True , True , _   ) -> "class" =: "pressed homerow"
-                      --      (True , False, _   ) -> "class" =: "pressed"
-                      --      (False, True , _   ) -> "class" =: "homerow"
-                      --      (False, False, _   ) -> mempty
             elDynAttr "td" attrs $ do
                 elClass "div" "steno" $ text $ showt k
                 elClass "div" "qwerty" $ text $ Text.unwords qwerties
@@ -726,12 +727,99 @@ landingPage
        )
     => m ()
 landingPage = elClass "div" "landing" $ do
-    (elEN, _) <- el' "button" $ text "EN"
-    (elDE, _) <- el' "button" $ text "DE"
-    let eClickEN = domEvent Click elEN $> EN
-        eClickDE = domEvent Click elDE $> DE
-    updateState $ leftmost [eClickEN, eClickDE] <&> \lang ->
-        [field @"stMLang" .~ Just lang]
+    el "h1" $ text "Type as fast as you speak"
+    el "hr" blank
+    elClass "div" "action" $ do
+
+        (elDE, _) <- el' "button" $ do
+            elClass "div" "icon" $ do
+                elFlag "de"
+                el "br" blank
+                elFlag "at"
+                elFlag "ch"
+            elClass "div" "countrycode" $ text "DE"
+            elClass "div" "description"
+                $ text
+                      "100'000+ words and growing. A steno system designed for \
+                      \the German language."
+
+        (elEN, _) <- el' "button" $ do
+            elClass "div" "icon"
+                $ elAttr "img" ("src" =: static @"palantype.png") blank
+            elClass "div" "countrycode" $ text "EN"
+            elClass "div" "description"
+                $ text
+                      "The original palantype steno system for English, \
+                          \brought to your keyboard."
+
+        elClass "div" "button" $ el "div" $ do
+            text "Missing a language? Checkout the "
+            elAttr
+                    "a"
+                    ("href" =: "https://github.com/rubenmoor/palantype-tools")
+                $ text "source on Github"
+            text " to create your own Palantype-style steno system."
+
+        let eClickEN = domEvent Click elEN $> EN
+            eClickDE = domEvent Click elDE $> DE
+        updateState $ leftmost [eClickEN, eClickDE] <&> \lang ->
+            [ field @"stMLang" .~ Just lang
+            -- if no progress in map, insert "Introduction"
+            , field @"stProgress"
+                %~ Map.insertWith (\_ o -> o) lang Introduction
+            ]
+
+    elAttr
+        "img"
+        ("src" =: static @"getstartedhere.png" <> "class" =: "getstartedhere")
+        blank
+
+    elClass "div" "usp" $ do
+        elClass "div" "caption" $ text "Maximum typing speed"
+        elClass "div" "description"
+            $ text
+                  "Reach a typing speed of up to 300 \
+             \words per minute, fast enough to type along as people talk."
+
+    elClass "div" "usp" $ do
+        elClass "div" "caption" $ text "Type chords, not letters"
+        elClass "div" "description"
+            $ text
+                  "Input whole words or word parts with a single stroke \
+             \using multiple fingers at once. This is why it's so fast \
+             \and why it requires a lot of practice."
+
+    elClass "div" "usp" $ do
+        elClass "div" "caption" $ text "No special hardware"
+        elClass "div" "description" $ do
+            text "You will need a keyboard that supports "
+            elAttr
+                    "a"
+                    (  "href"
+                    =: "https://en.wikipedia.org/wiki/Rollover_(keyboard)"
+                    )
+                $ text "N-key roll-over"
+            text
+                ", to register all the keys that you press simultaneously, and \
+             \optionally an ortho-linear key layout."
+
+    elClass "div" "usp" $ do
+        elClass "div" "caption" $ text "Free and open-source"
+        elClass "div" "description" $ do
+            text
+                "Find the code on Github and contribute by reporting bugs \
+             \and requesting features in the "
+            elAttr
+                    "a"
+                    (  "href"
+                    =: "https://github.com/rubenmoor/learn-palantype/issues"
+                    )
+                $ text "issue tracker"
+            text "."
+
+  where
+    elFlag cc =
+        elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
 
 stages
     :: forall js key (proxy :: * -> *) t (m :: * -> *)

@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay                           (marginLeft,  (#)
+import           Clay                           (img, fontStyle, italic, black, marginLeft,  (#)
                                                 , (&)
                                                 , (?)
                                                 , All(all)
@@ -495,3 +495,79 @@ main = putCss $ do
     ".blinking" ? animation "blink" (sec 1) ease (sec 0) infinite normal none
 
     keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]
+
+    div # ".landing" ? do
+      width $ pct 90
+      textAlign center
+      marginLeft auto
+      marginRight auto
+      img # ".getstartedhere" ? do
+        position relative
+        top $ px (-20)
+        left $ px (-290)
+      div # ".usp" ? do
+        display flex
+        justifyContent center
+        padding (px 24) (px 24) (px 24) (px 24)
+        div # ".caption" ? do
+          fontWeight bold
+          width $ px 160
+          marginRight $ px 24
+        div # ".description" ? do
+          minWidth $ px 400
+          maxWidth $ pct 60
+
+    div # ".action" ? do
+      display flex
+      justifyContent center
+
+      div # ".button" ? do
+        width $ px 296
+        height $ px 90
+        alignItems center
+        backgroundColor lightgray
+        fontSize $ pt 12
+        borderRadius (px 24) (px 24) (px 24) (px 24)
+        margin (px 4) (px 4) (px 4) (px 4)
+        border none (px 0) lightgray
+        textAlign center
+        display flex
+        div ? padding (px 8) (px 8) (px 8) (px 8)
+
+      button ? do
+        width $ px 296
+        height $ px 90
+        display flex
+        alignItems center
+        backgroundColor lightgray
+        borderRadius (px 24) (px 24) (px 24) (px 24)
+        margin (px 4) (px 4) (px 4) (px 4)
+        border none (px 0) lightgray
+        -- border none (px 0) transparent
+        cursor pointer
+        fontFamily ["Abel"] [sansSerif]
+        ":hover" & backgroundColor colorLinkVisited
+
+        div ? margin (px 4) (px 4) (px 4) (px 4)
+
+        div # ".icon" ? do
+          flexGrow 1
+          flexShrink 0
+          flexBasis auto
+          span ? margin (px 1) (px 1) (px 1) (px 1)
+
+        div # ".countrycode" ? do
+          flexGrow 1
+          flexShrink 0
+          flexBasis auto
+          fontSize $ pt 18
+          fontWeight bold
+          color anthrazit
+
+        div # ".description" ? do
+          flexGrow 0
+          flexShrink 1
+          flexBasis auto
+          fontSize $ pt 12
+          color black
+          padding (px 8) (px 8) (px 8) (px 8)
