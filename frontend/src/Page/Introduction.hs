@@ -25,7 +25,7 @@ import           Data.Semigroup         (Semigroup((<>)), Endo (..))
 import qualified Data.Set               as Set
 import           Data.Witherable        (Filterable (filter))
 import           Obelisk.Route.Frontend (pattern (:/), R, SetRoute (setRoute))
-import           Reflex.Dom             (DomBuilder, EventName (Click),
+import           Reflex.Dom             (blank, DomBuilder, EventName (Click),
                                          EventWriter, HasDomEvent (domEvent),
                                          el, elAttr, elClass, elClass',
                                          leftmost, text, (=:))
@@ -63,15 +63,18 @@ introduction = do
       \Any steno-style system requires quite a bit of learning. \
       \Palantype has the advantage that it's more suitable for regular \
       \keyboards. There are limitations, though."
+
   el "h2" $ text "Requirements"
+
   el "h3" $ text "Hardware"
+
   elClass "div" "paragraph" $
     text
       "You can get started with your regular keyboard. \
       \However, keyboards usually have limit of how many keys register \
       \at the same time. Long term, you will need a keyboard that supports \
-      \N-Key roll-over (NKR) to type chords of up to ten keys. \
-      \In addition, a ortholinear layout as well as very sensitive keys \
+      \N-Key roll-over (NKRO) to type chords of up to ten keys. \
+      \In addition, a ortho-linear layout as well as very sensitive keys \
       \are preferable."
   elClass "div" "paragraph" $
     text
@@ -79,6 +82,7 @@ introduction = do
       \register at the same time with your hardware."
 
   el "h3" $ text "Software"
+
   elClass "div" "paragraph" $ do
     text "All of this is made possible by the "
     elAttr "a" ("href" =: "http://www.openstenoproject.org/") $ text "Open Steno Project"
@@ -96,7 +100,19 @@ introduction = do
     elAttr "a" ("href" =: "http://www.openstenoproject.org/palantype/palantype/2016/08/21/palan-versus-steno.html") $ text "differences between Palantype and Stenography"
     text "."
 
-  -- TODO lang
+  elClass "blockquote" "warning" $ do
+    el "strong" $ text "Current state of the project"
+    el "br" blank
+    text "There exists a plover plugin for original English Palantype with a \
+         \dictionary of about 150'000 entries. \
+         \In addition, basic commands are defined. \
+         \As far as I know, there are no active users of the original \
+         \Palantype system. In case I am mistaken, please reach out to me \
+         \on the "
+    elAttr "a" ("href" =: "https://discord.gg/spymr5aCr5") $ text "Plover Discord Server"
+    text " in #palantype, @gurubm. Adding further exercises for English Palantype is quite \
+         \straightforward."
+
   let (rsStart, desc) = case navLang of
         EN -> ("START", "S-, T-, A, -R, and -T")
         DE -> ("SDAÜD", "S-, D-, A-, -Ü, -D")

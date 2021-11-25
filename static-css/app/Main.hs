@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay                           (img, fontStyle, italic, black, marginLeft,  (#)
+import           Clay                           (blockquote,  (#)
                                                 , (&)
                                                 , (?)
                                                 , All(all)
@@ -24,6 +24,7 @@ import           Clay                           (img, fontStyle, italic, black, 
                                                 , alignItems
                                                 , animation
                                                 , backgroundColor
+                                                , black
                                                 , block
                                                 , blue
                                                 , body
@@ -64,6 +65,7 @@ import           Clay                           (img, fontStyle, italic, black, 
                                                 , fontFamily
                                                 , fontSize
                                                 , fontSizeCustom
+                                                , fontStyle
                                                 , fontWeight
                                                 , footer
                                                 , gray
@@ -76,11 +78,13 @@ import           Clay                           (img, fontStyle, italic, black, 
                                                 , hover
                                                 , html
                                                 , i
+                                                , img
                                                 , important
                                                 , infinite
                                                 , inlineBlock
                                                 , inlineFlex
                                                 , input
+                                                , italic
                                                 , justifyContent
                                                 , keyframes
                                                 , left
@@ -93,6 +97,7 @@ import           Clay                           (img, fontStyle, italic, black, 
                                                 , listStyleType
                                                 , margin
                                                 , marginBottom
+                                                , marginLeft
                                                 , marginRight
                                                 , marginTop
                                                 , maxWidth
@@ -153,7 +158,9 @@ import           Clay                           (img, fontStyle, italic, black, 
                                                 , zIndex
                                                 , (|>)
                                                 )
-import           Clay.Border                    (dotted,  borderBottom )
+import           Clay.Border                    (borderTop,  borderBottom
+                                                , dotted
+                                                )
 import           Clay.Flexbox                   ( nowrap
                                                 , row
                                                 )
@@ -162,7 +169,7 @@ import           Control.Applicative            ( Applicative(pure) )
 import           Data.Function                  ( ($) )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           GHC.IO                         ( IO )
-import           GHC.Num                        ( Num(negate, (*), (+), (-)) )
+import           GHC.Num                        ( Num((*), (+), (-), negate) )
 import           System.IO                      ( putStrLn )
 
 anthrazit :: Color
@@ -251,7 +258,7 @@ main = putCss $ do
                     paddingRight $ px 8
                     fontSize $ pt 14
 
-    footer ? do
+    footer # ".stage" ? do
         flexGrow 0
         flexShrink 1
         boxShadow
@@ -299,7 +306,7 @@ main = putCss $ do
         keyboardHeight  = 271
         keyboardPadding = 12
         thumbrowOffset  = 12
-        pinkyYOffset = 16
+        pinkyYOffset    = 16
 
     div # ".stenoInput" ? do
         maxWidth $ pct 80
@@ -447,6 +454,10 @@ main = putCss $ do
         display inlineBlock
         overflow hidden
 
+    blockquote # ".warning" ? do
+      backgroundColor lightblue
+      padding (px 36) (px 36) (px 36) (px 36)
+
     ".bgWhite" ? backgroundColor white
     ".bgGreen" ? backgroundColor lightgreen
     ".bgRed" ? backgroundColor red
@@ -497,77 +508,82 @@ main = putCss $ do
     keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]
 
     div # ".landing" ? do
-      width $ pct 90
-      textAlign center
-      marginLeft auto
-      marginRight auto
-      img # ".getstartedhere" ? do
-        position relative
-        top $ px (-20)
-        left $ px (-290)
-      div # ".usp" ? do
-        display flex
-        justifyContent center
-        padding (px 24) (px 24) (px 24) (px 24)
-        div # ".caption" ? do
-          fontWeight bold
-          width $ px 160
-          marginRight $ px 24
-        div # ".description" ? do
-          minWidth $ px 400
-          maxWidth $ pct 60
-
-    div # ".action" ? do
-      display flex
-      justifyContent center
-
-      div # ".button" ? do
-        width $ px 296
-        height $ px 90
-        alignItems center
-        backgroundColor lightgray
-        fontSize $ pt 12
-        borderRadius (px 24) (px 24) (px 24) (px 24)
-        margin (px 4) (px 4) (px 4) (px 4)
-        border none (px 0) lightgray
         textAlign center
-        display flex
-        div ? padding (px 8) (px 8) (px 8) (px 8)
+        img # ".getstartedhere" ? do
+            position relative
+            top $ px (-20)
+            left $ px (-290)
+        div # ".usp" ? do
+            display flex
+            justifyContent center
+            padding (px 36) (px 24) (px 36) (px 24)
+            div # ".caption" ? do
+                fontWeight bold
+                width $ px 160
+                marginRight $ px 24
+            div # ".description" ? do
+                minWidth $ px 400
+                maxWidth $ pct 40
+                fontSize $ pt 14
 
-      button ? do
-        width $ px 296
-        height $ px 90
-        display flex
-        alignItems center
-        backgroundColor lightgray
-        borderRadius (px 24) (px 24) (px 24) (px 24)
-        margin (px 4) (px 4) (px 4) (px 4)
-        border none (px 0) lightgray
-        -- border none (px 0) transparent
-        cursor pointer
-        fontFamily ["Abel"] [sansSerif]
-        ":hover" & backgroundColor colorLinkVisited
+        div # ".action" ? do
+            display flex
+            justifyContent center
 
-        div ? margin (px 4) (px 4) (px 4) (px 4)
+            div # ".button" ? do
+                width $ px 296
+                height $ px 90
+                alignItems center
+                backgroundColor lightgray
+                fontSize $ pt 12
+                borderRadius (px 24) (px 24) (px 24) (px 24)
+                margin (px 4) (px 4) (px 4) (px 4)
+                border none (px 0) lightgray
+                textAlign center
+                display flex
+                div ? padding (px 8) (px 8) (px 8) (px 8)
 
-        div # ".icon" ? do
-          flexGrow 1
-          flexShrink 0
-          flexBasis auto
-          span ? margin (px 1) (px 1) (px 1) (px 1)
+            button ? do
+                width $ px 296
+                height $ px 90
+                display flex
+                alignItems center
+                backgroundColor lightgray
+                borderRadius (px 24) (px 24) (px 24) (px 24)
+                margin (px 4) (px 4) (px 4) (px 4)
+                border none (px 0) lightgray
+                -- border none (px 0) transparent
+                cursor pointer
+                fontFamily ["Abel"] [sansSerif]
+                ":hover" & backgroundColor colorLinkVisited
 
-        div # ".countrycode" ? do
-          flexGrow 1
-          flexShrink 0
-          flexBasis auto
-          fontSize $ pt 18
-          fontWeight bold
-          color anthrazit
+                div ? margin (px 4) (px 4) (px 4) (px 4)
 
-        div # ".description" ? do
-          flexGrow 0
-          flexShrink 1
-          flexBasis auto
-          fontSize $ pt 12
-          color black
-          padding (px 8) (px 8) (px 8) (px 8)
+                div # ".icon" ? do
+                    flexGrow 1
+                    flexShrink 0
+                    flexBasis auto
+                    span ? margin (px 1) (px 1) (px 1) (px 1)
+
+                div # ".countrycode" ? do
+                    flexGrow 1
+                    flexShrink 0
+                    flexBasis auto
+                    fontSize $ pt 18
+                    fontWeight bold
+                    color anthrazit
+
+                div # ".description" ? do
+                    flexGrow 0
+                    flexShrink 1
+                    flexBasis auto
+                    fontSize $ pt 12
+                    color black
+                    padding (px 8) (px 8) (px 8) (px 8)
+
+        footer ? do
+            borderTop solid (px 1) gray
+            padding (px 12) (px 12) (px 12) (px 12)
+            fontSize $ pt 12
+            color anthrazit
+            width $ pct 90

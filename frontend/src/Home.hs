@@ -728,7 +728,6 @@ landingPage
     => m ()
 landingPage = elClass "div" "landing" $ do
     el "h1" $ text "Type as fast as you speak"
-    el "hr" blank
     elClass "div" "action" $ do
 
         (elDE, _) <- el' "button" $ do
@@ -816,6 +815,11 @@ landingPage = elClass "div" "landing" $ do
                     )
                 $ text "issue tracker"
             text "."
+
+    el "footer" $ do
+      text "Want to reach out? Join the "
+      elAttr "a" ("href" =: "https://discord.gg/spymr5aCr5") $ text "Plover Discord Server"
+      text " and find me in #palantype, @gurubm."
 
   where
     elFlag cc =

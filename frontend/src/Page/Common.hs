@@ -62,7 +62,7 @@ elFooter
   => Lang
   -> Navigation
   -> m ()
-elFooter lang Navigation{..} = el "footer" $ do
+elFooter lang Navigation{..} = elClass "footer" "stage" $ do
   whenJust navMPrevious $ \prv -> do
     elClass "div" "floatLeft" $ do
       text "< "
