@@ -17,7 +17,7 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
-import           Common.Api                     ( Lang(..)
+import           Common.Api                     (showSymbol,  Lang(..)
                                                 , PloverSystemCfg(..)
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
@@ -236,7 +236,6 @@ settings
 settings = do
     dynState <- ask
 
-
     -- button to toggle keyboard
     let dynShowKeyboard = stShowKeyboard <$> dynState
     dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
@@ -255,24 +254,30 @@ settings = do
 
             eFile' <- elClass "span" "hiddenFileInput" $ do
                 text "Upload your plover.cfg"
-                elFileInput $ eReset $> ""
+                elFileInput $ eRC $> ""
 
-            eReset <- do
-                (spanResetConfig, _) <- el' "span"
-                    $ text "Reset to default configuration"
-                let eReset' = domEvent Click spanResetConfig
-                updateState $ eReset $> [field @"stPloverCfg" .~ def]
-                pure eReset'
+            (elRC, _) <- el' "span"
+                $ text "Reset to default configuration"
+            let eRC = domEvent Click elRC
+            updateState $ eRC $> [field @"stPloverCfg" .~ def]
 
             (eRP, _) <- el' "span" $ text "Reset progress"
             updateState $ domEvent Click eRP $> [field @"stProgress" .~ def]
 
+            pure eFile'
+
+    let dynMLang = stMLang <$> dynState
+    dyn_ $ dynMLang <&> \case
+      Nothing -> blank
+      Just lang -> elClass "div" "dropdown" $ do
+        elClass "span" "dropdown-button" $ text $ showSymbol lang
+        elClass "div" "dropdown-content" $ do
             (eRL, _) <- el' "span" $ text "Reset language"
             let eClickRL = domEvent Click eRL
             updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
             setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
-            pure eFile'
+
 
     eReqResult <- postRender $ do
         fileReader <- liftJSM newFileReader

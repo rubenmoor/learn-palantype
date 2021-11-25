@@ -50,6 +50,11 @@ instance TextShow Lang where
     EN -> fromText "Palantype"
     DE -> fromText "Palantype DE"
 
+showSymbol :: Lang -> Text
+showSymbol = \case
+  EN -> "EN"
+  DE -> "DE"
+
 newtype PloverCfg = PloverCfg { unPloverCfg :: Map Lang PloverSystemCfg }
   deriving (Generic, ToJSON, FromJSON)
 
