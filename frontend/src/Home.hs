@@ -17,8 +17,9 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
-import           Common.Api                     (showSymbol,  Lang(..)
+import           Common.Api                     ( Lang(..)
                                                 , PloverSystemCfg(..)
+                                                , showSymbol
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendSubroute_Stage(..)
@@ -256,8 +257,7 @@ settings = do
                 text "Upload your plover.cfg"
                 elFileInput $ eRC $> ""
 
-            (elRC, _) <- el' "span"
-                $ text "Reset to default configuration"
+            (elRC, _) <- el' "span" $ text "Reset to default configuration"
             let eRC = domEvent Click elRC
             updateState $ eRC $> [field @"stPloverCfg" .~ def]
 
@@ -268,14 +268,14 @@ settings = do
 
     let dynMLang = stMLang <$> dynState
     dyn_ $ dynMLang <&> \case
-      Nothing -> blank
-      Just lang -> elClass "div" "dropdown" $ do
-        elClass "span" "dropdown-button" $ text $ showSymbol lang
-        elClass "div" "dropdown-content" $ do
-            (eRL, _) <- el' "span" $ text "Reset language"
-            let eClickRL = domEvent Click eRL
-            updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
-            setRoute $ eClickRL $> FrontendRoute_Main :/ ()
+        Nothing   -> blank
+        Just lang -> elClass "div" "dropdown" $ do
+            elClass "span" "dropdown-button" $ text $ showSymbol lang
+            elClass "div" "dropdown-content" $ do
+                (eRL, _) <- el' "span" $ text "Reset language"
+                let eClickRL = domEvent Click eRL
+                updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
+                setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
 
 
@@ -406,12 +406,14 @@ stenoInput lang = do
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
                     let eChord = catMaybes $ updated dynChord
-                        rsTK = case lang of
-                          DE -> "BDJN"
-                          EN -> "STFL"
+                        rsTK   = case lang of
+                            DE -> "BDJN"
+                            EN -> "STFL"
                         eChordToggle =
                             filter (== parseChordLenient rsTK) eChord
-                    updateState $ eChordToggle $> [field @"stShowKeyboard" %~ not]
+                    updateState
+                        $  eChordToggle
+                        $> [field @"stShowKeyboard" %~ not]
 
                     pure eChord
 
@@ -719,6 +721,7 @@ toc lang dynCurrent = elClass "section" "toc" $ do
                 elDynClass "ul" dynClassUl2 $ do
                     elLi Stage2_1
                     elLi Stage2_2
+                    elLi Stage2_3
 
 landingPage
     :: forall js t (m :: * -> *)
@@ -822,9 +825,10 @@ landingPage = elClass "div" "landing" $ do
             text "."
 
     el "footer" $ do
-      text "Want to reach out? Join the "
-      elAttr "a" ("href" =: "https://discord.gg/spymr5aCr5") $ text "Plover Discord Server"
-      text " and find me in #palantype, @gurubm."
+        text "Want to reach out? Join the "
+        elAttr "a" ("href" =: "https://discord.gg/spymr5aCr5")
+            $ text "Plover Discord Server"
+        text " and find me in #palantype, @gurubm."
 
   where
     elFlag cc =
@@ -922,7 +926,11 @@ stages _ navLang = elClass "div" "box" $ do
                                                 Stage2_1
                                                 (Just Stage2_2)
                                                 Stage2.exercise1
-            FrontendSubroute_Stage2_2 ->
-                setEnv (Just Stage2_1) Stage2_2 Nothing Stage2.exercise2
+            FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
+                                                Stage2_2
+                                                (Just Stage2_3)
+                                                Stage2.exercise2
+            FrontendSubroute_Stage2_3 ->
+                setEnv (Just Stage2_2) Stage2_3 Nothing Stage2.exercise3
         pure dynNavigation
     dyn_ $ dynNavigation <&> elFooter navLang

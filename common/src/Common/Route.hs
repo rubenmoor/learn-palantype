@@ -51,6 +51,7 @@ data FrontendSubroute_Stage :: * -> * where
   FrontendSubroute_Stage1_7 :: FrontendSubroute_Stage ()
   FrontendSubroute_Stage2_1 :: FrontendSubroute_Stage ()
   FrontendSubroute_Stage2_2 :: FrontendSubroute_Stage ()
+  FrontendSubroute_Stage2_3 :: FrontendSubroute_Stage ()
 
 fullRouteEncoder
   :: Encoder (Either Text) Identity (R (FullRoute BackendRoute FrontendRoute)) PageName
@@ -83,6 +84,7 @@ fullRouteEncoder = mkFullRouteEncoder
       FrontendSubroute_Stage1_7 -> PathSegment "stage1-7" $ unitEncoder mempty
       FrontendSubroute_Stage2_1 -> PathSegment "stage2-1" $ unitEncoder mempty
       FrontendSubroute_Stage2_2 -> PathSegment "stage2-2" $ unitEncoder mempty
+      FrontendSubroute_Stage2_3 -> PathSegment "stage2-3" $ unitEncoder mempty
 
 
 concat <$> mapM deriveRouteComponent

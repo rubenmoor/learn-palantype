@@ -472,7 +472,7 @@ taskLetters dynLetters = do
                     $  showH
                     $  slsLetters
                     !! slsCounter
-                el "span" $ do
+                elClass "div" "paragraph" $ do
                     el "strong" $ text (Text.pack $ show slsCounter)
                     text " / "
                     text (Text.pack $ show len)
@@ -629,7 +629,8 @@ exercise7 = do
     elClass "div" "paragraph" $ do
         text
             "For the next stage, you should have some muscle memory for every \
-         \key. Be sure to complete this exercise without the keyboard, too."
+         \key. Be sure to complete this exercise without \
+         \the virtual keyboard, too."
     elClass "div" "paragraph" $ do
         text "Type every steno letter as it appears!"
 
@@ -645,6 +646,11 @@ exercise7 = do
                 <$> envDynState
 
     eDone <- taskLetters dynAlphabet
+
+    elClass "div" "paragraph" $
+      text "By the way, you can re-shuffle the order, in which the keys \
+           \are presented to you, by reloading the page, if you feel the need to."
+
 
     elCongraz eDone envNavigation
     pure envNavigation

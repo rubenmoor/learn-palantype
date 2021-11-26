@@ -8,6 +8,7 @@
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
@@ -24,7 +25,7 @@ import           Control.Lens                   ( (%~)
                                                 )
 import           Control.Monad                  ( when )
 import           Control.Monad.Fix              ( MonadFix )
-import           Control.Monad.Reader           ( MonadReader(ask) )
+import           Control.Monad.Reader           (asks,  MonadReader(ask) )
 import           Data.Bool                      ( Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(length)
@@ -42,7 +43,7 @@ import           Data.List                      ( (!!)
                                                 )
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..) )
-import           Data.Ord                       ( Ord((>)) )
+import           Data.Ord                       ( Ord((>), max) )
 import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
                                                 )
@@ -60,21 +61,20 @@ import           Page.Common                    ( elCongraz
                                                 , getChordBack
                                                 , getChordCon
                                                 )
-import           Palantype.Common               ( Chord
+import           Palantype.Common               (Chord (..)
                                                 , Palantype
                                                 )
 import           Palantype.Common.RawSteno      ( RawSteno(..)
                                                 , parseChordLenient
                                                 , parseStenoLenient
                                                 )
-import           Reflex.Dom                     ( (=:)
+import           Reflex.Dom                     (PerformEvent(performEvent), Prerender,  (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
                                                 , MonadHold(holdDyn)
-                                                , PostBuild
-                                                , Reflex(Event, updated)
+                                                , PostBuild(getPostBuild),  Reflex(Dynamic, Event, updated)
                                                 , blank
                                                 , dyn_
                                                 , el
@@ -87,7 +87,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , text
                                                 , widgetHold_
                                                 )
-import           Shared                         ( whenJust )
+import           Shared                         (dynSimple, widgetHoldSimple, prerenderSimple,  whenJust )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Stage(Stage1_1)
@@ -97,6 +97,10 @@ import           State                          ( Env(..)
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import System.Random (newStdGen)
+import Control.Monad.Random (evalRand)
+import System.Random.Shuffle (shuffleM)
 
 backUp :: Lang -> RawSteno
 backUp = \case
@@ -107,11 +111,8 @@ exercise1
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
-       , MonadFix m
-       , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
-       , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -238,10 +239,17 @@ exercise2 = do
                 el "code" $ text "LE^"
                 text " and "
                 el "code" $ text "S+I"
-                text " separately. For this reason, the steno code for \"lazy\" \
-                     \is denoted "
+                text
+                    " separately. For this reason, the steno code for \"lazy\" \
+                     \is typically denoted "
                 el "code" $ text "LE^/S+I"
                 text ", with a /."
+
+            elClass "div" "paragraph" $ do
+                text
+                    "You wonder why the steno code looks so weird? \
+                   \Some words are almost beyond recognition. \
+                   \No worries, we'll get to that."
 
             pure eDone
         DE -> do
@@ -263,7 +271,18 @@ exercise2 = do
                 el "code" $ text "SFEI"
                 text " and "
                 el "code" $ text "FEL"
-                text " separately. This is what the /-symbol means."
+                text
+                    " separately. For this reason, the steno code for «Zweifel» \
+                     \is typically denoted "
+                el "code" $ text "SFEI/FEL"
+                text ", with a /."
+
+            elClass "div" "paragraph" $ do
+                text
+                    "You wonder why the steno code looks so weird? \
+                   \Some words are almost beyond recognition. \
+                   \No worries, we'll get to that."
+
             pure eDone
 
     elClass "div" "paragraph" $ do
@@ -309,7 +328,7 @@ walkWords words raw = do
             _ | wsCounter == len - 1 ->
                 ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
             _ | chord == cBackUp ->
-                ws { wsMMistake = Nothing, wsCounter = wsCounter - 1 }  -- undo stroke
+                ws { wsMMistake = Nothing, wsCounter = max 0 $ wsCounter - 1 }  -- undo stroke
             (Just _, _) -> ws   -- halt while mistake
             (_, _) | chords !! wsCounter == chord ->
                 ws { wsDone = Nothing, wsCounter = wsCounter + 1 } -- correct
@@ -343,3 +362,210 @@ walkWords words raw = do
             "Cleared. Press any key to start over."
 
     pure $ void $ filter id eDone
+
+-- Stage 2.3
+
+data StenoWordsState k = StenoWordsState
+    { slsCounter  :: Int
+    , slsMMistake :: Maybe (Int, (Text, RawSteno))
+    , slsDone     :: Maybe Bool
+    , slsWords  :: [Text]
+    }
+
+taskWords
+    :: forall key js t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , Prerender js t m
+       )
+    => Dynamic t [Text]
+    -> m (Event t ())
+taskWords dynWords = do
+
+    eChord  <- asks envEChord
+
+    eStdGen <- prerenderSimple $ do
+        ePb <- getPostBuild
+        performEvent $ ePb $> liftIO newStdGen
+
+    widgetHoldSimple $ eStdGen <&> \stdGen -> do
+        dynSimple $ dynWords <&> \words -> mdo
+            let len = length words
+
+                step
+                    :: Chord key
+                    -> StenoWordsState key
+                    -> StenoWordsState key
+                step c ls@StenoWordsState {..} =
+                    case (showt c, slsMMistake, slsDone) of
+                        (_, _, Just True) ->
+                            let words' =
+                                    evalRand (shuffleM slsWords) stdGen
+                            in  ls { slsDone    = Just False
+                                   , slsCounter = 0
+                                   , slsWords = words'
+                                   } -- reset after done
+                        _ | slsCounter == len - 1 -> ls
+                            { slsDone    = Just True
+                            , slsCounter = slsCounter + 1
+                            } -- done
+                        (_, Just _, _) ->
+                            ls { slsCounter = 0, slsMMistake = Nothing } -- reset after mistake
+                        -- TODO: w = lookup raw in top2k dict
+                        (raw, _, _) | slsWords !! slsCounter == w -> ls
+                            { slsDone    = Nothing
+                            , slsCounter = slsCounter + 1
+                            } -- correct
+                        (wrong, _, _) -> ls
+                            { slsDone     = Nothing
+                            -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
+                            , slsMMistake = Just (slsCounter, (wrong, raws))
+                            } -- mistake
+
+                stepInitial = StenoWordsState
+                    { slsCounter  = 0
+                    , slsMMistake = Nothing
+                    , slsDone     = Nothing
+                    , slsWords  = evalRand (shuffleM words) stdGen
+                    }
+
+            dynStenoWords <- foldDyn step stepInitial eChord
+
+            let eDone = catMaybes $ slsDone <$> updated dynStenoWords
+
+            dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
+                let clsMistake = case slsMMistake of
+                        Nothing -> ""
+                        Just _  -> "bgRed"
+                when (slsCounter < len)
+                    $  el "pre"
+                    $  elClass "code" clsMistake
+                    $  text
+                    $  showt
+                    $  slsWords
+                    !! slsCounter
+                elClass "div" "paragraph" $ do
+                    el "strong" $ text (Text.pack $ show slsCounter)
+                    text " / "
+                    text (Text.pack $ show len)
+
+            let eMMistake = slsMMistake <$> updated dynStenoWords
+            widgetHold_ blank $ eMMistake <&> \case
+                Just (_, chord) ->
+                    elClass "div" "red small"
+                        $  text
+                        $  "You typed "
+                        <> showt chord
+                        <> ". Any key to start over."
+                Nothing -> blank
+
+            dynDone <- holdDyn False eDone
+            dyn_ $ dynDone <&> \bDone ->
+                when bDone $ elClass "div" "small anthrazit" $ text
+                    "Cleared. Press any key to start over."
+
+            pure $ void $ filter id eDone
+
+exercise3
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , SetRoute t (R FrontendRoute) m
+       )
+    => m Navigation
+exercise3 = do
+
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+
+    el "h1" $ text "Stage 2"
+    el "h2" $ text "Syllables and chords"
+    el "h3" $ text "Exercise 3"
+
+    case navLang of
+        EN -> elClass "blockquote" "warning" $ do
+            el "strong" $ text "Not implemented"
+            el "br" blank
+            text
+                "You are currently looking at an exercise that has not been \
+             \implemented for the original English palantype. \
+             \Feel free to read, but don't expect things to work from here on."
+        _ -> blank
+
+    elClass "div" "paragraph"
+        $ text
+              "During the following exercises, you will learn to type words, \
+           \starting with the most straightfoward ones. \
+           \You will be able to guess the correct chord without problem."
+
+    elClass "div" "paragraph"
+        $ text
+              "There are rules that will become progressively more complex \
+           \in the course of this tutorial. We start simple:"
+
+    el "h4" $ text "Rule 1: Steno key order"
+
+    elClass "div" "paragraph"
+        $ text
+              "Every chord consists of up to ten keys \
+           \pressed at once. \
+           \Within one chord, the order in which you press down keys does not \
+           \matter. \
+           \Instead, all keys of one chord will always be interpreted \
+           \in their proper order."
+
+    elClass "div" "paragraph" $ do
+        text "For example, the steno keys "
+        el "code" $ text "BUʃ"
+
+            " can only appear in exactly that order and always mean «Busch». \
+           \The word «Schub» has to be typed using different keys \
+           \, and indeed here it is: "
+        el "code" $ text "SJUP"
+        text "."
+
+
+    el "h4" $ text "Rule 2: Word part structure"
+
+    elClass "div" "paragraph"
+        $ text
+              "One chord either makes a word or a word part. \
+           \In general, a part consists of an onset, a nucleus, \
+           \and a coda. The onset comprises the consonants in the beginning \
+           \and can be missing. The nucleus comprises the vowels that follow \
+           \and the coda finally comprises the consonants in the end."
+
+    elClass "div" "paragraph"
+        $ text
+              "For a word part structured that way, you will use the fingers \
+      \of your left hand for the consonants of the onset and the fingers \
+      \of your right hand for the consonants of the coda. \
+      \For the nucleus you have your thumb."
+
+    elClass "div" "paragraph" $ do
+        text "The example «Busch» shows, how "
+        el "em" $ text "b"
+        text " and "
+        el "em" $ text "sch"
+        text
+            " have different steno keys, depending on where they appear. \
+           \In the onset "
+        el "em" $ text "b"
+        text " is simply "
+        el "code" $ text "B"
+        text ", whereas in the coda, "
+        el "em" $ text "b"
+        text " is "
+        el "code" $ text "P"
+        text "."
+
+    pure envNavigation
