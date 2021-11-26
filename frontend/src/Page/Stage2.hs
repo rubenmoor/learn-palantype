@@ -8,12 +8,15 @@
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE RecordWildCards     #-}
-{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Page.Stage2 where
 
+import           Client                         ( RequestResult(..)
+                                                , getDictTop2k
+                                                , request
+                                                )
 import           Common.Api                     ( Lang(..) )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
@@ -25,7 +28,11 @@ import           Control.Lens                   ( (%~)
                                                 )
 import           Control.Monad                  ( when )
 import           Control.Monad.Fix              ( MonadFix )
-import           Control.Monad.Reader           (asks,  MonadReader(ask) )
+import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Control.Monad.Random           ( evalRand )
+import           Control.Monad.Reader           ( MonadReader(ask)
+                                                , asks
+                                                )
 import           Data.Bool                      ( Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(length)
@@ -37,13 +44,15 @@ import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
 import           Data.Generics.Product          ( field )
+import           Data.HashMap.Strict            ( HashMap )
+import qualified Data.HashMap.Strict           as HashMap
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( Maybe(..) )
-import           Data.Ord                       ( Ord((>), max) )
+import           Data.Maybe                     (fromMaybe,  Maybe(..) )
+import           Data.Ord                       ( Ord((<), (>), max) )
 import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
                                                 )
@@ -61,20 +70,26 @@ import           Page.Common                    ( elCongraz
                                                 , getChordBack
                                                 , getChordCon
                                                 )
-import           Palantype.Common               (Chord (..)
+import           Palantype.Common               ( Chord(..)
                                                 , Palantype
                                                 )
-import           Palantype.Common.RawSteno      ( RawSteno(..)
-                                                , parseChordLenient
-                                                , parseStenoLenient
-                                                )
-import           Reflex.Dom                     (PerformEvent(performEvent), Prerender,  (=:)
+import           Palantype.Common.RawSteno      ( RawSteno(..) )
+import qualified Palantype.Common.RawSteno     as Raw
+import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
                                                 , MonadHold(holdDyn)
-                                                , PostBuild(getPostBuild),  Reflex(Dynamic, Event, updated)
+                                                , PerformEvent(performEvent)
+                                                , PostBuild(getPostBuild)
+                                                , Prerender
+                                                , Reflex
+                                                    ( Dynamic
+                                                    , Event
+                                                    , never
+                                                    , updated
+                                                    )
                                                 , blank
                                                 , dyn_
                                                 , el
@@ -86,8 +101,13 @@ import           Reflex.Dom                     (PerformEvent(performEvent), Pre
                                                 , leftmost
                                                 , text
                                                 , widgetHold_
+                                                , zipDyn
                                                 )
-import           Shared                         (dynSimple, widgetHoldSimple, prerenderSimple,  whenJust )
+import           Shared                         ( dynSimple
+                                                , prerenderSimple
+                                                , whenJust
+                                                , widgetHoldSimple
+                                                )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Stage(Stage1_1)
@@ -95,12 +115,10 @@ import           State                          ( Env(..)
                                                 , stageUrl
                                                 , updateState
                                                 )
+import           System.Random                  ( newStdGen )
+import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import System.Random (newStdGen)
-import Control.Monad.Random (evalRand)
-import System.Random.Shuffle (shuffleM)
 
 backUp :: Lang -> RawSteno
 backUp = \case
@@ -318,8 +336,8 @@ walkWords words raw = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
-    let cBackUp = parseChordLenient $ backUp navLang
-        chords  = parseStenoLenient raw
+    let cBackUp = Raw.parseChordLenient $ backUp navLang
+        chords  = Raw.parseStenoLenient raw
         len     = length chords
 
         step :: Chord key -> WalkState -> WalkState
@@ -366,11 +384,16 @@ walkWords words raw = do
 -- Stage 2.3
 
 data StenoWordsState k = StenoWordsState
-    { slsCounter  :: Int
-    , slsMMistake :: Maybe (Int, (Text, RawSteno))
-    , slsDone     :: Maybe Bool
-    , slsWords  :: [Text]
+    { slsCounter   :: Int
+    , slsMMistake  :: Maybe StateMistake
+    , slsDone      :: Maybe Bool
+    , slsWords     :: [Text]
+    , slsNMistakes :: Int
     }
+
+data StateMistake
+  = MistakeOne RawSteno
+  | MistakeTwo RawSteno [RawSteno]
 
 taskWords
     :: forall key js t (m :: * -> *)
@@ -382,9 +405,10 @@ taskWords
        , PostBuild t m
        , Prerender js t m
        )
-    => Dynamic t [Text]
+    => [Text]
+    -> Event t (HashMap RawSteno Text, HashMap Text [RawSteno])
     -> m (Event t ())
-taskWords dynWords = do
+taskWords words eMaps = do
 
     eChord  <- asks envEChord
 
@@ -392,45 +416,68 @@ taskWords dynWords = do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-    widgetHoldSimple $ eStdGen <&> \stdGen -> do
-        dynSimple $ dynWords <&> \words -> mdo
+    dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
+    dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
+
+    dynSimple $ zipDyn dynMStdGen dynMMaps <&> \case
+        (Nothing    , _      ) -> pure never
+        (_          , Nothing) -> pure never
+        (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
             let len = length words
 
-                step
-                    :: Chord key
-                    -> StenoWordsState key
-                    -> StenoWordsState key
+                step :: Chord key -> StenoWordsState key -> StenoWordsState key
                 step c ls@StenoWordsState {..} =
-                    case (showt c, slsMMistake, slsDone) of
-                        (_, _, Just True) ->
-                            let words' =
-                                    evalRand (shuffleM slsWords) stdGen
+                    case (Raw.fromChord c, slsDone) of
+
+                -- reset after done
+                        (_, Just True) ->
+                            let words' = evalRand (shuffleM slsWords) stdGen
                             in  ls { slsDone    = Just False
                                    , slsCounter = 0
-                                   , slsWords = words'
-                                   } -- reset after done
+                                   , slsWords   = words'
+                                   }
+
+                        -- done
                         _ | slsCounter == len - 1 -> ls
                             { slsDone    = Just True
                             , slsCounter = slsCounter + 1
-                            } -- done
-                        (_, Just _, _) ->
-                            ls { slsCounter = 0, slsMMistake = Nothing } -- reset after mistake
-                        -- TODO: w = lookup raw in top2k dict
-                        (raw, _, _) | slsWords !! slsCounter == w -> ls
-                            { slsDone    = Nothing
-                            , slsCounter = slsCounter + 1
-                            } -- correct
-                        (wrong, _, _) -> ls
-                            { slsDone     = Nothing
-                            -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
-                            , slsMMistake = Just (slsCounter, (wrong, raws))
-                            } -- mistake
+                            }
+
+                        (raw, _) ->
+                            let word = slsWords !! slsCounter
+                            in  if fromMaybe "" (HashMap.lookup raw mapStenoWord) == word
+                                   -- correct
+                                then
+                                  ls { slsDone     = Nothing
+                                     , slsCounter  = slsCounter + 1
+                                     , slsMMistake = Nothing
+                                     }
+                                else
+                                  case slsMMistake of
+                                      -- first mistake
+                                      Nothing -> ls
+                                          { slsDone     = Nothing
+                                          , slsMMistake = Just $ MistakeOne raw
+                                          }
+
+                                      -- second mistake
+                                      Just (MistakeOne _) ->
+                                        let corrects = fromMaybe [] $ HashMap.lookup word mapWordStenos
+                                        in  ls
+                                              { slsDone     = Nothing
+                                              -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
+                                              , slsMMistake = Just $ MistakeTwo raw corrects
+                                              }
+
+                                      -- third mistake and so forth
+                                      Just (MistakeTwo _ _) -> ls
 
                 stepInitial = StenoWordsState
-                    { slsCounter  = 0
-                    , slsMMistake = Nothing
-                    , slsDone     = Nothing
-                    , slsWords  = evalRand (shuffleM words) stdGen
+                    { slsCounter   = 0
+                    , slsMMistake  = Nothing
+                    , slsDone      = Nothing
+                    , slsWords     = evalRand (shuffleM words) stdGen
+                    , slsNMistakes = 0
                     }
 
             dynStenoWords <- foldDyn step stepInitial eChord
@@ -455,12 +502,17 @@ taskWords dynWords = do
 
             let eMMistake = slsMMistake <$> updated dynStenoWords
             widgetHold_ blank $ eMMistake <&> \case
-                Just (_, chord) ->
-                    elClass "div" "red small"
-                        $  text
-                        $  "You typed "
-                        <> showt chord
-                        <> ". Any key to start over."
+                Just (MistakeOne raw) -> elClass "div" "paragraph" $ do
+                    elClass "code" "red small" $ text $ showt raw
+                    elClass "span" "small" $ text " try again!"
+                Just (MistakeTwo raw corrects) ->
+                    elClass "div" "paragraph" $ do
+                        elClass "code" "red small" $ text $ showt raw
+                        elClass "span" "small" $ text $ if length corrects == 1
+                            then " try this: "
+                            else " try one of these: "
+                        for_ corrects $ \correct ->
+                            elClass "code" "small" $ text $ showt correct
                 Nothing -> blank
 
             dynDone <- holdDyn False eDone
@@ -471,7 +523,7 @@ taskWords dynWords = do
             pure $ void $ filter id eDone
 
 exercise3
-    :: forall key t (m :: * -> *)
+    :: forall js key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
@@ -479,6 +531,7 @@ exercise3
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender js t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -526,7 +579,7 @@ exercise3 = do
     elClass "div" "paragraph" $ do
         text "For example, the steno keys "
         el "code" $ text "BUʃ"
-
+        text
             " can only appear in exactly that order and always mean «Busch». \
            \The word «Schub» has to be typed using different keys \
            \, and indeed here it is: "
@@ -568,4 +621,80 @@ exercise3 = do
         el "code" $ text "P"
         text "."
 
+    elClass "div" "paragraph" $ text "Type the following words as they appear!"
+
+    ePb                <- getPostBuild
+    RequestResult {..} <- request (getDictTop2k ePb)
+    widgetHold_ blank $ rrEFailure $> do
+        elClass "div" "paragraph small red"
+            $ text "Could not load resource: top2k"
+
+    eDone <- taskWords words2_3 rrESuccess
+
+    elCongraz eDone envNavigation
     pure envNavigation
+
+words2_3 :: [Text]
+words2_3 =
+    [ "und"
+    , "in"
+    , "das"
+    , "den"
+    , "im"
+    , "auf"
+    , "es"
+    , "ein"
+    , "dem"
+    , "des"
+    , "am"
+    , "an"
+    , "als"
+    , "bei"
+    , "aus"
+    , "um"
+    , "so"
+    , "man"
+    , "bis"
+    , "sein"
+    , "was"
+    , "nun"
+    , "beim"
+    , "da"
+    , "drei"
+    , "uns"
+    , "rund"
+    , "weil"
+    , "mal"
+    , "ins"
+    , "ja"
+    , "wo"
+    , "Land"
+    , "fünf"
+    , "frau"
+    , "Mai"
+    , "du"
+    , "je"
+    , "neu"
+    , "Haus"
+    , "hin"
+    , "bald"
+    , "Bild"
+    , "mein"
+    , "Bund"
+    , "Hand"
+    , "raum"
+    , "neun"
+    , "frei"
+    , "Bad"
+    , "los"
+    , "fand"
+    , "AfD"
+    , "elf"
+    , "Grad"
+    , "Mensch"
+    , "Brand"
+    , "nein"
+    , "aufs"
+    , "eins"
+    , "Bau"
+    ]

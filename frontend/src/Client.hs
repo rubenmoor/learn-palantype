@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE LambdaCase                #-}
@@ -27,6 +28,9 @@ import           Servant.Reflex      (BaseUrl (BasePath), SupportsServantReflex,
 import Data.Maybe (fromMaybe, Maybe (..))
 import Data.Function (($))
 import Data.Semigroup (Semigroup((<>)))
+import Servant.API ((:<|>)(..))
+import Data.HashMap.Strict (HashMap)
+import Palantype.Common.RawSteno (RawSteno)
 
 postRender
   :: (Prerender js t m, Monad m)
@@ -58,7 +62,12 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
-postConfigNew =
+getDictTop2k
+  :: SupportsServantReflex t m
+  => Event t ()
+  -> m (Event t (ReqResult () (HashMap RawSteno Text, HashMap Text [RawSteno])))
+
+postConfigNew :<|> getDictTop2k =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

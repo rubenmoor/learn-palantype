@@ -85,6 +85,9 @@ import           State                          ( Env(..)
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
+import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
+import Data.Text (Text)
 
 elFooter
     :: forall js t (m :: * -> *)
@@ -194,77 +197,6 @@ elCongraz eDone Navigation {..} = mdo
                 pure $ leftmost [eChordBack, domEvent Click elABack]
     blank
 
--- parserChord :: Parsec String ([(Char, PTChar)], Bool) PTChord
--- parserChord = do
---
---   let lsChars =
---         [ ('S', LeftS)
---         , ('C', LeftC)
---         , ('P', LeftP)
---         , ('T', LeftT)
---         , ('H', LeftH)
---         , ('+', LeftCross)
---         , ('M', LeftM)
---         , ('F', LeftF)
---         , ('R', LeftR)
---         , ('N', LeftN)
---         , ('L', LeftL)
---         , ('Y', LeftY)
---         , ('O', LeftO)
---         , ('E', LeftE)
---         , ('|', LeftPipe)
---         , ('|', RightPipe)
---         , ('A', RightA)
---         , ('U', RightU)
---         , ('I', MiddleI)
---         , ('^', RightPoint)
---         , ('N', RightN)
---         , ('L', RightL)
---         , ('C', RightC)
---         , ('M', RightM)
---         , ('F', RightF)
---         , ('R', RightR)
---         , ('P', RightP)
---         , ('T', RightT)
---         , ('+', RightCross)
---         , ('S', RightS)
---         , ('H', RightH)
---         , ('e', RightE)
---         ]
---   setState (lsChars, False)
---
---   let parserKey = do
---         (ls, _) <- getState
---         c <- oneOf $ fst <$> lsChars
---         case findIndex ((==) c . fst) ls of
---             Nothing -> mzero
---             Just i  -> do
---               Parsec.updateState $ (drop (i + 1) ls,) . snd
---               pure $ snd $ ls !! i
---
---       parserHypen = do
---         (ls, foundHyphen) <- getState
---         when foundHyphen mzero
---         void $ char '-'
---         setState (drop 15 ls, True)
---
---   PTChord <$> many1
---     (   parserKey
---     <|> (parserHypen *> parserKey)
---     )
---
--- parserWord :: Parsec String ([(Char, PTChar)], Bool) [PTChord]
--- parserWord = sepBy1 parserChord (char '/')
---
--- parserSentence :: Parsec String ([(Char, PTChar)], Bool) [[PTChord]]
--- parserSentence = spaces >> sepBy1 parserWord (many1 space) <* eof
---
--- parseSteno :: String -> Either Text [PTChord]
--- parseSteno str =
---   case runParser parserSentence ([], False) "frontend steno code" str of
---     Left  err -> Left  $ Text.pack $ show err
---     Right ls  -> Right $ concat ls
-
 parseStenoOrError
     :: forall proxy key t (m :: * -> *)
      . (EventWriter t (Endo State) m, Palantype key, PostBuild t m)
@@ -280,3 +212,6 @@ parseStenoOrError _ raw = case parseSteno raw of
                 "Could not parse steno code: " <> showt raw <> "\n" <> err
         updateState $ ePb $> [field @"stMsg" .~ Just Message { .. }]
         pure Nothing
+
+-- getMapTop2k :: IO (HashMap RawSteno Text, HashMap Text [RawSteno])
+-- getMapTop2k = HashMap.empty

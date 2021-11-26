@@ -14,6 +14,7 @@ library
     , common
     , ConfigFile
     , containers
+    , file-embed
     , frontend
     , gerippe
     , monad-logger
@@ -29,9 +30,11 @@ library
     , parsec
     , resource-pool
     , resourcet
+    , servant
     , servant-snap
     , snap-core
     , text
+    , unordered-containers
   exposed-modules:
       Backend
   other-modules:

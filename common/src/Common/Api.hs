@@ -26,14 +26,16 @@ import           Data.Text                 (Text)
 import           GHC.Generics              (Generic)
 import           Palantype.Common          (KeyIndex)
 import           Palantype.Common.RawSteno (RawSteno)
-import           Servant.API               ((:>), JSON, PlainText, Post,
+import           Servant.API               ((:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
 import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (Key)
+import Data.HashMap.Strict (HashMap)
 
 type RoutesApi = "api" :>
-     ( "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
-     )
+     "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+     :<|> "dict"   :> "top2k" :> Get '[JSON] (HashMap RawSteno Text, HashMap Text [RawSteno])
+
 
 type Routes = RoutesApi
 

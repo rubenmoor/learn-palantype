@@ -18,6 +18,7 @@ library
     , servant
     , text
     , text-show
+    , unordered-containers
   exposed-modules:
     Common.Api
     Common.PloverAdapter
