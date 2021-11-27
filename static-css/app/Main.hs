@@ -4,7 +4,7 @@
 
 module Main where
 
-import           Clay                           (blockquote,  (#)
+import           Clay                           (inline, blockquote,  (#)
                                                 , (&)
                                                 , (?)
                                                 , All(all)
@@ -502,6 +502,8 @@ main = putCss $ do
         cursor pointer
 
     ".displayNone" ? display none
+    ".inline" ? display inline
+    ".inlineBlock" ? display inlineBlock
 
     ".blinking" ? animation "blink" (sec 1) ease (sec 0) infinite normal none
 
@@ -516,6 +518,9 @@ main = putCss $ do
         div # ".usp" ? do
             display flex
             justifyContent center
+            maxWidth $ px 1280
+            marginLeft auto
+            marginRight auto
             padding (px 36) (px 24) (px 36) (px 24)
             div # ".caption" ? do
                 fontWeight bold
@@ -587,3 +592,14 @@ main = putCss $ do
             fontSize $ pt 12
             color anthrazit
             width $ pct 90
+
+    div # ".taskWords" ? do
+        display flex
+        alignItems center
+        span ? do
+            display inlineBlock
+            marginLeft $ em 1
+            marginRight $ em 1
+            width $ px 120
+
+    div # ".taskWords" |> code ? marginRight (em 1)

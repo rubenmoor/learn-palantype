@@ -96,7 +96,6 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , widgetHold_
                                                 )
 import           Shared                         ( dynSimple
-                                                , prerenderSimple
                                                 , widgetHoldSimple
                                                 )
 import           State                          ( Env(..)
@@ -108,6 +107,7 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import Palantype.Common.RawSteno (RawSteno)
+import Client (postRender)
 
 -- exercise 1
 
@@ -414,7 +414,7 @@ taskLetters dynLetters = do
 
     eChord  <- asks envEChord
 
-    eStdGen <- prerenderSimple $ do
+    eStdGen <- postRender $ do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 

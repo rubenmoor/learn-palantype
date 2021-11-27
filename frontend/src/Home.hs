@@ -174,7 +174,6 @@ import           Reflex.Dom                     ( (=:)
 import           Servant.Common.Req             ( reqSuccess )
 import           Shared                         ( dynSimple
                                                 , iFa
-                                                , prerenderSimple
                                                 , whenJust
                                                 )
 import           State                          ( Env(..)
@@ -344,7 +343,7 @@ stenoInput lang = do
         $   dynPloverCfg
         <&> view (_Wrapped' . at lang . non def)
         <&> \PloverSystemCfg {..} ->
-                prerenderSimple $ elClass "div" "stenoInput" $ mdo
+                postRender $ elClass "div" "stenoInput" $ mdo
                     let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
                             [ keydown qwertyKey kbInput
                                 $> [KeyStateDown $ fromIndex kI]

@@ -15,6 +15,7 @@ module Page.Stage2 where
 
 import           Client                         ( RequestResult(..)
                                                 , getDictTop2k
+                                                , postRender
                                                 , request
                                                 )
 import           Common.Api                     ( Lang(..) )
@@ -26,7 +27,9 @@ import           Control.Category               ( Category((.), id) )
 import           Control.Lens                   ( (%~)
                                                 , (<&>)
                                                 )
-import           Control.Monad                  ( when )
+import           Control.Monad                  ( (=<<)
+                                                , when
+                                                )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand )
@@ -51,7 +54,9 @@ import           Data.List                      ( (!!)
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     (fromMaybe,  Maybe(..) )
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
+                                                )
 import           Data.Ord                       ( Ord((<), (>), max) )
 import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
@@ -59,7 +64,11 @@ import           Data.Semigroup                 ( Endo
 import qualified Data.Set                      as Set
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
-import           Data.Witherable                ( Filterable(catMaybes, filter)
+import           Data.Witherable                ( Filterable
+                                                    ( catMaybes
+                                                    , filter
+                                                    , mapMaybe
+                                                    )
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( pattern (:/)
@@ -90,7 +99,9 @@ import           Reflex.Dom                     ( (=:)
                                                     , never
                                                     , updated
                                                     )
+                                                , TriggerEvent
                                                 , blank
+                                                , delay
                                                 , dyn_
                                                 , el
                                                 , elAttr
@@ -103,8 +114,11 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold_
                                                 , zipDyn
                                                 )
+import           Servant.Common.Req             ( ReqResult(..)
+                                                , reqSuccess
+                                                )
 import           Shared                         ( dynSimple
-                                                , prerenderSimple
+                                                , iFa
                                                 , whenJust
                                                 , widgetHoldSimple
                                                 )
@@ -412,7 +426,7 @@ taskWords words eMaps = do
 
     eChord  <- asks envEChord
 
-    eStdGen <- prerenderSimple $ do
+    eStdGen <- postRender $ do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
@@ -429,7 +443,7 @@ taskWords words eMaps = do
                 step c ls@StenoWordsState {..} =
                     case (Raw.fromChord c, slsDone) of
 
-                -- reset after done
+            -- reset after done
                         (_, Just True) ->
                             let words' = evalRand (shuffleM slsWords) stdGen
                             in  ls { slsDone    = Just False
@@ -445,32 +459,46 @@ taskWords words eMaps = do
 
                         (raw, _) ->
                             let word = slsWords !! slsCounter
-                            in  if fromMaybe "" (HashMap.lookup raw mapStenoWord) == word
+                            in
+                                if fromMaybe
+                                        ""
+                                        (HashMap.lookup raw mapStenoWord)
+                                    == word
                                    -- correct
                                 then
-                                  ls { slsDone     = Nothing
-                                     , slsCounter  = slsCounter + 1
-                                     , slsMMistake = Nothing
-                                     }
+                                    ls { slsDone     = Nothing
+                                       , slsCounter  = slsCounter + 1
+                                       , slsMMistake = Nothing
+                                       }
                                 else
-                                  case slsMMistake of
+                                    case slsMMistake of
                                       -- first mistake
-                                      Nothing -> ls
-                                          { slsDone     = Nothing
-                                          , slsMMistake = Just $ MistakeOne raw
-                                          }
+                                        Nothing -> ls
+                                            { slsDone     = Nothing
+                                            , slsMMistake = Just
+                                                                $ MistakeOne raw
+                                            }
 
-                                      -- second mistake
-                                      Just (MistakeOne _) ->
-                                        let corrects = fromMaybe [] $ HashMap.lookup word mapWordStenos
-                                        in  ls
-                                              { slsDone     = Nothing
-                                              -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
-                                              , slsMMistake = Just $ MistakeTwo raw corrects
-                                              }
+                                        -- second mistake
+                                        Just (MistakeOne _) ->
+                                            let
+                                                corrects =
+                                                    fromMaybe []
+                                                        $ HashMap.lookup
+                                                              word
+                                                              mapWordStenos
+                                            in
+                                                ls
+                                                    { slsDone     = Nothing
+                                                  -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
+                                                    , slsMMistake =
+                                                        Just $ MistakeTwo
+                                                            raw
+                                                            corrects
+                                                    }
 
-                                      -- third mistake and so forth
-                                      Just (MistakeTwo _ _) -> ls
+                                        -- third mistake and so forth
+                                        Just (MistakeTwo _ _) -> ls
 
                 stepInitial = StenoWordsState
                     { slsCounter   = 0
@@ -484,36 +512,34 @@ taskWords words eMaps = do
 
             let eDone = catMaybes $ slsDone <$> updated dynStenoWords
 
-            dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
-                let clsMistake = case slsMMistake of
-                        Nothing -> ""
-                        Just _  -> "bgRed"
-                when (slsCounter < len)
-                    $  el "pre"
-                    $  elClass "code" clsMistake
-                    $  text
-                    $  showt
-                    $  slsWords
-                    !! slsCounter
-                elClass "div" "paragraph" $ do
-                    el "strong" $ text (Text.pack $ show slsCounter)
-                    text " / "
-                    text (Text.pack $ show len)
+            elClass "div" "taskWords" $ do
+                el "span" $ dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
+                    when (slsCounter < len)
+                        $  el "pre"
+                        $  el "code"
+                        $  text
+                        $  slsWords
+                        !! slsCounter
 
-            let eMMistake = slsMMistake <$> updated dynStenoWords
-            widgetHold_ blank $ eMMistake <&> \case
-                Just (MistakeOne raw) -> elClass "div" "paragraph" $ do
-                    elClass "code" "red small" $ text $ showt raw
-                    elClass "span" "small" $ text " try again!"
-                Just (MistakeTwo raw corrects) ->
-                    elClass "div" "paragraph" $ do
+                let eMMistake = slsMMistake <$> updated dynStenoWords
+                widgetHold_ blank $ eMMistake <&> \case
+                    Just (MistakeOne raw) -> do
+                        elClass "code" "red small" $ text $ showt raw
+                        elClass "span" "small" $ text " try again!"
+                    Just (MistakeTwo raw corrects) -> do
                         elClass "code" "red small" $ text $ showt raw
                         elClass "span" "small" $ text $ if length corrects == 1
                             then " try this: "
                             else " try one of these: "
                         for_ corrects $ \correct ->
                             elClass "code" "small" $ text $ showt correct
-                Nothing -> blank
+                    Nothing -> blank
+
+            let dynCounter = slsCounter <$> dynStenoWords
+            dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
+                el "strong" $ text $ showt c
+                text " / "
+                text $ showt len
 
             dynDone <- holdDyn False eDone
             dyn_ $ dynDone <&> \bDone ->
@@ -623,13 +649,20 @@ exercise3 = do
 
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
-    ePb                <- getPostBuild
-    RequestResult {..} <- request (getDictTop2k ePb)
-    widgetHold_ blank $ rrEFailure $> do
-        elClass "div" "paragraph small red"
+    ePb     <- postRender $ delay 0.1 =<< getPostBuild
+    eResult <- postRender (getDictTop2k ePb)
+    let eSuccess = mapMaybe reqSuccess eResult
+    dynResult <- holdDyn Nothing $ Just <$> eResult
+
+    dyn_ $ dynResult <&> \case
+        Nothing -> elClass "div" "paragraph" $ do
+            iFa "fas fa-spinner fa-spin"
+            text " Loading ..."
+        Just (ResponseSuccess _ _ _) -> blank
+        Just _                       -> elClass "div" "paragraph small red"
             $ text "Could not load resource: top2k"
 
-    eDone <- taskWords words2_3 rrESuccess
+    eDone <- taskWords words2_3 eSuccess
 
     elCongraz eDone envNavigation
     pure envNavigation

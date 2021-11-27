@@ -33,8 +33,9 @@ import           Web.KeyCode               (Key)
 import Data.HashMap.Strict (HashMap)
 
 type RoutesApi = "api" :>
-     "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+     (    "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
      :<|> "dict"   :> "top2k" :> Get '[JSON] (HashMap RawSteno Text, HashMap Text [RawSteno])
+     )
 
 
 type Routes = RoutesApi

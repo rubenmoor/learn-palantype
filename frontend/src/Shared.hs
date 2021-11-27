@@ -126,14 +126,14 @@ dynSimple
   -> m (Event t a)
 dynSimple a = switchHold never =<< dyn a
 
-prerenderSimple
-  :: forall a js t (m :: * -> *).
-  ( Prerender js t m
-  , Applicative m
-  )
-  => Client m (Event t a)
-  -> m (Event t a)
-prerenderSimple a = switchDyn <$> prerender (pure never) a
+-- prerenderSimple
+--   :: forall a js t (m :: * -> *).
+--   ( Prerender js t m
+--   , Applicative m
+--   )
+--   => Client m (Event t a)
+--   -> m (Event t a)
+-- prerenderSimple a = switchDyn <$> prerender (pure never) a
 
 widgetHoldSimple
   :: forall a t (m :: * -> *).
