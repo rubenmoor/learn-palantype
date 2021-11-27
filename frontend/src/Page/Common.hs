@@ -85,9 +85,6 @@ import           State                          ( Env(..)
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HashMap
-import Data.Text (Text)
 
 elFooter
     :: forall js t (m :: * -> *)
@@ -159,8 +156,8 @@ elCongraz
     -> m ()
 elCongraz eDone Navigation {..} = mdo
 
-    eChord         <- asks envEChord
-    let (rsCon, eChordCon) = getChordCon navLang eChord
+    eChord <- asks envEChord
+    let (rsCon , eChordCon ) = getChordCon navLang eChord
         (rsBack, eChordBack) = getChordBack navLang eChord
 
     dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
@@ -215,3 +212,27 @@ parseStenoOrError _ raw = case parseSteno raw of
 
 -- getMapTop2k :: IO (HashMap RawSteno Text, HashMap Text [RawSteno])
 -- getMapTop2k = HashMap.empty
+
+elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()
+elNotImplemented = elClass "blockquote" "warning" $ do
+    el "strong" $ text "Not implemented"
+    el "br" blank
+    text
+        "You are currently looking at an exercise that has not been \
+     \implemented for the original English palantype. \
+     \Feel free to read, but don't expect things to work from here on."
+
+rawToggleKeyboard :: Lang -> RawSteno
+rawToggleKeyboard = \case
+    DE -> "BDJN"
+    EN -> "STFL"
+
+rawArrowDown :: Lang -> RawSteno
+rawArrowDown = \case
+  DE -> "JMKSD"
+  EN -> "FCFTS"
+
+rawArrowUp :: Lang -> RawSteno
+rawArrowUp = \case
+  DE -> "DMKSD"
+  EN -> "TCFTS"

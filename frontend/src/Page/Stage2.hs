@@ -13,10 +13,9 @@
 
 module Page.Stage2 where
 
-import           Client                         ( RequestResult(..)
-                                                , getDictTop2k
+import           Client                         ( getDictTop2k
                                                 , postRender
-                                                , request
+
                                                 )
 import           Common.Api                     ( Lang(..) )
 import           Common.Route                   ( FrontendRoute(..) )
@@ -50,7 +49,7 @@ import           Data.Generics.Product          ( field )
 import           Data.HashMap.Strict            ( HashMap )
 import qualified Data.HashMap.Strict           as HashMap
 import           Data.Int                       ( Int )
-import           Data.List                      ( (!!)
+import           Data.List                      (elem,  (!!)
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
@@ -75,7 +74,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , SetRoute(setRoute)
                                                 )
-import           Page.Common                    ( elCongraz
+import           Page.Common                    (elNotImplemented,  elCongraz
                                                 , getChordBack
                                                 , getChordCon
                                                 )
@@ -94,12 +93,11 @@ import           Reflex.Dom                     ( (=:)
                                                 , PostBuild(getPostBuild)
                                                 , Prerender
                                                 , Reflex
-                                                    ( Dynamic
-                                                    , Event
+                                                    ( Event
                                                     , never
                                                     , updated
                                                     )
-                                                , TriggerEvent
+
                                                 , blank
                                                 , delay
                                                 , dyn_
@@ -120,7 +118,7 @@ import           Servant.Common.Req             ( ReqResult(..)
 import           Shared                         ( dynSimple
                                                 , iFa
                                                 , whenJust
-                                                , widgetHoldSimple
+
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -133,6 +131,7 @@ import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
+import Control.Monad (unless)
 
 backUp :: Lang -> RawSteno
 backUp = \case
@@ -152,7 +151,7 @@ exercise1 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h2" $ text "Syllables and chords"
@@ -212,6 +211,75 @@ exercise1 = do
 
     pure envNavigation
 
+-- Ex 2.2
+
+data WalkState = WalkState
+    { wsCounter  :: Int
+    , wsMMistake :: Maybe Int
+    , wsDone     :: Maybe Bool
+    }
+
+walkWords
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       )
+    => [Text]
+    -> RawSteno
+    -> m (Event t ())
+walkWords words raw = do
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+
+    let cBackUp = Raw.parseChordLenient $ backUp navLang
+        chords  = Raw.parseStenoLenient raw
+        len     = length chords
+
+        step :: Chord key -> WalkState -> WalkState
+        step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
+            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 } -- reset after done
+            _ | wsCounter == len - 1 ->
+                ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
+            _ | chord == cBackUp ->
+                ws { wsMMistake = Nothing, wsCounter = max 0 $ wsCounter - 1 }  -- undo stroke
+            (Just _, _) -> ws   -- halt while mistake
+            (_, _) | chords !! wsCounter == chord ->
+                ws { wsDone = Nothing, wsCounter = wsCounter + 1 } -- correct
+            (_, _) -> ws { wsDone = Nothing, wsMMistake = Just wsCounter } -- mistake
+
+        stepInitial =
+            WalkState { wsCounter = 0, wsMMistake = Nothing, wsDone = Nothing }
+
+    dynWalk <- foldDyn step stepInitial envEChord
+    let eDone = catMaybes $ wsDone <$> updated dynWalk
+
+    el "blockquote" $ el "table" $ do
+        el "tr" $ traverse_ (el "td" . text) words
+        el "tr" $ do
+            for_ (zip [0 :: Int ..] chords) $ \(i, c) -> do
+                let dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
+                        Just j  -> if i == j then "bgRed" else ""
+                        Nothing -> if wsCounter > i then "bgGreen" else ""
+                el "td" $ elDynClass "pre" dynCls $ el "code" $ text $ showt c
+
+            el "td" $ do
+                let eMistake = wsMMistake <$> updated dynWalk
+                widgetHold_ blank $ eMistake <&> \case
+                    Just _ -> elClass "code" "blinking" $ text $ " " <> showt
+                        (backUp navLang)
+                    Nothing -> blank
+
+    dynDone <- holdDyn False eDone
+    dyn_ $ dynDone <&> \bDone ->
+        when bDone $ elClass "div" "small anthrazit" $ text
+            "Cleared. Press any key to start over."
+
+    pure $ void $ filter id eDone
+
 exercise2
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -228,6 +296,7 @@ exercise2 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h2" $ text "Syllables and chords"
@@ -328,81 +397,14 @@ exercise2 = do
 
     pure envNavigation
 
-data WalkState = WalkState
-    { wsCounter  :: Int
-    , wsMMistake :: Maybe Int
-    , wsDone     :: Maybe Bool
-    }
+-- Ex 2.3
 
-walkWords
-    :: forall key t (m :: * -> *)
-     . ( DomBuilder t m
-       , MonadFix m
-       , MonadHold t m
-       , MonadReader (Env t key) m
-       , Palantype key
-       , PostBuild t m
-       )
-    => [Text]
-    -> RawSteno
-    -> m (Event t ())
-walkWords words raw = do
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
-
-    let cBackUp = Raw.parseChordLenient $ backUp navLang
-        chords  = Raw.parseStenoLenient raw
-        len     = length chords
-
-        step :: Chord key -> WalkState -> WalkState
-        step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
-            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 } -- reset after done
-            _ | wsCounter == len - 1 ->
-                ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
-            _ | chord == cBackUp ->
-                ws { wsMMistake = Nothing, wsCounter = max 0 $ wsCounter - 1 }  -- undo stroke
-            (Just _, _) -> ws   -- halt while mistake
-            (_, _) | chords !! wsCounter == chord ->
-                ws { wsDone = Nothing, wsCounter = wsCounter + 1 } -- correct
-            (_, _) -> ws { wsDone = Nothing, wsMMistake = Just wsCounter } -- mistake
-
-        stepInitial =
-            WalkState { wsCounter = 0, wsMMistake = Nothing, wsDone = Nothing }
-
-    dynWalk <- foldDyn step stepInitial envEChord
-    let eDone = catMaybes $ wsDone <$> updated dynWalk
-
-    el "blockquote" $ el "table" $ do
-        el "tr" $ traverse_ (el "td" . text) words
-        el "tr" $ do
-            for_ (zip [0 :: Int ..] chords) $ \(i, c) -> do
-                let dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
-                        Just j  -> if i == j then "bgRed" else ""
-                        Nothing -> if wsCounter > i then "bgGreen" else ""
-                el "td" $ elDynClass "pre" dynCls $ el "code" $ text $ showt c
-
-            el "td" $ do
-                let eMistake = wsMMistake <$> updated dynWalk
-                widgetHold_ blank $ eMistake <&> \case
-                    Just _ -> elClass "code" "blinking" $ text $ " " <> showt
-                        (backUp navLang)
-                    Nothing -> blank
-
-    dynDone <- holdDyn False eDone
-    dyn_ $ dynDone <&> \bDone ->
-        when bDone $ elClass "div" "small anthrazit" $ text
-            "Cleared. Press any key to start over."
-
-    pure $ void $ filter id eDone
-
--- Stage 2.3
-
-data StenoWordsState k = StenoWordsState
-    { slsCounter   :: Int
-    , slsMMistake  :: Maybe StateMistake
-    , slsDone      :: Maybe Bool
-    , slsWords     :: [Text]
-    , slsNMistakes :: Int
+data StenoSingletonsState = StenoSingletonsState
+    { ssstCounter   :: Int
+    , ssstMMistake  :: Maybe StateMistake
+    , ssstDone      :: Maybe Bool
+    , ssstWords     :: [Text]
+    , ssstNMistakes :: Int
     }
 
 data StateMistake
@@ -439,26 +441,26 @@ taskWords words eMaps = do
         (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
             let len = length words
 
-                step :: Chord key -> StenoWordsState key -> StenoWordsState key
-                step c ls@StenoWordsState {..} =
-                    case (Raw.fromChord c, slsDone) of
+                step :: Chord key -> StenoSingletonsState -> StenoSingletonsState
+                step c ls@StenoSingletonsState {..} =
+                    case (Raw.fromChord c, ssstDone) of
 
-            -- reset after done
+                        -- reset after done
                         (_, Just True) ->
-                            let words' = evalRand (shuffleM slsWords) stdGen
-                            in  ls { slsDone    = Just False
-                                   , slsCounter = 0
-                                   , slsWords   = words'
+                            let words' = evalRand (shuffleM ssstWords) stdGen
+                            in  ls { ssstDone    = Just False
+                                   , ssstCounter = 0
+                                   , ssstWords   = words'
                                    }
 
                         -- done
-                        _ | slsCounter == len - 1 -> ls
-                            { slsDone    = Just True
-                            , slsCounter = slsCounter + 1
+                        _ | ssstCounter == len - 1 -> ls
+                            { ssstDone    = Just True
+                            , ssstCounter = ssstCounter + 1
                             }
 
                         (raw, _) ->
-                            let word = slsWords !! slsCounter
+                            let word = ssstWords !! ssstCounter
                             in
                                 if fromMaybe
                                         ""
@@ -466,16 +468,16 @@ taskWords words eMaps = do
                                     == word
                                    -- correct
                                 then
-                                    ls { slsDone     = Nothing
-                                       , slsCounter  = slsCounter + 1
-                                       , slsMMistake = Nothing
+                                    ls { ssstDone     = Nothing
+                                       , ssstCounter  = ssstCounter + 1
+                                       , ssstMMistake = Nothing
                                        }
                                 else
-                                    case slsMMistake of
+                                    case ssstMMistake of
                                       -- first mistake
                                         Nothing -> ls
-                                            { slsDone     = Nothing
-                                            , slsMMistake = Just
+                                            { ssstDone     = Nothing
+                                            , ssstMMistake = Just
                                                                 $ MistakeOne raw
                                             }
 
@@ -489,9 +491,8 @@ taskWords words eMaps = do
                                                               mapWordStenos
                                             in
                                                 ls
-                                                    { slsDone     = Nothing
-                                                  -- TODO: raws = lookup (slsWords !! slsCounter) in reverse top2k dict
-                                                    , slsMMistake =
+                                                    { ssstDone     = Nothing
+                                                    , ssstMMistake =
                                                         Just $ MistakeTwo
                                                             raw
                                                             corrects
@@ -500,28 +501,28 @@ taskWords words eMaps = do
                                         -- third mistake and so forth
                                         Just (MistakeTwo _ _) -> ls
 
-                stepInitial = StenoWordsState
-                    { slsCounter   = 0
-                    , slsMMistake  = Nothing
-                    , slsDone      = Nothing
-                    , slsWords     = evalRand (shuffleM words) stdGen
-                    , slsNMistakes = 0
+                stepInitial = StenoSingletonsState
+                    { ssstCounter   = 0
+                    , ssstMMistake  = Nothing
+                    , ssstDone      = Nothing
+                    , ssstWords     = evalRand (shuffleM words) stdGen
+                    , ssstNMistakes = 0
                     }
 
             dynStenoWords <- foldDyn step stepInitial eChord
 
-            let eDone = catMaybes $ slsDone <$> updated dynStenoWords
+            let eDone = catMaybes $ ssstDone <$> updated dynStenoWords
 
             elClass "div" "taskWords" $ do
-                el "span" $ dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
-                    when (slsCounter < len)
+                el "span" $ dyn_ $ dynStenoWords <&> \StenoSingletonsState {..} -> do
+                    when (ssstCounter < len)
                         $  el "pre"
                         $  el "code"
                         $  text
-                        $  slsWords
-                        !! slsCounter
+                        $  ssstWords
+                        !! ssstCounter
 
-                let eMMistake = slsMMistake <$> updated dynStenoWords
+                let eMMistake = ssstMMistake <$> updated dynStenoWords
                 widgetHold_ blank $ eMMistake <&> \case
                     Just (MistakeOne raw) -> do
                         elClass "code" "red small" $ text $ showt raw
@@ -535,7 +536,7 @@ taskWords words eMaps = do
                             elClass "code" "small" $ text $ showt correct
                     Nothing -> blank
 
-            let dynCounter = slsCounter <$> dynStenoWords
+            let dynCounter = ssstCounter <$> dynStenoWords
             dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
                 el "strong" $ text $ showt c
                 text " / "
@@ -565,20 +566,11 @@ exercise3 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 3"
-
-    case navLang of
-        EN -> elClass "blockquote" "warning" $ do
-            el "strong" $ text "Not implemented"
-            el "br" blank
-            text
-                "You are currently looking at an exercise that has not been \
-             \implemented for the original English palantype. \
-             \Feel free to read, but don't expect things to work from here on."
-        _ -> blank
 
     elClass "div" "paragraph"
         $ text
@@ -731,3 +723,13 @@ words2_3 =
     , "eins"
     , "Bau"
     ]
+
+-- Ex 2.4
+
+data StenoWordsState = StenoWordsState
+    { swsCounter   :: Int
+    , swsDone      :: Maybe Bool
+    , swsChords    :: [RawSteno]
+    , swsWords     :: [Text]
+    , swsNMistakes :: Int
+    }

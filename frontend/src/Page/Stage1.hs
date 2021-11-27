@@ -30,7 +30,7 @@ import           Control.Lens                   ( (.~)
                                                 , non
                                                 , view
                                                 )
-import           Control.Monad                  ( when )
+import           Control.Monad                  (unless,  when )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( liftIO )
 import           Control.Monad.Random           ( evalRand
@@ -68,7 +68,7 @@ import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute
                                                 )
-import           Page.Common                    ( elCongraz )
+import           Page.Common                    (rawToggleKeyboard, elNotImplemented,  elCongraz )
 import           Palantype.Common               (showH,  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
@@ -133,6 +133,7 @@ exercise1 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -185,6 +186,7 @@ exercise2 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -248,6 +250,7 @@ exercise3 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -294,6 +297,8 @@ exercise4
 exercise4 = do
 
     Env {..} <- ask
+    let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -511,10 +516,7 @@ exercise5 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-
-        rsTK = case navLang of
-          DE -> "BDJN" :: RawSteno
-          EN -> "STFL"
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -523,7 +525,7 @@ exercise5 = do
         text
             "You get the virtual keyboard back. Feel free, to toggle it anytime. \
          \You can even use "
-        el "code" $ text $ showt rsTK
+        el "code" $ text $ showt $ rawToggleKeyboard navLang
         text
             " to do that. This is a chord that just exists \
          \for this purpose here on this website. \
@@ -570,6 +572,7 @@ exercise6 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
@@ -617,6 +620,7 @@ exercise7 = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"

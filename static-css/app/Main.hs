@@ -1,10 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Main where
 
-import           Clay                           (inline, blockquote,  (#)
+import           Clay                           ((-:), sticky, before, inline, blockquote,  (#)
                                                 , (&)
                                                 , (?)
                                                 , All(all)
@@ -224,11 +225,64 @@ main = putCss $ do
         flexShrink 1
         overflowY hidden
 
-    section # ".content" ? do
+    section # "#content" ? do
         overflowY auto
+        "scroll-behavior" -: "smooth"
         paddingLeft $ em 1
         paddingRight $ em 1
         height $ pct 100
+        position relative
+
+    section # "#content" # before ? do
+      content $ stringContent "Up \\25B2 DMKSD" -- U+25B2
+      -- content $ stringContent "Up ▲ DMKSD" -- unicode makes `ob run` crash
+      display block
+      width $ other "fit-content"
+      position sticky
+      top $ px 2
+      fontSize $ pt 12
+      fontWeight bold
+      height $ px 21
+      marginLeft auto
+      marginRight auto
+      backgroundColor $ rgb 102 141 60
+      opacity 0.7
+      color white
+      borderRadius (px 8) (px 8) (px 8) (px 8)
+      padding (px 4) (px 4) (px 4) (px 4)
+
+    section # "#content" |> div # before ? do
+      content $ stringContent ""
+      width $ pct 80
+      backgroundColor white
+      position absolute
+      top $ px 2
+      height $ px 29
+
+    section # "#content" # after ? do
+      content $ stringContent "Down \\25BC JMKSD"
+      display block
+      width $ other "fit-content"
+      position sticky
+      bottom $ px 8
+      fontSize $ pt 12
+      fontWeight bold
+      height $ px 21
+      marginLeft auto
+      marginRight auto
+      backgroundColor $ rgb 102 141 60
+      opacity 0.7
+      color white
+      borderRadius (px 8) (px 8) (px 8) (px 8)
+      padding (px 4) (px 4) (px 4) (px 4)
+
+    section # "#content" |> div # after ? do
+      content $ stringContent ""
+      width $ pct 80
+      backgroundColor white
+      position absolute
+      height $ px 37
+      zIndex 1
 
     section # ".toc" ? do
         marginTop $ em 0.83
@@ -268,6 +322,7 @@ main = putCss $ do
         fontSize $ pt 14
         padding (px 12) (px 12) (px 12) (px 12)
         textAlign center
+        zIndex 1
 
     div # ".mkOverlay" ? do
         top $ pct 50

@@ -96,8 +96,9 @@ import           GHCJS.DOM.FileReader           ( getResult
                                                 , readAsText
                                                 )
 import           GHCJS.DOM.HTMLElement          ( focus )
+import           GHCJS.DOM.Element          ( scrollBy )
 import           GHCJS.DOM.Types                ( File )
-import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
+import           Language.Javascript.JSaddle    (eval,  FromJSVal(fromJSVal)
                                                 , ToJSVal(toJSVal)
                                                 , liftJSM
                                                 )
@@ -111,7 +112,9 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , routeLink
                                                 , subRoute
                                                 )
-import           Page.Common                    ( elFooter )
+import           Page.Common                    ( rawArrowUp, rawArrowDown,  elFooter
+                                                , rawToggleKeyboard
+                                                )
 import           Page.Introduction              ( introduction )
 import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
@@ -123,12 +126,13 @@ import           Palantype.Common               ( Chord(..)
 import           Palantype.Common.RawSteno      ( RawSteno(..)
                                                 , parseChordLenient
                                                 )
-import           Reflex.Dom                     ( (=:)
+import           Reflex.Dom                     (GhcjsDomSpace,    (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
                                                     )
-                                                , DomSpace(addEventSpecFlags)
+                                                , DomSpace(RawElement, addEventSpecFlags)
+                                                , Element(_element_raw)
                                                 , EventName(Click, Keydown)
                                                 , EventResult
                                                 , EventWriter
@@ -186,6 +190,7 @@ import           State                          ( Env(..)
                                                 , updateState
                                                 )
 import           TextShow                       ( TextShow(showt) )
+import qualified Palantype.Common.RawSteno as Raw
 
 default (Text)
 
@@ -404,15 +409,27 @@ stenoInput lang = do
                     ePb <- delay 0.1 =<< getPostBuild
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-                    let eChord = catMaybes $ updated dynChord
-                        rsTK   = case lang of
-                            DE -> "BDJN"
-                            EN -> "STFL"
-                        eChordToggle =
-                            filter (== parseChordLenient rsTK) eChord
+                    let eChord       = catMaybes $ updated dynChord
+                        eChordToggle = filter
+                            (== parseChordLenient (rawToggleKeyboard lang))
+                            eChord
+                        eChordArrowDown = filter (\c -> Raw.fromChord c == rawArrowDown lang) eChord
+                        eChordArrowUp = filter (\c -> Raw.fromChord c == rawArrowUp lang) eChord
+
                     updateState
                         $  eChordToggle
                         $> [field @"stShowKeyboard" %~ not]
+
+                    -- this is a workaround
+                    -- scroll, like focus, is not available in reflex dom
+                    -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
+                    -- GhcjsDomSpace requires the elements to be build post render
+                    let jsDown = "let el = document.getElementById(\"content\"); \
+                                 \el.scrollBy(0,100)" :: Text
+                    performEvent_ $ eChordArrowDown $> void (liftJSM $ eval jsDown)
+                    let jsUp = "let el = document.getElementById(\"content\"); \
+                               \el.scrollBy(0,-100)" :: Text
+                    performEvent_ $ eChordArrowUp $> void (liftJSM $ eval jsUp)
 
                     pure eChord
 
@@ -723,14 +740,9 @@ toc lang dynCurrent = elClass "section" "toc" $ do
                     elLi Stage2_3
 
 landingPage
-    :: forall js t (m :: * -> *)
+    :: forall t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
-       , MonadReader (Dynamic t State) m
-       , Prerender js t m
-       , PostBuild t m
-       , RouteToUrl (R FrontendRoute) m
-       , SetRoute t (R FrontendRoute) m
        )
     => m ()
 landingPage = elClass "div" "landing" $ do
@@ -890,46 +902,47 @@ stages _ navLang = elClass "div" "box" $ do
                     , envNavigation = Navigation { .. }
                     }
                 )
-        dynNavigation <- elClass "section" "content" $ subRoute $ \case
-            FrontendSubroute_Introduction ->
-                setEnv Nothing Introduction (Just Stage1_1) introduction
-            FrontendSubroute_Stage1_1 -> setEnv (Just Introduction)
-                                                Stage1_1
-                                                (Just Stage1_2)
-                                                Stage1.exercise1
-            FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1)
-                                                Stage1_2
-                                                (Just Stage1_3)
-                                                Stage1.exercise2
-            FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2)
-                                                Stage1_3
-                                                (Just Stage1_4)
-                                                Stage1.exercise3
-            FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3)
-                                                Stage1_4
-                                                (Just Stage1_5)
-                                                Stage1.exercise4
-            FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4)
-                                                Stage1_5
-                                                (Just Stage1_6)
-                                                Stage1.exercise5
-            FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5)
-                                                Stage1_6
-                                                (Just Stage1_7)
-                                                Stage1.exercise6
-            FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6)
-                                                Stage1_7
-                                                (Just Stage2_1)
-                                                Stage1.exercise7
-            FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7)
-                                                Stage2_1
-                                                (Just Stage2_2)
-                                                Stage2.exercise1
-            FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
-                                                Stage2_2
-                                                (Just Stage2_3)
-                                                Stage2.exercise2
-            FrontendSubroute_Stage2_3 ->
-                setEnv (Just Stage2_2) Stage2_3 Nothing Stage2.exercise3
+        dynNavigation <-
+            elAttr "section" ("id" =: "content") $ el "div" $ subRoute $ \case
+                FrontendSubroute_Introduction ->
+                    setEnv Nothing Introduction (Just Stage1_1) introduction
+                FrontendSubroute_Stage1_1 -> setEnv (Just Introduction)
+                                                    Stage1_1
+                                                    (Just Stage1_2)
+                                                    Stage1.exercise1
+                FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1)
+                                                    Stage1_2
+                                                    (Just Stage1_3)
+                                                    Stage1.exercise2
+                FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2)
+                                                    Stage1_3
+                                                    (Just Stage1_4)
+                                                    Stage1.exercise3
+                FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3)
+                                                    Stage1_4
+                                                    (Just Stage1_5)
+                                                    Stage1.exercise4
+                FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4)
+                                                    Stage1_5
+                                                    (Just Stage1_6)
+                                                    Stage1.exercise5
+                FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5)
+                                                    Stage1_6
+                                                    (Just Stage1_7)
+                                                    Stage1.exercise6
+                FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6)
+                                                    Stage1_7
+                                                    (Just Stage2_1)
+                                                    Stage1.exercise7
+                FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7)
+                                                    Stage2_1
+                                                    (Just Stage2_2)
+                                                    Stage2.exercise1
+                FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
+                                                    Stage2_2
+                                                    (Just Stage2_3)
+                                                    Stage2.exercise2
+                FrontendSubroute_Stage2_3 ->
+                    setEnv (Just Stage2_2) Stage2_3 Nothing Stage2.exercise3
         pure dynNavigation
     dyn_ $ dynNavigation <&> elFooter navLang
