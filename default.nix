@@ -63,12 +63,12 @@ in
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
       }) {});
-      # my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-        owner = "rubenmoor";
-        repo = "my-palantype";
-        rev = "47a4b52f6fa3fb4b652cd31cab107336a0c1e857";
-        sha256 = "1fyw0rgldsnl031pc4j1lgn1mi481ydibpjisg80fj3qlljpgnjf";
-      }) {};
+      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      # my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+      #   owner = "rubenmoor";
+      #   repo = "my-palantype";
+      #   rev = "47a4b52f6fa3fb4b652cd31cab107336a0c1e857";
+      #   sha256 = "1fyw0rgldsnl031pc4j1lgn1mi481ydibpjisg80fj3qlljpgnjf";
+      # }) {};
     };
   })

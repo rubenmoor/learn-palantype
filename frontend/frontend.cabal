@@ -31,6 +31,7 @@ library
     , random
     , random-shuffle
     , reflex-dom
+    , safe
     , servant
     , servant-reflex
     , text

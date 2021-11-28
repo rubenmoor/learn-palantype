@@ -648,7 +648,7 @@ main = putCss $ do
             color anthrazit
             width $ pct 90
 
-    div # ".taskWords" ? do
+    div # ".taskSingletons" ? do
         display flex
         alignItems center
         span ? do

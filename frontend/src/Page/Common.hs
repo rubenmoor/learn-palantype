@@ -236,3 +236,8 @@ rawArrowUp :: Lang -> RawSteno
 rawArrowUp = \case
   DE -> "DMKSD"
   EN -> "TCFTS"
+
+backUp :: Lang -> RawSteno
+backUp = \case
+    EN -> "ULFTS"
+    DE -> "ILKSD"

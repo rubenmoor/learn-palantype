@@ -49,7 +49,7 @@ import           Data.Generics.Product          ( field )
 import           Data.HashMap.Strict            ( HashMap )
 import qualified Data.HashMap.Strict           as HashMap
 import           Data.Int                       ( Int )
-import           Data.List                      (elem,  (!!)
+import           Data.List                      (intersperse, (++), elem,  (!!)
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
@@ -74,7 +74,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , SetRoute(setRoute)
                                                 )
-import           Page.Common                    (elNotImplemented,  elCongraz
+import           Page.Common                    (backUp, elNotImplemented,  elCongraz
                                                 , getChordBack
                                                 , getChordCon
                                                 )
@@ -132,11 +132,8 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
 import Control.Monad (unless)
-
-backUp :: Lang -> RawSteno
-backUp = \case
-    EN -> "ULFTS"
-    DE -> "ILKSD"
+import Data.Sequence ((|>), Seq)
+import Safe (initMay)
 
 exercise1
     :: forall key t (m :: * -> *)
@@ -235,8 +232,7 @@ walkWords words raw = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
-    let cBackUp = Raw.parseChordLenient $ backUp navLang
-        chords  = Raw.parseStenoLenient raw
+    let chords  = Raw.parseStenoLenient raw
         len     = length chords
 
         step :: Chord key -> WalkState -> WalkState
@@ -244,7 +240,7 @@ walkWords words raw = do
             (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 } -- reset after done
             _ | wsCounter == len - 1 ->
                 ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
-            _ | chord == cBackUp ->
+            _ | Raw.fromChord chord == backUp navLang ->
                 ws { wsMMistake = Nothing, wsCounter = max 0 $ wsCounter - 1 }  -- undo stroke
             (Just _, _) -> ws   -- halt while mistake
             (_, _) | chords !! wsCounter == chord ->
@@ -411,7 +407,7 @@ data StateMistake
   = MistakeOne RawSteno
   | MistakeTwo RawSteno [RawSteno]
 
-taskWords
+taskSingletons
     :: forall key js t (m :: * -> *)
      . ( DomBuilder t m
        , MonadFix m
@@ -424,7 +420,7 @@ taskWords
     => [Text]
     -> Event t (HashMap RawSteno Text, HashMap Text [RawSteno])
     -> m (Event t ())
-taskWords words eMaps = do
+taskSingletons words eMaps = do
 
     eChord  <- asks envEChord
 
@@ -513,7 +509,7 @@ taskWords words eMaps = do
 
             let eDone = catMaybes $ ssstDone <$> updated dynStenoWords
 
-            elClass "div" "taskWords" $ do
+            elClass "div" "taskSingletons" $ do
                 el "span" $ dyn_ $ dynStenoWords <&> \StenoSingletonsState {..} -> do
                     when (ssstCounter < len)
                         $  el "pre"
@@ -654,7 +650,7 @@ exercise3 = do
         Just _                       -> elClass "div" "paragraph small red"
             $ text "Could not load resource: top2k"
 
-    eDone <- taskWords words2_3 eSuccess
+    eDone <- taskSingletons words2_3 eSuccess
 
     elCongraz eDone envNavigation
     pure envNavigation
@@ -733,3 +729,114 @@ data StenoWordsState = StenoWordsState
     , swsWords     :: [Text]
     , swsNMistakes :: Int
     }
+
+taskWords
+    :: forall key js t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , Prerender js t m
+       )
+    => [Text]
+    -> Event t (HashMap RawSteno Text, HashMap Text [RawSteno])
+    -> m (Event t ())
+taskWords words eMaps = do
+
+  Env {..} <- ask
+  let Navigation {..} = envNavigation
+
+  eStdGen <- postRender $ do
+      ePb <- getPostBuild
+      performEvent $ ePb $> liftIO newStdGen
+
+  dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
+  dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
+
+  dynSimple $ zipDyn dynMStdGen dynMMaps <&> \case
+    (Nothing    , _      ) -> pure never
+    (_          , Nothing) -> pure never
+    (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
+      let len = length words
+
+          step :: Chord key -> StenoWordsState -> StenoWordsState
+          step c ls@StenoWordsState {..} =
+            -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [Raw.fromChord c]
+            case (Raw.fromChord c, swsDone) of
+
+              -- reset after done
+              (_, Just True) ->
+                let words' = evalRand (shuffleM swsWords) stdGen
+                in  ls { swsDone    = Just False
+                       , swsCounter = 0
+                       , swsWords   = words'
+                       }
+
+              -- done
+              _ | swsCounter == len - 1 -> ls
+                  { swsDone    = Just True
+                  , swsCounter = swsCounter + 1
+                  }
+
+              -- undo last input
+              (r, _) | r == backUp navLang -> ls
+                  { swsChords = fromMaybe [] $ initMay swsChords
+                  , swsNMistakes = swsNMistakes + 1
+                  }
+
+              (raw, _) ->
+                let word = swsWords !! swsCounter
+                    rawWord = Raw.unparts $ swsChords ++ [raw]
+                in
+                    if fromMaybe
+                            ""
+                            (HashMap.lookup rawWord mapStenoWord)
+                        == word
+                       -- correct
+                    then
+                        ls { swsDone     = Nothing
+                           , swsCounter  = swsCounter + 1
+                           }
+                    else
+                        ls { swsDone     = Nothing
+                           , swsChords   = swsChords ++ [raw]
+                           }
+
+          stepInitial = StenoWordsState
+              { swsCounter   = 0
+              , swsChords = []
+              , swsDone      = Nothing
+              , swsWords     = evalRand (shuffleM words) stdGen
+              , swsNMistakes = 0
+              }
+
+      dynStenoWords <- foldDyn step stepInitial envEChord
+
+      let eDone = catMaybes $ swsDone <$> updated dynStenoWords
+
+      elClass "div" "taskWords" $ do
+        dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
+          el "span" $
+              when (swsCounter < len)
+                  $  el "pre"
+                  $  el "code"
+                  $  text
+                  $  swsWords !! swsCounter
+
+          el "span" $ for_ (intersperse "/" $ showt <$> swsChords) $ \str ->
+            el "code" $ text str
+
+      let dynCounter = swsCounter <$> dynStenoWords
+      dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
+          el "strong" $ text $ showt c
+          text " / "
+          text $ showt len
+
+      dynDone <- holdDyn False eDone
+      dyn_ $ dynDone <&> \bDone ->
+          when bDone $ elClass "div" "small anthrazit" $ text
+              "Cleared. Press any key to start over."
+
+      pure $ void $ filter id eDone
