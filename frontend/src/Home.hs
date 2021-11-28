@@ -44,13 +44,13 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      ( Bool(..)
+import           Data.Bool                      ((&&),  Bool(..)
                                                 , bool
                                                 , not
                                                 )
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..) )
-import           Data.Eq                        ( Eq((==)) )
+import           Data.Eq                        ( Eq((/=), (==)) )
 import           Data.Foldable                  ( Foldable(foldl, null)
                                                 , concat
                                                 )
@@ -409,12 +409,17 @@ stenoInput lang = do
                     ePb <- delay 0.1 =<< getPostBuild
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-                    let eChord       = catMaybes $ updated dynChord
-                        eChordToggle = filter
-                            (== parseChordLenient (rawToggleKeyboard lang))
-                            eChord
-                        eChordArrowDown = filter (\c -> Raw.fromChord c == rawArrowDown lang) eChord
-                        eChordArrowUp = filter (\c -> Raw.fromChord c == rawArrowUp lang) eChord
+                    let eChordAll       = catMaybes $ updated dynChord
+                        eChordToggle = filter (\c -> Raw.fromChord c == rawToggleKeyboard lang) eChordAll
+                        eChordArrowDown = filter (\c -> Raw.fromChord c == rawArrowDown lang) eChordAll
+                        eChordArrowUp = filter (\c -> Raw.fromChord c == rawArrowUp lang) eChordAll
+
+                        remainder chord =
+                          let raw = Raw.fromChord chord
+                          in     raw /= rawToggleKeyboard lang
+                              && raw /= rawArrowUp lang
+                              && raw /= rawArrowDown lang
+                        eChord = filter remainder eChordAll
 
                     updateState
                         $  eChordToggle
@@ -738,6 +743,7 @@ toc lang dynCurrent = elClass "section" "toc" $ do
                     elLi Stage2_1
                     elLi Stage2_2
                     elLi Stage2_3
+                    elLi Stage2_4
 
 landingPage
     :: forall t (m :: * -> *)
@@ -943,6 +949,8 @@ stages _ navLang = elClass "div" "box" $ do
                                                     (Just Stage2_3)
                                                     Stage2.exercise2
                 FrontendSubroute_Stage2_3 ->
-                    setEnv (Just Stage2_2) Stage2_3 Nothing Stage2.exercise3
+                    setEnv (Just Stage2_2) Stage2_3 (Just Stage2_4) Stage2.exercise3
+                FrontendSubroute_Stage2_4 ->
+                    setEnv (Just Stage2_3) Stage2_4 Nothing Stage2.exercise4
         pure dynNavigation
     dyn_ $ dynNavigation <&> elFooter navLang

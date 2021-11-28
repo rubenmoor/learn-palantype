@@ -657,4 +657,23 @@ main = putCss $ do
             marginRight $ em 1
             width $ px 120
 
-    div # ".taskWords" |> code ? marginRight (em 1)
+    div # ".taskSingletons" |> code ? marginRight (em 1)
+
+    div # ".taskWords" ? do
+        display flex
+        alignItems center
+
+    div # ".taskWords" |> span ? do
+            marginLeft $ em 1
+            marginRight $ em 1
+
+    div # ".taskWords" |> span # ".word" ?
+            width (px 120)
+
+    span # ".btnSteno" ? do
+      fontSize $ pt 12
+      fontWeight bold
+      backgroundColor $ rgb 102 141 60
+      color white
+      borderRadius (px 12) (px 12) (px 12) (px 12)
+      padding (px 6) (px 6) (px 6) (px 6)

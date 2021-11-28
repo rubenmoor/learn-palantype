@@ -13,6 +13,7 @@
 
 module Page.Stage1 where
 
+import           Client                         ( postRender )
 import           Common.Api                     ( Lang(..)
                                                 , PloverSystemCfg
                                                     ( pcfgMapStenoKeys
@@ -30,7 +31,9 @@ import           Control.Lens                   ( (.~)
                                                 , non
                                                 , view
                                                 )
-import           Control.Monad                  (unless,  when )
+import           Control.Monad                  ( unless
+                                                , when
+                                                )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( liftIO )
 import           Control.Monad.Random           ( evalRand
@@ -68,12 +71,17 @@ import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute
                                                 )
-import           Page.Common                    (rawToggleKeyboard, elNotImplemented,  elCongraz )
-import           Palantype.Common               (showH,  Chord(..)
+import           Page.Common                    ( elCongraz
+                                                , elNotImplemented
+                                                , rawToggleKeyboard
+                                                )
+import           Palantype.Common               ( Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex
+                                                , showH
                                                 )
+import           Palantype.Common.RawSteno      ( RawSteno )
 import           Reflex.Dom                     ( DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)
@@ -106,8 +114,6 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import Palantype.Common.RawSteno (RawSteno)
-import Client (postRender)
 
 -- exercise 1
 
@@ -205,25 +211,24 @@ exercise2 = do
     elCongraz eDone envNavigation
 
     case navLang of
-        DE ->
-            elClass "div" "paragraph" $ do
-              text "Well, how to pronounce ~? This symbol is used to turn "
-              el "em" $ text "u"
-              text " into "
-              el "em" $ text "uh"
-              text ", "
-              el "em" $ text "i"
-              text " into "
-              el "em" $ text "ie"
-              text ", "
-              el "em" $ text "o"
-              text " into "
-              el "em" $ text "oh"
-              text ", and "
-              el "em" $ text "ü"
-              text " into "
-              el "em" $ text "üh"
-              text ". It is called «lang» (the German word for long)."
+        DE -> elClass "div" "paragraph" $ do
+            text "Well, how to pronounce ~? This symbol is used to turn "
+            el "em" $ text "u"
+            text " into "
+            el "em" $ text "uh"
+            text ", "
+            el "em" $ text "i"
+            text " into "
+            el "em" $ text "ie"
+            text ", "
+            el "em" $ text "o"
+            text " into "
+            el "em" $ text "oh"
+            text ", and "
+            el "em" $ text "ü"
+            text " into "
+            el "em" $ text "üh"
+            text ". It is called «lang» (the German word for long)."
         EN ->
             elClass "div" "paragraph"
                 $ text
@@ -268,14 +273,15 @@ exercise3 = do
     elCongraz eDone envNavigation
 
     case navLang of
-        DE ->
-            elClass "div" "paragraph" $ do
-              text "Missing the letter T? It's not there and you don't need it. \
+        DE -> elClass "div" "paragraph" $ do
+            text
+                "Missing the letter T? It's not there and you don't need it. \
                    \You will learn to type "
-              el "em" $ text "t"
-              text " as BD and "
-              el "em" $ text "st"
-              text " as SD, when it occurs in the onset of a syllable. \
+            el "em" $ text "t"
+            text " as BD and "
+            el "em" $ text "st"
+            text
+                " as SD, when it occurs in the onset of a syllable. \
                    \At the end of a syllable, you will type +D or just D."
         EN -> pure () -- TODO
     pure envNavigation
@@ -344,17 +350,27 @@ taskAlphabet showAlphabet = do
             step :: Chord key -> WalkState key -> WalkState key
             step (Chord ks) ws@WalkState {..} =
                 case (ks, wsMMistake, wsDone) of
+
+                -- reset after done
                     (_, _, Just True) ->
-                        ws { wsDone = Just False, wsCounter = 0 } -- reset after done
-                    _ | wsCounter == len - 1 ->
-                        ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
+                        ws { wsDone = Just False, wsCounter = 0 }
+
+                    -- reset after mistake
                     (_, Just _, _) ->
-                        ws { wsCounter = 0, wsMMistake = Nothing } -- reset after mistake
-                    ([l], _, _) | ptAlphabet !! wsCounter == l ->
-                        ws { wsDone = Nothing, wsCounter = wsCounter + 1 } -- correct
+                        ws { wsCounter = 0, wsMMistake = Nothing }
+
+                    -- correct
+                    ([l], _, _) | ptAlphabet !! wsCounter == l -> ws
+                        { wsDone    = if wsCounter == len - 1
+                                          then Just True
+                                          else Nothing
+                        , wsCounter = wsCounter + 1
+                        }
+
+                    -- mistake
                     (ls, _, _) -> ws { wsDone     = Nothing
                                      , wsMMistake = Just (wsCounter, Chord ls)
-                                     } -- mistake
+                                     }
 
             stepInitial = WalkState { wsCounter  = 0
                                     , wsMMistake = Nothing
@@ -433,27 +449,33 @@ taskLetters dynLetters = do
                     -> StenoLettersState key
                 step (Chord ks) ls@StenoLettersState {..} =
                     case (ks, slsMMistake, slsDone) of
+
+                        -- reset after done
                         (_, _, Just True) ->
                             let letters' =
                                     evalRand (shuffleM slsLetters) stdGen
                             in  ls { slsDone    = Just False
                                    , slsCounter = 0
                                    , slsLetters = letters'
-                                   } -- reset after done
-                        _ | slsCounter == len - 1 -> ls
-                            { slsDone    = Just True
-                            , slsCounter = slsCounter + 1
-                            } -- done
+                                   }
+
+                        -- reset after mistake
                         (_, Just _, _) ->
-                            ls { slsCounter = 0, slsMMistake = Nothing } -- reset after mistake
+                            ls { slsCounter = 0, slsMMistake = Nothing }
+
+                        -- correct
                         ([l], _, _) | slsLetters !! slsCounter == l -> ls
-                            { slsDone    = Nothing
+                            { slsDone    = if slsCounter == len - 1
+                                               then Just True
+                                               else Nothing
                             , slsCounter = slsCounter + 1
-                            } -- correct
+                            }
+
+                        -- mistake
                         (wrong, _, _) -> ls
                             { slsDone     = Nothing
                             , slsMMistake = Just (slsCounter, Chord wrong)
-                            } -- mistake
+                            }
 
                 stepInitial = StenoLettersState
                     { slsCounter  = 0
@@ -651,8 +673,9 @@ exercise7 = do
 
     eDone <- taskLetters dynAlphabet
 
-    elClass "div" "paragraph" $
-      text "By the way, you can re-shuffle the order, in which the keys \
+    elClass "div" "paragraph"
+        $ text
+              "By the way, you can re-shuffle the order, in which the keys \
            \are presented to you, by reloading the page, if you feel the need to."
 
 

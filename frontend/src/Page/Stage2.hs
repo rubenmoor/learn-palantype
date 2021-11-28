@@ -35,9 +35,9 @@ import           Control.Monad.Random           ( evalRand )
 import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 )
-import           Data.Bool                      ( Bool(..) )
+import           Data.Bool                      (Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(length)
+import           Data.Foldable                  ( Foldable(null, length)
                                                 , for_
                                                 , traverse_
                                                 )
@@ -70,7 +70,7 @@ import           Data.Witherable                ( Filterable
                                                     )
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         ( pattern (:/)
+import           Obelisk.Route.Frontend         (RouteToUrl, routeLink,  pattern (:/)
                                                 , R
                                                 , SetRoute(setRoute)
                                                 )
@@ -122,7 +122,7 @@ import           Shared                         ( dynSimple
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
-                                                , Stage(Stage1_1)
+                                                , Stage(Stage2_2, Stage1_1)
                                                 , State(..)
                                                 , stageUrl
                                                 , updateState
@@ -132,8 +132,7 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
 import Control.Monad (unless)
-import Data.Sequence ((|>), Seq)
-import Safe (initMay)
+import Safe (atMay, initMay)
 
 exercise1
     :: forall key t (m :: * -> *)
@@ -237,15 +236,26 @@ walkWords words raw = do
 
         step :: Chord key -> WalkState -> WalkState
         step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
-            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 } -- reset after done
-            _ | wsCounter == len - 1 ->
-                ws { wsDone = Just True, wsCounter = wsCounter + 1 } -- done
+
+            -- reset after done
+            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
+
+            -- undo stroke
             _ | Raw.fromChord chord == backUp navLang ->
-                ws { wsMMistake = Nothing, wsCounter = max 0 $ wsCounter - 1 }  -- undo stroke
-            (Just _, _) -> ws   -- halt while mistake
-            (_, _) | chords !! wsCounter == chord ->
-                ws { wsDone = Nothing, wsCounter = wsCounter + 1 } -- correct
-            (_, _) -> ws { wsDone = Nothing, wsMMistake = Just wsCounter } -- mistake
+                ws { wsMMistake = Nothing }
+
+            -- halt while mistake
+            (Just _, _) -> ws
+
+            -- correct
+            _ | chords !! wsCounter == chord ->
+                     let done = if wsCounter == len - 1
+                           then Just True -- done
+                           else Nothing
+                     in ws { wsDone = done, wsCounter = wsCounter + 1 }
+
+            -- mistake
+            _ -> ws { wsDone = Nothing, wsMMistake = Just wsCounter }
 
         stepInitial =
             WalkState { wsCounter = 0, wsMMistake = Nothing, wsDone = Nothing }
@@ -265,8 +275,9 @@ walkWords words raw = do
             el "td" $ do
                 let eMistake = wsMMistake <$> updated dynWalk
                 widgetHold_ blank $ eMistake <&> \case
-                    Just _ -> elClass "code" "blinking" $ text $ " " <> showt
-                        (backUp navLang)
+                    Just _ -> elClass "code" "blinking" $ do
+                      text " "
+                      elClass "span" "btnSteno" $ text $ "↤ " <> showt (backUp navLang) -- U+21A4
                     Nothing -> blank
 
     dynDone <- holdDyn False eDone
@@ -310,7 +321,10 @@ exercise2 = do
                         =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html"
                         )
                     $ text "Palantype Tutorial"
-                text " of the Open Steno Project:"
+                text " of the Open Steno Project? In case you have trouble \
+                     \with keys that appear twice on the steno keyboard: There is \
+                     \always only exactly one correct key that results in the desired \
+                     \output."
 
             let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
                 lsWord =
@@ -353,7 +367,10 @@ exercise2 = do
             elClass "div" "paragraph"
                 $ text
                       "We can begin with actually typing sentences now. \
-             \How about this quote from Goethe:"
+             \How about this quote from Goethe? In case you have trouble \
+             \with keys that appear twice on the steno keyboard: There is \
+             \always only exactly one correct key that results in the desired \
+             \output."
 
             -- TODO: punctuation
             let raw = "MID DEM WISn WÄKSD DEÜ SFEI/FEL"
@@ -449,22 +466,14 @@ taskSingletons words eMaps = do
                                    , ssstWords   = words'
                                    }
 
-                        -- done
-                        _ | ssstCounter == len - 1 -> ls
-                            { ssstDone    = Just True
-                            , ssstCounter = ssstCounter + 1
-                            }
-
                         (raw, _) ->
                             let word = ssstWords !! ssstCounter
+                                isCorrect = fromMaybe "" (HashMap.lookup raw mapStenoWord) == word
                             in
-                                if fromMaybe
-                                        ""
-                                        (HashMap.lookup raw mapStenoWord)
-                                    == word
+                                if isCorrect
                                    -- correct
                                 then
-                                    ls { ssstDone     = Nothing
+                                    ls { ssstDone     = if ssstCounter == len - 1 then Just True else Nothing
                                        , ssstCounter  = ssstCounter + 1
                                        , ssstMMistake = Nothing
                                        }
@@ -728,6 +737,7 @@ data StenoWordsState = StenoWordsState
     , swsChords    :: [RawSteno]
     , swsWords     :: [Text]
     , swsNMistakes :: Int
+    , swsMHint     :: Maybe [RawSteno]
     }
 
 taskWords
@@ -764,40 +774,38 @@ taskWords words eMaps = do
           step :: Chord key -> StenoWordsState -> StenoWordsState
           step c ls@StenoWordsState {..} =
             -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [Raw.fromChord c]
-            case (Raw.fromChord c, swsDone) of
+            case (Raw.fromChord c, swsWords `atMay` swsCounter) of
 
               -- reset after done
-              (_, Just True) ->
+              (_, Nothing) ->
                 let words' = evalRand (shuffleM swsWords) stdGen
                 in  ls { swsDone    = Just False
                        , swsCounter = 0
                        , swsWords   = words'
+                       , swsMHint = Nothing
                        }
 
-              -- done
-              _ | swsCounter == len - 1 -> ls
-                  { swsDone    = Just True
-                  , swsCounter = swsCounter + 1
-                  }
-
               -- undo last input
-              (r, _) | r == backUp navLang -> ls
-                  { swsChords = fromMaybe [] $ initMay swsChords
-                  , swsNMistakes = swsNMistakes + 1
-                  }
+              (r, Just word) | r == backUp navLang -> case initMay swsChords of
+                         Just cs -> ls
+                           { swsDone = Nothing
+                           , swsChords = cs
+                           , swsNMistakes = swsNMistakes + 1
+                           , swsMHint = Nothing
+                           }
+                         Nothing -> ls { swsMHint = Just $ fromMaybe [] $ HashMap.lookup word mapWordStenos }
 
-              (raw, _) ->
-                let word = swsWords !! swsCounter
-                    rawWord = Raw.unparts $ swsChords ++ [raw]
-                in
-                    if fromMaybe
-                            ""
-                            (HashMap.lookup rawWord mapStenoWord)
-                        == word
+              (raw, Just word) ->
+                let rawWord = Raw.unparts $ swsChords ++ [raw]
+                    isCorrect = fromMaybe "" (HashMap.lookup rawWord mapStenoWord) == word
+                in  if isCorrect
+
                        -- correct
                     then
-                        ls { swsDone     = Nothing
+                        ls { swsDone     = if swsCounter == len - 1 then Just True else Nothing
                            , swsCounter  = swsCounter + 1
+                           , swsMHint = Nothing
+                           , swsChords = []
                            }
                     else
                         ls { swsDone     = Nothing
@@ -810,6 +818,7 @@ taskWords words eMaps = do
               , swsDone      = Nothing
               , swsWords     = evalRand (shuffleM words) stdGen
               , swsNMistakes = 0
+              , swsMHint     = Nothing
               }
 
       dynStenoWords <- foldDyn step stepInitial envEChord
@@ -818,15 +827,25 @@ taskWords words eMaps = do
 
       elClass "div" "taskWords" $ do
         dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
-          el "span" $
+          elClass "span" "word" $
               when (swsCounter < len)
                   $  el "pre"
                   $  el "code"
                   $  text
                   $  swsWords !! swsCounter
 
-          el "span" $ for_ (intersperse "/" $ showt <$> swsChords) $ \str ->
+          elClass "span" "input" $ for_ (intersperse "/" $ (showt <$> swsChords) ++ ["…"]) $ \str ->
             el "code" $ text str
+
+          el "span" $ do
+            elClass "span" "btnSteno" $ text $ "↤ " <> showt (backUp navLang) -- U+21A4
+            elClass "span" "small" $ text $
+              if null swsChords then " to show hint" else " to back up"
+
+          whenJust swsMHint $ \hint ->
+            elClass "div" "small" $ for_ hint $ \r -> do
+                                                  text $ showt r
+                                                  el "br" blank
 
       let dynCounter = swsCounter <$> dynStenoWords
       dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
@@ -840,3 +859,216 @@ taskWords words eMaps = do
               "Cleared. Press any key to start over."
 
       pure $ void $ filter id eDone
+
+exercise4
+    :: forall js key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , Prerender js t m
+       , RouteToUrl (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) m
+       )
+    => m Navigation
+exercise4 = do
+
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+    unless (navLang == DE) elNotImplemented
+
+    el "h1" $ text "Stage 2"
+    el "h2" $ text "Syllables and chords"
+    el "h3" $ text "Exercise 4"
+
+    elClass "div" "paragraph"
+        $ text
+              "Introducing words that rely on two or more chords to type now. \
+              \In general, the idea of any steno system is typing efficiency \
+              \and the less chords you need to type a word, the better. \
+              \There are, however, several reasons why especially German words \
+              \do not always fit into one steno chord. In that case, \
+              \the words are simply split up and you type the corresponding chord \
+              \in succession to produce the word."
+
+    elClass "div" "paragraph" $ do
+      text
+          "As a rule of thumb, words are split up along their ortographic \
+          \syllables, e.g. we saw «Zweifel» as "
+      el "code" $ text "SFEI/FEL"
+      text " in "
+      routeLink (stageUrl navLang Stage2_2) (text "Exercise 2.2")
+      text ". In the same exercise we saw «Wissen» as "
+      el "code" $ text "WISn"
+      text ", thus ortographic syllables are not respected, after all? \
+           \Well, there are alternative spellings and you can choose \
+           \to type "
+      el "code" $ text "WIS/SEN"
+      text ", too. Thus our next rule: "
+
+    el "h4" $ text "Rule 3: syllables and word parts"
+
+    elClass "div" "paragraph"
+        $ text
+              "Words that contain more than one syllable can be typed \
+              \by typing the syllables separately, one after the other."
+
+    elClass "div" "paragraph" $ text "Type the following words as they appear!"
+
+    ePb     <- postRender $ delay 0.1 =<< getPostBuild
+    eResult <- postRender $ getDictTop2k ePb
+    let eSuccess = mapMaybe reqSuccess eResult
+    dynResult <- holdDyn Nothing $ Just <$> eResult
+
+    dyn_ $ dynResult <&> \case
+        Nothing -> elClass "div" "paragraph" $ do
+            iFa "fas fa-spinner fa-spin"
+            text " Loading ..."
+        Just (ResponseSuccess _ _ _) -> blank
+        Just _                       -> elClass "div" "paragraph small red"
+            $ text "Could not load resource: top2k"
+
+    eDone <- taskWords words2_4 eSuccess
+
+    elClass "div" "paragraph" $
+      text "Like with a lot of rules, there are exceptions. \
+           \We don't need to bother right now, the words of this exercise \
+           \are not affected. Just that you now, \
+           \sometimes you will have to type chords that span multiple \
+           \syllables and sometimes you will need multiple chords to \
+           \type a single syllable. For this reason we generally speak of \
+           \word parts instead of syllables."
+
+    elCongraz eDone envNavigation
+    pure envNavigation
+
+words2_4 :: [Text]
+words2_4 =
+  [ "eine"
+  , "einen"
+  , "haben"
+  , "gegen"
+  , "Habe"
+  , "Euro"
+  , "alle"
+  , "seine"
+  , "dabei"
+  , "Neue"
+  , "müssen"
+  , "eines"
+  , "wegen"
+  , "Ende"
+  , "sollen"
+  , "andere"
+  , "alles"
+  , "also"
+  , "wollen"
+  , "leben"
+  , "lassen"
+  , "einmal"
+  , "geben"
+  , "wäre"
+  , "gerade"
+  , "gehen"
+  , "sehen"
+  , "darauf"
+  , "gewesen"
+  , "einige"
+  , "lange"
+  , "bleiben"
+  , "neben"
+  , "denen"
+  , "Frage"
+  , "allen"
+  , "unsere"
+  , "Saison"
+  , "aufgrund"
+  , "finden"
+  , "Juni"
+  , "genau"
+  , "April"
+  , "folgen"
+  , "damals"
+  , "beide"
+  , "gegeben"
+  , "gemeinsam"
+  , "warum"
+  , "wissen"
+  , "Lage"
+  , "sagen"
+  , "Juli"
+  , "daran"
+  , "meine"
+  , "fragen"
+  , "bringen"
+  , "dessen"
+  , "allein"
+  , "dagegen"
+  , "Rolle"
+  , "Junge"
+  , "einigen"
+  , "Folge"
+  , "Region"
+  , "grünen"
+  , "helfen"
+  , "Hilfe"
+  , "offen"
+  , "darum"
+  , "eben"
+  , "Eigene"
+  , "jungen"
+  , "Medien"
+  , "jeweils"
+  , "hinaus"
+  , "Gemeinde"
+  , "gefunden"
+  , "Namen"
+  , "Donald"
+  , "Abend"
+  , "regeln"
+  , "insbesondere"
+  , "hingegen"
+  , "Union"
+  , "Wolle"
+  , "laufen"
+  , "darin"
+  , "Liga"
+  , "oben"
+  , "rennen"
+  , "gesehen"
+  , "genommen"
+  , "fällen"
+  , "hohe"
+  , "essen"
+  , "gewinnen"
+  , "Grüne"
+  , "Nähe"
+  , "Gebäude"
+  , "Boden"
+  , "fallen"
+  , "Bundesliga"
+  , "freuen"
+  , "Musik"
+  , "jemand"
+  , "Ehemalige"
+  , "Rede"
+  , "befinden"
+  , "jedenfalls"
+  , "meinen"
+  , "heraus"
+  , "Runde"
+  , "deswegen"
+  , "daraufhin"
+  , "nahe"
+  , "begonnen"
+  , "handeln"
+  , "freien"
+  , "gewonnen"
+  , "Reihe"
+  , "Handel"
+  , "Glaube"
+  , "lesen"
+  ]

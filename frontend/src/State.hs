@@ -135,6 +135,7 @@ data Stage
   | Stage2_1
   | Stage2_2
   | Stage2_3
+  | Stage2_4
   deriving (Eq, Ord, Generic)
 
 instance ToJSON Stage
@@ -155,6 +156,7 @@ instance Show Stage where
   show Stage2_1     = "Stage 2.1"
   show Stage2_2     = "Stage 2.2"
   show Stage2_3     = "Stage 2.3"
+  show Stage2_4     = "Stage 2.4"
 
 stageUrl
   :: Lang
@@ -176,6 +178,7 @@ stageUrl lang stage =
         Stage2_1 -> FrontendSubroute_Stage2_1
         Stage2_2 -> FrontendSubroute_Stage2_2
         Stage2_3 -> FrontendSubroute_Stage2_3
+        Stage2_4 -> FrontendSubroute_Stage2_4
   in r1 :/ r2 :/ ()
 
 stageDescription :: Stage -> Text
@@ -191,3 +194,4 @@ stageDescription = \case
   Stage2_1 -> "Ex. 1: Make use of home row"
   Stage2_2 -> "Ex. 2: Learn your first chords"
   Stage2_3 -> "Ex. 3: Onset, nucleus, and coda"
+  Stage2_4 -> "Ex. 4: Syllables and word parts"
