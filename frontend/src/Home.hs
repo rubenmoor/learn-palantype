@@ -44,7 +44,8 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      ((&&),  Bool(..)
+import           Data.Bool                      ( (&&)
+                                                , Bool(..)
                                                 , bool
                                                 , not
                                                 )
@@ -96,10 +97,10 @@ import           GHCJS.DOM.FileReader           ( getResult
                                                 , readAsText
                                                 )
 import           GHCJS.DOM.HTMLElement          ( focus )
-import           GHCJS.DOM.Element          ( scrollBy )
 import           GHCJS.DOM.Types                ( File )
-import           Language.Javascript.JSaddle    (eval,  FromJSVal(fromJSVal)
+import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
                                                 , ToJSVal(toJSVal)
+                                                , eval
                                                 , liftJSM
                                                 )
 import           Obelisk.Generated.Static       ( static )
@@ -112,7 +113,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , routeLink
                                                 , subRoute
                                                 )
-import           Page.Common                    ( rawArrowUp, rawArrowDown,  elFooter
+import           Page.Common                    ( elFooter
                                                 , rawToggleKeyboard
                                                 )
 import           Page.Introduction              ( introduction )
@@ -123,16 +124,18 @@ import           Palantype.Common               ( Chord(..)
                                                 , Palantype(fromIndex, keyCode)
                                                 , mkChord
                                                 )
-import           Palantype.Common.RawSteno      ( RawSteno(..)
-                                                , parseChordLenient
+import           Palantype.Common.Dictionary    ( kiDown
+                                                , kiUp
                                                 )
-import           Reflex.Dom                     (GhcjsDomSpace,    (=:)
+import qualified Palantype.Common.Indices      as KI
+import           Palantype.Common.RawSteno      ( RawSteno(..) )
+import qualified Palantype.Common.RawSteno     as Raw
+import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
                                                     )
-                                                , DomSpace(RawElement, addEventSpecFlags)
-                                                , Element(_element_raw)
+                                                , DomSpace(addEventSpecFlags)
                                                 , EventName(Click, Keydown)
                                                 , EventResult
                                                 , EventWriter
@@ -190,7 +193,6 @@ import           State                          ( Env(..)
                                                 , updateState
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import qualified Palantype.Common.RawSteno as Raw
 
 default (Text)
 
@@ -409,16 +411,25 @@ stenoInput lang = do
                     ePb <- delay 0.1 =<< getPostBuild
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-                    let eChordAll       = catMaybes $ updated dynChord
-                        eChordToggle = filter (\c -> Raw.fromChord c == rawToggleKeyboard lang) eChordAll
-                        eChordArrowDown = filter (\c -> Raw.fromChord c == rawArrowDown lang) eChordAll
-                        eChordArrowUp = filter (\c -> Raw.fromChord c == rawArrowUp lang) eChordAll
+                    let
+                        rawDown = KI.toRaw @key kiDown
+                        rawUp = KI.toRaw @key kiUp
+                        eChordAll    = catMaybes $ updated dynChord
+                        eChordToggle = filter
+                            (\c -> Raw.fromChord c == rawToggleKeyboard lang)
+                            eChordAll
+                        eChordArrowDown = filter
+                            (\c -> Raw.fromChord c == rawDown)
+                            eChordAll
+                        eChordArrowUp = filter
+                            (\c -> Raw.fromChord c == rawUp)
+                            eChordAll
 
                         remainder chord =
-                          let raw = Raw.fromChord chord
-                          in     raw /= rawToggleKeyboard lang
-                              && raw /= rawArrowUp lang
-                              && raw /= rawArrowDown lang
+                            let raw = Raw.fromChord chord
+                            in  raw /= rawToggleKeyboard lang
+                                    && raw /= rawUp
+                                    && raw /= rawDown
                         eChord = filter remainder eChordAll
 
                     updateState
@@ -429,10 +440,15 @@ stenoInput lang = do
                     -- scroll, like focus, is not available in reflex dom
                     -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
                     -- GhcjsDomSpace requires the elements to be build post render
-                    let jsDown = "let el = document.getElementById(\"content\"); \
+                    let
+                        jsDown =
+                            "let el = document.getElementById(\"content\"); \
                                  \el.scrollBy(0,100)" :: Text
-                    performEvent_ $ eChordArrowDown $> void (liftJSM $ eval jsDown)
-                    let jsUp = "let el = document.getElementById(\"content\"); \
+                    performEvent_ $ eChordArrowDown $> void
+                        (liftJSM $ eval jsDown)
+                    let
+                        jsUp =
+                            "let el = document.getElementById(\"content\"); \
                                \el.scrollBy(0,-100)" :: Text
                     performEvent_ $ eChordArrowUp $> void (liftJSM $ eval jsUp)
 
@@ -747,9 +763,7 @@ toc lang dynCurrent = elClass "section" "toc" $ do
 
 landingPage
     :: forall t (m :: * -> *)
-     . ( DomBuilder t m
-       , EventWriter t (Endo State) m
-       )
+     . (DomBuilder t m, EventWriter t (Endo State) m)
     => m ()
 landingPage = elClass "div" "landing" $ do
     el "h1" $ text "Type as fast as you speak"
@@ -948,8 +962,10 @@ stages _ navLang = elClass "div" "box" $ do
                                                     Stage2_2
                                                     (Just Stage2_3)
                                                     Stage2.exercise2
-                FrontendSubroute_Stage2_3 ->
-                    setEnv (Just Stage2_2) Stage2_3 (Just Stage2_4) Stage2.exercise3
+                FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2)
+                                                    Stage2_3
+                                                    (Just Stage2_4)
+                                                    Stage2.exercise3
                 FrontendSubroute_Stage2_4 ->
                     setEnv (Just Stage2_3) Stage2_4 Nothing Stage2.exercise4
         pure dynNavigation

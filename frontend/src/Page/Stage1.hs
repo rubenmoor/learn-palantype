@@ -81,7 +81,6 @@ import           Palantype.Common               ( Chord(..)
                                                 , fromIndex
                                                 , showH
                                                 )
-import           Palantype.Common.RawSteno      ( RawSteno )
 import           Reflex.Dom                     ( DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)

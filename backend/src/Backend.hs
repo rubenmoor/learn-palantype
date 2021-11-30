@@ -5,9 +5,7 @@
 
 module Backend where
 
-import           Common.Api                     ( Routes
-                                                , RoutesApi
-                                                )
+import           Common.Api                     ( Routes )
 import           Common.Route                   ( BackendRoute
                                                     ( BackendRoute_Api
                                                     , BackendRoute_Missing

@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
@@ -85,6 +86,9 @@ import           State                          ( Env(..)
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
+import qualified Palantype.Common.Indices as KI
+import qualified Palantype.Common.RawSteno as Raw
+import Palantype.Common.Dictionary (kiBackUp, kiEnter)
 
 elFooter
     :: forall js t (m :: * -> *)
@@ -100,45 +104,21 @@ elFooter lang Navigation {..} = elClass "footer" "stage" $ do
     whenJust navMPrevious $ \prv -> do
         elClass "div" "floatLeft" $ do
             text "< "
-            routeLink (stageUrl lang prv) $ text $ Text.pack $ show prv
-    text $ Text.pack $ show navCurrent
+            routeLink (stageUrl lang prv) $ text $ showt prv
+    text $ showt navCurrent
     whenJust navMNext $ \nxt -> do
         elClass "div" "floatRight" $ do
-            routeLink (stageUrl lang nxt) $ text $ Text.pack $ show nxt
+            routeLink (stageUrl lang nxt) $ text $ showt nxt
             text " >"
     elClass "br" "clearBoth" blank
 
-getChordCon
-    :: forall key t
-     . (Palantype key, Reflex t)
-    => Lang
-    -> Event t (Chord key)
-    -> (RawSteno, Event t ())
-getChordCon lang eChord =
-    let rs = case lang of
-            DE -> "GDON"
-            EN -> "CON"
-    in  (rs, getChord eChord rs)
-
-getChordBack
-    :: forall key t
-     . (Palantype key, Reflex t)
-    => Lang
-    -> Event t (Chord key)
-    -> (RawSteno, Event t ())
-getChordBack lang eChord =
-    let rs = case lang of
-            DE -> "BÄK"
-            EN -> "P+AC"
-    in  (rs, getChord eChord rs)
-
-getChord
-    :: forall key t
-     . (Palantype key, Reflex t)
-    => Event t (Chord key)
-    -> RawSteno
-    -> Event t ()
-getChord eChord rs = void $ filter (== parseChordLenient rs) eChord
+elBackUp
+  :: forall key (m :: * -> *) t
+  . ( DomBuilder t m
+    , Palantype key
+    ) => m ()
+elBackUp = elClass "span" "btnSteno" $
+  text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
 elCongraz
     :: forall key t (m :: * -> *)
@@ -157,8 +137,8 @@ elCongraz
 elCongraz eDone Navigation {..} = mdo
 
     eChord <- asks envEChord
-    let (rsCon , eChordCon ) = getChordCon navLang eChord
-        (rsBack, eChordBack) = getChordBack navLang eChord
+    let eChordEnter = void $ filter (\c -> KI.fromChord c == kiEnter) eChord
+        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) eChord
 
     dynShowCongraz <- holdDyn False $ leftmost [eDone $> True, eBack $> False]
     eBack          <- dynSimple $ dynShowCongraz <&> \case
@@ -169,10 +149,12 @@ elCongraz eDone Navigation {..} = mdo
             whenJust navMNext $ \nxt -> do
                 (elACont, _) <- elClass "div" "anthrazit" $ do
                     text "Type "
-                    el "code" $ text $ showt rsCon
+                    elClass "span" "btnSteno" $ do
+                        text "Enter "
+                        el "code" $ text $ showt $ KI.toRaw @key kiEnter
                     text " to continue to "
-                    elClass' "a" "normalLink" (text $ Text.pack $ show nxt)
-                let eContinue = leftmost [eChordCon, domEvent Click elACont]
+                    elClass' "a" "normalLink" (text $ showt nxt)
+                let eContinue = leftmost [eChordEnter, domEvent Click elACont]
                 updateState
                     $  eContinue
                     $> [ field @"stProgress"
@@ -189,9 +171,9 @@ elCongraz eDone Navigation {..} = mdo
                 el "span" $ text "("
                 (elABack, _) <- elClass' "a" "normalLink" $ text "back"
                 text " "
-                el "code" $ text $ showt rsBack
+                elBackUp @key
                 el "span" $ text ")"
-                pure $ leftmost [eChordBack, domEvent Click elABack]
+                pure $ leftmost [eChordBackUp, domEvent Click elABack]
     blank
 
 parseStenoOrError
@@ -224,20 +206,5 @@ elNotImplemented = elClass "blockquote" "warning" $ do
 
 rawToggleKeyboard :: Lang -> RawSteno
 rawToggleKeyboard = \case
-    DE -> "BDJN"
-    EN -> "STFL"
-
-rawArrowDown :: Lang -> RawSteno
-rawArrowDown = \case
-  DE -> "JMKSD"
-  EN -> "FCFTS"
-
-rawArrowUp :: Lang -> RawSteno
-rawArrowUp = \case
-  DE -> "DMKSD"
-  EN -> "TCFTS"
-
-backUp :: Lang -> RawSteno
-backUp = \case
-    EN -> "ULFTS"
-    DE -> "ILKSD"
+    DE -> "ULKSD"
+    EN -> "ALFTS"

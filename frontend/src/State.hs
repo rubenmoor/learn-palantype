@@ -32,6 +32,8 @@ import Data.Foldable (Foldable(foldMap))
 import Palantype.Common (Chord)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import TextShow (TextShow (showb), fromText)
+import Control.Category ((<<<))
 
 -- environment for frontend pages
 
@@ -144,19 +146,20 @@ instance FromJSON Stage
 instance Default Stage where
   def = Introduction
 
-instance Show Stage where
-  show Introduction = "Introduction"
-  show Stage1_1     = "Stage 1.1"
-  show Stage1_2     = "Stage 1.2"
-  show Stage1_3     = "Stage 1.3"
-  show Stage1_4     = "Stage 1.4"
-  show Stage1_5     = "Stage 1.5"
-  show Stage1_6     = "Stage 1.6"
-  show Stage1_7     = "Stage 1.7"
-  show Stage2_1     = "Stage 2.1"
-  show Stage2_2     = "Stage 2.2"
-  show Stage2_3     = "Stage 2.3"
-  show Stage2_4     = "Stage 2.4"
+instance TextShow Stage where
+  showb = fromText <<< \case
+      Introduction -> "Introduction"
+      Stage1_1     -> "Stage 1.1"
+      Stage1_2     -> "Stage 1.2"
+      Stage1_3     -> "Stage 1.3"
+      Stage1_4     -> "Stage 1.4"
+      Stage1_5     -> "Stage 1.5"
+      Stage1_6     -> "Stage 1.6"
+      Stage1_7     -> "Stage 1.7"
+      Stage2_1     -> "Stage 2.1"
+      Stage2_2     -> "Stage 2.2"
+      Stage2_3     -> "Stage 2.3"
+      Stage2_4     -> "Stage 2.4"
 
 stageUrl
   :: Lang
