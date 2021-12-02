@@ -5,8 +5,9 @@
 
 module Main where
 
-import           Clay                           ((-:), sticky, before, inline, blockquote,  (#)
+import           Clay                           ( (#)
                                                 , (&)
+                                                , (-:)
                                                 , (?)
                                                 , All(all)
                                                 , Auto(auto)
@@ -25,8 +26,10 @@ import           Clay                           ((-:), sticky, before, inline, b
                                                 , alignItems
                                                 , animation
                                                 , backgroundColor
+                                                , before
                                                 , black
                                                 , block
+                                                , blockquote
                                                 , blue
                                                 , body
                                                 , bold
@@ -82,6 +85,7 @@ import           Clay                           ((-:), sticky, before, inline, b
                                                 , img
                                                 , important
                                                 , infinite
+                                                , inline
                                                 , inlineBlock
                                                 , inlineFlex
                                                 , input
@@ -138,6 +142,7 @@ import           Clay                           ((-:), sticky, before, inline, b
                                                 , solid
                                                 , span
                                                 , star
+                                                , sticky
                                                 , stringContent
                                                 , table
                                                 , td
@@ -159,7 +164,8 @@ import           Clay                           ((-:), sticky, before, inline, b
                                                 , zIndex
                                                 , (|>)
                                                 )
-import           Clay.Border                    (borderTop,  borderBottom
+import           Clay.Border                    ( borderBottom
+                                                , borderTop
                                                 , dotted
                                                 )
 import           Clay.Flexbox                   ( nowrap
@@ -234,55 +240,55 @@ main = putCss $ do
         position relative
 
     section # "#content" # before ? do
-      content $ stringContent "Up \\25B2 DMKSD" -- U+25B2
-      -- content $ stringContent "Up ▲ DMKSD" -- unicode makes `ob run` crash
-      display block
-      width $ other "fit-content"
-      position sticky
-      top $ px 2
-      fontSize $ pt 12
-      fontWeight bold
-      height $ px 21
-      marginLeft auto
-      marginRight auto
-      backgroundColor $ rgb 102 141 60
-      opacity 0.7
-      color white
-      borderRadius (px 8) (px 8) (px 8) (px 8)
-      padding (px 4) (px 4) (px 4) (px 4)
+        content $ stringContent "Up \\25B2 DMKSD" -- U+25B2
+        -- content $ stringContent "Up ▲ DMKSD" -- unicode makes `ob run` crash
+        display block
+        width $ other "fit-content"
+        position sticky
+        top $ px 2
+        fontSize $ pt 12
+        fontWeight bold
+        height $ px 21
+        marginLeft auto
+        marginRight auto
+        backgroundColor $ rgb 102 141 60
+        opacity 0.7
+        color white
+        borderRadius (px 8) (px 8) (px 8) (px 8)
+        padding (px 4) (px 4) (px 4) (px 4)
 
     section # "#content" |> div # before ? do
-      content $ stringContent ""
-      width $ pct 80
-      backgroundColor white
-      position absolute
-      top $ px 2
-      height $ px 29
+        content $ stringContent ""
+        width $ pct 80
+        backgroundColor white
+        position absolute
+        top $ px 2
+        height $ px 29
 
     section # "#content" # after ? do
-      content $ stringContent "Down \\25BC JMKSD"
-      display block
-      width $ other "fit-content"
-      position sticky
-      bottom $ px 8
-      fontSize $ pt 12
-      fontWeight bold
-      height $ px 21
-      marginLeft auto
-      marginRight auto
-      backgroundColor $ rgb 102 141 60
-      opacity 0.7
-      color white
-      borderRadius (px 8) (px 8) (px 8) (px 8)
-      padding (px 4) (px 4) (px 4) (px 4)
+        content $ stringContent "Down \\25BC JMKSD"
+        display block
+        width $ other "fit-content"
+        position sticky
+        bottom $ px 8
+        fontSize $ pt 12
+        fontWeight bold
+        height $ px 21
+        marginLeft auto
+        marginRight auto
+        backgroundColor $ rgb 102 141 60
+        opacity 0.7
+        color white
+        borderRadius (px 8) (px 8) (px 8) (px 8)
+        padding (px 4) (px 4) (px 4) (px 4)
 
     section # "#content" |> div # after ? do
-      content $ stringContent ""
-      width $ pct 80
-      backgroundColor white
-      position absolute
-      height $ px 37
-      zIndex 1
+        content $ stringContent ""
+        width $ pct 80
+        backgroundColor white
+        position absolute
+        height $ px 37
+        zIndex 1
 
     section # ".toc" ? do
         marginTop $ em 0.83
@@ -470,13 +476,20 @@ main = putCss $ do
         color gray
         fontSize $ pt 24
 
+    span # ".checkmark" ? do
+        width (em 1)
+        display inlineBlock
+
     div # ".dropdown" ? do
+
         position relative
         display inlineBlock
+
         span # ".dropdown-button" ? do
             color gray
             fontSize $ pt 24
             padding (px 8) (px 8) (px 8) (px 8)
+
         div # ".dropdown-content" ? do
             display none
             position absolute
@@ -488,11 +501,20 @@ main = putCss $ do
                       $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)
                 ]
             zIndex 1
-            span ? do
+
+            span # ".entry" ? do
                 minWidth $ px 160
                 padding (px 12) (px 12) (px 12) (px 12)
                 display block
-                hover & backgroundColor gray
+                hover & backgroundColor lightgray
+
+            span # ".caption" ? do
+                padding (px 12) (px 12) (px 0) (px 12)
+                display block
+                color anthrazit
+                fontSize $ pt 10
+                fontWeight bold
+                borderBottom solid (px 1) lightgray
 
         ":hover" & div # ".dropdown-content" ? display block
 
@@ -510,8 +532,8 @@ main = putCss $ do
         overflow hidden
 
     blockquote # ".warning" ? do
-      backgroundColor lightblue
-      padding (px 36) (px 36) (px 36) (px 36)
+        backgroundColor lightblue
+        padding (px 36) (px 36) (px 36) (px 36)
 
     ".bgWhite" ? backgroundColor white
     ".bgGreen" ? backgroundColor lightgreen
@@ -664,16 +686,15 @@ main = putCss $ do
         alignItems center
 
     div # ".taskWords" |> span ? do
-            marginLeft $ em 1
-            marginRight $ em 1
+        marginLeft $ em 1
+        marginRight $ em 1
 
-    div # ".taskWords" |> span # ".word" ?
-            width (px 120)
+    div # ".taskWords" |> span # ".word" ? width (px 120)
 
     span # ".btnSteno" ? do
-      fontSize $ pt 12
-      fontWeight bold
-      backgroundColor $ rgb 102 141 60
-      color white
-      borderRadius (px 12) (px 12) (px 12) (px 12)
-      padding (px 6) (px 6) (px 6) (px 6)
+        fontSize $ pt 12
+        fontWeight bold
+        backgroundColor $ rgb 102 141 60
+        color white
+        borderRadius (px 12) (px 12) (px 12) (px 12)
+        padding (px 6) (px 6) (px 6) (px 6)

@@ -31,12 +31,12 @@ import           Servant.API               ((:<|>), Get, (:>), JSON, PlainText, 
 import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (Key)
 import Data.HashMap.Strict (HashMap)
+import Control.Category ((<<<))
 
 type RoutesApi = "api" :>
      (    "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
      :<|> "dict"   :> "top2k" :> Get '[JSON] (HashMap RawSteno Text, HashMap Text [RawSteno])
      )
-
 
 type Routes = RoutesApi
 
@@ -63,6 +63,23 @@ newtype PloverCfg = PloverCfg { unPloverCfg :: Map Lang PloverSystemCfg }
 
 instance Wrapped PloverCfg
 
+-- PloverSystemCfg
+
+data CfgName
+  = CNFile
+  | CNQwertyEN
+  | CNQwertzDE
+  deriving (Generic, Eq)
+
+instance TextShow CfgName where
+  showb = fromText <<< \case
+    CNFile -> "custom layout"
+    CNQwertyEN -> "qwerty EN"
+    CNQwertzDE -> "qwerty DE"
+
+instance FromJSON CfgName
+instance ToJSON CfgName
+
 data PloverSystemCfg = PloverSystemCfg
   -- recognized steno keys: Map (raw steno) [plover key code]
   { pcfgMapStenoKeys        :: Map KeyIndex [Text]
@@ -73,6 +90,7 @@ data PloverSystemCfg = PloverSystemCfg
   -- plover key codes that failed to parse
   , pcfgUnrecognizedQwertys :: [Text]
   , pcfgMachine             :: Text
+  , pcfgName :: CfgName
   }
   deriving (Eq, Generic)
 
@@ -80,43 +98,79 @@ instance ToJSON PloverSystemCfg
 instance FromJSON PloverSystemCfg
 
 instance Default PloverSystemCfg where
-  def = keyMapToPloverCfg lsStenoKeys [] "keyboard"
-    where
-        lsStenoKeys :: [(KeyIndex, [Text])]
-        lsStenoKeys =
-          [ ( 1, ["q"])
-          , ( 2, ["a"])
-          , ( 3, ["z"])
-          , ( 4, ["2"])
-          , ( 5, ["w"])
-          , ( 6, ["s"])
-          , ( 7, ["3"])
-          , ( 8, ["e"])
-          , ( 9, ["d"])
-          , (10, ["4"])
-          , (11, ["r"])
-          , (12, ["f"])
-          , (13, ["c"])
-          , (14, ["v"])
-          , (15, ["b"])
-          , (16, ["g"])
-          , (17, ["h"])
-          , (18, ["n"])
-          , (19, ["m"])
-          , (20, [","])
-          , (21, ["7"])
-          , (22, ["u"])
-          , (23, ["j"])
-          , (24, ["8"])
-          , (25, ["i"])
-          , (26, ["k"])
-          , (27, ["9"])
-          , (28, ["o"])
-          , (29, ["l"])
-          , (30, ["p"])
-          , (31, [";"])
-          , (32, ["/"])
-          ]
+  def = keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
+
+lsStenoQwerty :: [(KeyIndex, [Text])]
+lsStenoQwerty =
+  [ ( 1, ["q"])
+  , ( 2, ["a"])
+  , ( 3, ["z"])
+  , ( 4, ["2"])
+  , ( 5, ["w"])
+  , ( 6, ["s"])
+  , ( 7, ["3"])
+  , ( 8, ["e"])
+  , ( 9, ["d"])
+  , (10, ["4"])
+  , (11, ["r"])
+  , (12, ["f"])
+  , (13, ["c"])
+  , (14, ["v"])
+  , (15, ["b"])
+  , (16, ["g"])
+  , (17, ["h"])
+  , (18, ["n"])
+  , (19, ["m"])
+  , (20, [","])
+  , (21, ["7"])
+  , (22, ["u"])
+  , (23, ["j"])
+  , (24, ["8"])
+  , (25, ["i"])
+  , (26, ["k"])
+  , (27, ["9"])
+  , (28, ["o"])
+  , (29, ["l"])
+  , (30, ["p"])
+  , (31, [";"])
+  , (32, ["/"])
+  ]
+
+lsStenoQwertz :: [(KeyIndex, [Text])]
+lsStenoQwertz =
+  [ ( 1, ["q"])
+  , ( 2, ["a"])
+  , ( 3, ["y"])
+  , ( 4, ["2"])
+  , ( 5, ["w"])
+  , ( 6, ["s"])
+  , ( 7, ["3"])
+  , ( 8, ["e"])
+  , ( 9, ["d"])
+  , (10, ["4"])
+  , (11, ["r"])
+  , (12, ["f"])
+  , (13, ["c"])
+  , (14, ["v"])
+  , (15, ["b"])
+  , (16, ["g"])
+  , (17, ["h"])
+  , (18, ["n"])
+  , (19, ["m"])
+  , (20, [","])
+  , (21, ["7"])
+  , (22, ["u"])
+  , (23, ["j"])
+  , (24, ["8"])
+  , (25, ["i"])
+  , (26, ["k"])
+  , (27, ["9"])
+  , (28, ["o"])
+  , (29, ["l"])
+  , (30, ["p"])
+  , (31, ["ö"])
+  , (32, ["-"])
+  ]
 
 instance ToJSON Key
 instance FromJSON Key
@@ -126,51 +180,55 @@ instance FromJSON Key
 --
 instance Default PloverCfg where
   def = PloverCfg $ Map.fromList
-          [ (EN, keyMapToPloverCfg lsStenoKeysOrig [] "keyboard")
+          [ (EN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
           , (DE, def)
           ]
     where
       -- | this is a copy of the default mapping for plover's
       --   Palantype plug-in
-      lsStenoKeysOrig :: [(KeyIndex, [Text])]
-      lsStenoKeysOrig =
-        [ (3 , ["2"])
+      lsStenoQwertyOrig :: [(KeyIndex, [Text])]
+      lsStenoQwertyOrig =
+        [ (4 , ["2"])
         , (7 , ["3"])
         , (10, ["4"])
-        , (22, ["8"])
-        , (25, ["9"])
-        , (28, ["0"])
-        , (2 , ["q"])
-        , (4 , ["w"])
+        , (21, ["8"])
+        , (24, ["9"])
+        , (27, ["0"])
+        , (1 , ["q"])
+        , (5 , ["w"])
         , (8 , ["e"])
         , (11, ["r"])
-        , (23, ["u"])
-        , (26, ["i"])
-        , (29, ["o"])
-        , (32, ["p"])
-        , (1 , ["a"])
-        , (5 , ["s"])
+        , (22, ["u"])
+        , (25, ["i"])
+        , (28, ["o"])
+        , (31, ["p"])
+        , (2 , ["a"])
+        , (6 , ["s"])
         , (9 , ["d"])
         , (12, ["f"])
         , (14, ["g"])
         , (18, ["h"])
-        , (24, ["j"])
-        , (27, ["k"])
-        , (30, ["l"])
-        , (31, [";"])
-        , (6 , ["z", "x", "c"])
+        , (23, ["j"])
+        , (26, ["k"])
+        , (29, ["l"])
+        , (30, [";"])
+        , (3 , ["z", "x", "c"])
         , (15, ["v"])
-        , (20, ["b"])
+        , (17, ["b"])
         , (19, ["n"])
-        , (21, ["m", ",", ".", "/"])
+        , (32, ["m", ",", ".", "/"])
         ]
 
+{-|
+generate a ploverCfg object from the specified key map
+-}
 keyMapToPloverCfg
-  :: [(KeyIndex, [Text])]
-  -> [RawSteno]
-  -> Text
+  :: [(KeyIndex, [Text])] -- ^ key map
+  -> [RawSteno]           -- ^ unrecognized steno keys
+  -> Text                 -- ^ machine
+  -> CfgName              -- ^ config name
   -> PloverSystemCfg
-keyMapToPloverCfg lsIndexPlover pcfgUnrecognizedStenos pcfgMachine =
+keyMapToPloverCfg lsIndexPlover pcfgUnrecognizedStenos pcfgMachine pcfgName =
   let acc (lsKeySteno, mapStenoKeys, lsUQwerty) (i, plovers) =
         let lsEQwerty = fromPlover <$> plovers
             lsQwerty = rights lsEQwerty

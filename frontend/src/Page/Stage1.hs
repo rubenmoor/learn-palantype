@@ -56,6 +56,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
+                                                , sort
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
@@ -320,6 +321,9 @@ exercise4 = do
     elCongraz eDone envNavigation
     pure envNavigation
 
+{-|
+Pass through all the letters of the steno alphabet one by one
+-}
 taskAlphabet
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -329,14 +333,15 @@ taskAlphabet
        , Palantype key
        , PostBuild t m
        )
-    => Bool
+    => Bool -- ^ show the alphabet
     -> m (Event t ())
 taskAlphabet showAlphabet = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
     let dynAlphabet =
-            fmap fromIndex
+            sort
+                .   fmap fromIndex
                 .   Map.keys
                 .   pcfgMapStenoKeys
                 .   view (_Wrapped' . at navLang . non def)
@@ -350,7 +355,7 @@ taskAlphabet showAlphabet = do
             step (Chord ks) ws@WalkState {..} =
                 case (ks, wsMMistake, wsDone) of
 
-                -- reset after done
+            -- reset after done
                     (_, _, Just True) ->
                         ws { wsDone = Just False, wsCounter = 0 }
 
@@ -418,6 +423,9 @@ data StenoLettersState k = StenoLettersState
     , slsLetters  :: [k]
     }
 
+{-|
+Type random steno letters as they appear
+-}
 taskLetters
     :: forall key js t (m :: * -> *)
      . ( DomBuilder t m
@@ -449,7 +457,7 @@ taskLetters dynLetters = do
                 step (Chord ks) ls@StenoLettersState {..} =
                     case (ks, slsMMistake, slsDone) of
 
-                        -- reset after done
+                    -- reset after done
                         (_, _, Just True) ->
                             let letters' =
                                     evalRand (shuffleM slsLetters) stdGen

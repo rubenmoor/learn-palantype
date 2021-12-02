@@ -15,6 +15,7 @@ import           Common.Api                     ( Lang(..)
                                                 , PloverSystemCfg
                                                 , Routes
                                                 , keyMapToPloverCfg
+                                                , CfgName (CNFile)
                                                 )
 import           Control.Applicative            ( Applicative((<*>), pure) )
 import           Control.Category               ( Category((.)) )
@@ -180,4 +181,5 @@ handleConfigNew str = do
                 , keyMapToPloverCfg lsIndexPlovers
                                     unrecognizedStenos
                                     (Text.pack machine)
+                                    CNFile
                 )

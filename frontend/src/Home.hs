@@ -17,17 +17,21 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
-import           Common.Api                     ( Lang(..)
+import           Common.Api                     (CfgName (..),  Lang(..)
                                                 , PloverSystemCfg(..)
+                                                , keyMapToPloverCfg
+                                                , lsStenoQwerty
+                                                , lsStenoQwertz
                                                 , showSymbol
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendSubroute_Stage(..)
                                                 )
 import           Control.Applicative            ( Applicative(..) )
-import           Control.Category               ( Category((.), id) )
-import           Control.Lens                   ( At(at)
+import           Control.Category               ((<<<), (>>>), Category((.), id) )
+import           Control.Lens                   ((^.),  At(at)
                                                 , Ixed(ix)
+                                                , _Just
                                                 , non
                                                 , view
                                                 )
@@ -68,7 +72,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as Map
-import           Data.Maybe                     ( Maybe(..)
+import           Data.Maybe                     (maybe,  Maybe(..)
                                                 , listToMaybe
                                                 )
 import           Data.Monoid                    ( (<>) )
@@ -130,7 +134,7 @@ import           Palantype.Common.Dictionary    ( kiDown
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.Common.RawSteno      ( RawSteno(..) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Reflex.Dom                     ( (=:)
+import           Reflex.Dom                     ((=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
@@ -239,8 +243,9 @@ settings
        , MonadFix m
        , SetRoute t (R FrontendRoute) m
        )
-    => m ()
-settings = do
+    => Lang
+    -> m ()
+settings lang = do
     dynState <- ask
 
     -- button to toggle keyboard
@@ -259,31 +264,57 @@ settings = do
         elClass "span" "dropdown-button" $ iFa "fas fa-cog"
         elClass "div" "dropdown-content" $ mdo
 
-            eFile' <- elClass "span" "hiddenFileInput" $ do
-                text "Upload your plover.cfg"
-                elFileInput $ eRC $> ""
+            let dynMCfgName = fmap pcfgName . view (at lang >>> _Wrapped') . stPloverCfg <$> dynState
+                elCheckmark co = dyn_ $ dynMCfgName <&> \cfgName ->
+                    elClass "span" "checkmark" $ if cfgName == Just co then text "✓ " else blank
 
-            (elRC, _) <- el' "span" $ text "Reset to default configuration"
-            let eRC = domEvent Click elRC
-            updateState $ eRC $> [field @"stPloverCfg" .~ def]
+            elClass "span" "caption" $ text "Keyboard layout"
 
-            (eRP, _) <- el' "span" $ text "Reset progress"
+            (elQwertz, _) <- elClass' "span" "entry" $ do
+                elCheckmark CNQwertzDE
+                text "qwertz DE"
+
+            let eQwertz = domEvent Click elQwertz
+            updateState
+                $  eQwertz
+                $> [ field @"stPloverCfg"
+                     .  _Wrapped'
+                     .  ix lang
+                     .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
+                   ]
+
+            (elQwerty, _) <- elClass' "span" "entry" $ do
+                elCheckmark CNQwertyEN
+                text "qwerty EN"
+            let eQwerty = domEvent Click elQwerty
+            updateState
+                $  eQwerty
+                $> [ field @"stPloverCfg"
+                     .  _Wrapped'
+                     .  ix lang
+                     .~ keyMapToPloverCfg lsStenoQwerty [] "keyboard" CNQwertyEN
+                   ]
+
+
+            eFile' <- elClass "span" "hiddenFileInput entry" $ do
+                elCheckmark CNFile
+                text "Upload plover.cfg"
+                elFileInput $ leftmost [eQwerty, eQwertz] $> ""
+
+            elClass "span" "caption" $ text "Progress"
+
+            (eRP, _) <- elClass' "span" "entry" $ text "Reset"
             updateState $ domEvent Click eRP $> [field @"stProgress" .~ def]
 
             pure eFile'
 
-    let dynMLang = stMLang <$> dynState
-    dyn_ $ dynMLang <&> \case
-        Nothing   -> blank
-        Just lang -> elClass "div" "dropdown" $ do
-            elClass "span" "dropdown-button" $ text $ showSymbol lang
-            elClass "div" "dropdown-content" $ do
-                (eRL, _) <- el' "span" $ text "Reset language"
-                let eClickRL = domEvent Click eRL
-                updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
-                setRoute $ eClickRL $> FrontendRoute_Main :/ ()
-
-
+    elClass "div" "dropdown" $ do
+        elClass "span" "dropdown-button" $ text $ showSymbol lang
+        elClass "div" "dropdown-content" $ do
+            (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
+            let eClickRL = domEvent Click eRL
+            updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
+            setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
     eReqResult <- postRender $ do
         fileReader <- liftJSM newFileReader
@@ -305,8 +336,8 @@ settings = do
             msgBody    = "Did you upload a proper .cfg file?\n" <> str
         in  [field @"stMsg" .~ Just Message { .. }, field @"stPloverCfg" .~ def]
 
-    updateState $ eReqSuccess <&> \(lang, systemCfg@PloverSystemCfg {..}) ->
-        [ field @"stPloverCfg" %~ (_Wrapped' %~ ix lang .~ systemCfg)
+    updateState $ eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
+        [ field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg)
         , if null pcfgUnrecognizedQwertys
             then id
             else
@@ -392,8 +423,8 @@ stenoInput lang = do
                       -- a bit of a hack to switch to the original Palantype
                       -- keyboard layout for English
                       -- that original layout I will consider the exception
-                        EN -> elKeyboardEN pcfgMapStenoKeys dynPressedKeys
-                        _  -> elKeyboard pcfgMapStenoKeys dynPressedKeys lang
+                        EN -> elKeyboardEN pcfgName pcfgMapStenoKeys dynPressedKeys
+                        _  -> elKeyboard pcfgName pcfgMapStenoKeys dynPressedKeys lang
 
                     kbInput <- elStenoOutput dynDownKeys
 
@@ -411,9 +442,8 @@ stenoInput lang = do
                     ePb <- delay 0.1 =<< getPostBuild
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-                    let
-                        rawDown = KI.toRaw @key kiDown
-                        rawUp = KI.toRaw @key kiUp
+                    let rawDown      = KI.toRaw @key kiDown
+                        rawUp        = KI.toRaw @key kiUp
                         eChordAll    = catMaybes $ updated dynChord
                         eChordToggle = filter
                             (\c -> Raw.fromChord c == rawToggleKeyboard lang)
@@ -427,9 +457,12 @@ stenoInput lang = do
 
                         remainder chord =
                             let raw = Raw.fromChord chord
-                            in  raw /= rawToggleKeyboard lang
-                                    && raw /= rawUp
-                                    && raw /= rawDown
+                            in  raw
+                                    /= rawToggleKeyboard lang
+                                    && raw
+                                    /= rawUp
+                                    && raw
+                                    /= rawDown
                         eChord = filter remainder eChordAll
 
                     updateState
@@ -457,11 +490,12 @@ stenoInput lang = do
 elKeyboard
     :: forall key t (m :: * -> *)
      . (DomBuilder t m, Palantype key, PostBuild t m)
-    => Map KeyIndex [Text]
+    => CfgName
+    -> Map KeyIndex [Text]
     -> Dynamic t (Set key)
     -> Lang
     -> m ()
-elKeyboard stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
+elKeyboard cfgName stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
     el "table" $ do
         el "tr" $ do
             elCell stenoKeys dynPressedKeys 1  "1" "pinkyYOffset"
@@ -517,7 +551,9 @@ elKeyboard stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 20 "1" "thumbrow"
 
             elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-    elClass "span" "system" $ text $ showt lang
+    elClass "span" "system" $ do
+      el "div" $ text $ showt EN
+      el "div" $ text $ showt cfgName
 
 -- | original Palantype keyboard layout
 -- | unfortunately the keys don't follow the simple order
@@ -526,56 +562,53 @@ elKeyboard stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
 elKeyboardEN
     :: forall key t (m :: * -> *)
      . (DomBuilder t m, Palantype key, PostBuild t m)
-    => Map KeyIndex [Text]
+    => CfgName
+    -> Map KeyIndex [Text]
     -> Dynamic t (Set key)
     -> m ()
-elKeyboardEN stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
+elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
     el "table" $ do
         el "tr" $ do
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 3  "1" ""
+            elCell stenoKeys dynPressedKeys 4  "1" ""
             elCell stenoKeys dynPressedKeys 7  "1" ""
             elCell stenoKeys dynPressedKeys 10 "1" ""
             elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 22 "1" ""
-            elCell stenoKeys dynPressedKeys 25 "1" ""
-            elCell stenoKeys dynPressedKeys 28 "1" ""
+            elCell stenoKeys dynPressedKeys 21 "1" ""
+            elCell stenoKeys dynPressedKeys 24 "1" ""
+            elCell stenoKeys dynPressedKeys 27 "1" ""
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 2  "1" ""
-            elCell stenoKeys dynPressedKeys 4  "1" "homerow"
+
+            elCell stenoKeys dynPressedKeys 5  "1" "homerow"
             elCell stenoKeys dynPressedKeys 8  "1" "homerow"
             elCell stenoKeys dynPressedKeys 11 "1" "homerow"
             elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 23 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 26 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 29 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 32 "1" ""
+            elCell stenoKeys dynPressedKeys 22 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 25 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 28 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 31 "1" ""
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 1  "1" "homerow"
-            elCell stenoKeys dynPressedKeys 5  "1" ""
+            elCell stenoKeys dynPressedKeys 2  "1" "homerow"
+            elCell stenoKeys dynPressedKeys 6  "1" ""
             elCell stenoKeys dynPressedKeys 9  "1" ""
             elCell stenoKeys dynPressedKeys 12 "1" ""
             elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 24 "1" ""
-            elCell stenoKeys dynPressedKeys 27 "1" ""
-            elCell stenoKeys dynPressedKeys 30 "1" ""
-            elCell stenoKeys dynPressedKeys 31 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 23 "1" ""
+            elCell stenoKeys dynPressedKeys 26 "1" ""
+            elCell stenoKeys dynPressedKeys 29 "1" ""
+            elCell stenoKeys dynPressedKeys 30 "1" "homerow"
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 6 "2" ""
-            -- 13: not in use
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+            elCell stenoKeys dynPressedKeys 3  "3" ""
             elCell stenoKeys dynPressedKeys 14 "1" ""
             elCell stenoKeys dynPressedKeys 15 "1" "homerow"
-            -- 16: not in use
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            -- 17: not in use
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 18 "1" ""
+            elCell stenoKeys dynPressedKeys 17 "2" ""
             elCell stenoKeys dynPressedKeys 19 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 20 "1" ""
-            elCell stenoKeys dynPressedKeys 21 "2" ""
-    elClass "span" "system" $ text $ showt EN
+            elCell stenoKeys dynPressedKeys 18 "1" ""
+            elCell stenoKeys dynPressedKeys 29 "3" ""
+    elClass "span" "system" $ do
+      el "div" $ text $ showt EN
+      el "div" $ text $ showt cfgName
 
 elCell
     :: forall key t (m1 :: * -> *)
@@ -885,7 +918,7 @@ stages
            ()
 stages _ navLang = elClass "div" "box" $ do
     eChord <- el "header" $ do
-        settings
+        settings navLang
         message
         stenoInput navLang
 
