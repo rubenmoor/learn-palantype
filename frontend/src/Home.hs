@@ -573,13 +573,17 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 4  "1" ""
             elCell stenoKeys dynPressedKeys 7  "1" ""
             elCell stenoKeys dynPressedKeys 10 "1" ""
-            elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+            -- elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
+            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
+            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
             elCell stenoKeys dynPressedKeys 21 "1" ""
             elCell stenoKeys dynPressedKeys 24 "1" ""
             elCell stenoKeys dynPressedKeys 27 "1" ""
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
         el "tr" $ do
-
+            elCell stenoKeys dynPressedKeys 1  "1" ""
             elCell stenoKeys dynPressedKeys 5  "1" "homerow"
             elCell stenoKeys dynPressedKeys 8  "1" "homerow"
             elCell stenoKeys dynPressedKeys 11 "1" "homerow"
@@ -587,7 +591,7 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 22 "1" "homerow"
             elCell stenoKeys dynPressedKeys 25 "1" "homerow"
             elCell stenoKeys dynPressedKeys 28 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 31 "1" ""
+            elCell stenoKeys dynPressedKeys 30 "1" ""
         el "tr" $ do
             elCell stenoKeys dynPressedKeys 2  "1" "homerow"
             elCell stenoKeys dynPressedKeys 6  "1" ""
@@ -597,15 +601,15 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 23 "1" ""
             elCell stenoKeys dynPressedKeys 26 "1" ""
             elCell stenoKeys dynPressedKeys 29 "1" ""
-            elCell stenoKeys dynPressedKeys 30 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 31 "1" "homerow"
         el "tr" $ do
             elCell stenoKeys dynPressedKeys 3  "3" ""
             elCell stenoKeys dynPressedKeys 14 "1" ""
             elCell stenoKeys dynPressedKeys 15 "1" "homerow"
             elCell stenoKeys dynPressedKeys 17 "2" ""
-            elCell stenoKeys dynPressedKeys 19 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 18 "1" ""
-            elCell stenoKeys dynPressedKeys 29 "3" ""
+            elCell stenoKeys dynPressedKeys 18 "1" "homerow"
+            elCell stenoKeys dynPressedKeys 19 "1" ""
+            elCell stenoKeys dynPressedKeys 32 "3" ""
     elClass "span" "system" $ do
       el "div" $ text $ showt EN
       el "div" $ text $ showt cfgName

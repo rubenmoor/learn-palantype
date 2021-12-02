@@ -355,7 +355,7 @@ main = putCss $ do
         fontSize (pt 12)
         padding (px 12) (px 12) (px 12) (px 12)
         position absolute
-        zIndex 1
+        zIndex 3
         span ? whiteSpace preWrap
         div ? fontWeight bold
 
