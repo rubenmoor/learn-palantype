@@ -239,16 +239,15 @@ main = putCss $ do
         height $ pct 100
         position relative
 
-    section # "#content" # before ? do
-        content $ stringContent "Up \\25B2 DMKSD" -- U+25B2
-        -- content $ stringContent "Up ▲ DMKSD" -- unicode makes `ob run` crash
-        display block
-        width $ other "fit-content"
+    -- section # "#content" # before ? do
+        -- content $ stringContent "Up \\25B2  DMKSD" -- U+25B2
+    section # "#content" |> div # ".scrollTop" ? do
+        width $ other "max-content"
+        height $ px 29
         position sticky
         top $ px 2
         fontSize $ pt 12
         fontWeight bold
-        height $ px 21
         marginLeft auto
         marginRight auto
         backgroundColor $ rgb 102 141 60
@@ -257,7 +256,7 @@ main = putCss $ do
         borderRadius (px 8) (px 8) (px 8) (px 8)
         padding (px 4) (px 4) (px 4) (px 4)
 
-    section # "#content" |> div # before ? do
+    section # "#content" |> div # ".content" # before ? do
         content $ stringContent ""
         width $ pct 80
         backgroundColor white
@@ -265,15 +264,13 @@ main = putCss $ do
         top $ px 2
         height $ px 29
 
-    section # "#content" # after ? do
-        content $ stringContent "Down \\25BC JMKSD"
-        display block
-        width $ other "fit-content"
+    section # "#content" |> div # ".scrollBottom" ? do
+        width $ other "max-content"
+        height $ px 29
         position sticky
         bottom $ px 8
         fontSize $ pt 12
         fontWeight bold
-        height $ px 21
         marginLeft auto
         marginRight auto
         backgroundColor $ rgb 102 141 60
@@ -282,7 +279,7 @@ main = putCss $ do
         borderRadius (px 8) (px 8) (px 8) (px 8)
         padding (px 4) (px 4) (px 4) (px 4)
 
-    section # "#content" |> div # after ? do
+    section # "#content" |> div # ".content" # after ? do
         content $ stringContent ""
         width $ pct 80
         backgroundColor white

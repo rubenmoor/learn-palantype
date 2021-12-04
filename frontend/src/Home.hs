@@ -17,10 +17,12 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
-import           Common.Api                     (CfgName (..),  Lang(..)
+import           Common.Api                     ( CfgName(..)
+                                                , Lang(..)
                                                 , PloverSystemCfg(..)
                                                 , keyMapToPloverCfg
                                                 , lsStenoQwerty
+                                                , lsStenoQwertyOrig
                                                 , lsStenoQwertz
                                                 , showSymbol
                                                 )
@@ -28,10 +30,11 @@ import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendSubroute_Stage(..)
                                                 )
 import           Control.Applicative            ( Applicative(..) )
-import           Control.Category               ((<<<), (>>>), Category((.), id) )
-import           Control.Lens                   ((^.),  At(at)
+import           Control.Category               ( (>>>)
+                                                , Category((.), id)
+                                                )
+import           Control.Lens                   ( At(at)
                                                 , Ixed(ix)
-                                                , _Just
                                                 , non
                                                 , view
                                                 )
@@ -41,6 +44,7 @@ import           Control.Lens.Setter            ( (%~)
 import           Control.Lens.Wrapped           ( _Wrapped' )
 import           Control.Monad                  ( (<=<)
                                                 , (=<<)
+                                                , guard
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.Reader           ( MonadReader(ask)
@@ -72,8 +76,9 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as Map
-import           Data.Maybe                     (maybe,  Maybe(..)
+import           Data.Maybe                     ( Maybe(..)
                                                 , listToMaybe
+
                                                 )
 import           Data.Monoid                    ( (<>) )
 import           Data.Proxy                     ( Proxy(..) )
@@ -94,6 +99,7 @@ import           Data.Witherable                ( Filterable
                                                     , mapMaybe
                                                     )
                                                 )
+import GHC.Real (fromIntegral)
 import           GHCJS.DOM.EventM               ( on )
 import           GHCJS.DOM.FileReader           ( getResult
                                                 , load
@@ -134,17 +140,17 @@ import           Palantype.Common.Dictionary    ( kiDown
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.Common.RawSteno      ( RawSteno(..) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Reflex.Dom                     ((=:)
+import           Reflex.Dom                     (KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
                                                     )
                                                 , DomSpace(addEventSpecFlags)
-                                                , EventName(Click, Keydown)
+                                                , EventName(Click, Keydown, Keyup)
                                                 , EventResult
                                                 , EventWriter
                                                 , EventWriterT
-                                                , HasDomEvent(domEvent)
+                                                , HasDomEvent(DomEventType, domEvent)
                                                 , InputElement(..)
                                                 , InputElementConfig
                                                 , MonadHold(holdDyn)
@@ -159,6 +165,7 @@ import           Reflex.Dom                     ((=:)
                                                 , blank
                                                 , delay
                                                 , dyn_
+
                                                 , el
                                                 , el'
                                                 , elAttr
@@ -170,12 +177,11 @@ import           Reflex.Dom                     ((=:)
                                                 , elementConfig_eventSpec
                                                 , elementConfig_initialAttributes
                                                 , elementConfig_modifyAttributes
+                                                , fmapMaybe
                                                 , foldDyn
                                                 , inputElementConfig_elementConfig
                                                 , inputElementConfig_initialValue
                                                 , inputElementConfig_setValue
-                                                , keydown
-                                                , keyup
                                                 , leftmost
                                                 , mergeWith
                                                 , preventDefault
@@ -197,6 +203,7 @@ import           State                          ( Env(..)
                                                 , updateState
                                                 )
 import           TextShow                       ( TextShow(showt) )
+import Data.Word (Word)
 
 default (Text)
 
@@ -240,7 +247,6 @@ settings
        , Prerender js t m
        , EventWriter t (Endo State) m
        , MonadReader (Dynamic t State) m
-       , MonadFix m
        , SetRoute t (R FrontendRoute) m
        )
     => Lang
@@ -264,9 +270,21 @@ settings lang = do
         elClass "span" "dropdown-button" $ iFa "fas fa-cog"
         elClass "div" "dropdown-content" $ mdo
 
-            let dynMCfgName = fmap pcfgName . view (at lang >>> _Wrapped') . stPloverCfg <$> dynState
-                elCheckmark co = dyn_ $ dynMCfgName <&> \cfgName ->
-                    elClass "span" "checkmark" $ if cfgName == Just co then text "✓ " else blank
+            let dynMCfgName =
+                    fmap pcfgName
+                        .   view (at lang >>> _Wrapped')
+                        .   stPloverCfg
+                        <$> dynState
+                elCheckmark co =
+                    dyn_
+                        $   dynMCfgName
+                        <&> \cfgName ->
+                                elClass "span" "checkmark"
+                                    $ if cfgName == Just co
+                                      then
+                                          text "✓ "
+                                      else
+                                          blank
 
             elClass "span" "caption" $ text "Keyboard layout"
 
@@ -287,12 +305,15 @@ settings lang = do
                 elCheckmark CNQwertyEN
                 text "qwerty EN"
             let eQwerty = domEvent Click elQwerty
+                lsStenoQwertyEN = case lang of
+                  EN -> lsStenoQwertyOrig
+                  _ -> lsStenoQwerty
             updateState
                 $  eQwerty
                 $> [ field @"stPloverCfg"
                      .  _Wrapped'
                      .  ix lang
-                     .~ keyMapToPloverCfg lsStenoQwerty [] "keyboard" CNQwertyEN
+                     .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
                    ]
 
 
@@ -362,6 +383,30 @@ data KeyState key
   = KeyStateDown key
   | KeyStateUp key
 
+{-# INLINABLE keydown #-}
+keydown
+    :: ( Reflex t
+       , HasDomEvent t e 'KeydownTag
+       , DomEventType e 'KeydownTag ~ Word
+       )
+    => KeyCode
+    -> e
+    -> Event t ()
+keydown keycode = fmapMaybe (\n -> guard $ fromIntegral n == keycode)
+    . domEvent Keydown
+
+{-# INLINABLE keyup #-}
+keyup
+    :: ( Reflex t
+       , HasDomEvent t e 'KeyupTag
+       , DomEventType e 'KeyupTag ~ Word
+       )
+    => KeyCode
+    -> e
+    -> Event t ()
+keyup keycode = fmapMaybe (\n -> guard $ fromIntegral n == keycode)
+    . domEvent Keyup
+
 stenoInput
     :: forall js key t (m :: * -> *)
      . ( DomBuilder t m
@@ -375,6 +420,7 @@ stenoInput
     => Lang
     -> m (Event t (Chord key))
 stenoInput lang = do
+
     dynPloverCfg    <- asks (stPloverCfg <$>)
     dynShowKeyboard <- asks (stShowKeyboard <$>)
     dynSimple
@@ -383,7 +429,7 @@ stenoInput lang = do
         <&> \PloverSystemCfg {..} ->
                 postRender $ elClass "div" "stenoInput" $ mdo
                     let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
-                            [ keydown qwertyKey kbInput
+                            [ keydown (fromIntegral qwertyKey) kbInput
                                 $> [KeyStateDown $ fromIndex kI]
                             , keyup qwertyKey kbInput
                                 $> [KeyStateUp $ fromIndex kI]
@@ -423,8 +469,13 @@ stenoInput lang = do
                       -- a bit of a hack to switch to the original Palantype
                       -- keyboard layout for English
                       -- that original layout I will consider the exception
-                        EN -> elKeyboardEN pcfgName pcfgMapStenoKeys dynPressedKeys
-                        _  -> elKeyboard pcfgName pcfgMapStenoKeys dynPressedKeys lang
+                        EN -> elKeyboardEN pcfgName
+                                           pcfgMapStenoKeys
+                                           dynPressedKeys
+                        _ -> elKeyboard pcfgName
+                                        pcfgMapStenoKeys
+                                        dynPressedKeys
+                                        lang
 
                     kbInput <- elStenoOutput dynDownKeys
 
@@ -495,65 +546,66 @@ elKeyboard
     -> Dynamic t (Set key)
     -> Lang
     -> m ()
-elKeyboard cfgName stenoKeys dynPressedKeys lang = elClass "div" "keyboard" $ do
-    el "table" $ do
-        el "tr" $ do
-            elCell stenoKeys dynPressedKeys 1  "1" "pinkyYOffset"
-            elCell stenoKeys dynPressedKeys 4  "1" ""
-            elCell stenoKeys dynPressedKeys 7  "1" ""
-            elCell stenoKeys dynPressedKeys 10 "1" ""
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elCell stenoKeys dynPressedKeys 21 "1" ""
-            elCell stenoKeys dynPressedKeys 24 "1" ""
-            elCell stenoKeys dynPressedKeys 27 "1" ""
-            elCell stenoKeys dynPressedKeys 30 "1" "pinkyYOffset"
-        el "tr" $ do
-            elCell stenoKeys dynPressedKeys 2  "1" "homerow pinkyYOffset"
-            elCell stenoKeys dynPressedKeys 5  "1" "homerow"
-            elCell stenoKeys dynPressedKeys 8  "1" "homerow"
-            elCell stenoKeys dynPressedKeys 11 "1" "homerow"
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elCell stenoKeys dynPressedKeys 22 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 25 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 28 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
-        el "tr" $ do
-            elCell stenoKeys dynPressedKeys 3  "1" "pinkyYOffset"
-            elCell stenoKeys dynPressedKeys 6  "1" ""
-            elCell stenoKeys dynPressedKeys 9  "1" ""
-            elCell stenoKeys dynPressedKeys 12 "1" ""
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
-            elCell stenoKeys dynPressedKeys 23 "1" ""
-            elCell stenoKeys dynPressedKeys 26 "1" ""
-            elCell stenoKeys dynPressedKeys 29 "1" ""
-            elCell stenoKeys dynPressedKeys 32 "1" "pinkyYOffset"
-        el "tr" $ do
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+elKeyboard cfgName stenoKeys dynPressedKeys lang =
+    elClass "div" "keyboard" $ do
+        el "table" $ do
+            el "tr" $ do
+                elCell stenoKeys dynPressedKeys 1  "1" "pinkyYOffset"
+                elCell stenoKeys dynPressedKeys 4  "1" ""
+                elCell stenoKeys dynPressedKeys 7  "1" ""
+                elCell stenoKeys dynPressedKeys 10 "1" ""
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elCell stenoKeys dynPressedKeys 21 "1" ""
+                elCell stenoKeys dynPressedKeys 24 "1" ""
+                elCell stenoKeys dynPressedKeys 27 "1" ""
+                elCell stenoKeys dynPressedKeys 30 "1" "pinkyYOffset"
+            el "tr" $ do
+                elCell stenoKeys dynPressedKeys 2  "1" "homerow pinkyYOffset"
+                elCell stenoKeys dynPressedKeys 5  "1" "homerow"
+                elCell stenoKeys dynPressedKeys 8  "1" "homerow"
+                elCell stenoKeys dynPressedKeys 11 "1" "homerow"
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elCell stenoKeys dynPressedKeys 22 "1" "homerow"
+                elCell stenoKeys dynPressedKeys 25 "1" "homerow"
+                elCell stenoKeys dynPressedKeys 28 "1" "homerow"
+                elCell stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
+            el "tr" $ do
+                elCell stenoKeys dynPressedKeys 3  "1" "pinkyYOffset"
+                elCell stenoKeys dynPressedKeys 6  "1" ""
+                elCell stenoKeys dynPressedKeys 9  "1" ""
+                elCell stenoKeys dynPressedKeys 12 "1" ""
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap")     blank
+                elCell stenoKeys dynPressedKeys 23 "1" ""
+                elCell stenoKeys dynPressedKeys 26 "1" ""
+                elCell stenoKeys dynPressedKeys 29 "1" ""
+                elCell stenoKeys dynPressedKeys 32 "1" "pinkyYOffset"
+            el "tr" $ do
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
 
-            -- left thumb
-            elCell stenoKeys dynPressedKeys 13 "1" "thumbrow"
-            elCell stenoKeys dynPressedKeys 14 "1" "thumbrow"
-            elCell stenoKeys dynPressedKeys 15 "1" "homerow thumbrow"
-            elCell stenoKeys dynPressedKeys 16 "1" "thumbrow"
+                -- left thumb
+                elCell stenoKeys dynPressedKeys 13 "1" "thumbrow"
+                elCell stenoKeys dynPressedKeys 14 "1" "thumbrow"
+                elCell stenoKeys dynPressedKeys 15 "1" "homerow thumbrow"
+                elCell stenoKeys dynPressedKeys 16 "1" "thumbrow"
 
-            elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
+                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
 
-            -- right thumb
-            elCell stenoKeys dynPressedKeys 17 "1" "thumbrow"
-            elCell stenoKeys dynPressedKeys 18 "1" "homerow thumbrow"
-            elCell stenoKeys dynPressedKeys 19 "1" "thumbrow"
-            elCell stenoKeys dynPressedKeys 20 "1" "thumbrow"
+                -- right thumb
+                elCell stenoKeys dynPressedKeys 17 "1" "thumbrow"
+                elCell stenoKeys dynPressedKeys 18 "1" "homerow thumbrow"
+                elCell stenoKeys dynPressedKeys 19 "1" "thumbrow"
+                elCell stenoKeys dynPressedKeys 20 "1" "thumbrow"
 
-            elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-    elClass "span" "system" $ do
-      el "div" $ text $ showt EN
-      el "div" $ text $ showt cfgName
+                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
+        elClass "span" "system" $ do
+            el "div" $ text $ showt lang
+            el "div" $ text $ showt cfgName
 
 -- | original Palantype keyboard layout
 -- | unfortunately the keys don't follow the simple order
@@ -611,8 +663,8 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell stenoKeys dynPressedKeys 19 "1" ""
             elCell stenoKeys dynPressedKeys 32 "3" ""
     elClass "span" "system" $ do
-      el "div" $ text $ showt EN
-      el "div" $ text $ showt cfgName
+        el "div" $ text $ showt EN
+        el "div" $ text $ showt cfgName
 
 elCell
     :: forall key t (m1 :: * -> *)
@@ -960,50 +1012,57 @@ stages _ navLang = elClass "div" "box" $ do
                     }
                 )
         dynNavigation <-
-            elAttr "section" ("id" =: "content") $ el "div" $ subRoute $ \case
-                FrontendSubroute_Introduction ->
-                    setEnv Nothing Introduction (Just Stage1_1) introduction
-                FrontendSubroute_Stage1_1 -> setEnv (Just Introduction)
-                                                    Stage1_1
-                                                    (Just Stage1_2)
-                                                    Stage1.exercise1
-                FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1)
-                                                    Stage1_2
-                                                    (Just Stage1_3)
-                                                    Stage1.exercise2
-                FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2)
-                                                    Stage1_3
-                                                    (Just Stage1_4)
-                                                    Stage1.exercise3
-                FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3)
-                                                    Stage1_4
-                                                    (Just Stage1_5)
-                                                    Stage1.exercise4
-                FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4)
-                                                    Stage1_5
-                                                    (Just Stage1_6)
-                                                    Stage1.exercise5
-                FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5)
-                                                    Stage1_6
-                                                    (Just Stage1_7)
-                                                    Stage1.exercise6
-                FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6)
-                                                    Stage1_7
-                                                    (Just Stage2_1)
-                                                    Stage1.exercise7
-                FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7)
-                                                    Stage2_1
-                                                    (Just Stage2_2)
-                                                    Stage2.exercise1
-                FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
-                                                    Stage2_2
-                                                    (Just Stage2_3)
-                                                    Stage2.exercise2
-                FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2)
-                                                    Stage2_3
-                                                    (Just Stage2_4)
-                                                    Stage2.exercise3
-                FrontendSubroute_Stage2_4 ->
-                    setEnv (Just Stage2_3) Stage2_4 Nothing Stage2.exercise4
+            elAttr "section" ("id" =: "content") $ do
+              elClass "div" "scrollTop" $
+                  text $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
+              d <-
+                elClass "div" "content" $ subRoute $ \case
+                  FrontendSubroute_Introduction ->
+                      setEnv Nothing Introduction (Just Stage1_1) introduction
+                  FrontendSubroute_Stage1_1 -> setEnv (Just Introduction)
+                                                      Stage1_1
+                                                      (Just Stage1_2)
+                                                      Stage1.exercise1
+                  FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1)
+                                                      Stage1_2
+                                                      (Just Stage1_3)
+                                                      Stage1.exercise2
+                  FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2)
+                                                      Stage1_3
+                                                      (Just Stage1_4)
+                                                      Stage1.exercise3
+                  FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3)
+                                                      Stage1_4
+                                                      (Just Stage1_5)
+                                                      Stage1.exercise4
+                  FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4)
+                                                      Stage1_5
+                                                      (Just Stage1_6)
+                                                      Stage1.exercise5
+                  FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5)
+                                                      Stage1_6
+                                                      (Just Stage1_7)
+                                                      Stage1.exercise6
+                  FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6)
+                                                      Stage1_7
+                                                      (Just Stage2_1)
+                                                      Stage1.exercise7
+                  FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7)
+                                                      Stage2_1
+                                                      (Just Stage2_2)
+                                                      Stage2.exercise1
+                  FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
+                                                      Stage2_2
+                                                      (Just Stage2_3)
+                                                      Stage2.exercise2
+                  FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2)
+                                                      Stage2_3
+                                                      (Just Stage2_4)
+                                                      Stage2.exercise3
+                  FrontendSubroute_Stage2_4 ->
+                      setEnv (Just Stage2_3) Stage2_4 Nothing Stage2.exercise4
+              elClass "div" "scrollBottom" $
+                  text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
+              pure d
         pure dynNavigation
     dyn_ $ dynNavigation <&> elFooter navLang

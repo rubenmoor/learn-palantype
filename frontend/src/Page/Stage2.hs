@@ -27,8 +27,8 @@ import           Control.Lens                   ( (%~)
                                                 )
 import           Control.Monad                  ( (=<<)
                                                 , when
+                                                , unless
                                                 )
-import           Control.Monad                  ( unless )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand )
@@ -132,7 +132,6 @@ import           State                          ( Env(..)
                                                 )
 import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
-import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
 
 exercise1

@@ -42,7 +42,6 @@ import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Set                      as Set
-import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable(filter) )
 import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
@@ -54,7 +53,7 @@ import           Palantype.Common               ( Chord
                                                 , Palantype
                                                 )
 import           Palantype.Common.RawSteno      ( RawSteno
-                                                , parseChordLenient
+
                                                 , parseSteno
                                                 )
 import           Reflex.Dom                     ( DomBuilder
@@ -84,10 +83,8 @@ import           State                          ( Env(..)
                                                 , stageUrl
                                                 , updateState
                                                 )
-import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
-import qualified Palantype.Common.RawSteno as Raw
 import Palantype.Common.Dictionary (kiBackUp, kiEnter)
 
 elFooter

@@ -29,7 +29,7 @@ import           Palantype.Common.RawSteno (RawSteno)
 import           Servant.API               ((:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
 import           TextShow                  (TextShow (..), fromText)
-import           Web.KeyCode               (Key)
+import           Web.KeyCode               (KeyCode, Key)
 import Data.HashMap.Strict (HashMap)
 import Control.Category ((<<<))
 
@@ -85,8 +85,8 @@ data PloverSystemCfg = PloverSystemCfg
   { pcfgMapStenoKeys        :: Map KeyIndex [Text]
   -- raw steno key codes that failed to parse
   , pcfgUnrecognizedStenos  :: [RawSteno]
-  -- [(Web.KeyCode, raw steno code)]
-  , pcfgLsKeySteno          :: [(Key, KeyIndex)]
+  -- [(Web.KeyCode, steno key index)]
+  , pcfgLsKeySteno          :: [(KeyCode, KeyIndex)]
   -- plover key codes that failed to parse
   , pcfgUnrecognizedQwertys :: [Text]
   , pcfgMachine             :: Text
@@ -172,52 +172,52 @@ lsStenoQwertz =
   , (32, ["-"])
   ]
 
+-- | this is a copy of the default mapping for plover's
+--   Palantype plug-in
+lsStenoQwertyOrig :: [(KeyIndex, [Text])]
+lsStenoQwertyOrig =
+  [ (4 , ["2"])
+  , (7 , ["3"])
+  , (10, ["4"])
+  , (21, ["8"])
+  , (24, ["9"])
+  , (27, ["0"])
+  , (1 , ["q"])
+  , (5 , ["w"])
+  , (8 , ["e"])
+  , (11, ["r"])
+  , (22, ["u"])
+  , (25, ["i"])
+  , (28, ["o"])
+  , (31, ["p"])
+  , (2 , ["a"])
+  , (6 , ["s"])
+  , (9 , ["d"])
+  , (12, ["f"])
+  , (14, ["g"])
+  , (18, ["h"])
+  , (23, ["j"])
+  , (26, ["k"])
+  , (29, ["l"])
+  , (30, [";"])
+  , (3 , ["z", "x", "c"])
+  , (15, ["v"])
+  , (17, ["b"])
+  , (19, ["n"])
+  , (32, ["m", ",", ".", "/"])
+  ]
+
 instance ToJSON Key
 instance FromJSON Key
 
--- default configuration for palantype on a qwerty keyboard
--- from http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html
+-- | default configuration for palantype on a qwerty keyboard
+--   from http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html
 --
 instance Default PloverCfg where
   def = PloverCfg $ Map.fromList
           [ (EN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
           , (DE, def)
           ]
-    where
-      -- | this is a copy of the default mapping for plover's
-      --   Palantype plug-in
-      lsStenoQwertyOrig :: [(KeyIndex, [Text])]
-      lsStenoQwertyOrig =
-        [ (4 , ["2"])
-        , (7 , ["3"])
-        , (10, ["4"])
-        , (21, ["8"])
-        , (24, ["9"])
-        , (27, ["0"])
-        , (1 , ["q"])
-        , (5 , ["w"])
-        , (8 , ["e"])
-        , (11, ["r"])
-        , (22, ["u"])
-        , (25, ["i"])
-        , (28, ["o"])
-        , (31, ["p"])
-        , (2 , ["a"])
-        , (6 , ["s"])
-        , (9 , ["d"])
-        , (12, ["f"])
-        , (14, ["g"])
-        , (18, ["h"])
-        , (23, ["j"])
-        , (26, ["k"])
-        , (29, ["l"])
-        , (30, [";"])
-        , (3 , ["z", "x", "c"])
-        , (15, ["v"])
-        , (17, ["b"])
-        , (19, ["n"])
-        , (32, ["m", ",", ".", "/"])
-        ]
 
 {-|
 generate a ploverCfg object from the specified key map
@@ -230,30 +230,16 @@ keyMapToPloverCfg
   -> PloverSystemCfg
 keyMapToPloverCfg lsIndexPlover pcfgUnrecognizedStenos pcfgMachine pcfgName =
   let acc (lsKeySteno, mapStenoKeys, lsUQwerty) (i, plovers) =
-        let lsEQwerty = fromPlover <$> plovers
-            lsQwerty = rights lsEQwerty
+        let lsEQwertys = fromPlover <$> plovers
+            lsQwertys = mconcat $ rights lsEQwertys
             lsKeySteno' =
-              if null lsQwerty
+              if null lsQwertys
                 then lsKeySteno
-                else ((, i) <$> lsQwerty) ++ lsKeySteno
+                else ((, i) <$> lsQwertys) ++ lsKeySteno
             mapStenoKeys' = Map.insert i plovers mapStenoKeys
-            lsUQwerty' = lefts lsEQwerty ++ lsUQwerty
+            lsUQwerty' = lefts lsEQwertys ++ lsUQwerty
         in (lsKeySteno', mapStenoKeys', lsUQwerty')
 
       (pcfgLsKeySteno, pcfgMapStenoKeys, pcfgUnrecognizedQwertys) =
         foldl acc ([], Map.empty, []) lsIndexPlover
   in  PloverSystemCfg{..}
-
--- getPloverSystemCfg
---   :: Lang
---   -> PloverCfg
---   -> PloverSystemCfg
--- getPloverSystemCfg lang cfg = cfg ^. _Wrapped' . at lang . non def
---   -- unPloverCfg pcfg ! lang
---
--- setPloverSystemCfg
---   :: Lang
---   -> PloverSystemCfg
---   -> PloverCfg
---   -> PloverCfg
--- setPloverSystemCfg lang systemCfg = _Wrapped' %~ (ix lang .~ systemCfg)
