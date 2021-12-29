@@ -10,6 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE MultiWayIf #-}
 
 module Home where
 
@@ -51,7 +52,7 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      ( (&&)
+import           Data.Bool                      (otherwise,  (&&)
                                                 , Bool(..)
                                                 , bool
                                                 , not
@@ -139,7 +140,7 @@ import           Palantype.Common.Dictionary    ( kiDown
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.Common.RawSteno      ( RawSteno(..) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Reflex.Dom                     (KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
+import           Reflex.Dom                     (EventSelector(select), fanMap, KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
@@ -203,6 +204,8 @@ import           State                          ( Env(..)
                                                 )
 import           TextShow                       ( TextShow(showt) )
 import Data.Word (Word)
+import Data.Ord (Ord)
+import Data.Functor.Misc (Const2 (Const2))
 
 default (Text)
 
@@ -406,6 +409,13 @@ keyup
 keyup keycode = fmapMaybe (\n -> guard $ fromIntegral n == keycode)
     . domEvent Keyup
 
+data FanChord
+  = FanToggle
+  | FanDown
+  | FanUp
+  | FanOther
+  deriving (Eq, Ord)
+
 stenoInput
     :: forall js key t (m :: * -> *)
      . ( DomBuilder t m
@@ -492,32 +502,22 @@ stenoInput lang = do
                     ePb <- delay 0.1 =<< getPostBuild
                     performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
-                    let rawDown      = KI.toRaw @key kiDown
-                        rawUp        = KI.toRaw @key kiUp
+                    let
                         eChordAll    = catMaybes $ updated dynChord
-                        eChordToggle = filter
-                            (\c -> Raw.fromChord c == rawToggleKeyboard lang)
-                            eChordAll
-                        eChordArrowDown = filter
-                            (\c -> Raw.fromChord c == rawDown)
-                            eChordAll
-                        eChordArrowUp = filter
-                            (\c -> Raw.fromChord c == rawUp)
-                            eChordAll
 
-                        remainder chord =
-                            let raw = Raw.fromChord chord
-                            in  raw
-                                    /= rawToggleKeyboard lang
-                                    && raw
-                                    /= rawUp
-                                    && raw
-                                    /= rawDown
-                        eChord = filter remainder eChordAll
+                        selector = fanMap $ eChordAll <&> \c -> if
+                            | Raw.fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
+                            | Raw.fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+                            | Raw.fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
+                            | otherwise                                 -> Map.singleton FanOther c
+
+                        eChordToggle = select selector (Const2 FanToggle)
+                        eChordDown   = select selector (Const2 FanDown)
+                        eChordUp     = select selector (Const2 FanUp)
+                        eChordOther  = select selector (Const2 FanOther)
 
                     updateState
-                        $  eChordToggle
-                        $> [field @"stShowKeyboard" %~ not]
+                        $  eChordToggle $> [field @"stShowKeyboard" %~ not]
 
                     -- this is a workaround
                     -- scroll, like focus, is not available in reflex dom
@@ -527,15 +527,15 @@ stenoInput lang = do
                         jsDown =
                             "let el = document.getElementById(\"content\"); \
                                  \el.scrollBy(0,100)" :: Text
-                    performEvent_ $ eChordArrowDown $> void
+                    performEvent_ $ eChordDown $> void
                         (liftJSM $ eval jsDown)
                     let
                         jsUp =
                             "let el = document.getElementById(\"content\"); \
                                \el.scrollBy(0,-100)" :: Text
-                    performEvent_ $ eChordArrowUp $> void (liftJSM $ eval jsUp)
+                    performEvent_ $ eChordUp $> void (liftJSM $ eval jsUp)
 
-                    pure eChord
+                    pure eChordOther
 
 elKeyboard
     :: forall key t (m :: * -> *)

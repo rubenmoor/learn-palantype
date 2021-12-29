@@ -203,5 +203,5 @@ elNotImplemented = elClass "blockquote" "warning" $ do
 
 rawToggleKeyboard :: Lang -> RawSteno
 rawToggleKeyboard = \case
-    DE -> "ULKSD"
+    DE -> "ULNSD"
     EN -> "ALFTS"

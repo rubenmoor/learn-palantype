@@ -27,6 +27,7 @@ library
     , obelisk-generated-static
     , obelisk-route
     , parsec
+    , patch
     , proxied
     , random
     , random-shuffle
