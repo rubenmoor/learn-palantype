@@ -5,24 +5,23 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Handler
     ( handlers
     ) where
 
-import           Common.Api                     ( Lang(..)
-                                                , PloverSystemCfg
+import           Common.Api                     (DictId (..),  PloverSystemCfg
                                                 , Routes
                                                 , keyMapToPloverCfg
                                                 , CfgName (CNFile)
                                                 )
 import           Control.Applicative            ( Applicative((<*>), pure) )
-import           Control.Category               ( Category((.)) )
+import           Control.Category               ((<<<),  Category((.)) )
 import           Control.Monad                  ( foldM
                                                 , unless
+
                                                 )
-import           Control.Monad                  ( Monad((>>=)) )
 import           Control.Monad.Except           ( MonadError(throwError)
                                                 , runExcept
                                                 )
@@ -34,37 +33,34 @@ import           Data.Aeson.Types               ( Parser
                                                 , typeMismatch
                                                 )
 import qualified Data.ByteString.Char8         as Char8
-import qualified Data.ByteString.Lazy          as Lazy
+import qualified Data.ByteString.Lazy          as LazyBS
+import qualified Data.Text.Lazy          as LazyT
+import qualified Data.Text.Lazy.IO          as LazyT
 import qualified Data.ConfigFile               as CfgParser
 import           Data.Either                    ( Either(..)
                                                 , either
                                                 )
 import           Data.Eq                        ( (==) )
-import           Data.FileEmbed                 ( embedFile
-                                                , makeRelativeToProject
-                                                )
 import           Data.Foldable                  ( Foldable(elem, toList)
                                                 , foldl'
                                                 )
 import           Data.Function                  ( ($)
                                                 , const
                                                 )
-import           Data.Functor                   ( (<$>) )
-import           Data.HashMap.Strict            ( HashMap )
-import qualified Data.HashMap.Strict           as HashMap
-import           Data.List                      ( (++) )
+import           Data.Functor                   (Functor(fmap),  (<$>) )
+import           Data.List                      (filter, take,  (++) )
 import           Data.Map                       ( Map )
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Monoid                    ( (<>) )
 import           Data.String                    ( String )
-import           Data.Text                      ( Text )
+import           Data.Text                      (toUpper,  Text )
 import qualified Data.Text                     as Text
 import           GHC.Show                       ( Show(show) )
-import           Palantype.Common               ( KeyIndex
+import           Palantype.Common               (Lang (..),  KeyIndex
                                                 , Palantype(keyIndex)
                                                 )
-import           Palantype.Common.RawSteno      ( RawSteno
+import           Palantype.Common.RawSteno      (RawSteno (..)
                                                 , parseStenoKey
                                                 )
 import qualified Palantype.DE.Keys             as DE
@@ -73,29 +69,49 @@ import           Servant.API                    ( (:<|>)(..) )
 import           Servant.Server                 ( HasServer(ServerT)
                                                 , ServantErr(errBody)
                                                 , err400
-                                                , err500
+
                                                 )
 import qualified Servant.Server                as Snap
                                                 ( throwError )
 import           Snap.Core                      ( Snap )
+import Data.Int (Int)
+import GHC.Err (error)
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import TextShow (TextShow(showt))
 
 handlers :: ServerT Routes '[] Snap
-handlers = handleConfigNew :<|> handleDictTop2k
+handlers = handleConfigNew :<|> handleDict
 
 -- handleDictTop2k
 
-handleDictTop2k :: Snap (HashMap RawSteno Text, HashMap Text [RawSteno])
-handleDictTop2k = do
-    let str = $(makeRelativeToProject "top2k.json" >>= embedFile)
-    mStenoWord <- case Json.eitherDecodeStrict str of
-        Right m   -> pure m
-        Left  err -> Snap.throwError $ err500
-            { errBody = "Could not decode top2k.json: "
-                            <> Lazy.fromStrict (Char8.pack $ show err)
-            }
-    let acc m (raw, word) = HashMap.insertWith (++) word [raw] m
-        mWordStenos = foldl' acc HashMap.empty $ HashMap.toList mStenoWord
-    pure (mStenoWord, mWordStenos)
+handleDict :: Int -> DictId -> Snap (Map RawSteno Text, Map Text [RawSteno])
+handleDict n = \case
+    DictSimpleSingle -> readDict $ \(raw, word) -> toUpper word == showt raw
+    DictSimpleMulti -> pure (Map.empty, Map.empty)
+    DictReplsSingle -> pure (Map.empty, Map.empty)
+    DictReplsMulti -> pure (Map.empty, Map.empty)
+    DictCodaHR -> pure (Map.empty, Map.empty)
+  where
+
+    file = "palantype-DE.txt"
+
+    readDict pred = liftIO $ do
+      ls <-   take n
+            . filter pred
+            . fmap (parseLine <<< LazyT.toStrict)
+            . LazyT.lines
+          <$> LazyT.readFile file
+
+      let acc (mapStenoWord, mapWordStenos) (raw, word) =
+              ( Map.insert raw word mapStenoWord
+              , Map.insertWith (++) word [raw] mapWordStenos
+              )
+          -- mWordStenos = foldl' acc HashMap.empty $ HashMap.toList mStenoWord
+      pure $ foldl' acc (Map.empty, Map.empty) ls
+
+    parseLine line = case Text.splitOn " " line of
+        [raw, word] -> (RawSteno raw, word)
+        _ -> error $ "file " <> file <> " wrong format: " <> Text.unpack line
 
 -- handleConfigNew
 
@@ -131,7 +147,7 @@ handleConfigNew str = do
                                ("keymap[" <> machineType <> "]")
             m <-
                 case
-                    Json.eitherDecode $ Lazy.fromStrict $ Char8.pack keyMapStr
+                    Json.eitherDecode $ LazyBS.fromStrict $ Char8.pack keyMapStr
                 of
                     Left msg ->
                         throwError
@@ -143,14 +159,14 @@ handleConfigNew str = do
 
     case eCfg of
         Left err -> Snap.throwError
-            $ err400 { errBody = Lazy.fromStrict $ Char8.pack $ show err }
+            $ err400 { errBody = LazyBS.fromStrict $ Char8.pack $ show err }
         Right (system, machine, stenoKeys) -> do
 
             lang <- case system of
                 "Palantype"    -> pure EN
                 "Palantype DE" -> pure DE
                 _              -> Snap.throwError $ err400
-                    { errBody = Lazy.fromStrict
+                    { errBody = LazyBS.fromStrict
                                 $  Char8.pack
                                 $  "System "
                                 <> system
@@ -164,7 +180,7 @@ handleConfigNew str = do
                     DE -> either (const Nothing) (Just . keyIndex)
                         $ parseStenoKey @DE.Key raw
 
-            let acc
+                acc
                     :: ([(KeyIndex, [Text])], [RawSteno])
                     -> (RawSteno, [Text])
                     -> ([(KeyIndex, [Text])], [RawSteno])

@@ -37,7 +37,6 @@ library
     , text
     , text-show
     , time
-    , unordered-containers
     , witherable
   exposed-modules:
     Frontend

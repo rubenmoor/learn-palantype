@@ -15,7 +15,6 @@
 
 module Page.Common where
 
-import           Common.Api                     ( Lang(..) )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( Category(id) )
@@ -51,6 +50,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 )
 import           Palantype.Common               ( Chord
                                                 , Palantype
+                                                , Lang (..)
                                                 )
 import           Palantype.Common.RawSteno      ( RawSteno
 

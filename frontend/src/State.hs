@@ -9,8 +9,7 @@
 module State where
 
 -- import           Common.Auth      (SessionData)
-import           Common.Api                     ( Lang(..)
-                                                , PloverCfg
+import           Common.Api                     ( PloverCfg
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendSubroute_Stage(..)
@@ -37,7 +36,7 @@ import           GHC.Generics                   ( Generic )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Palantype.Common               ( Chord )
+import           Palantype.Common               (Lang (..),  Chord )
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )

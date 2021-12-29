@@ -16,42 +16,57 @@ module Common.Api where
 
 import           Common.PloverAdapter      (fromPlover)
 import           Control.Lens.Wrapped      (Wrapped)
-import           Data.Aeson                (FromJSON, FromJSONKey, ToJSON,
-                                            ToJSONKey)
+import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Default              (Default (..))
 import           Data.Either               (lefts, rights)
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Text                 (Text)
 import           GHC.Generics              (Generic)
-import           Palantype.Common          (KeyIndex)
+import           Palantype.Common          (KeyIndex, Lang (..))
 import           Palantype.Common.RawSteno (RawSteno)
-import           Servant.API               ((:<|>), Get, (:>), JSON, PlainText, Post,
+import           Servant.API               (FromHttpApiData (..), ToHttpApiData (..), Capture, (:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
 import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (KeyCode, Key)
-import Data.HashMap.Strict (HashMap)
 import Control.Category ((<<<))
 
 type RoutesApi = "api" :>
      (    "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
-     :<|> "dict"   :> "top2k" :> Get '[JSON] (HashMap RawSteno Text, HashMap Text [RawSteno])
+     :<|> "dict"   :> Capture "n" Int :> Capture "dictionary-identifier" DictId :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
+
      )
 
 type Routes = RoutesApi
 
-data Lang = EN | DE
-  deriving (Eq, Generic, Ord)
+--
 
-instance FromJSON Lang
-instance ToJSON Lang
-instance FromJSONKey Lang
-instance ToJSONKey Lang
+data DictId
+  = DictSimpleSingle
+  | DictSimpleMulti
+  | DictReplsSingle
+  | DictReplsMulti
+  | DictCodaHR
 
-instance TextShow Lang where
+instance TextShow DictId where
   showb = \case
-    EN -> fromText "Palantype"
-    DE -> fromText "Palantype DE"
+    DictSimpleSingle -> "simpleSingle"
+    DictSimpleMulti  -> "simpleMulti"
+    DictReplsSingle  -> "replsSingle"
+    DictReplsMulti   -> "replsMulti"
+    DictCodaHR       -> "codaHR"
+
+instance ToHttpApiData DictId where
+  toUrlPiece = showt
+
+instance FromHttpApiData DictId where
+  parseUrlPiece = \case
+    "simpleSingle" -> Right DictSimpleSingle
+    "simpleMulti"  -> Right DictSimpleMulti
+    "replsSingle"  -> Right DictReplsSingle
+    "replsMulti"   -> Right DictReplsMulti
+    "codaHR"       -> Right DictCodaHR
+    str            -> Left $ "No parse: " <> str
 
 showSymbol :: Lang -> Text
 showSymbol = \case

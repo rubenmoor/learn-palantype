@@ -14,8 +14,7 @@
 module Page.Stage1 where
 
 import           Client                         ( postRender )
-import           Common.Api                     ( Lang(..)
-                                                , PloverSystemCfg
+import           Common.Api                     ( PloverSystemCfg
                                                     ( pcfgMapStenoKeys
                                                     )
                                                 )
@@ -76,7 +75,7 @@ import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
                                                 , rawToggleKeyboard
                                                 )
-import           Palantype.Common               ( Chord(..)
+import           Palantype.Common               (Lang(..),  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex

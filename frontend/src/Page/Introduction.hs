@@ -12,7 +12,6 @@
 
 module Page.Introduction where
 
-import           Common.Api                     ( Lang(..) )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Lens                   ( (%~)
@@ -37,7 +36,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , SetRoute(setRoute)
                                                 )
-import           Palantype.Common               ( Palantype )
+import           Palantype.Common               (Lang(..),  Palantype )
 import           Palantype.Common.RawSteno      ( parseChordLenient )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder

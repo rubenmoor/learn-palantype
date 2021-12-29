@@ -13,10 +13,9 @@
 
 module Page.Stage2 where
 
-import           Client                         ( getDictTop2k
+import           Client                         (getDict'
                                                 , postRender
                                                 )
-import           Common.Api                     ( Lang(..) )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
@@ -46,8 +45,6 @@ import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
 import           Data.Generics.Product          ( field )
-import           Data.HashMap.Strict            ( HashMap )
-import qualified Data.HashMap.Strict           as HashMap
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , (++)
@@ -57,7 +54,7 @@ import           Data.List                      ( (!!)
                                                 )
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..)
-                                                , fromMaybe
+
                                                 )
 import           Data.Ord                       ( Ord((<), (>)) )
 import           Data.Semigroup                 ( Endo
@@ -84,12 +81,13 @@ import           Page.Common                    (elBackUp,  elCongraz
                                                 )
 import           Palantype.Common               ( Chord(..)
                                                 , Palantype
+                                                , Lang (..)
                                                 )
 import           Palantype.Common.Dictionary    (kiEnter,  kiBackUp )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.Common.RawSteno      ( RawSteno(..) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Reflex.Dom                     ( (=:)
+import           Reflex.Dom                     ((=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
@@ -133,6 +131,10 @@ import           State                          ( Env(..)
 import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
+import Common.Api (DictId(DictSimpleMulti, DictSimpleSingle))
+import Data.Map.Strict (Map)
+
+-- Ex. 2.1
 
 exercise1
     :: forall key t (m :: * -> *)
@@ -191,7 +193,9 @@ exercise1 = do
     whenJust navMNext $ \nxt -> do
         (elACont, _) <- elClass "div" "anthrazit" $ do
             text "Type "
-            elClass "span" "btnSteno" $ text $ "Enter " <> showt (KI.toRaw @key kiEnter)
+            elClass "span" "btnSteno" $ do
+              el "em" $ text "Enter "
+              text $ showt (KI.toRaw @key kiEnter)
             text " to continue to "
             elClass' "a" "normalLink" $ text $ showt nxt
         let eContinue = leftmost [eChordEnter, domEvent Click elACont]
@@ -437,10 +441,9 @@ taskSingletons
        , PostBuild t m
        , Prerender js t m
        )
-    => [Text]
-    -> Event t (HashMap RawSteno Text, HashMap Text [RawSteno])
+    => Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t ())
-taskSingletons words eMaps = do
+taskSingletons eMaps = do
 
     eChord  <- asks envEChord
 
@@ -455,7 +458,7 @@ taskSingletons words eMaps = do
         (Nothing    , _      ) -> pure never
         (_          , Nothing) -> pure never
         (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
-            let len = length words
+            let len = Map.size mapWordStenos
 
                 step
                     :: Chord key -> StenoSingletonsState -> StenoSingletonsState
@@ -473,11 +476,7 @@ taskSingletons words eMaps = do
                         (raw, _) ->
                             let
                                 word = ssstWords !! ssstCounter
-                                isCorrect =
-                                    fromMaybe
-                                            ""
-                                            (HashMap.lookup raw mapStenoWord)
-                                        == word
+                                isCorrect = Map.findWithDefault "" raw mapStenoWord == word
                             in
                                 if isCorrect
                                    -- correct
@@ -499,19 +498,11 @@ taskSingletons words eMaps = do
                                         -- second mistake
                                         Just (MistakeOne _) ->
                                             let
-                                                corrects =
-                                                    fromMaybe []
-                                                        $ HashMap.lookup
-                                                              word
-                                                              mapWordStenos
+                                                corrects = Map.findWithDefault [] word mapWordStenos
                                             in
-                                                ls
-                                                    { ssstDone     = Nothing
-                                                    , ssstMMistake =
-                                                        Just $ MistakeTwo
-                                                            raw
-                                                            corrects
-                                                    }
+                                                ls { ssstDone     = Nothing
+                                                   , ssstMMistake = Just $ MistakeTwo raw corrects
+                                                   }
 
                                         -- third mistake and so forth
                                         Just (MistakeTwo _ _) -> ls
@@ -520,7 +511,7 @@ taskSingletons words eMaps = do
                     { ssstCounter   = 0
                     , ssstMMistake  = Nothing
                     , ssstDone      = Nothing
-                    , ssstWords     = evalRand (shuffleM words) stdGen
+                    , ssstWords     = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
                     , ssstNMistakes = 0
                     }
 
@@ -638,7 +629,7 @@ exercise3 = do
               "For a word part structured that way, you will use the fingers \
       \of your left hand for the consonants of the onset and the fingers \
       \of your right hand for the consonants of the coda. \
-      \For the nucleus you have your thumb."
+      \For the nucleus you have your thumbs."
 
     elClass "div" "paragraph" $ do
         text "The example «Busch» shows, how "
@@ -657,10 +648,16 @@ exercise3 = do
         el "code" $ text "P"
         text "."
 
+    el "h4" $ text "Practice simple words"
+
+    elClass "div" "paragraph" $
+      text "To get started, we start with the most simple words. \
+           \Every letter can be typed as it is, just make sure to use the \
+           \right finger."
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender (getDictTop2k ePb)
+    eResult <- postRender $ getDict' 100 DictSimpleSingle ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 
@@ -672,7 +669,7 @@ exercise3 = do
         Just _                 -> elClass "div" "paragraph small red"
             $ text "Could not load resource: top2k"
 
-    eDone <- taskSingletons words2_3 eSuccess
+    eDone <- taskSingletons eSuccess
 
     elCongraz eDone envNavigation
     pure envNavigation
@@ -763,10 +760,9 @@ taskWords
        , PostBuild t m
        , Prerender js t m
        )
-    => [Text]
-    -> Event t (HashMap RawSteno Text, HashMap Text [RawSteno])
+    => Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t ())
-taskWords words eMaps = do
+taskWords eMaps = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -782,7 +778,7 @@ taskWords words eMaps = do
         (Nothing    , _      ) -> pure never
         (_          , Nothing) -> pure never
         (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
-            let len = length words
+            let len = Map.size mapWordStenos
 
                 step :: Chord key -> StenoWordsState -> StenoWordsState
                 step c ls@StenoWordsState {..} =
@@ -807,21 +803,13 @@ taskWords words eMaps = do
                                               , swsMHint     = Nothing
                                               }
                                 Nothing -> ls
-                                    { swsMHint =
-                                        Just $ fromMaybe [] $ HashMap.lookup
-                                            word
-                                            mapWordStenos
+                                    { swsMHint = Just $ Map.findWithDefault [] word mapWordStenos
                                     }
 
                         (raw, Just word) ->
                             let
                                 rawWord = Raw.unparts $ swsChords ++ [raw]
-                                isCorrect =
-                                    fromMaybe
-                                            ""
-                                            (HashMap.lookup rawWord mapStenoWord
-                                            )
-                                        == word
+                                isCorrect = Map.findWithDefault "" rawWord mapStenoWord == word
                             in
                                 if isCorrect
 
@@ -842,7 +830,7 @@ taskWords words eMaps = do
                     { swsCounter   = 0
                     , swsChords    = []
                     , swsDone      = Nothing
-                    , swsWords     = evalRand (shuffleM words) stdGen
+                    , swsWords     = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
                     , swsNMistakes = 0
                     , swsMHint     = Nothing
                     }
@@ -951,7 +939,7 @@ exercise4 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictTop2k ePb
+    eResult <- postRender $ getDict' 100 DictSimpleMulti ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 
@@ -963,7 +951,7 @@ exercise4 = do
         Just _                  -> elClass "div" "paragraph small red"
             $ text "Could not load resource: top2k"
 
-    eDone <- taskWords words2_4 eSuccess
+    eDone <- taskWords eSuccess
 
     elClass "div" "paragraph"
         $ text
@@ -1105,3 +1093,39 @@ words2_4 =
     , "Glaube"
     , "lesen"
     ]
+
+-- Ex. 2.5
+{-
+single letter replacements
+  onset: p, t, k, z, v, c, q, ...?
+  coda: w, v, b, g, t, z
+  nucleus: ö, y
+multiple letter replacements
+  onset: sp, st, sk, pf, sch, ch, schm, schw
+  coda: ch, sch, nch, tsch, tz, tzt, ts, ng, nk, lm
+    consonants digraphs: ll, nn, mm, ss, ff, pp, tt
+r in the coda: er, ar, or, ur, ir, är, ür, ör
+h in the coda: eh, ah, oh, uh, äh, üh, öh
+hr in the coda: ehr, ahr, ohr, uhr, ihr, ier, ühr, öhr
+
+ß ?
+vowel digraphs
+coda: g?
+ie, ih
+
+capitalization
+punctuation, hyphenation?
+special characters
+commands
+steno tricks (e.g. capitalize last word, retroactively write +)
+
+engl.: ?
+frnz.: ?
+chemical elements
+acronyms
+
+even faster:
+en, es, er
+de, di, ge, gi, be, bi, ...
+onset: schl, schn, schr
+-}

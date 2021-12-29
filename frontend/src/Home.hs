@@ -18,7 +18,6 @@ import           Client                         ( postConfigNew
                                                 , reqFailure
                                                 )
 import           Common.Api                     ( CfgName(..)
-                                                , Lang(..)
                                                 , PloverSystemCfg(..)
                                                 , keyMapToPloverCfg
                                                 , lsStenoQwerty
@@ -129,7 +128,7 @@ import           Page.Common                    ( elFooter
 import           Page.Introduction              ( introduction )
 import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
-import           Palantype.Common               ( Chord(..)
+import           Palantype.Common               (Lang (..),  Chord(..)
                                                 , KeyIndex(..)
                                                 , Palantype(fromIndex, keyCode)
                                                 , mkChord

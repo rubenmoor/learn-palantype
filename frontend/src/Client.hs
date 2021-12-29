@@ -10,10 +10,10 @@
 
 module Client where
 
-import           Common.Api          (PloverSystemCfg, RoutesApi, Lang)
+import           Common.Api          (DictId, PloverSystemCfg, RoutesApi)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
-import           Data.Either         (Either)
+import           Data.Either         (Either(Right))
 import           Data.Functor        ((<$>))
 import           Data.Proxy          (Proxy (Proxy))
 import           Data.String         (String)
@@ -29,8 +29,10 @@ import Data.Maybe (fromMaybe, Maybe (..))
 import Data.Function (($))
 import Data.Semigroup (Semigroup((<>)))
 import Servant.API ((:<|>)(..))
-import Data.HashMap.Strict (HashMap)
 import Palantype.Common.RawSteno (RawSteno)
+import Palantype.Common (Lang)
+import Data.Int (Int)
+import Data.Map.Strict (Map)
 
 postRender
   :: (Prerender js t m, Monad m)
@@ -62,12 +64,22 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
-getDictTop2k
+getDict
   :: SupportsServantReflex t m
-  => Event t ()
-  -> m (Event t (ReqResult () (HashMap RawSteno Text, HashMap Text [RawSteno])))
+  => Dynamic t (Either Text Int)
+  -> Dynamic t (Either Text DictId)
+  -> Event t ()
+  -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
 
-postConfigNew :<|> getDictTop2k =
+getDict'
+  :: SupportsServantReflex t m
+  => Int
+  -> DictId
+  -> Event t ()
+  -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
+getDict' n d = getDict (constDyn $ Right n) (constDyn $ Right d)
+
+postConfigNew :<|> getDict =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())
@@ -78,3 +90,11 @@ reqFailure = \case
   ResponseSuccess {}        -> Nothing
   ResponseFailure _ str xhr -> Just $ str <> fromMaybe "" (_xhrResponse_responseText xhr)
   RequestFailure  _ str     -> Just str
+
+--     :<|> "dict"   :> Capture "n" Int :>
+--         (  "singlesimple" :> Get '[JSON] BDict
+--       :<|> "multiplesimple" :> Get '[JSON] BDict
+--       :<|> "singleletterreplacements" :> Get '[JSON] BDict
+--       :<|> "multipleletterreplacements" :> Get '[JSON] BDict
+--       :<|> "codahr" :> Get '[JSON] BDict
+--         )
