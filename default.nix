@@ -1,40 +1,38 @@
 { system ? builtins.currentSystem
 , pkgs ? import <nixpkgs> {}
 }:
-let reflex-dom-framework = pkgs.fetchFromGitHub {
-      owner = "reflex-frp";
-      repo = "reflex-dom";
-      rev = "112e626ce8dc97d17c8aa9092727fb824b6f9fba";
-      sha256 = "12bggm7p69fq3pc0s5wfwg6rvp207lny24xxsx72xyynz1b8ym3l";
-    };
-    reflex-platform-hls = pkgs.fetchFromGitHub {
-      # branch: haskell-language-server
-      owner = "ibizaman";
-      repo = "reflex-platform";
-      rev = "a9cd44d288395092fdaa76a6a7f146049cc21f15";
-      sha256 = "1nfzls18cs0a1a0d3xiiidsl0n6clcf5z9i8b78yj1k8hdc6k1fh";
-    };
-    obelisk = (import ./.obelisk/impl {
-      reflex-platform-func = args@{ ... }: (import reflex-platform-hls) (args // {
-          inherit system;
-          # activate haskell-language-server for reflex-platform with full
-          # support for template-haskell
-          hlsSupport = true;
-      });
-      inherit system;
-      iosSdkVersion = "13.2";
-      terms.security.acme.acceptTerms = true;
-    });
-    # clay = pkgs.haskellPackages.callHackage "clay" "0.13.3" {};
+let
+  pkgs20_09 = import (pkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "20.09";
+    sha256 = "1wg61h4gndm3vcprdcg7rc4s1v3jkm5xd7lw8r2f67w502y94gcy";
+  }) {};
+  pkgs21_05 = import (pkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "21.05";
+    sha256 = "1ckzhh24mgz6jd1xhfgx0i9mijk6xjqxwsshnvq789xsavrmsc36";
+  }) {};
+  obelisk = (import ./.obelisk/impl {
+    inherit system;
+    iosSdkVersion = "13.2";
+    terms.security.acme.acceptTerms = true;
+  });
+
 in
   with pkgs.haskell.lib;
   obelisk.project ./. ({ ... }: {
     android.applicationId = "systems.obsidian.obelisk.examples.minimal";
-    android.displayName = "Obelisk Minimal Example";
+    android.displayName = "Palantype";
     ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
-    ios.bundleName = "Obelisk Minimal Example";
+    ios.bundleName = "Palantype";
 
     staticFiles = import ./static.nix { inherit pkgs; };
+
+    shellToolOverrides = self: super: {
+      inherit (pkgs20_09.haskell.packages.ghc865) haskell-language-server;
+    };
 
     overrides = self: super: {
 
@@ -45,12 +43,6 @@ in
         sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
       }) {});
 
-      reflex-dom = self.callCabal2nix "reflex-dom" (reflex-dom-framework + /reflex-dom) {};
-      reflex-dom-core = pkgs.haskell.lib.dontCheck (
-        self.callCabal2nix "reflex-dom-core" (
-          reflex-dom-framework + /reflex-dom-core
-        ) {}
-      );
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "imalsogreg";
         repo = "servant-reflex";

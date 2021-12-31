@@ -331,7 +331,7 @@ main = putCss $ do
         top $ pct 50
         left $ pct 50
         transform (translate (pct $ -50) $ pct $ -50)
-        maxWidth $ px 418
+        maxWidth $ px 518
         backgroundColor white
         boxShadow
             [ bsColor (rgba 0 0 0 0.2)
@@ -339,7 +339,7 @@ main = putCss $ do
             ]
         padding (px 24) (px 24) (px 24) (px 24)
         position absolute
-        zIndex 1
+        zIndex 2
 
     div # ".msgOverlay" ? do
         bottom $ px 0

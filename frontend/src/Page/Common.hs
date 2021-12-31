@@ -147,7 +147,7 @@ elCongraz eDone Navigation {..} = mdo
                 (elACont, _) <- elClass "div" "anthrazit" $ do
                     text "Type "
                     elClass "span" "btnSteno" $ do
-                        text "Enter "
+                        el "em" $ text "Enter "
                         el "code" $ text $ showt $ KI.toRaw @key kiEnter
                     text " to continue to "
                     elClass' "a" "normalLink" (text $ showt nxt)

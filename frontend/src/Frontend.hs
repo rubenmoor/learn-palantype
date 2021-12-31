@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -144,7 +145,7 @@ frontendHead = do
     elAttr
         "link"
         ( "href"
-            =: static @"main.css"
+            =: $(static "main.css")
             <> "type"
             =: "text/css"
             <> "rel"
@@ -178,7 +179,7 @@ frontendHead = do
         ( "rel"
             =: "stylesheet"
             <> "href"
-            =: static @"FontAwesome/css/all.min.css"
+            =: $(static "FontAwesome/css/all.min.css")
         )
         blank
     elAttr
@@ -186,6 +187,6 @@ frontendHead = do
         ( "rel"
             =: "stylesheet"
             <> "href"
-            =: static @"flag-icons-main/css/flag-icons.min.css"
+            =: $(static "flag-icons-main/css/flag-icons.min.css")
         )
         blank

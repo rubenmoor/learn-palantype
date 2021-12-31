@@ -14,20 +14,22 @@ library
     , common
     , ConfigFile
     , containers
-    , file-embed
     , frontend
     , gerippe
+    , generic-lens
+    , lens
     , monad-logger
     , mtl
     , mysql
     , my-palantype
     , network
     , obelisk-backend
+    , obelisk-generated-static
     , obelisk-route
+    , megaparsec
     , persistent
     , persistent-mysql
     , persistent-template
-    , parsec
     , resource-pool
     , resourcet
     , servant
@@ -41,6 +43,7 @@ library
   other-modules:
       Handler
       DbAdapter
+      StenoPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable backend

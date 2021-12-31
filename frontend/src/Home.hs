@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
@@ -871,7 +872,7 @@ landingPage = elClass "div" "landing" $ do
 
         (elEN, _) <- el' "button" $ do
             elClass "div" "icon"
-                $ elAttr "img" ("src" =: static @"palantype.png") blank
+                $ elAttr "img" ("src" =: $(static "palantype.png")) blank
             elClass "div" "countrycode" $ text "EN"
             elClass "div" "description"
                 $ text
@@ -897,7 +898,7 @@ landingPage = elClass "div" "landing" $ do
 
     elAttr
         "img"
-        ("src" =: static @"getstartedhere.png" <> "class" =: "getstartedhere")
+        ("src" =: $(static "getstartedhere.png") <> "class" =: "getstartedhere")
         blank
 
     elClass "div" "usp" $ do

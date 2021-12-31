@@ -380,7 +380,7 @@ exercise2 = do
              \output."
 
             -- TODO: punctuation
-            let raw = "MID DEM WISn WÄKSD DEÜ SFEI/FEL"
+            let raw = "MID DEM WISn WÄKSD DEÜ SWEI/FEL"
                 txt = "Mit dem Wissen wächst der Zweifel"
 
             eDone <- walkWords (Text.words txt) raw
@@ -389,13 +389,13 @@ exercise2 = do
                 text
                     "Each word is one chord, except the word «Zweifel». You will \
              \have to strike "
-                el "code" $ text "SFEI"
+                el "code" $ text "SWEI"
                 text " and "
                 el "code" $ text "FEL"
                 text
                     " separately. For this reason, the steno code for «Zweifel» \
                      \is typically denoted "
-                el "code" $ text "SFEI/FEL"
+                el "code" $ text "SWEI/FEL"
                 text ", with a /."
 
             elClass "div" "paragraph" $ do
@@ -667,7 +667,7 @@ exercise3 = do
             text " Loading ..."
         Just ResponseSuccess{} -> blank
         Just _                 -> elClass "div" "paragraph small red"
-            $ text "Could not load resource: top2k"
+            $ text "Could not load resource: dict"
 
     eDone <- taskSingletons eSuccess
 
@@ -917,7 +917,7 @@ exercise4 = do
         text
             "As a rule of thumb, words are split up along their ortographic \
           \syllables, e.g. we saw «Zweifel» as "
-        el "code" $ text "SFEI/FEL"
+        el "code" $ text "SWEI/FEL"
         text " in "
         routeLink (stageUrl navLang Stage2_2) (text "Exercise 2.2")
         text ". In the same exercise we saw «Wissen» as "
@@ -949,7 +949,7 @@ exercise4 = do
             text " Loading ..."
         Just ResponseSuccess {} -> blank
         Just _                  -> elClass "div" "paragraph small red"
-            $ text "Could not load resource: top2k"
+            $ text "Could not load resource: dict"
 
     eDone <- taskWords eSuccess
 
@@ -1101,7 +1101,7 @@ single letter replacements
   coda: w, v, b, g, t, z
   nucleus: ö, y
 multiple letter replacements
-  onset: sp, st, sk, pf, sch, ch, schm, schw
+  onset: sp, st, sk, pf, sch, ch, schm, schw, qu
   coda: ch, sch, nch, tsch, tz, tzt, ts, ng, nk, lm
     consonants digraphs: ll, nn, mm, ss, ff, pp, tt
 r in the coda: er, ar, or, ur, ir, är, ür, ör
