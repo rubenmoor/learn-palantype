@@ -130,6 +130,7 @@ import           Page.Common                    ( elFooter
 import           Page.Introduction              ( introduction )
 import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
+import qualified Page.Patterns as Patterns
 import           Palantype.Common               (Lang (..),  Chord(..)
                                                 , KeyIndex(..)
                                                 , Palantype(fromIndex, keyCode)
@@ -850,6 +851,8 @@ toc lang dynCurrent = elClass "section" "toc" $ do
                     elLi Stage2_3
                     elLi Stage2_4
 
+                elLi PatternOverview
+
 landingPage
     :: forall t (m :: * -> *)
      . (DomBuilder t m, EventWriter t (Endo State) m)
@@ -1019,48 +1022,18 @@ stages _ navLang = elClass "div" "box" $ do
                 elClass "div" "content" $ subRoute $ \case
                   FrontendSubroute_Introduction ->
                       setEnv Nothing Introduction (Just Stage1_1) introduction
-                  FrontendSubroute_Stage1_1 -> setEnv (Just Introduction)
-                                                      Stage1_1
-                                                      (Just Stage1_2)
-                                                      Stage1.exercise1
-                  FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1)
-                                                      Stage1_2
-                                                      (Just Stage1_3)
-                                                      Stage1.exercise2
-                  FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2)
-                                                      Stage1_3
-                                                      (Just Stage1_4)
-                                                      Stage1.exercise3
-                  FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3)
-                                                      Stage1_4
-                                                      (Just Stage1_5)
-                                                      Stage1.exercise4
-                  FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4)
-                                                      Stage1_5
-                                                      (Just Stage1_6)
-                                                      Stage1.exercise5
-                  FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5)
-                                                      Stage1_6
-                                                      (Just Stage1_7)
-                                                      Stage1.exercise6
-                  FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6)
-                                                      Stage1_7
-                                                      (Just Stage2_1)
-                                                      Stage1.exercise7
-                  FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7)
-                                                      Stage2_1
-                                                      (Just Stage2_2)
-                                                      Stage2.exercise1
-                  FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1)
-                                                      Stage2_2
-                                                      (Just Stage2_3)
-                                                      Stage2.exercise2
-                  FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2)
-                                                      Stage2_3
-                                                      (Just Stage2_4)
-                                                      Stage2.exercise3
-                  FrontendSubroute_Stage2_4 ->
-                      setEnv (Just Stage2_3) Stage2_4 Nothing Stage2.exercise4
+                  FrontendSubroute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
+                  FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
+                  FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
+                  FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
+                  FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
+                  FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
+                  FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
+                  FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
+                  FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 (Just Stage2_3) Stage2.exercise2
+                  FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2) Stage2_3 (Just Stage2_4) Stage2.exercise3
+                  FrontendSubroute_Stage2_4 -> setEnv (Just Stage2_3) Stage2_4 (Just PatternOverview) Stage2.exercise4
+                  FrontendSubroute_PatternOverview -> setEnv (Just Stage2_4) PatternOverview Nothing Patterns.overview
               elClass "div" "scrollBottom" $
                   text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
               pure d

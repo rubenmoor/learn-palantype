@@ -77,6 +77,7 @@ ie, ih
 
 capitalization
 punctuation, hyphenation?
+
 special characters
 commands
 steno tricks (e.g. capitalize last word, retroactively write +)
@@ -91,57 +92,6 @@ en, es, er
 de, di, ge, gi, be, bi, ...
 onset: schl, schn, schr
 -}
-data StatePatterns = StatePatterns
-  { stSimple :: [(Char, RawSteno)]
-  , stSingle0 :: [(Char, RawSteno)]
-  , stDigraphCons  :: [(Text, RawSteno)]
-  , stMultiSimple :: [(Text, RawSteno)] -- remaining
-  , stCodaR :: [(Text, RawSteno)]
-  , stCodaHIE :: [(Text, RawSteno)]
-  , stCodaHR :: [(Text, RawSteno)]
-  , stSZ :: [(Text, RawSteno)]
-  , stG :: [(Text, RawSteno)]
-  , stDigraphVowels :: [(Text, RawSteno)]
-  } deriving (Generic)
-
--- TODO
--- ignore rules with / in raw completely
--- do not ignore patterns with | in bs, but don't show those in html
-patterns =
-  let
-      acc st (bs, (g, raw)) =
-        let
-            strRaw = showt raw
-            str = Text.decodeUtf8 bs
-            str' = Text.unpack str
-            ucSimpl = toUpper $ stripDiacritics str
-        in
-            case g of
-              0 -> if
-                | length str == 1 -> if ucSimpl == strRaw
-                    then st & field @"stSimple" %~ ((head str, raw) :)
-                    else st & field @"stSingle0" %~ ((head str, raw) :)
-                | str `elem` ["bb", "ff", "ll", "mm", "nn", "pp", "rr", "ss", "tt"] ->
-                    st & field @"stDigraphCons" %~ ((str, raw) :)
-                | length str == 2 && str' !! 1 == 'r' ->
-                        st & field @"stCodaR" %~ ((str, raw) :)
-                | length str == 2 && (str' !! 1 == 'h' || str == "ie") ->
-                        st & field @"stCodaHIE" %~ ((str, raw) :)
-                | length str == 3 && tail str' == "hr" ->
-                    st & field @"stCodaHR" %~ ((str, raw) :)
-                | "ß" `isInfixOf` str && (not $ "|" `isInfixOf` str) ->
-                    st & field @"stSZ" %~ ((str, raw) :)
-                | "g" `isInfixOf` str && (not $ "|" `isInfixOf` str) ->
-                    st & field @"stG" %~ ((str, raw) :)
-                | any (`isPrefixOf` str) ["aa", "ee", "oo"] ->
-                    st & field @"stDigraphVowels" %~ ((str, raw) :)
-
-
-  in  foldl acc (StatePatterns [] [] [] [] [] [] [] [] [] []) $
-        foldl (\ls (bs, lsGRaw) -> ls ++ ((bs,) <$> lsGRaw)) [] lsPrimitives
-
-stripDiacritics :: Text -> Text
-stripDiacritics = id
 
 {-
 parse the dictionary

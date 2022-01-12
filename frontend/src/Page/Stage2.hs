@@ -13,7 +13,7 @@
 
 module Page.Stage2 where
 
-import           Client                         (getDict'
+import           Client                         ( getDictDE'
                                                 , postRender
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
@@ -131,8 +131,8 @@ import           State                          ( Env(..)
 import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
-import Common.Api (DictId(DictSimpleMulti, DictSimpleSingle))
 import Data.Map.Strict (Map)
+import Palantype.DE.Pattern (Pattern(PatSimple))
 
 -- Ex. 2.1
 
@@ -657,7 +657,7 @@ exercise3 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDict' 100 DictSimpleSingle ePb
+    eResult <- postRender $ getDictDE' 100 PatSimple 0 ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 
@@ -939,7 +939,7 @@ exercise4 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDict' 100 DictSimpleMulti ePb
+    eResult <- postRender $ getDictDE' 100 PatSimple 0 ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 

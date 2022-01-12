@@ -145,6 +145,7 @@ data Stage
   | Stage2_2
   | Stage2_3
   | Stage2_4
+  | PatternOverview
   deriving (Eq, Ord, Generic)
 
 instance ToJSON Stage
@@ -167,6 +168,7 @@ instance TextShow Stage where
         Stage2_2     -> "Stage 2.2"
         Stage2_3     -> "Stage 2.3"
         Stage2_4     -> "Stage 2.4"
+        PatternOverview -> "Pattern overview"
 
 stageUrl :: Lang -> Stage -> R FrontendRoute
 stageUrl lang stage =
@@ -186,6 +188,7 @@ stageUrl lang stage =
             Stage2_2     -> FrontendSubroute_Stage2_2
             Stage2_3     -> FrontendSubroute_Stage2_3
             Stage2_4     -> FrontendSubroute_Stage2_4
+            PatternOverview -> FrontendSubroute_PatternOverview
     in  r1 :/ r2 :/ ()
 
 stageDescription :: Stage -> Text
@@ -202,3 +205,4 @@ stageDescription = \case
     Stage2_2     -> "Ex. 2: Learn your first chords"
     Stage2_3     -> "Ex. 3: Onset, nucleus, and coda"
     Stage2_4     -> "Ex. 4: Syllables and word parts"
+    PatternOverview -> "Pattern overview"

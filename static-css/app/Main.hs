@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           ( (#)
+import           Clay                           (sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -695,3 +695,17 @@ main = putCss $ do
         color white
         borderRadius (px 12) (px 12) (px 12) (px 12)
         padding (px 6) (px 6) (px 6) (px 6)
+
+    div # ".patternTable" ? do
+      span # ".orig" ? do
+        backgroundColor myLightgray
+        paddingRight $ em 1
+        width $ px 100
+        textAlign $ alignSide sideRight
+        display inlineBlock
+      code # ".steno" ? do
+        width $ px 100
+        paddingLeft $ em 1
+        textAlign $ alignSide sideLeft
+        display inlineBlock
+        fontSize $ pt 14

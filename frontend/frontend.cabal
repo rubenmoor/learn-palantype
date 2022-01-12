@@ -46,6 +46,7 @@ library
     Shared
     Page.Common
     Page.Introduction
+    Page.Patterns
     Page.Stage1
     Page.Stage2
     State

@@ -25,48 +25,25 @@ import           Data.Text                 (Text)
 import           GHC.Generics              (Generic)
 import           Palantype.Common          (KeyIndex, Lang (..))
 import           Palantype.Common.RawSteno (RawSteno)
-import           Servant.API               (FromHttpApiData (..), ToHttpApiData (..), Capture, (:<|>), Get, (:>), JSON, PlainText, Post,
+import           Servant.API               (Capture, (:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
 import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (KeyCode, Key)
 import Control.Category ((<<<))
+import qualified Palantype.DE.Pattern as DE
+import Palantype.DE (Greediness)
 
 type RoutesApi = "api" :>
-     (    "config" :> "new"   :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
-     :<|> "dict"   :> Capture "n" Int :> Capture "dictionary-identifier" DictId :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
-
+     (    "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+     :<|> "dict"   :> "DE" :> Capture "n" Int
+                           :> Capture "pattern-group" DE.Pattern
+                           :> Capture "greediness" Greediness
+                           :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
      )
 
 type Routes = RoutesApi
 
 --
-
-data DictId
-  = DictSimpleSingle
-  | DictSimpleMulti
-  | DictReplsSingle
-  | DictReplsMulti
-  | DictCodaHR
-
-instance TextShow DictId where
-  showb = \case
-    DictSimpleSingle -> "simpleSingle"
-    DictSimpleMulti  -> "simpleMulti"
-    DictReplsSingle  -> "replsSingle"
-    DictReplsMulti   -> "replsMulti"
-    DictCodaHR       -> "codaHR"
-
-instance ToHttpApiData DictId where
-  toUrlPiece = showt
-
-instance FromHttpApiData DictId where
-  parseUrlPiece = \case
-    "simpleSingle" -> Right DictSimpleSingle
-    "simpleMulti"  -> Right DictSimpleMulti
-    "replsSingle"  -> Right DictReplsSingle
-    "replsMulti"   -> Right DictReplsMulti
-    "codaHR"       -> Right DictCodaHR
-    str            -> Left $ "No parse: " <> str
 
 showSymbol :: Lang -> Text
 showSymbol = \case

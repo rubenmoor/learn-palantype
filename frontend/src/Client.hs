@@ -10,7 +10,7 @@
 
 module Client where
 
-import           Common.Api          (DictId, PloverSystemCfg, RoutesApi)
+import           Common.Api          (PloverSystemCfg, RoutesApi)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
 import           Data.Either         (Either(Right))
@@ -33,6 +33,8 @@ import Palantype.Common.RawSteno (RawSteno)
 import Palantype.Common (Lang)
 import Data.Int (Int)
 import Data.Map.Strict (Map)
+import qualified Palantype.DE.Pattern as DE
+import Palantype.DE (Greediness)
 
 postRender
   :: (Prerender js t m, Monad m)
@@ -64,22 +66,25 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
-getDict
+getDictDE
   :: SupportsServantReflex t m
   => Dynamic t (Either Text Int)
-  -> Dynamic t (Either Text DictId)
+  -> Dynamic t (Either Text DE.Pattern)
+  -> Dynamic t (Either Text Greediness)
   -> Event t ()
   -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
 
-getDict'
+getDictDE'
   :: SupportsServantReflex t m
   => Int
-  -> DictId
+  -> DE.Pattern
+  -> Greediness
   -> Event t ()
   -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
-getDict' n d = getDict (constDyn $ Right n) (constDyn $ Right d)
+getDictDE' n p g =
+  getDictDE (constDyn $ Right n) (constDyn $ Right p) (constDyn $ Right g)
 
-postConfigNew :<|> getDict =
+postConfigNew :<|> getDictDE =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

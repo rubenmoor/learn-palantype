@@ -15,7 +15,6 @@ where
 
 import Common.Api
     ( CfgName (CNFile),
-      DictId (..),
       PloverSystemCfg,
       Routes,
       keyMapToPloverCfg,
@@ -92,65 +91,17 @@ import qualified Servant.Server as Snap
     ( throwError,
     )
 import Snap.Core (Snap)
-import StenoPatterns (checkParse, icaseChar, syll, replChar)
 import Control.Applicative (Alternative((<|>)))
+import qualified Palantype.DE.Pattern as DE
+import Palantype.DE (Greediness)
 
 handlers :: ServerT Routes '[] Snap
-handlers = handleConfigNew :<|> handleDict
+handlers = handleConfigNew :<|> handleDictDE
 
 -- handleDict
 
-handleDict :: Int -> DictId -> Snap (Map RawSteno Text, Map Text [RawSteno])
-handleDict n = \case
-    DictSimpleSingle -> readDict icaseChar
-    DictSimpleMulti -> readDict $ icaseChar <|> syll
-
-    -- single letter replacements
-    DictReplsSingle -> readDict $
-      foldl' (\p (c, steno) -> p <|> replChar c steno) (icaseChar <|> syll) $
-        --   onset: p, t, k, z, v, c, q, ...?
-        [ ('p', "BD")
-        , ('t', "DJ")
-        , ('k', "GD")
-        , ('z', "SHM")
-        , ('v', "F") -- ?
-        , ('c', "GDM") -- ?
-        , ('ç', "SHM")
-        , ('q', "GD") -- ?
-        --   nucleus: ö, y
-        , [ "é"   , [0, "E+"]]
-        --   coda: w, v, b, g, t, z
-        , ('w', "F")
-        , ('v', "F")
-        , ('b', "P")
-        , ('g', "K")
-        , ('t', "D")
-        , ('z', "")
-        , ('c', "+K")
-        ]
-
-    DictReplsMulti -> pure (Map.empty, Map.empty)
-    DictCodaHR -> pure (Map.empty, Map.empty)
-    where
-        file = Text.unpack $(staticFilePath "palantype-DE.txt")
-        readDict p = liftIO $ do
-            ls <-
-                take n
-                    . filter (\(raw, word) -> checkParse p word raw)
-                    . fmap (parseLine <<< LazyT.toStrict)
-                    . LazyT.lines
-                    <$> LazyT.readFile file
-
-            let acc (mapStenoWord, mapWordStenos) (raw, word) =
-                    ( Map.insert raw word mapStenoWord,
-                      Map.insertWith (++) word [raw] mapWordStenos
-                    )
-            -- mWordStenos = foldl' acc HashMap.empty $ HashMap.toList mStenoWord
-            pure $ foldl' acc (Map.empty, Map.empty) ls
-            where
-                parseLine line = case Text.splitOn " " line of
-                    [raw, word] -> (RawSteno raw, word)
-                    _ -> error $ "file " <> file <> " wrong format: " <> Text.unpack line
+handleDictDE :: Int -> DE.Pattern -> Greediness -> Snap (Map RawSteno Text, Map Text [RawSteno])
+handleDictDE n p g = pure (Map.empty, Map.empty)
 
 -- handleConfigNew
 
