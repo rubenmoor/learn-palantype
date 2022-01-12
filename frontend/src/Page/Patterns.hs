@@ -29,6 +29,7 @@ import GHC.Real (fromIntegral, Fractional((/)))
 import Data.Monoid (Monoid(mempty))
 import GHC.Float (Double)
 import Control.Applicative (Applicative(pure))
+import GHC.Num ((+), (-), Num((*)))
 
 overview
     :: forall key t (m :: * -> *)
@@ -59,12 +60,12 @@ overview = do
                 lOrig :: Double = fromIntegral $ length orig
                 styleOrig =
                   if lOrig > 6
-                    then "style" =: ("font-size: " <> showt (12 / lOrig) <> "em")
+                    then "style" =: ("font-size: " <> showt ((1 + 6 / lOrig) / 2) <> "em")
                     else mempty
                 lSteno :: Double = fromIntegral $ length $ showt steno
                 styleSteno =
                   if lSteno > 6
-                    then "style" =: ("font-size: " <> showt (12 / lSteno) <> "em")
+                    then "style" =: ("font-size: " <> showt (6 / lSteno) <> "em")
                     else mempty
             elAttr "div" ("class" =: "orig" <> styleOrig) $ text orig
             elAttr "code" ("class" =: "steno" <> styleSteno) $ text $ showt steno

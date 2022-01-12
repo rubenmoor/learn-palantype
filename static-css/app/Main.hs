@@ -706,7 +706,7 @@ main = putCss $ do
         backgroundColor myLightgray
         paddingRight $ em 0.5
         width $ px 100
-        height $ px 30
+        height $ px 31
         textAlign $ alignSide sideRight
         display inlineBlock
         verticalAlign vAlignBottom
@@ -716,7 +716,6 @@ main = putCss $ do
         textAlign $ alignSide sideLeft
         display inlineBlock
         fontSize $ pt 14
-        verticalAlign vAlignBottom
       hr ? do
         border none (px 0) black
         height $ px 1
