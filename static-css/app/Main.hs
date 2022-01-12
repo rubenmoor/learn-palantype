@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -178,6 +178,9 @@ import           Data.Monoid                    ( Monoid(mempty) )
 import           GHC.IO                         ( IO )
 import           GHC.Num                        ( Num((*), (+), (-), negate) )
 import           System.IO                      ( putStrLn )
+import Clay (borderTopColor)
+import Clay (borderTopStyle)
+import Clay (borderTopWidth)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -208,7 +211,9 @@ main = putCss $ do
                 color colorLink
                 cursor pointer
         height $ pct 100
-        h2 ? color darkblue
+        h2 ? do
+          color darkblue
+          marginTop $ px 60
         h3 ? color anthrazit
     star ? boxSizing borderBox
 
@@ -697,15 +702,34 @@ main = putCss $ do
         padding (px 6) (px 6) (px 6) (px 6)
 
     div # ".patternTable" ? do
-      span # ".orig" ? do
+      div # ".orig" ? do
         backgroundColor myLightgray
-        paddingRight $ em 1
+        paddingRight $ em 0.5
         width $ px 100
+        height $ px 30
         textAlign $ alignSide sideRight
         display inlineBlock
+        verticalAlign vAlignBottom
       code # ".steno" ? do
         width $ px 100
-        paddingLeft $ em 1
+        paddingLeft $ em 0.5
         textAlign $ alignSide sideLeft
         display inlineBlock
         fontSize $ pt 14
+        verticalAlign vAlignBottom
+      hr ? do
+        border none (px 0) black
+        height $ px 1
+      hr # ".onset" ? backgroundColor pink
+      hr # ".nucleus" ? backgroundColor lightgreen
+      hr # ".coda" ? backgroundColor lightblue
+      hr # ".multiple" ? backgroundColor violet
+      span # ".patternPosition" ? do
+        float floatRight
+        fontSize $ px 14
+        fontWeight bold
+        marginTop $ px (-10)
+      span # ".onset" ? color pink
+      span # ".nucleus" ? color lightgreen
+      span # ".coda" ? color lightblue
+      span # ".multiple" ? color violet
