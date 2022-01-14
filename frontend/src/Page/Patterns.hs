@@ -1,9 +1,11 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Page.Patterns where
 
@@ -11,12 +13,11 @@ module Page.Patterns where
 
 import Reflex.Dom ((=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
-import Palantype.Common (toDescription, Palantype)
+import Palantype.Common (PatternGroup, toDescription, Palantype)
 import Obelisk.Route.Frontend (R, SetRoute)
 import Common.Route (FrontendRoute)
 import Data.Semigroup ((<>), Endo(Endo))
 import State (State (..), Env (..), Navigation (..))
-import Palantype.DE (patternDoc)
 import Data.Traversable (for)
 import Data.Foldable (for_)
 import TextShow (TextShow(showt))
@@ -30,6 +31,8 @@ import Data.Monoid (Monoid(mempty))
 import GHC.Float (Double)
 import Control.Applicative (Applicative(pure))
 import GHC.Num ((+), (-), Num((*)))
+import Palantype.Common.Primitives (patternDoc)
+import qualified Palantype.DE as DE
 
 overview
     :: forall key t (m :: * -> *)
@@ -45,7 +48,7 @@ overview = do
 
   el "h1" $ text "Pattern group overview"
 
-  for_ patternDoc $ \(p, lsPattern) -> do
+  for_ (patternDoc @key @DE.Pattern) $ \(p, lsPattern) -> do
     el "h2" $ text $ toDescription p
     elClass "div" "patternTable" $ do
     for_ lsPattern $ \(g, lsPPosPairs) -> do

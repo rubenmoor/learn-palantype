@@ -245,10 +245,10 @@ message = do
                 el "span" $ text msgBody
 
 settings
-    :: forall t js (m :: * -> *)
+    :: forall t (m :: * -> *)
      . ( DomBuilder t m
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        , EventWriter t (Endo State) m
        , MonadReader (Dynamic t State) m
        , SetRoute t (R FrontendRoute) m
@@ -419,14 +419,14 @@ data FanChord
   deriving (Eq, Ord)
 
 stenoInput
-    :: forall js key t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) (Client m)
        , MonadHold t m
        , MonadReader (Dynamic t State) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        )
     => Lang
     -> m (Event t (Chord key))
@@ -743,11 +743,11 @@ elStenoOutput dynDownKeys = mdo
 -- Table of Contents
 
 toc
-    :: forall js t (m :: * -> *)
+    :: forall t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadReader (Dynamic t State) m
-       , Prerender js t m
+       , Prerender t m
        , PostBuild t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
@@ -958,13 +958,13 @@ landingPage = elClass "div" "landing" $ do
         elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
 
 stages
-    :: forall js key (proxy :: * -> *) t (m :: * -> *)
+    :: forall key (proxy :: * -> *) t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
        , MonadFix m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )

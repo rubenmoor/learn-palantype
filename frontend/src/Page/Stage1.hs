@@ -426,14 +426,14 @@ data StenoLettersState k = StenoLettersState
 Type random steno letters as they appear
 -}
 taskLetters
-    :: forall key js t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        )
     => Dynamic t [key]
     -> m (Event t ())
@@ -528,14 +528,14 @@ taskLetters dynLetters = do
             pure $ void $ filter id eDone
 
 exercise5
-    :: forall key js t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
-       , Prerender js t m
+       , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )
@@ -584,14 +584,14 @@ exercise5 = do
     pure envNavigation
 
 exercise6
-    :: forall key js t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
-       , Prerender js t m
+       , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )
@@ -632,14 +632,14 @@ exercise6 = do
     pure envNavigation
 
 exercise7
-    :: forall js key t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
-       , Prerender js t m
+       , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )

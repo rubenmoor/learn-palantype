@@ -432,14 +432,14 @@ data StateMistake
   | MistakeTwo RawSteno [RawSteno]
 
 taskSingletons
-    :: forall key js t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        )
     => Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t ())
@@ -559,7 +559,7 @@ taskSingletons eMaps = do
             pure $ void $ filter id eDone
 
 exercise3
-    :: forall js key t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
@@ -567,7 +567,7 @@ exercise3
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -751,14 +751,14 @@ data StenoWordsState = StenoWordsState
     }
 
 taskWords
-    :: forall key js t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        )
     => Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t ())
@@ -880,7 +880,7 @@ taskWords eMaps = do
             pure $ void $ filter id eDone
 
 exercise4
-    :: forall js key t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
@@ -888,7 +888,7 @@ exercise4
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
-       , Prerender js t m
+       , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )

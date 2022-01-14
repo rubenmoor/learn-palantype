@@ -86,8 +86,8 @@ frontend =
     Frontend{_frontend_head = frontendHead, _frontend_body = frontendBody}
 
 frontendBody ::
-    forall t js (m :: * -> *).
-    (ObeliskWidget js t (R FrontendRoute) m) =>
+    forall t (m :: * -> *).
+    (ObeliskWidget t (R FrontendRoute) m) =>
     RoutedT t (R FrontendRoute) m ()
 frontendBody = mdo
     let key = "state" :: Text
@@ -137,8 +137,8 @@ frontendBody = mdo
     blank
 
 frontendHead ::
-    forall t js (m :: * -> *).
-    (ObeliskWidget js t (R FrontendRoute) m) =>
+    forall t (m :: * -> *).
+    (ObeliskWidget t (R FrontendRoute) m) =>
     RoutedT t (R FrontendRoute) m ()
 frontendHead = do
     el "title" $ text "Palantype"

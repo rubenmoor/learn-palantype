@@ -88,9 +88,9 @@ import qualified Palantype.Common.Indices as KI
 import Palantype.Common.Dictionary (kiBackUp, kiEnter)
 
 elFooter
-    :: forall js t (m :: * -> *)
+    :: forall t (m :: * -> *)
      . ( DomBuilder t m
-       , Prerender js t m
+       , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )

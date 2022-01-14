@@ -30,14 +30,13 @@ import Data.Function (($))
 import Data.Semigroup (Semigroup((<>)))
 import Servant.API ((:<|>)(..))
 import Palantype.Common.RawSteno (RawSteno)
-import Palantype.Common (Lang)
+import Palantype.Common (Greediness, Lang)
 import Data.Int (Int)
 import Data.Map.Strict (Map)
 import qualified Palantype.DE.Pattern as DE
-import Palantype.DE (Greediness)
 
 postRender
-  :: (Prerender js t m, Monad m)
+  :: (Prerender t m, Monad m)
   => Client m (Event t a)
   -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
@@ -48,9 +47,9 @@ data RequestResult t a = RequestResult
   }
 
 request
-  :: forall js t (m :: * -> *) a.
+  :: forall t (m :: * -> *) a.
   ( Monad m
-  , Prerender js t m
+  , Prerender t m
   )
   => Client m (Event t (ReqResult () a))
   -> m (RequestResult t a)
