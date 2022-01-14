@@ -23,7 +23,7 @@ import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Text                 (Text)
 import           GHC.Generics              (Generic)
-import           Palantype.Common          (KeyIndex, Lang (..))
+import           Palantype.Common          (Greediness, KeyIndex, Lang (..))
 import           Palantype.Common.RawSteno (RawSteno)
 import           Servant.API               (Capture, (:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
@@ -31,7 +31,6 @@ import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (KeyCode, Key)
 import Control.Category ((<<<))
 import qualified Palantype.DE.Pattern as DE
-import Palantype.DE (Greediness)
 
 type RoutesApi = "api" :>
      (    "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)

@@ -74,6 +74,7 @@ import Palantype.Common
     ( KeyIndex,
       Lang (..),
       Palantype (keyIndex),
+      Greediness
     )
 import Palantype.Common.RawSteno
     ( RawSteno (..),
@@ -93,7 +94,6 @@ import qualified Servant.Server as Snap
 import Snap.Core (Snap)
 import Control.Applicative (Alternative((<|>)))
 import qualified Palantype.DE.Pattern as DE
-import Palantype.DE (Greediness)
 
 handlers :: ServerT Routes '[] Snap
 handlers = handleConfigNew :<|> handleDictDE
