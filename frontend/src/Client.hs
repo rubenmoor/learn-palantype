@@ -29,11 +29,11 @@ import Data.Maybe (fromMaybe, Maybe (..))
 import Data.Function (($))
 import Data.Semigroup (Semigroup((<>)))
 import Servant.API ((:<|>)(..))
-import Palantype.Common.RawSteno (RawSteno)
+import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, RawSteno)
 import Palantype.Common (Greediness, Lang)
 import Data.Int (Int)
 import Data.Map.Strict (Map)
-import qualified Palantype.DE.Pattern as DE
+import qualified Palantype.DE as DE
 
 postRender
   :: (Prerender t m, Monad m)
@@ -65,6 +65,11 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
+getDocDEPatterns
+  :: SupportsServantReflex t m
+  => Event t ()
+  -> m (Event t (ReqResult () (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)))
+
 getDictDE
   :: SupportsServantReflex t m
   => Dynamic t (Either Text Int)
@@ -83,7 +88,7 @@ getDictDE'
 getDictDE' n p g =
   getDictDE (constDyn $ Right n) (constDyn $ Right p) (constDyn $ Right g)
 
-postConfigNew :<|> getDictDE =
+postConfigNew :<|> getDocDEPatterns :<|> getDictDE =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

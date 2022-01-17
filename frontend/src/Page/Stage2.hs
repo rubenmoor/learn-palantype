@@ -82,11 +82,12 @@ import           Page.Common                    (elBackUp,  elCongraz
 import           Palantype.Common               ( Chord(..)
                                                 , Palantype
                                                 , Lang (..)
+                                                , fromChord
+                                                , unparts
                                                 )
-import           Palantype.Common.Dictionary    (kiEnter,  kiBackUp )
+import           Palantype.Common    (kiEnter,  kiBackUp )
 import qualified Palantype.Common.Indices      as KI
-import           Palantype.Common.RawSteno      ( RawSteno(..) )
-import qualified Palantype.Common.RawSteno     as Raw
+import           Palantype.Common      ( RawSteno(..) , parseStenoLenient)
 import           Reflex.Dom                     ((=:)
                                                 , DomBuilder
                                                 , EventName(Click)
@@ -132,7 +133,7 @@ import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
-import Palantype.DE.Pattern (Pattern(PatSimple))
+import Palantype.DE (Pattern(PatSimple))
 
 -- Ex. 2.1
 
@@ -235,7 +236,7 @@ walkWords words raw = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
-    let chords = Raw.parseStenoLenient raw
+    let chords = parseStenoLenient raw
         len    = length chords
 
         step :: Chord key -> WalkState -> WalkState
@@ -245,7 +246,7 @@ walkWords words raw = do
             (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
 
             -- undo stroke
-            _ | Raw.fromChord chord == KI.toRaw @key kiBackUp ->
+            _ | fromChord chord == KI.toRaw @key kiBackUp ->
                 ws { wsMMistake = Nothing }
 
             -- halt while mistake
@@ -463,7 +464,7 @@ taskSingletons eMaps = do
                 step
                     :: Chord key -> StenoSingletonsState -> StenoSingletonsState
                 step c ls@StenoSingletonsState {..} =
-                    case (Raw.fromChord c, ssstDone) of
+                    case (fromChord c, ssstDone) of
 
                     -- reset after done
                         (_, Just True) ->
@@ -782,8 +783,8 @@ taskWords eMaps = do
 
                 step :: Chord key -> StenoWordsState -> StenoWordsState
                 step c ls@StenoWordsState {..} =
-              -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [Raw.fromChord c]
-                    case (Raw.fromChord c, swsWords `atMay` swsCounter) of
+              -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [fromChord c]
+                    case (fromChord c, swsWords `atMay` swsCounter) of
 
                 -- reset after done
                         (_, Nothing) ->
@@ -808,7 +809,7 @@ taskWords eMaps = do
 
                         (raw, Just word) ->
                             let
-                                rawWord = Raw.unparts $ swsChords ++ [raw]
+                                rawWord = unparts $ swsChords ++ [raw]
                                 isCorrect = Map.findWithDefault "" rawWord mapStenoWord == word
                             in
                                 if isCorrect

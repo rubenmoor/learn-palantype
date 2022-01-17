@@ -52,7 +52,7 @@ import           Palantype.Common               ( Chord
                                                 , Palantype
                                                 , Lang (..)
                                                 )
-import           Palantype.Common.RawSteno      ( RawSteno
+import           Palantype.Common      ( RawSteno
 
                                                 , parseSteno
                                                 )
@@ -85,7 +85,7 @@ import           State                          ( Env(..)
                                                 )
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
-import Palantype.Common.Dictionary (kiBackUp, kiEnter)
+import Palantype.Common (kiBackUp, kiEnter)
 
 elFooter
     :: forall t (m :: * -> *)

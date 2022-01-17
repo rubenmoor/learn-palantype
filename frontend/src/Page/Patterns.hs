@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,7 +12,7 @@ module Page.Patterns where
 
 --
 
-import Reflex.Dom ((=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
+import Reflex.Dom (MonadHold, widgetHold_, Prerender, delay, getPostBuild, (=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
 import Palantype.Common (PatternGroup, toDescription, Palantype)
 import Obelisk.Route.Frontend (R, SetRoute)
@@ -31,15 +32,21 @@ import Data.Monoid (Monoid(mempty))
 import GHC.Float (Double)
 import Control.Applicative (Applicative(pure))
 import GHC.Num ((+), (-), Num((*)))
-import Palantype.Common.Primitives (patternDoc)
-import qualified Palantype.DE as DE
+import Client (request, getDocDEPatterns, RequestResult (..), postRender)
+import Shared (iFa)
+import Control.Monad ((=<<))
+import Data.Functor ((<&>))
+import qualified Data.Map.Strict as Map
+import Data.Tuple (fst)
 
 overview
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadReader (Env t key) m
+       , MonadHold t m
        , Palantype key
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -48,11 +55,26 @@ overview = do
 
   el "h1" $ text "Pattern group overview"
 
-  for_ (patternDoc @key @DE.Pattern) $ \(p, lsPattern) -> do
+  ePb     <- postRender $ delay 0.1 =<< getPostBuild
+  RequestResult {..} <- request $ getDocDEPatterns ePb
+
+  let loading = do
+        iFa "fas fa-spinner fa-spin"
+        text " Loading ..."
+
+  widgetHold_ blank $ rrEFailure <&> \str ->
+    elClass "span" "red small" $ text str
+
+  widgetHold_ loading $ rrESuccess <&> \(patternDoc, m) -> for_ patternDoc \(p, lsPattern) -> do
     el "h2" $ text $ toDescription p
     elClass "div" "patternTable" $ do
     for_ lsPattern $ \(g, lsPPosPairs) -> do
+      let (n, lsExamples) =
+            Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
       el "h3" $ text $ "Greediness " <> showt g
+      elClass "span" "" $ do
+        text "# total: "
+        text $ showt n
       for_ lsPPosPairs $ \(pPos, pairs) -> do
         let strPPos = toLower $ showt pPos
         elClass "hr" strPPos blank

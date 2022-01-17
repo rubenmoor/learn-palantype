@@ -71,14 +71,16 @@ import GHC.Err (error)
 import GHC.Show (Show (show))
 import Obelisk.Generated.Static (staticFilePath)
 import Palantype.Common
-    ( KeyIndex,
+    (MapStenoWordTake100, PatternDoc,  KeyIndex,
       Lang (..),
       Palantype (keyIndex),
       Greediness
     )
-import Palantype.Common.RawSteno
+import Palantype.Common
     ( RawSteno (..),
       parseStenoKey,
+      patternDoc,
+      PatternPos
     )
 import qualified Palantype.DE.Keys as DE
 import qualified Palantype.EN.Keys as EN
@@ -93,10 +95,18 @@ import qualified Servant.Server as Snap
     )
 import Snap.Core (Snap)
 import Control.Applicative (Alternative((<|>)))
-import qualified Palantype.DE.Pattern as DE
+import qualified Palantype.DE as DE
 
 handlers :: ServerT Routes '[] Snap
-handlers = handleConfigNew :<|> handleDictDE
+handlers = handleConfigNew :<|> handleDocDEPatterns :<|> handleDictDE
+
+-- handleDocDEPatterns
+
+handleDocDEPatterns
+  :: Snap (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
+handleDocDEPatterns = do
+  m <- Json.decodeFileStrict' $(staticFilePath "palantype-DE-doc.json")
+  pure (patternDoc, m)
 
 -- handleDict
 

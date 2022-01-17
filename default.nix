@@ -43,19 +43,20 @@ in
         sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
       }) {});
 
-      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-        owner = "imalsogreg";
-        repo = "servant-reflex";
-        rev = "20e2621cc2eca5fe38f8a01c7a159b0b9be524ea";
-        sha256 = "0aqyk04yg39xj40aj86hr6gwbzvj6i2fxi8zznmfl5fay8l96b4g";
-      }) {};
+      # servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+      #   owner = "imalsogreg";
+      #   repo = "servant-reflex";
+      #   rev = "f76dbeb9416c03fc26784b29ba5852374d91b0d2";
+      #   sha256 = "1ly62i7b1bsdmpg0l8hvvzrdmmh97ac8bhc8z35223jjmsfcp9j6";
+      # }) {};
+      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
       servant-snap = dontCheck (self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
       }) {});
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = dontCheck (self.callCabal2nix "my-palantype" ../my-palantype { });
       # my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
       #   owner = "rubenmoor";
       #   repo = "my-palantype";

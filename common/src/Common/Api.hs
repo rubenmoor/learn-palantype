@@ -23,17 +23,18 @@ import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Text                 (Text)
 import           GHC.Generics              (Generic)
-import           Palantype.Common          (Greediness, KeyIndex, Lang (..))
-import           Palantype.Common.RawSteno (RawSteno)
 import           Servant.API               (Capture, (:<|>), Get, (:>), JSON, PlainText, Post,
                                             ReqBody)
 import           TextShow                  (TextShow (..), fromText)
 import           Web.KeyCode               (KeyCode, Key)
 import Control.Category ((<<<))
-import qualified Palantype.DE.Pattern as DE
+import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, Greediness, Lang (..))
+import qualified Palantype.DE as DE
+import Palantype.Common (KeyIndex, RawSteno)
 
 type RoutesApi = "api" :>
      (    "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+     :<|> "doc"    :> "DE" :> "patterns" :> Get '[JSON] (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
      :<|> "dict"   :> "DE" :> Capture "n" Int
                            :> Capture "pattern-group" DE.Pattern
                            :> Capture "greediness" Greediness

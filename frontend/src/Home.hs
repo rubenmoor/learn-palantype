@@ -53,14 +53,14 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      (otherwise,  (&&)
+import           Data.Bool                      (otherwise
                                                 , Bool(..)
                                                 , bool
                                                 , not
                                                 )
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..) )
-import           Data.Eq                        ( Eq((/=), (==)) )
+import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(foldl, null)
                                                 , concat
                                                 )
@@ -131,17 +131,13 @@ import           Page.Introduction              ( introduction )
 import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
 import qualified Page.Patterns as Patterns
-import           Palantype.Common               (Lang (..),  Chord(..)
+import           Palantype.Common               (fromChord, Lang (..),  Chord(..)
                                                 , KeyIndex(..)
                                                 , Palantype(fromIndex, keyCode)
-                                                , mkChord
-                                                )
-import           Palantype.Common.Dictionary    ( kiDown
+                                                , mkChord, kiDown
                                                 , kiUp
-                                                )
+                                                , RawSteno(..) )
 import qualified Palantype.Common.Indices      as KI
-import           Palantype.Common.RawSteno      ( RawSteno(..) )
-import qualified Palantype.Common.RawSteno     as Raw
 import           Reflex.Dom                     (EventSelector(select), fanMap, KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
@@ -508,9 +504,9 @@ stenoInput lang = do
                         eChordAll    = catMaybes $ updated dynChord
 
                         selector = fanMap $ eChordAll <&> \c -> if
-                            | Raw.fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
-                            | Raw.fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
-                            | Raw.fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
+                            | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
+                            | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+                            | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
                             | otherwise                                 -> Map.singleton FanOther c
 
                         eChordToggle = select selector (Const2 FanToggle)
