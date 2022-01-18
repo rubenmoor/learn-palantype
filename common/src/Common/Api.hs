@@ -35,8 +35,7 @@ import Palantype.Common (KeyIndex, RawSteno)
 type RoutesApi = "api" :>
      (    "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
      :<|> "doc"    :> "DE" :> "patterns" :> Get '[JSON] (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
-     :<|> "dict"   :> "DE" :> Capture "n" Int
-                           :> Capture "pattern-group" DE.Pattern
+     :<|> "dict"   :> "DE" :> Capture "pattern-group" DE.Pattern
                            :> Capture "greediness" Greediness
                            :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
      )

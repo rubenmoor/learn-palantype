@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -7,12 +8,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE RecursiveDo #-}
 
 module Page.Patterns where
 
 --
 
-import Reflex.Dom (MonadHold, widgetHold_, Prerender, delay, getPostBuild, (=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
+import Reflex.Dom (Dynamic, dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, (=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
 import Palantype.Common (PatternGroup, toDescription, Palantype)
 import Obelisk.Route.Frontend (R, SetRoute)
@@ -38,14 +40,19 @@ import Control.Monad ((=<<))
 import Data.Functor ((<&>))
 import qualified Data.Map.Strict as Map
 import Data.Tuple (fst)
+import Data.Bool (bool, Bool (..), not)
+import Control.Monad.Fix (MonadFix)
+import Data.Functor ((<$>))
 
 overview
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
-       , MonadReader (Env t key) m
+       , MonadFix m
        , MonadHold t m
+       , MonadReader (Env t key) m
        , Palantype key
+       , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
@@ -58,9 +65,10 @@ overview = do
   ePb     <- postRender $ delay 0.1 =<< getPostBuild
   RequestResult {..} <- request $ getDocDEPatterns ePb
 
-  let loading = do
-        iFa "fas fa-spinner fa-spin"
-        text " Loading ..."
+  let loading =
+        el "div" $ do
+          iFa "fas fa-spinner fa-spin"
+          text " Loading ..."
 
   widgetHold_ blank $ rrEFailure <&> \str ->
     elClass "span" "red small" $ text str
@@ -72,13 +80,30 @@ overview = do
       let (n, lsExamples) =
             Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
       el "h3" $ text $ "Greediness " <> showt g
-      elClass "span" "" $ do
-        text "# total: "
-        text $ showt n
+
+      elClass "div" "patternExamples" $ mdo
+        elClass "strong" "floatLeft" $ text "Examples"
+        (btn, _) <- elClass' "button" "floatLeft" $ dyn_ $ dynToggle <&> \case
+          False -> iFa "fas fa-plus"
+          True  -> iFa "fas fa-minus"
+        elClass "em" "floatRight" $ do
+          text "# total: "
+          text $ showt n
+        elClass "br" "clearBoth" blank
+
+        dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
+        let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
+        elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
+          el "span" $ text w
+          text " "
+          el "code" $ text $ showt s
+          text ", "
+
       for_ lsPPosPairs $ \(pPos, pairs) -> do
         let strPPos = toLower $ showt pPos
         elClass "hr" strPPos blank
         elClass "span" ("patternPosition " <> strPPos) $ text strPPos
+        elClass "br" "clearBoth" blank
         for_ pairs $ \(orig, steno) ->
           elClass "div" "floatLeft" $ do
             let

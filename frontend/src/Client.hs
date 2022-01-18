@@ -72,21 +72,19 @@ getDocDEPatterns
 
 getDictDE
   :: SupportsServantReflex t m
-  => Dynamic t (Either Text Int)
-  -> Dynamic t (Either Text DE.Pattern)
+  => Dynamic t (Either Text DE.Pattern)
   -> Dynamic t (Either Text Greediness)
   -> Event t ()
   -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
 
 getDictDE'
   :: SupportsServantReflex t m
-  => Int
-  -> DE.Pattern
+  => DE.Pattern
   -> Greediness
   -> Event t ()
   -> m (Event t (ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
-getDictDE' n p g =
-  getDictDE (constDyn $ Right n) (constDyn $ Right p) (constDyn $ Right g)
+getDictDE' p g =
+  getDictDE (constDyn $ Right p) (constDyn $ Right g)
 
 postConfigNew :<|> getDocDEPatterns :<|> getDictDE =
   client (Proxy :: Proxy RoutesApi)

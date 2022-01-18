@@ -133,7 +133,7 @@ import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
-import Palantype.DE (Pattern(PatSimple))
+import Palantype.DE (Pattern(..))
 
 -- Ex. 2.1
 
@@ -658,7 +658,7 @@ exercise3 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictDE' 100 PatSimple 0 ePb
+    eResult <- postRender $ getDictDE' PatSimple 0 ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 
@@ -940,7 +940,7 @@ exercise4 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictDE' 100 PatSimple 0 ePb
+    eResult <- postRender $ getDictDE' PatSimpleMulti 0 ePb
     let eSuccess = mapMaybe reqSuccess eResult
     dynResult <- holdDyn Nothing $ Just <$> eResult
 

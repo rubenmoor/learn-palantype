@@ -20,7 +20,7 @@ import Common.Api
       keyMapToPloverCfg,
     )
 import Control.Applicative (Applicative ((<*>), pure))
-import Control.Category ((<<<), Category ((.)))
+import Control.Category (Category ((.)))
 import Control.Monad
     ( foldM,
       unless,
@@ -55,19 +55,15 @@ import Data.Function
     ( ($),
       const,
     )
-import Data.Functor ((<$>), Functor (fmap))
+import Data.Functor ((<$>))
 import Data.Int (Int)
-import Data.List ((++), filter, take)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe (Maybe (..))
+import Data.Maybe (maybe, Maybe (..))
 import Data.Monoid ((<>))
 import Data.String (String)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.Lazy as LazyT
-import qualified Data.Text.Lazy.IO as LazyT
-import GHC.Err (error)
 import GHC.Show (Show (show))
 import Obelisk.Generated.Static (staticFilePath)
 import Palantype.Common
@@ -80,13 +76,12 @@ import Palantype.Common
     ( RawSteno (..),
       parseStenoKey,
       patternDoc,
-      PatternPos
     )
 import qualified Palantype.DE.Keys as DE
 import qualified Palantype.EN.Keys as EN
 import Servant.API ((:<|>) (..))
 import Servant.Server
-    ( HasServer (ServerT),
+    (err500,  HasServer (ServerT),
       ServantErr (errBody),
       err400,
     )
@@ -94,24 +89,43 @@ import qualified Servant.Server as Snap
     ( throwError,
     )
 import Snap.Core (Snap)
-import Control.Applicative (Alternative((<|>)))
-import qualified Palantype.DE as DE
+import Data.Tuple (snd)
 
 handlers :: ServerT Routes '[] Snap
 handlers = handleConfigNew :<|> handleDocDEPatterns :<|> handleDictDE
 
 -- handleDocDEPatterns
 
+getDocMapDE :: Snap (MapStenoWordTake100 DE.Key)
+getDocMapDE = do
+  let
+      errCouldNotDecode = err500
+          { errBody = "Could not load map palantype-DE-doc"
+          }
+
+  mMap <- liftIO $ Json.decodeFileStrict' $(staticFilePath "palantype-DE-doc.json")
+  maybe (Snap.throwError errCouldNotDecode) pure mMap
+
 handleDocDEPatterns
   :: Snap (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
 handleDocDEPatterns = do
-  m <- Json.decodeFileStrict' $(staticFilePath "palantype-DE-doc.json")
-  pure (patternDoc, m)
+  map <- getDocMapDE
+  pure (patternDoc, map)
 
 -- handleDict
 
-handleDictDE :: Int -> DE.Pattern -> Greediness -> Snap (Map RawSteno Text, Map Text [RawSteno])
-handleDictDE n p g = pure (Map.empty, Map.empty)
+handleDictDE :: DE.Pattern -> Greediness -> Snap (Map RawSteno Text, Map Text [RawSteno])
+handleDictDE p g = do
+  mapPG <- getDocMapDE
+  let
+      ls = snd $ Map.findWithDefault (0, []) g
+               $ Map.findWithDefault Map.empty p mapPG
+  pure $
+    foldl' (\(mSW, mWSs) (w, s) ->
+              ( Map.insert s w mSW
+              , Map.insertWith (<>) w [s] mWSs
+              )
+           ) (Map.empty, Map.empty) ls
 
 -- handleConfigNew
 
@@ -156,24 +170,22 @@ handleConfigNew str = do
                     Right km -> pure (km :: KeysMapJSON)
             pure (systemName, machineType, Map.toList $ unKeysMapJSON m)
 
+        errSystemNotImplemented system = err400
+            { errBody = LazyBS.fromStrict $ Char8.pack $ "System "
+                          <> system
+                          <> " not implemented."
+            }
+        errNotFound err = err400
+          { errBody = LazyBS.fromStrict $ Char8.pack $ show err
+          }
+
     case eCfg of
-        Left err ->
-            Snap.throwError $
-                err400 {errBody = LazyBS.fromStrict $ Char8.pack $ show err}
+        Left err -> Snap.throwError $ errNotFound err
         Right (system, machine, stenoKeys) -> do
             lang <- case system of
-                "Palantype" -> pure EN
+                "Palantype"    -> pure EN
                 "Palantype DE" -> pure DE
-                _ ->
-                    Snap.throwError $
-                        err400
-                            { errBody =
-                                  LazyBS.fromStrict
-                                      $ Char8.pack
-                                      $ "System "
-                                          <> system
-                                          <> " not implemented."
-                            }
+                _              -> Snap.throwError $ errSystemNotImplemented system
 
             let rawToIndex raw = case lang of
                     EN ->

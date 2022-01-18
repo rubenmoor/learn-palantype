@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -168,8 +168,7 @@ import           Clay.Border                    ( borderBottom
                                                 , borderTop
                                                 , dotted
                                                 )
-import           Clay.Flexbox                   ( nowrap
-                                                , row
+import           Clay.Flexbox                   ( row
                                                 )
 import qualified Clay.Media                    as Media
 import           Control.Applicative            ( Applicative(pure) )
@@ -181,6 +180,8 @@ import           System.IO                      ( putStrLn )
 import Clay (borderTopColor)
 import Clay (borderTopStyle)
 import Clay (borderTopWidth)
+import qualified Clay.Flexbox as Flex
+import Clay (nowrap)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -221,7 +222,7 @@ main = putCss $ do
 
     div # ".box" ? do
         display flex
-        flexFlow column nowrap
+        flexFlow column Flex.nowrap
         height $ pct 100
 
     header ? do
@@ -231,7 +232,7 @@ main = putCss $ do
 
     div # ".row" ? do
         display flex
-        flexFlow row nowrap
+        flexFlow row Flex.nowrap
         flexGrow 1
         flexShrink 1
         overflowY hidden
@@ -540,6 +541,7 @@ main = putCss $ do
     ".bgWhite" ? backgroundColor white
     ".bgGreen" ? backgroundColor lightgreen
     ".bgRed" ? backgroundColor red
+    ".bgLightblue" ? backgroundColor lightblue
     ".bgLightgray" ? backgroundColor myLightgray
     ".fgTransparent" ? color transparent
     ".red" ? color red
@@ -732,3 +734,23 @@ main = putCss $ do
       span # ".nucleus" ? color lightgreen
       span # ".coda" ? color lightblue
       span # ".multiple" ? color violet
+
+    div # ".patternExamples" ? do
+      backgroundColor lightblue
+      fontSize $ pt 12
+      padding (px 8) (px 8) (px 8) (px 8)
+      borderRadius (px 8) (px 8) (px 8) (px 8)
+      strong ? marginBottom (em 0.5)
+
+      div ? do
+        overflow hidden
+        textOverflow overflowEllipsis
+
+      button ? do
+        backgroundColor transparent
+        border none (px 0) black
+        cursor pointer
+        color anthrazit
+        fontSize $ em 0.5
+
+    ".whiteSpaceNoWrap" ? whiteSpace nowrap
