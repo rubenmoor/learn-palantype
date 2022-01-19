@@ -12,7 +12,8 @@
 
 module Page.Introduction where
 
-import           Common.Route                   (Stage (..),  FrontendRoute(..) )
+import           Common.Route                   ( FrontendRoute(..) )
+import           Common.Stage                   ( Stage () )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
@@ -168,7 +169,7 @@ introduction = do
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stProgress" %~ Map.update (\_ -> Just $ Stage "stage_1-1") navLang
+            $> [ field @"stProgress" %~ Map.update (\_ -> Just "stage_1-1") navLang
                , field @"stCleared" %~ Set.insert navCurrent
                , field @"stTOCShowStage1" .~ True
                ]

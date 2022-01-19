@@ -12,8 +12,8 @@ module State where
 import           Common.Api                     ( PloverCfg
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
-                                                , Stage (..)
                                                 )
+import           Common.Stage                   ( Stage ())
 import           Control.Applicative            ( (<$>) )
 import           Control.Category               ( (<<<) )
 import           Data.Aeson                     ( FromJSON(..)
@@ -99,7 +99,7 @@ instance Default State where
         , stMLang         = Nothing
         , stMsg           = Nothing
         , stPloverCfg     = def
-        , stProgress = Map.fromList [(EN, Stage "introduction"), (DE, Stage "introduction")]
+        , stProgress = Map.fromList [(EN, "introduction"), (DE, "introduction")]
         , stShowKeyboard  = True
         , stShowTOC       = False
         , stTOCShowStage1 = False
@@ -137,20 +137,3 @@ stageUrl lang stage =
     case lang of
         EN -> FrontendRoute_EN :/ stage
         DE -> FrontendRoute_DE :/ stage
-
-stageDescription :: Stage -> Text
-stageDescription (Stage stage) = case stage of
-    "introduction" -> "Introduction"
-    "stage_1-1"     -> "Ex. 1: Type the letters"
-    "stage_1-2"     -> "Ex. 2: Memorize the order"
-    "stage_1-3"     -> "Ex. 3: Type the letters blindly"
-    "stage_1-4"     -> "Ex. 4: Memorize the order blindly"
-    "stage_1-5"     -> "Ex. 5: Memorize the left hand"
-    "stage_1-6"     -> "Ex. 6: Memorize the right hand"
-    "stage_1-7"     -> "Ex. 7: Memorize them all"
-    "stage_2-1"     -> "Ex. 1: Make use of home row"
-    "stage_2-2"     -> "Ex. 2: Learn your first chords"
-    "stage_2-3"     -> "Ex. 3: Onset, nucleus, and coda"
-    "stage_2-4"     -> "Ex. 4: Syllables and word parts"
-    "patternoverview" -> "Pattern overview"
-    other           -> "Page not found: " <> other

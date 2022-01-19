@@ -19,6 +19,7 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
+import           Common.Stage                   ( Stage (), stageDescription, mPrev, mNext )
 import           Common.Api                     ( CfgName(..)
                                                 , PloverSystemCfg(..)
                                                 , keyMapToPloverCfg
@@ -27,7 +28,7 @@ import           Common.Api                     ( CfgName(..)
                                                 , lsStenoQwertz
                                                 , showSymbol
                                                 )
-import           Common.Route                   (Stage (Stage),  FrontendRoute(..)
+import           Common.Route                   ( FrontendRoute(..)
                                                 )
 import           Control.Applicative            ( Applicative(..) )
 import           Control.Category               ( (>>>)
@@ -193,7 +194,6 @@ import           State                          ( Env(..)
                                                 , Message(..)
                                                 , Navigation(..)
                                                 , State(..)
-                                                , stageDescription
                                                 , stageUrl
                                                 , updateState
                                                 )
@@ -799,7 +799,7 @@ toc lang current = elClass "section" "toc" $ do
 
             el "ul" $ do
 
-                elLi $ Stage "introduction"
+                elLi "introduction"
 
                 (s1, _) <- elClass' "li" "stage" $ do
 
@@ -817,13 +817,13 @@ toc lang current = elClass "section" "toc" $ do
 
                 elDynClass "ul" dynClassUl1 $ do
 
-                    elLi $ Stage "stage_1-1"
-                    elLi $ Stage "stage_1-2"
-                    elLi $ Stage "stage_1-3"
-                    elLi $ Stage "stage_1-4"
-                    elLi $ Stage "stage_1-5"
-                    elLi $ Stage "stage_1-6"
-                    elLi $ Stage "stage_1-7"
+                    elLi "stage_1-1"
+                    elLi "stage_1-2"
+                    elLi "stage_1-3"
+                    elLi "stage_1-4"
+                    elLi "stage_1-5"
+                    elLi "stage_1-6"
+                    elLi "stage_1-7"
 
                 (s2, _) <- elClass' "li" "stage" $ do
 
@@ -840,12 +840,12 @@ toc lang current = elClass "section" "toc" $ do
                 let dynClassUl2 = bool "displayNone" "" <$> dynShowStage2
 
                 elDynClass "ul" dynClassUl2 $ do
-                    elLi $ Stage "stage_2-1"
-                    elLi $ Stage "stage_2-2"
-                    elLi $ Stage "stage_2-3"
-                    elLi $ Stage "stage_2-4"
+                    elLi "stage_2-1"
+                    elLi "stage_2-2"
+                    elLi "stage_2-3"
+                    elLi "stage_2-4"
 
-                elLi $ Stage "patternoverview"
+                elLi "patternoverview"
 
 landingPage
     :: forall t (m :: * -> *)
@@ -890,7 +890,7 @@ landingPage = elClass "div" "landing" $ do
             [ field @"stMLang" .~ Just lang
             -- if no progress in map, insert "Introduction"
             , field @"stProgress"
-                %~ Map.insertWith (\_ o -> o) lang (Stage "introduction")
+                %~ Map.insertWith (\_ o -> o) lang "introduction"
             ]
 
     elAttr
@@ -989,7 +989,7 @@ stages'
     -> Lang
     -> Stage
     -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-stages' _ navLang current@(Stage strCurrent) = elClass "div" "box" $ do
+stages' _ navLang current = elClass "div" "box" $ do
       eChord <- el "header" $ do
           settings navLang
           message
@@ -1000,11 +1000,11 @@ stages' _ navLang current@(Stage strCurrent) = elClass "div" "box" $ do
           toc navLang current
 
           let
-              setEnv mPrev mNext =
+              setEnv =
                 let
-                    navMPrevious = Stage <$> mPrev
+                    navMPrevious = mPrev current
                     navCurrent = current
-                    navMNext = Stage <$> mNext
+                    navMNext = mNext current
                 in  mapRoutedT
                       (withReaderT $ \dynState -> Env
                           { envDynState   = dynState
@@ -1017,21 +1017,25 @@ stages' _ navLang current@(Stage strCurrent) = elClass "div" "box" $ do
               elClass "div" "scrollTop" $
                   text $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
               nav <-
-                elClass "div" "content" $ case strCurrent of
-                  "introduction" -> setEnv Nothing (Just "stage_1-1") introduction
-                  "stage_1-1" -> setEnv (Just "introduction") (Just "stage1_2") Stage1.exercise1
-                  "stage_1-2" -> setEnv (Just "stage_1-1") (Just "stage_1-3") Stage1.exercise2
-                  "stage_1-3" -> setEnv (Just "stage_1-2") (Just "stage_1-4") Stage1.exercise3
-                  "stage_1-4" -> setEnv (Just "stage_1-3") (Just "stage_1-5") Stage1.exercise4
-                  "stage_1-5" -> setEnv (Just "stage_1-4") (Just "stage_1-6") Stage1.exercise5
-                  "stage_1-6" -> setEnv (Just "stage_1-5") (Just "stage_1-7") Stage1.exercise6
-                  "stage_1-7" -> setEnv (Just "stage_1-6") (Just "stage_2-1") Stage1.exercise7
-                  "stage_2-1" -> setEnv (Just "stage_1-7") (Just "stage_2-2") Stage2.exercise1
-                  "stage_2-2" -> setEnv (Just "stage_2-1") (Just "stage_2-3") Stage2.exercise2
-                  "stage_2-3" -> setEnv (Just "stage_2-2") (Just "stage_2-4") Stage2.exercise3
-                  "stage_2-4" -> setEnv (Just "stage_2-3") (Just "patternoverview") Stage2.exercise4
-                  "patternoverview" -> setEnv (Just "stage_2-4") Nothing Patterns.overview
-                  other       -> text ("Page not found: " <> other) $> Navigation navLang Nothing "stagenotfound" Nothing
+                elClass "div" "content" $ setEnv $ case current of
+                  "introduction" -> introduction
+                  "stage_1-1"    -> Stage1.exercise1
+                  "stage_1-2"    -> Stage1.exercise2
+                  "stage_1-3"    -> Stage1.exercise3
+                  "stage_1-4"    -> Stage1.exercise4
+                  "stage_1-5"    -> Stage1.exercise5
+                  "stage_1-6"    -> Stage1.exercise6
+                  "stage_1-7"    -> Stage1.exercise7
+                  "stage_2-1"    -> Stage2.exercise1
+                  "stage_2-2"    -> Stage2.exercise2
+                  "stage_2-3"    -> Stage2.exercise3
+                  "stage_2-4"    -> Stage2.exercise4
+                  "patternoverview" -> Patterns.overview
+                  other          ->
+                    elClass "div" "small anthrazit" $
+                      text ("Page not found: " <> showt other)
+                        $> Navigation navLang Nothing "introduction" Nothing
+
               elClass "div" "scrollBottom" $
                   text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
               pure nav

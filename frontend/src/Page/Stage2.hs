@@ -16,7 +16,8 @@ module Page.Stage2 where
 import           Client                         ( getDictDE'
                                                 , postRender
                                                 )
-import           Common.Route                   (Stage (..),  FrontendRoute(..) )
+import           Common.Route                   ( FrontendRoute(..) )
+import           Common.Stage                   ( Stage () )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
@@ -185,10 +186,10 @@ exercise1 = do
 
     let eBack = leftmost [eChordBackUp, domEvent Click elABack]
 
-    setRoute $ eBack $> stageUrl navLang (Stage "stage_1-1")
+    setRoute $ eBack $> stageUrl navLang "stage_1-1"
     updateState
         $  eBack
-        $> [field @"stProgress" %~ Map.update (\_ -> Just $ Stage "stage_1-1") navLang]
+        $> [field @"stProgress" %~ Map.update (\_ -> Just "stage_1-1") navLang]
 
     whenJust navMNext $ \nxt -> do
         (elACont, _) <- elClass "div" "anthrazit" $ do
@@ -919,7 +920,7 @@ exercise4 = do
           \syllables, e.g. we saw «Zweifel» as "
         el "code" $ text "SWEI/FEL"
         text " in "
-        routeLink (stageUrl navLang $ Stage "stage_2-2") (text "Exercise 2.2")
+        routeLink (stageUrl navLang "stage_2-2") (text "Exercise 2.2")
         text ". In the same exercise we saw «Wissen» as "
         el "code" $ text "WISn"
         text
