@@ -15,7 +15,7 @@
 
 module Page.Common where
 
-import           Common.Route                   ( FrontendRoute(..) )
+import           Common.Route                   (Stage (..),  FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( Category(id) )
 import           Control.Lens                   ( (%~)
@@ -78,7 +78,6 @@ import           Shared                         ( dynSimple
 import           State                          ( Env(..)
                                                 , Message(..)
                                                 , Navigation(..)
-                                                , Stage(..)
                                                 , State
                                                 , stageUrl
                                                 , updateState
@@ -159,7 +158,7 @@ elCongraz eDone Navigation {..} = mdo
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
                        , field @"stCleared" %~ Set.insert navCurrent
-                       , if nxt == Stage2_1
+                       , if nxt == Stage "stage_2-1"
                            then field @"stTOCShowStage2" .~ True
                            else id
                        ]

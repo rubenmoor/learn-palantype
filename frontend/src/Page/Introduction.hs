@@ -12,7 +12,7 @@
 
 module Page.Introduction where
 
-import           Common.Route                   ( FrontendRoute(..) )
+import           Common.Route                   (Stage (..),  FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
@@ -53,7 +53,6 @@ import           Reflex.Dom                     ( (=:)
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
-                                                , Stage(..)
                                                 , State
                                                 , updateState
                                                 )
@@ -169,7 +168,7 @@ introduction = do
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stProgress" %~ Map.update (\_ -> Just Stage1_1) navLang
+            $> [ field @"stProgress" %~ Map.update (\_ -> Just $ Stage "stage_1-1") navLang
                , field @"stCleared" %~ Set.insert navCurrent
                , field @"stTOCShowStage1" .~ True
                ]

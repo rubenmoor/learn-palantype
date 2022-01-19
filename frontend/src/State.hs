@@ -12,7 +12,7 @@ module State where
 import           Common.Api                     ( PloverCfg
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
-                                                , FrontendSubroute_Stage(..)
+                                                , Stage (..)
                                                 )
 import           Control.Applicative            ( (<$>) )
 import           Control.Category               ( (<<<) )
@@ -28,7 +28,7 @@ import           Data.Map                       ( Map )
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Ord                       ( Ord )
-import           Data.Semigroup                 ( Endo(..) )
+import           Data.Semigroup                 ((<>),  Endo(..) )
 import           Data.Set                       ( Set )
 import qualified Data.Set                      as Set
 import           Data.Text                      ( Text )
@@ -99,7 +99,7 @@ instance Default State where
         , stMLang         = Nothing
         , stMsg           = Nothing
         , stPloverCfg     = def
-        , stProgress = Map.fromList [(EN, Introduction), (DE, Introduction)]
+        , stProgress = Map.fromList [(EN, Stage "introduction"), (DE, Stage "introduction")]
         , stShowKeyboard  = True
         , stShowTOC       = False
         , stTOCShowStage1 = False
@@ -132,77 +132,25 @@ instance ToJSON Message
 -- instance FromJSON Session
 -- instance ToJSON Session
 
-data Stage
-  = Introduction
-  | Stage1_1
-  | Stage1_2
-  | Stage1_3
-  | Stage1_4
-  | Stage1_5
-  | Stage1_6
-  | Stage1_7
-  | Stage2_1
-  | Stage2_2
-  | Stage2_3
-  | Stage2_4
-  | PatternOverview
-  deriving (Eq, Ord, Generic)
-
-instance ToJSON Stage
-instance FromJSON Stage
-
-instance Default Stage where
-    def = Introduction
-
-instance TextShow Stage where
-    showb = fromText <<< \case
-        Introduction -> "Introduction"
-        Stage1_1     -> "Stage 1.1"
-        Stage1_2     -> "Stage 1.2"
-        Stage1_3     -> "Stage 1.3"
-        Stage1_4     -> "Stage 1.4"
-        Stage1_5     -> "Stage 1.5"
-        Stage1_6     -> "Stage 1.6"
-        Stage1_7     -> "Stage 1.7"
-        Stage2_1     -> "Stage 2.1"
-        Stage2_2     -> "Stage 2.2"
-        Stage2_3     -> "Stage 2.3"
-        Stage2_4     -> "Stage 2.4"
-        PatternOverview -> "Pattern overview"
-
 stageUrl :: Lang -> Stage -> R FrontendRoute
 stageUrl lang stage =
-    let r1 = case lang of
-            EN -> FrontendRoute_EN
-            DE -> FrontendRoute_DE
-        r2 = case stage of
-            Introduction -> FrontendSubroute_Introduction
-            Stage1_1     -> FrontendSubroute_Stage1_1
-            Stage1_2     -> FrontendSubroute_Stage1_2
-            Stage1_3     -> FrontendSubroute_Stage1_3
-            Stage1_4     -> FrontendSubroute_Stage1_4
-            Stage1_5     -> FrontendSubroute_Stage1_5
-            Stage1_6     -> FrontendSubroute_Stage1_6
-            Stage1_7     -> FrontendSubroute_Stage1_7
-            Stage2_1     -> FrontendSubroute_Stage2_1
-            Stage2_2     -> FrontendSubroute_Stage2_2
-            Stage2_3     -> FrontendSubroute_Stage2_3
-            Stage2_4     -> FrontendSubroute_Stage2_4
-            PatternOverview -> FrontendSubroute_PatternOverview
-    in  r1 :/ r2 :/ ()
+    case lang of
+        EN -> FrontendRoute_EN :/ stage
+        DE -> FrontendRoute_DE :/ stage
 
 stageDescription :: Stage -> Text
-stageDescription = \case
-    Introduction -> "Introduction"
-    Stage1_1     -> "Ex. 1: Type the letters"
-    Stage1_2     -> "Ex. 2: Memorize the order"
-    Stage1_3     -> "Ex. 3: Type the letters blindly"
-    Stage1_4     -> "Ex. 4: Memorize the order blindly"
-    Stage1_5     -> "Ex. 5: Memorize the left hand"
-    Stage1_6     -> "Ex. 6: Memorize the right hand"
-    Stage1_7     -> "Ex. 7: Memorize them all"
-    Stage2_1     -> "Ex. 1: Make use of home row"
-    Stage2_2     -> "Ex. 2: Learn your first chords"
-    Stage2_3     -> "Ex. 3: Onset, nucleus, and coda"
-    Stage2_4     -> "Ex. 4: Syllables and word parts"
-    PatternOverview -> "Pattern overview"
+stageDescription (Stage stage) = case stage of
+    "introduction" -> "Introduction"
+    "stage_1-1"     -> "Ex. 1: Type the letters"
+    "stage_1-2"     -> "Ex. 2: Memorize the order"
+    "stage_1-3"     -> "Ex. 3: Type the letters blindly"
+    "stage_1-4"     -> "Ex. 4: Memorize the order blindly"
+    "stage_1-5"     -> "Ex. 5: Memorize the left hand"
+    "stage_1-6"     -> "Ex. 6: Memorize the right hand"
+    "stage_1-7"     -> "Ex. 7: Memorize them all"
+    "stage_2-1"     -> "Ex. 1: Make use of home row"
+    "stage_2-2"     -> "Ex. 2: Learn your first chords"
+    "stage_2-3"     -> "Ex. 3: Onset, nucleus, and coda"
+    "stage_2-4"     -> "Ex. 4: Syllables and word parts"
+    "patternoverview" -> "Pattern overview"
+    other           -> "Page not found: " <> other

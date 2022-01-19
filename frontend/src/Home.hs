@@ -27,8 +27,7 @@ import           Common.Api                     ( CfgName(..)
                                                 , lsStenoQwertz
                                                 , showSymbol
                                                 )
-import           Common.Route                   ( FrontendRoute(..)
-                                                , FrontendSubroute_Stage(..)
+import           Common.Route                   (Stage (Stage),  FrontendRoute(..)
                                                 )
 import           Control.Applicative            ( Applicative(..) )
 import           Control.Category               ( (>>>)
@@ -115,14 +114,13 @@ import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
                                                 , liftJSM
                                                 )
 import           Obelisk.Generated.Static       ( static )
-import           Obelisk.Route.Frontend         ( pattern (:/)
+import           Obelisk.Route.Frontend         (askRoute,  pattern (:/)
                                                 , R
                                                 , RouteToUrl
                                                 , RoutedT
                                                 , SetRoute(setRoute)
                                                 , mapRoutedT
                                                 , routeLink
-                                                , subRoute
                                                 )
 import           Page.Common                    ( elFooter
                                                 , rawToggleKeyboard
@@ -194,7 +192,6 @@ import           Shared                         ( dynSimple
 import           State                          ( Env(..)
                                                 , Message(..)
                                                 , Navigation(..)
-                                                , Stage(..)
                                                 , State(..)
                                                 , stageDescription
                                                 , stageUrl
@@ -749,9 +746,9 @@ toc
        , SetRoute t (R FrontendRoute) m
        )
     => Lang
-    -> Dynamic t Stage
+    -> Stage
     -> m ()
-toc lang dynCurrent = elClass "section" "toc" $ do
+toc lang current = elClass "section" "toc" $ do
 
     dynState <- ask
     let dynShowTOC    = stShowTOC <$> dynState
@@ -789,9 +786,10 @@ toc lang dynCurrent = elClass "section" "toc" $ do
 
             let
                 elLi stage = do
-                    let dynClass =
-                            bool "" "bgLightgray" . (== stage) <$> dynCurrent
-                    elDynClass "li" dynClass $ do
+                    let cls = if stage == current
+                          then "bgLightgray"
+                          else ""
+                    elClass "li" cls $ do
                         if stage `Set.member` cleared
                             then iFa "fas fa-check"
                             else el "span" $ text "○"
@@ -801,7 +799,7 @@ toc lang dynCurrent = elClass "section" "toc" $ do
 
             el "ul" $ do
 
-                elLi Introduction
+                elLi $ Stage "introduction"
 
                 (s1, _) <- elClass' "li" "stage" $ do
 
@@ -819,13 +817,13 @@ toc lang dynCurrent = elClass "section" "toc" $ do
 
                 elDynClass "ul" dynClassUl1 $ do
 
-                    elLi Stage1_1
-                    elLi Stage1_2
-                    elLi Stage1_3
-                    elLi Stage1_4
-                    elLi Stage1_5
-                    elLi Stage1_6
-                    elLi Stage1_7
+                    elLi $ Stage "stage_1-1"
+                    elLi $ Stage "stage_1-2"
+                    elLi $ Stage "stage_1-3"
+                    elLi $ Stage "stage_1-4"
+                    elLi $ Stage "stage_1-5"
+                    elLi $ Stage "stage_1-6"
+                    elLi $ Stage "stage_1-7"
 
                 (s2, _) <- elClass' "li" "stage" $ do
 
@@ -842,12 +840,12 @@ toc lang dynCurrent = elClass "section" "toc" $ do
                 let dynClassUl2 = bool "displayNone" "" <$> dynShowStage2
 
                 elDynClass "ul" dynClassUl2 $ do
-                    elLi Stage2_1
-                    elLi Stage2_2
-                    elLi Stage2_3
-                    elLi Stage2_4
+                    elLi $ Stage "stage_2-1"
+                    elLi $ Stage "stage_2-2"
+                    elLi $ Stage "stage_2-3"
+                    elLi $ Stage "stage_2-4"
 
-                elLi PatternOverview
+                elLi $ Stage "patternoverview"
 
 landingPage
     :: forall t (m :: * -> *)
@@ -892,7 +890,7 @@ landingPage = elClass "div" "landing" $ do
             [ field @"stMLang" .~ Just lang
             -- if no progress in map, insert "Introduction"
             , field @"stProgress"
-                %~ Map.insertWith (\_ o -> o) lang Introduction
+                %~ Map.insertWith (\_ o -> o) lang (Stage "introduction")
             ]
 
     elAttr
@@ -966,72 +964,76 @@ stages
        )
     => proxy key
     -> Lang
-    -> RoutedT
-           t
-           (R FrontendSubroute_Stage)
-           (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m))
-           ()
-stages _ navLang = elClass "div" "box" $ do
-    eChord <- el "header" $ do
-        settings navLang
-        message
-        stenoInput navLang
+    -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    -- -> RoutedT
+    --        t
+    --        Stage
+    --        (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m))
+    --        ()
+stages p navLang = do
+  dynCurrent <- askRoute
+  dyn_ $ dynCurrent <&> stages' p navLang
 
-    dynNavigation <- elClass "div" "row" $ mdo
+stages'
+    :: forall key (proxy :: * -> *) t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadHold t m
+       , MonadFix m
+       , Palantype key
+       , PostBuild t m
+       , Prerender t m
+       , RouteToUrl (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) m
+       )
+    => proxy key
+    -> Lang
+    -> Stage
+    -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+stages' _ navLang current@(Stage strCurrent) = elClass "div" "box" $ do
+      eChord <- el "header" $ do
+          settings navLang
+          message
+          stenoInput @key navLang
 
-        toc navLang $ navCurrent <$> dynNavigation
+      navigation <- elClass "div" "row" $ mdo
 
-        let setEnv
-                :: forall
-                       a
-                 . Maybe Stage
-                -> Stage
-                -> Maybe Stage
-                -> RoutedT
-                       t
-                       a
-                       ( ReaderT
-                             (Env t key)
-                             (EventWriterT t (Endo State) m)
-                       )
-                       Navigation
-                -> RoutedT
-                       t
-                       a
-                       ( ReaderT
-                             (Dynamic t State)
-                             (EventWriterT t (Endo State) m)
-                       )
-                       Navigation
-            setEnv navMPrevious navCurrent navMNext = mapRoutedT
-                (withReaderT $ \dynState -> Env
-                    { envDynState   = dynState
-                    , envEChord     = eChord
-                    , envNavigation = Navigation { .. }
-                    }
-                )
-        dynNavigation <-
+          toc navLang current
+
+          let
+              setEnv mPrev mNext =
+                let
+                    navMPrevious = Stage <$> mPrev
+                    navCurrent = current
+                    navMNext = Stage <$> mNext
+                in  mapRoutedT
+                      (withReaderT $ \dynState -> Env
+                          { envDynState   = dynState
+                          , envEChord     = eChord
+                          , envNavigation = Navigation { .. }
+                          }
+                      )
+          navigation <-
             elAttr "section" ("id" =: "content") $ do
               elClass "div" "scrollTop" $
                   text $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
-              d <-
-                elClass "div" "content" $ subRoute $ \case
-                  FrontendSubroute_Introduction ->
-                      setEnv Nothing Introduction (Just Stage1_1) introduction
-                  FrontendSubroute_Stage1_1 -> setEnv (Just Introduction) Stage1_1 (Just Stage1_2) Stage1.exercise1
-                  FrontendSubroute_Stage1_2 -> setEnv (Just Stage1_1) Stage1_2 (Just Stage1_3) Stage1.exercise2
-                  FrontendSubroute_Stage1_3 -> setEnv (Just Stage1_2) Stage1_3 (Just Stage1_4) Stage1.exercise3
-                  FrontendSubroute_Stage1_4 -> setEnv (Just Stage1_3) Stage1_4 (Just Stage1_5) Stage1.exercise4
-                  FrontendSubroute_Stage1_5 -> setEnv (Just Stage1_4) Stage1_5 (Just Stage1_6) Stage1.exercise5
-                  FrontendSubroute_Stage1_6 -> setEnv (Just Stage1_5) Stage1_6 (Just Stage1_7) Stage1.exercise6
-                  FrontendSubroute_Stage1_7 -> setEnv (Just Stage1_6) Stage1_7 (Just Stage2_1) Stage1.exercise7
-                  FrontendSubroute_Stage2_1 -> setEnv (Just Stage1_7) Stage2_1 (Just Stage2_2) Stage2.exercise1
-                  FrontendSubroute_Stage2_2 -> setEnv (Just Stage2_1) Stage2_2 (Just Stage2_3) Stage2.exercise2
-                  FrontendSubroute_Stage2_3 -> setEnv (Just Stage2_2) Stage2_3 (Just Stage2_4) Stage2.exercise3
-                  FrontendSubroute_Stage2_4 -> setEnv (Just Stage2_3) Stage2_4 (Just PatternOverview) Stage2.exercise4
-                  FrontendSubroute_PatternOverview -> setEnv (Just Stage2_4) PatternOverview Nothing Patterns.overview
+              nav <-
+                elClass "div" "content" $ case strCurrent of
+                  "introduction" -> setEnv Nothing (Just "stage_1-1") introduction
+                  "stage_1-1" -> setEnv (Just "introduction") (Just "stage1_2") Stage1.exercise1
+                  "stage_1-2" -> setEnv (Just "stage_1-1") (Just "stage_1-3") Stage1.exercise2
+                  "stage_1-3" -> setEnv (Just "stage_1-2") (Just "stage_1-4") Stage1.exercise3
+                  "stage_1-4" -> setEnv (Just "stage_1-3") (Just "stage_1-5") Stage1.exercise4
+                  "stage_1-5" -> setEnv (Just "stage_1-4") (Just "stage_1-6") Stage1.exercise5
+                  "stage_1-6" -> setEnv (Just "stage_1-5") (Just "stage_1-7") Stage1.exercise6
+                  "stage_1-7" -> setEnv (Just "stage_1-6") (Just "stage_2-1") Stage1.exercise7
+                  "stage_2-1" -> setEnv (Just "stage_1-7") (Just "stage_2-2") Stage2.exercise1
+                  "stage_2-2" -> setEnv (Just "stage_2-1") (Just "stage_2-3") Stage2.exercise2
+                  "stage_2-3" -> setEnv (Just "stage_2-2") (Just "stage_2-4") Stage2.exercise3
+                  "stage_2-4" -> setEnv (Just "stage_2-3") (Just "patternoverview") Stage2.exercise4
+                  "patternoverview" -> setEnv (Just "stage_2-4") Nothing Patterns.overview
+                  other       -> text ("Page not found: " <> other) $> Navigation navLang Nothing "stagenotfound" Nothing
               elClass "div" "scrollBottom" $
                   text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
-              pure d
-        pure dynNavigation
-    dyn_ $ dynNavigation <&> elFooter navLang
+              pure nav
+          pure navigation
+      elFooter navLang navigation
