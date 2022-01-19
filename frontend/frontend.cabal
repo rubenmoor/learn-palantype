@@ -49,8 +49,17 @@ library
     Page.Patterns
     Page.Stage1
     Page.Stage2
+    Page.Stage3
     State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
+  default-extensions:
+      FlexibleContexts
+    , RecordWildCards
+    , KindSignatures
+    , LambdaCase
+    , ScopedTypeVariables
+    , OverloadedStrings
+
 
 executable frontend
   main-is: main.hs

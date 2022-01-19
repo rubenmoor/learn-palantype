@@ -24,7 +24,7 @@ import           Control.Lens                   ( (%~)
                                                 , (<&>)
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
-import           Control.Monad.Reader           ( MonadReader
+import           Control.Monad.Reader           (ask,  MonadReader
                                                 , asks
                                                 )
 import           Data.Bool                      ( Bool(..) )
@@ -37,7 +37,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..) )
-import           Data.Ord                       ( Ord((>)) )
+import           Data.Ord                       ((<),  Ord((>)) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
@@ -49,7 +49,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Palantype.Common               ( Chord
+import           Palantype.Common               (unparts, fromChord,  Chord
                                                 , Palantype
                                                 , Lang (..)
                                                 )
@@ -57,7 +57,7 @@ import           Palantype.Common      ( RawSteno
 
                                                 , parseSteno
                                                 )
-import           Reflex.Dom                     ( DomBuilder
+import           Reflex.Dom                     (dyn_, updated, foldDyn, zipDyn, performEvent,  DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
@@ -86,6 +86,24 @@ import           State                          ( Env(..)
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
 import Palantype.Common (kiBackUp, kiEnter)
+import Control.Monad (Monad)
+import Data.Int (Int)
+import Data.Text (Text)
+import Data.Map.Strict (Map)
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import Control.Monad.Random (evalRand, newStdGen)
+import Data.Functor ((<$>))
+import Client (postRender)
+import Safe (initMay, atMay)
+import System.Random.Shuffle (shuffleM)
+import GHC.Num (Num((+)))
+import GHC.Enum (pred, Enum(succ))
+import Data.Witherable (Filterable(catMaybes))
+import Control.Monad (when)
+import Data.List ((!!))
+import Data.Foldable (for_)
+import Data.List (intersperse)
+import Data.Foldable (Foldable(null))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -189,9 +207,6 @@ parseStenoOrError _ raw = case parseSteno raw of
         updateState $ ePb $> [field @"stMsg" .~ Just Message { .. }]
         pure Nothing
 
--- getMapTop2k :: IO (HashMap RawSteno Text, HashMap Text [RawSteno])
--- getMapTop2k = HashMap.empty
-
 elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()
 elNotImplemented = elClass "blockquote" "warning" $ do
     el "strong" $ text "Not implemented"
@@ -205,3 +220,151 @@ rawToggleKeyboard :: Lang -> RawSteno
 rawToggleKeyboard = \case
     DE -> "ULNSD"
     EN -> "ALFTS"
+
+loading
+  :: forall (m :: * -> *) t
+  .  ( DomBuilder t m
+     )
+  => m ()
+loading =
+    elClass "div" "paragraph" $ do
+       iFa "fas fa-spinner fa-spin"
+       text " Loading ..."
+
+data StenoWordsState = StenoWordsState
+    { swsCounter   :: Int
+    , swsDone      :: Maybe Bool
+    , swsChords    :: [RawSteno]
+    , swsWords     :: [Text]
+    , swsNMistakes :: Int
+    , swsMHint     :: Maybe [RawSteno]
+    }
+
+taskWords
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , Prerender t m
+       )
+    => Event t (Map RawSteno Text, Map Text [RawSteno])
+    -> m (Event t ())
+taskWords eMaps = do
+
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+
+    eStdGen <- postRender $ do
+        ePb <- getPostBuild
+        performEvent $ ePb $> liftIO newStdGen
+
+    dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
+    dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
+
+    dynSimple $ zipDyn dynMStdGen dynMMaps <&> \case
+        (Nothing    , _      ) -> pure never
+        (_          , Nothing) -> pure never
+        (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
+            let len = Map.size mapWordStenos
+
+                step :: Chord key -> StenoWordsState -> StenoWordsState
+                step c ls@StenoWordsState {..} =
+              -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [fromChord c]
+                    case (fromChord c, swsWords `atMay` swsCounter) of
+
+                -- reset after done
+                        (_, Nothing) ->
+                            let words' = evalRand (shuffleM swsWords) stdGen
+                            in  ls { swsDone    = Just False
+                                   , swsCounter = 0
+                                   , swsWords   = words'
+                                   , swsMHint   = Nothing
+                                   }
+
+                        -- undo last input
+                        (r, Just word) | r == KI.toRaw @key kiBackUp ->
+                            case initMay swsChords of
+                                Just cs -> ls { swsDone      = Nothing
+                                              , swsChords    = cs
+                                              , swsNMistakes = succ swsNMistakes
+                                              , swsMHint     = Nothing
+                                              }
+                                Nothing -> ls
+                                    { swsMHint = Just $ Map.findWithDefault [] word mapWordStenos
+                                    }
+
+                        (raw, Just word) ->
+                            let
+                                rawWord = unparts $ swsChords <> [raw]
+                                isCorrect = Map.findWithDefault "" rawWord mapStenoWord == word
+                            in
+                                if isCorrect
+
+                                   -- correct
+                                    then ls
+                                        { swsDone    = if swsCounter == pred len
+                                                           then Just True
+                                                           else Nothing
+                                        , swsCounter = swsCounter + 1
+                                        , swsMHint   = Nothing
+                                        , swsChords  = []
+                                        }
+                                    else ls { swsDone   = Nothing
+                                            , swsChords = swsChords <> [raw]
+                                            }
+
+                stepInitial = StenoWordsState
+                    { swsCounter   = 0
+                    , swsChords    = []
+                    , swsDone      = Nothing
+                    , swsWords     = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
+                    , swsNMistakes = 0
+                    , swsMHint     = Nothing
+                    }
+
+            dynStenoWords <- foldDyn step stepInitial envEChord
+
+            let eDone = catMaybes $ swsDone <$> updated dynStenoWords
+
+            elClass "div" "taskWords" $
+                dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
+                    elClass "span" "word"
+                        $  when (swsCounter < len)
+                        $  el "pre"
+                        $  el "code"
+                        $  text
+                        $  swsWords
+                        !! swsCounter
+
+                    elClass "span" "input"
+                        $ for_
+                              (intersperse "/" $ (showt <$> swsChords) <> ["…"])
+                        $ \str -> el "code" $ text str
+
+                    el "span" $ do
+                        elClass "span" "btnSteno" $ text $ "↤ " <> showt
+                            (KI.toRaw @key kiBackUp) -- U+21A4
+                        elClass "span" "small" $ text $ if null swsChords
+                            then " to show hint"
+                            else " to back up"
+
+                    whenJust swsMHint $ \hint ->
+                        elClass "div" "small" $ for_ hint $ \r -> do
+                            text $ showt r
+                            el "br" blank
+
+            let dynCounter = swsCounter <$> dynStenoWords
+            dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
+                el "strong" $ text $ showt c
+                text " / "
+                text $ showt len
+
+            dynDone <- holdDyn False eDone
+            dyn_ $ dynDone <&> \bDone ->
+                when bDone $ elClass "div" "small anthrazit" $ text
+                    "Cleared. Press any key to start over."
+
+            pure $ void $ filter id eDone

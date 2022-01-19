@@ -14,17 +14,15 @@ module Page.Patterns where
 
 --
 
-import Reflex.Dom (Dynamic, dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, (=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
+import Reflex.Dom (dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, (=:), elAttr, blank, elClass, el, text, EventWriter, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
-import Palantype.Common (PatternGroup, toDescription, Palantype)
+import Palantype.Common (toDescription, Palantype)
 import Obelisk.Route.Frontend (R, SetRoute)
 import Common.Route (FrontendRoute)
-import Data.Semigroup ((<>), Endo(Endo))
+import Data.Semigroup ((<>), Endo)
 import State (State (..), Env (..), Navigation (..))
-import Data.Traversable (for)
 import Data.Foldable (for_)
 import TextShow (TextShow(showt))
-import qualified Data.Text as Text
 import Data.Text (toLower)
 import Data.Function (($))
 import Data.Text (length)
@@ -33,16 +31,16 @@ import GHC.Real (fromIntegral, Fractional((/)))
 import Data.Monoid (Monoid(mempty))
 import GHC.Float (Double)
 import Control.Applicative (Applicative(pure))
-import GHC.Num ((+), (-), Num((*)))
+import GHC.Num ((+))
 import Client (request, getDocDEPatterns, RequestResult (..), postRender)
 import Shared (iFa)
 import Control.Monad ((=<<))
 import Data.Functor ((<&>))
 import qualified Data.Map.Strict as Map
-import Data.Tuple (fst)
 import Data.Bool (bool, Bool (..), not)
 import Control.Monad.Fix (MonadFix)
 import Data.Functor ((<$>))
+import Page.Common (loading)
 
 overview
     :: forall key t (m :: * -> *)
@@ -64,11 +62,6 @@ overview = do
 
   ePb     <- postRender $ delay 0.1 =<< getPostBuild
   RequestResult {..} <- request $ getDocDEPatterns ePb
-
-  let loading =
-        el "div" $ do
-          iFa "fas fa-spinner fa-spin"
-          text " Loading ..."
 
   widgetHold_ blank $ rrEFailure <&> \str ->
     elClass "span" "red small" $ text str

@@ -44,6 +44,7 @@ import Data.Text (uncons)
 import Data.Text (cons)
 import Data.Char (toUpper)
 import Control.Category ((<<<))
+import Safe (atMay)
 
 newtype Stage = Stage { unStage :: Text }
   deriving (Eq, Generic, Ord, Show)
@@ -82,6 +83,10 @@ strsStage =
   , "stage_2-2"
   , "stage_2-3"
   , "stage_2-4"
+  , "stage_3-1"
+  , "stage_3-2"
+  , "stage_3-3"
+  , "stage_3-4"
   , "patternoverview"
   ]
 
@@ -91,6 +96,25 @@ instance IsString Stage where
     in  if txt `elem` strsStage
            then Stage txt
            else error $ "Does not exist: Stage: " <> str
+
+{-
+  | PatReplCommon
+  | PatDiConsonant
+  | PatCodaH
+  | PatCodaR
+  | PatCodaRR
+  | PatCodaHR
+  | PatDt
+  | PatDiphtong
+  | PatReplC
+  | PatCodaGK
+  | PatSZ
+  | PatIJ
+  | PatTsDsPs
+  | PatDiVowel
+  | PatReplH
+  | PatSmallS
+-}
 
 stageDescription :: Stage -> Text
 stageDescription (Stage stage) = case elemIndex stage strsStage of
@@ -106,15 +130,20 @@ stageDescription (Stage stage) = case elemIndex stage strsStage of
     Just 9  -> "Ex. 2: Learn your first chords"
     Just 10 -> "Ex. 3: Onset, nucleus, and coda"
     Just 11 -> "Ex. 4: Syllables and word parts"
-    Just 12 -> "Pattern overview"
+    Just 12 -> "Ex. 1: Common letter substitutions"
+    Just 13 -> "Ex. 2: Double consonants"
+    Just 14 -> "Ex. 3: Long vowels"
+    Just 15 -> "Ex. 4: Vowels followed by -r"
+    Just 16 -> "Pattern overview"
+    Just _  -> "Page not implemented: " <> stage
     Nothing -> "Page not found: " <> stage
 
 mPrev :: Stage -> Maybe Stage
 mPrev (Stage s) = do
   i <- pred <$> elemIndex s strsStage
-  Stage <$> strsStage ^? element i
+  Stage <$> strsStage `atMay` i
 
 mNext :: Stage -> Maybe Stage
 mNext (Stage s) = do
   i <- succ <$> elemIndex s strsStage
-  Stage <$> strsStage ^? element i
+  Stage <$> strsStage `atMay` i

@@ -17,7 +17,6 @@ import           Client                         ( getDictDE'
                                                 , postRender
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( Stage () )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
@@ -37,7 +36,7 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 )
 import           Data.Bool                      ( Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(length, null)
+import           Data.Foldable                  ( Foldable(length)
                                                 , for_
                                                 , traverse_
                                                 )
@@ -59,7 +58,6 @@ import           Data.Maybe                     ( Maybe(..)
                                                 )
 import           Data.Ord                       ( Ord((<), (>)) )
 import           Data.Semigroup                 ( Endo
-                                                , Semigroup((<>))
                                                 )
 import qualified Data.Set                      as Set
 import           Data.Text                      ( Text )
@@ -77,14 +75,13 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Page.Common                    (elBackUp,  elCongraz
+import           Page.Common                    (taskWords, loading, elBackUp,  elCongraz
                                                 , elNotImplemented
                                                 )
 import           Palantype.Common               ( Chord(..)
                                                 , Palantype
                                                 , Lang (..)
                                                 , fromChord
-                                                , unparts
                                                 )
 import           Palantype.Common    (kiEnter,  kiBackUp )
 import qualified Palantype.Common.Indices      as KI
@@ -113,14 +110,10 @@ import           Reflex.Dom                     ((=:)
                                                 , widgetHold_
                                                 , zipDyn
                                                 )
-import           Safe                           ( atMay
-                                                , initMay
-                                                )
 import           Servant.Common.Req             ( ReqResult(..)
                                                 , reqSuccess
                                                 )
 import           Shared                         ( dynSimple
-                                                , iFa
                                                 , whenJust
                                                 )
 import           State                          ( Env(..)
@@ -660,225 +653,17 @@ exercise3 = do
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
     eResult <- postRender $ getDictDE' PatSimple 0 ePb
     let eSuccess = mapMaybe reqSuccess eResult
-    dynResult <- holdDyn Nothing $ Just <$> eResult
 
-    dyn_ $ dynResult <&> \case
-        Nothing -> elClass "div" "paragraph" $ do
-            iFa "fas fa-spinner fa-spin"
-            text " Loading ..."
-        Just ResponseSuccess{} -> blank
-        Just _                 -> elClass "div" "paragraph small red"
-            $ text "Could not load resource: dict"
-
+    widgetHold_ loading $ eResult <&> \case
+      ResponseSuccess {} -> blank
+      _                  -> elClass "div" "paragraph small red"
+        $ text "Could not load resource: dict"
     eDone <- taskSingletons eSuccess
 
     elCongraz eDone envNavigation
     pure envNavigation
 
-words2_3 :: [Text]
-words2_3 =
-    [ "und"
-    , "in"
-    , "das"
-    , "den"
-    , "im"
-    , "auf"
-    , "es"
-    , "ein"
-    , "dem"
-    , "des"
-    , "am"
-    , "an"
-    , "als"
-    , "bei"
-    , "aus"
-    , "um"
-    , "so"
-    , "man"
-    , "bis"
-    , "sein"
-    , "was"
-    , "nun"
-    , "beim"
-    , "da"
-    , "drei"
-    , "uns"
-    , "rund"
-    , "weil"
-    , "mal"
-    , "ins"
-    , "ja"
-    , "wo"
-    , "Land"
-    , "fünf"
-    , "frau"
-    , "Mai"
-    , "du"
-    , "je"
-    , "neu"
-    , "Haus"
-    , "hin"
-    , "bald"
-    , "Bild"
-    , "mein"
-    , "Bund"
-    , "Hand"
-    , "raum"
-    , "neun"
-    , "frei"
-    , "Bad"
-    , "los"
-    , "fand"
-    , "AfD"
-    , "elf"
-    , "Grad"
-    , "Mensch"
-    , "Brand"
-    , "nein"
-    , "aufs"
-    , "eins"
-    , "Bau"
-    ]
-
 -- Ex 2.4
-
-data StenoWordsState = StenoWordsState
-    { swsCounter   :: Int
-    , swsDone      :: Maybe Bool
-    , swsChords    :: [RawSteno]
-    , swsWords     :: [Text]
-    , swsNMistakes :: Int
-    , swsMHint     :: Maybe [RawSteno]
-    }
-
-taskWords
-    :: forall key t (m :: * -> *)
-     . ( DomBuilder t m
-       , MonadFix m
-       , MonadHold t m
-       , MonadReader (Env t key) m
-       , Palantype key
-       , PostBuild t m
-       , Prerender t m
-       )
-    => Event t (Map RawSteno Text, Map Text [RawSteno])
-    -> m (Event t ())
-taskWords eMaps = do
-
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
-
-    eStdGen <- postRender $ do
-        ePb <- getPostBuild
-        performEvent $ ePb $> liftIO newStdGen
-
-    dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
-    dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
-
-    dynSimple $ zipDyn dynMStdGen dynMMaps <&> \case
-        (Nothing    , _      ) -> pure never
-        (_          , Nothing) -> pure never
-        (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
-            let len = Map.size mapWordStenos
-
-                step :: Chord key -> StenoWordsState -> StenoWordsState
-                step c ls@StenoWordsState {..} =
-              -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [fromChord c]
-                    case (fromChord c, swsWords `atMay` swsCounter) of
-
-                -- reset after done
-                        (_, Nothing) ->
-                            let words' = evalRand (shuffleM swsWords) stdGen
-                            in  ls { swsDone    = Just False
-                                   , swsCounter = 0
-                                   , swsWords   = words'
-                                   , swsMHint   = Nothing
-                                   }
-
-                        -- undo last input
-                        (r, Just word) | r == KI.toRaw @key kiBackUp ->
-                            case initMay swsChords of
-                                Just cs -> ls { swsDone      = Nothing
-                                              , swsChords    = cs
-                                              , swsNMistakes = swsNMistakes + 1
-                                              , swsMHint     = Nothing
-                                              }
-                                Nothing -> ls
-                                    { swsMHint = Just $ Map.findWithDefault [] word mapWordStenos
-                                    }
-
-                        (raw, Just word) ->
-                            let
-                                rawWord = unparts $ swsChords ++ [raw]
-                                isCorrect = Map.findWithDefault "" rawWord mapStenoWord == word
-                            in
-                                if isCorrect
-
-                                   -- correct
-                                    then ls
-                                        { swsDone    = if swsCounter == len - 1
-                                                           then Just True
-                                                           else Nothing
-                                        , swsCounter = swsCounter + 1
-                                        , swsMHint   = Nothing
-                                        , swsChords  = []
-                                        }
-                                    else ls { swsDone   = Nothing
-                                            , swsChords = swsChords ++ [raw]
-                                            }
-
-                stepInitial = StenoWordsState
-                    { swsCounter   = 0
-                    , swsChords    = []
-                    , swsDone      = Nothing
-                    , swsWords     = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
-                    , swsNMistakes = 0
-                    , swsMHint     = Nothing
-                    }
-
-            dynStenoWords <- foldDyn step stepInitial envEChord
-
-            let eDone = catMaybes $ swsDone <$> updated dynStenoWords
-
-            elClass "div" "taskWords" $ do
-                dyn_ $ dynStenoWords <&> \StenoWordsState {..} -> do
-                    elClass "span" "word"
-                        $  when (swsCounter < len)
-                        $  el "pre"
-                        $  el "code"
-                        $  text
-                        $  swsWords
-                        !! swsCounter
-
-                    elClass "span" "input"
-                        $ for_
-                              (intersperse "/" $ (showt <$> swsChords) ++ ["…"])
-                        $ \str -> el "code" $ text str
-
-                    el "span" $ do
-                        elClass "span" "btnSteno" $ text $ "↤ " <> showt
-                            (KI.toRaw @key kiBackUp) -- U+21A4
-                        elClass "span" "small" $ text $ if null swsChords
-                            then " to show hint"
-                            else " to back up"
-
-                    whenJust swsMHint $ \hint ->
-                        elClass "div" "small" $ for_ hint $ \r -> do
-                            text $ showt r
-                            el "br" blank
-
-            let dynCounter = swsCounter <$> dynStenoWords
-            dyn_ $ dynCounter <&> \c -> elClass "div" "paragraph" $ do
-                el "strong" $ text $ showt c
-                text " / "
-                text $ showt len
-
-            dynDone <- holdDyn False eDone
-            dyn_ $ dynDone <&> \bDone ->
-                when bDone $ elClass "div" "small anthrazit" $ text
-                    "Cleared. Press any key to start over."
-
-            pure $ void $ filter id eDone
 
 exercise4
     :: forall key t (m :: * -> *)
@@ -941,16 +726,13 @@ exercise4 = do
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
     eResult <- postRender $ getDictDE' PatSimpleMulti 0 ePb
-    let eSuccess = mapMaybe reqSuccess eResult
-    dynResult <- holdDyn Nothing $ Just <$> eResult
+    let
+        eSuccess = mapMaybe reqSuccess eResult
 
-    dyn_ $ dynResult <&> \case
-        Nothing -> elClass "div" "paragraph" $ do
-            iFa "fas fa-spinner fa-spin"
-            text " Loading ..."
-        Just ResponseSuccess {} -> blank
-        Just _                  -> elClass "div" "paragraph small red"
-            $ text "Could not load resource: dict"
+    widgetHold_ loading $ eResult <&> \case
+      ResponseSuccess {} -> blank
+      _                  -> elClass "div" "paragraph small red"
+        $ text "Could not load resource: dict"
 
     eDone <- taskWords eSuccess
 
@@ -966,167 +748,3 @@ exercise4 = do
 
     elCongraz eDone envNavigation
     pure envNavigation
-
-words2_4 :: [Text]
-words2_4 =
-    [ "eine"
-    , "einen"
-    , "haben"
-    , "gegen"
-    , "Habe"
-    , "Euro"
-    , "alle"
-    , "seine"
-    , "dabei"
-    , "Neue"
-    , "müssen"
-    , "eines"
-    , "wegen"
-    , "Ende"
-    , "sollen"
-    , "andere"
-    , "alles"
-    , "also"
-    , "wollen"
-    , "leben"
-    , "lassen"
-    , "einmal"
-    , "geben"
-    , "wäre"
-    , "gerade"
-    , "gehen"
-    , "sehen"
-    , "darauf"
-    , "gewesen"
-    , "einige"
-    , "lange"
-    , "bleiben"
-    , "neben"
-    , "denen"
-    , "Frage"
-    , "allen"
-    , "unsere"
-    , "Saison"
-    , "aufgrund"
-    , "finden"
-    , "Juni"
-    , "genau"
-    , "April"
-    , "folgen"
-    , "damals"
-    , "beide"
-    , "gegeben"
-    , "gemeinsam"
-    , "warum"
-    , "wissen"
-    , "Lage"
-    , "sagen"
-    , "Juli"
-    , "daran"
-    , "meine"
-    , "fragen"
-    , "bringen"
-    , "dessen"
-    , "allein"
-    , "dagegen"
-    , "Rolle"
-    , "Junge"
-    , "einigen"
-    , "Folge"
-    , "Region"
-    , "grünen"
-    , "helfen"
-    , "Hilfe"
-    , "offen"
-    , "darum"
-    , "eben"
-    , "Eigene"
-    , "jungen"
-    , "Medien"
-    , "jeweils"
-    , "hinaus"
-    , "Gemeinde"
-    , "gefunden"
-    , "Namen"
-    , "Donald"
-    , "Abend"
-    , "regeln"
-    , "insbesondere"
-    , "hingegen"
-    , "Union"
-    , "Wolle"
-    , "laufen"
-    , "darin"
-    , "Liga"
-    , "oben"
-    , "rennen"
-    , "gesehen"
-    , "genommen"
-    , "fällen"
-    , "hohe"
-    , "essen"
-    , "gewinnen"
-    , "Grüne"
-    , "Nähe"
-    , "Gebäude"
-    , "Boden"
-    , "fallen"
-    , "Bundesliga"
-    , "freuen"
-    , "Musik"
-    , "jemand"
-    , "Ehemalige"
-    , "Rede"
-    , "befinden"
-    , "jedenfalls"
-    , "meinen"
-    , "heraus"
-    , "Runde"
-    , "deswegen"
-    , "daraufhin"
-    , "nahe"
-    , "begonnen"
-    , "handeln"
-    , "freien"
-    , "gewonnen"
-    , "Reihe"
-    , "Handel"
-    , "Glaube"
-    , "lesen"
-    ]
-
--- Ex. 2.5
-{-
-single letter replacements
-  onset: p, t, k, z, v, c, q, ...?
-  coda: w, v, b, g, t, z
-  nucleus: ö, y
-multiple letter replacements
-  onset: sp, st, sk, pf, sch, ch, schm, schw, qu
-  coda: ch, sch, nch, tsch, tz, tzt, ts, ng, nk, lm
-    consonants digraphs: ll, nn, mm, ss, ff, pp, tt
-r in the coda: er, ar, or, ur, ir, är, ür, ör
-h in the coda: eh, ah, oh, uh, äh, üh, öh
-hr in the coda: ehr, ahr, ohr, uhr, ihr, ier, ühr, öhr
-
-ß ?
-vowel digraphs
-coda: g?
-ie, ih
-
-capitalization
-punctuation, hyphenation?
-special characters
-commands
-steno tricks (e.g. capitalize last word, retroactively write +)
-
-engl.: ?
-frnz.: ?
-chemical elements
-acronyms
-
-even faster:
-en, es, er
-de, di, ge, gi, be, bi, ...
-onset: schl, schn, schr
--}

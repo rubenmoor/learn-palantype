@@ -129,6 +129,7 @@ import           Page.Common                    ( elFooter
 import           Page.Introduction              ( introduction )
 import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
+import qualified Page.Stage3                   as Stage3
 import qualified Page.Patterns as Patterns
 import           Palantype.Common               (fromChord, Lang (..),  Chord(..)
                                                 , KeyIndex(..)
@@ -845,6 +846,26 @@ toc lang current = elClass "section" "toc" $ do
                     elLi "stage_2-3"
                     elLi "stage_2-4"
 
+                (s3, _) <- elClass' "li" "stage" $ do
+
+                    let
+                        dynClass =
+                            bool "fas fa-caret-right" "fas fa-caret-down"
+                                <$> dynShowStage3
+                    elDynClass "i" dynClass blank
+                    text "Stage 3: Common replacement rules"
+
+                let eClickS3 = domEvent Click s3
+                updateState $ eClickS3 $> [field @"stTOCShowStage3" %~ not]
+
+                let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
+
+                elDynClass "ul" dynClassUl3 $ do
+                    elLi "stage_3-1"
+                    elLi "stage_3-2"
+                    elLi "stage_3-3"
+                    elLi "stage_3-4"
+
                 elLi "patternoverview"
 
 landingPage
@@ -1030,6 +1051,7 @@ stages' _ navLang current = elClass "div" "box" $ do
                   "stage_2-2"    -> Stage2.exercise2
                   "stage_2-3"    -> Stage2.exercise3
                   "stage_2-4"    -> Stage2.exercise4
+                  "stage_3-1"    -> Stage3.exercise1
                   "patternoverview" -> Patterns.overview
                   other          ->
                     elClass "div" "small anthrazit" $

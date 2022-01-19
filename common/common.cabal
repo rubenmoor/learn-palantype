@@ -15,6 +15,7 @@ library
     , mtl
     , my-palantype
     , obelisk-route
+    , safe
     , servant
     , text
     , text-show
