@@ -13,7 +13,7 @@
 
 module Page.Stage2 where
 
-import           Client                         ( getDictDE'
+import           Client                         (getDocDEPattern', request,  getDictDE'
                                                 , postRender
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
@@ -47,9 +47,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
-                                                , (++)
                                                 , elem
-                                                , intersperse
                                                 , zip
                                                 )
 import qualified Data.Map                      as Map
@@ -57,7 +55,7 @@ import           Data.Maybe                     ( Maybe(..)
 
                                                 )
 import           Data.Ord                       ( Ord((<), (>)) )
-import           Data.Semigroup                 ( Endo
+import           Data.Semigroup                 ((<>),  Endo
                                                 )
 import qualified Data.Set                      as Set
 import           Data.Text                      ( Text )
@@ -127,6 +125,7 @@ import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
 import Palantype.DE (Pattern(..))
+import Data.Either (isRight, Either(..))
 
 -- Ex. 2.1
 
@@ -651,14 +650,14 @@ exercise3 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictDE' PatSimple 0 ePb
-    let eSuccess = mapMaybe reqSuccess eResult
+    eEDict <- request $ getDictDE' PatSimple 0 ePb
 
-    widgetHold_ loading $ eResult <&> \case
-      ResponseSuccess {} -> blank
-      _                  -> elClass "div" "paragraph small red"
-        $ text "Could not load resource: dict"
-    eDone <- taskSingletons eSuccess
+    widgetHold_ loading $ eEDict <&> \case
+      Right _ -> blank
+      Left  str -> elClass "div" "paragraph small red"
+        $ text $ "Could not load resource: " <> str
+
+    eDone <- taskSingletons $ mapMaybe eEDict
 
     elCongraz eDone envNavigation
     pure envNavigation
@@ -724,17 +723,23 @@ exercise4 = do
 
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
-    ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictDE' PatSimpleMulti 0 ePb
+    ePb      <- postRender $ delay 0.1 =<< getPostBuild
+    eResDict <- postRender $ getDictDE' PatSimpleMulti 0 ePb
+    eResDoc  <- postRender $ getDocDEPattern' PatSimple 0 ePb
     let
-        eSuccess = mapMaybe reqSuccess eResult
+        eDict = mapMaybe reqSuccess eResDict
 
-    widgetHold_ loading $ eResult <&> \case
+    widgetHold_ loading $ eResDict <&> \case
       ResponseSuccess {} -> blank
       _                  -> elClass "div" "paragraph small red"
         $ text "Could not load resource: dict"
 
-    eDone <- taskWords eSuccess
+    widgetHold_ loading $ eResDoc <&> \case
+      ResponseSuccess {} -> blank
+      _                  -> elClass "div" "paragraph small red"
+        $ text "Could not load resource: doc"
+
+    eDone <- taskWords eDict
 
     elClass "div" "paragraph"
         $ text
@@ -745,6 +750,11 @@ exercise4 = do
            \syllables and sometimes you will need multiple chords to \
            \type a single syllable. For this reason we generally speak of \
            \word parts instead of syllables."
+
+    elClass "div" "paragraph"
+        $ text
+              "For completeness sake, find here the \"substitution rules\" \
+              \that have been applied so far:"
 
     elCongraz eDone envNavigation
     pure envNavigation

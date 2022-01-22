@@ -12,10 +12,11 @@ import Obelisk.Route (R)
 import State (Navigation (..), Env (..), State)
 import Control.Monad (unless)
 import Palantype.DE (Pattern(PatReplCommon))
-import Page.Common (elCongraz, taskWords, loading, elNotImplemented)
-import Client (postRender, getDictDE')
+import Page.Common (elPatterns, elCongraz, taskWords, loading, elNotImplemented)
+import Client (getDocDEPattern', postRender, getDictDE')
 import Data.Witherable (Filterable(mapMaybe))
 import Data.Functor ((<&>))
+import Data.Foldable (traverse_)
 
 exercise1
     :: forall key t (m :: * -> *)
@@ -43,27 +44,37 @@ exercise1 = do
 
     elClass "div" "paragraph"
         $ text
-              "Introducing words that rely on two or more chords to type now. \
-              \In general, the idea of any steno system is typing efficiency \
-              \and the less chords you need to type a word, the better. \
-              \There are, however, several reasons why especially German words \
-              \do not always fit into one steno chord. In that case, \
-              \the words are simply split up and you type the corresponding chord \
-              \in succession to produce the word."
+              "In general, any word in the natural language translates to some \
+              \steno code based on a couple of straightforward substitutions. \
+              \We start with the most common ones now."
 
-    elClass "div" "paragraph" $ text "Type the following words as they appear!"
+    elClass "div" "paragraph"
+        $ text
+              "First of all, note that these patterns are in addition to the \
+              \simple patterns of the last exercise."
 
-    ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    eResult <- postRender $ getDictDE' PatReplCommon 0 ePb
+    ePb      <- postRender $ delay 0.1 =<< getPostBuild
+    eResDict <- postRender $ getDictDE' PatReplCommon 0 ePb
     let
-        eSuccess = mapMaybe reqSuccess eResult
+        eDict = mapMaybe reqSuccess eResDict
 
-    widgetHold_ loading $ eResult <&> \case
+    eResDoc <- postRender $ getDocDEPattern' PatReplCommon 0 ePb
+
+    widgetHold_ loading $ eResDict <&> \case
       ResponseSuccess {} -> blank
       _                  -> elClass "div" "paragraph small red"
         $ text "Could not load resource: dict"
 
-    eDone <- taskWords eSuccess
+    widgetHold_ loading $ eResDoc <&> \case
+      ResponseSuccess {} -> blank
+      _                  -> elClass "div" "paragraph small red"
+        $ text "Could not load resource: docs"
+
+    let eDoc = mapMaybe reqSuccess eResDoc
+    widgetHold_ blank $ eDoc <&> \ls ->
+      elClass "div" "patternTable" $ traverse_ elPatterns ls
+
+    eDone <- taskWords eDict
 
     elClass "div" "paragraph"
         $ text
@@ -77,3 +88,22 @@ exercise1 = do
 
     elCongraz eDone envNavigation
     pure envNavigation
+
+{-
+  | PatReplCommon
+  | PatDiConsonant
+  | PatCodaH
+  | PatCodaR
+  | PatCodaRR
+  | PatCodaHR
+  | PatDt
+  | PatDiphtong
+  | PatReplC
+  | PatCodaGK
+  | PatSZ
+  | PatIJ
+  | PatTsDsPs
+  | PatDiVowel
+  | PatReplH
+  | PatSmallS
+-}

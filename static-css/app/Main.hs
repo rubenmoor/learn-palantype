@@ -721,6 +721,7 @@ main = putCss $ do
       hr ? do
         border none (px 0) black
         height $ px 1
+        marginBottom $ px $ -20
       hr # ".onset" ? backgroundColor pink
       hr # ".nucleus" ? backgroundColor lightgreen
       hr # ".coda" ? backgroundColor lightblue
@@ -729,7 +730,8 @@ main = putCss $ do
         float floatRight
         fontSize $ px 14
         fontWeight bold
-        marginTop $ px (-10)
+        position relative
+        top $ px 20
       span # ".onset" ? color pink
       span # ".nucleus" ? color lightgreen
       span # ".coda" ? color lightblue

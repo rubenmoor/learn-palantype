@@ -13,16 +13,15 @@ module Client where
 import           Common.Api          (PloverSystemCfg, RoutesApi)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
-import           Data.Either         (Either(Right))
-import           Data.Functor        ((<$>))
+import           Data.Either         (Either(..))
+import           Data.Functor        ((<&>), (<$>))
 import           Data.Proxy          (Proxy (Proxy))
 import           Data.String         (String)
 import           Data.Text           (Text)
-import           Data.Witherable     (Filterable (mapMaybe))
 import           Reflex.Dom          (Prerender (Client, prerender),
                                       Reflex (Dynamic, Event, never), constDyn,
                                       switchDyn, XhrResponse (..), )
-import           Servant.Common.Req  (ReqResult(..),  reqSuccess)
+import           Servant.Common.Req  (ReqResult(..))
 import           Servant.Reflex      (BaseUrl (BasePath), SupportsServantReflex,
                                       client)
 import Data.Maybe (fromMaybe, Maybe (..))
@@ -31,7 +30,6 @@ import Data.Semigroup (Semigroup((<>)))
 import Servant.API ((:<|>)(..))
 import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, RawSteno)
 import Palantype.Common (Greediness, Lang)
-import Data.Int (Int)
 import Data.Map.Strict (Map)
 import qualified Palantype.DE as DE
 
@@ -41,10 +39,10 @@ postRender
   -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
 
-data RequestResult t a = RequestResult
-  { rrESuccess :: Event t a
-  , rrEFailure :: Event t Text
-  }
+-- data RequestResult t a = RequestResult
+--   { rrESuccess :: Event t a
+--   , rrEFailure :: Event t Text
+--   }
 
 request
   :: forall t (m :: * -> *) a.
@@ -52,12 +50,17 @@ request
   , Prerender t m
   )
   => Client m (Event t (ReqResult () a))
-  -> m (RequestResult t a)
+  -> m (Event t (Either Text a))
 request req = do
   eResult <- switchDyn <$> prerender (pure never) req
-  let rrESuccess = mapMaybe reqSuccess eResult
-      rrEFailure = mapMaybe reqFailure eResult
-  pure RequestResult{..}
+  pure $ eResult <&> \case
+    ResponseSuccess _ x   _ -> Right x
+    ResponseFailure _ str _ -> Left str
+    RequestFailure  _ str   -> Left str
+
+  -- let rrESuccess = mapMaybe reqSuccess eResult
+  --     rrEFailure = mapMaybe reqFailure eResult
+  -- pure RequestResult{..}
 
 postConfigNew
   :: SupportsServantReflex t m
@@ -65,10 +68,27 @@ postConfigNew
   -> Event t ()
   -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
 
-getDocDEPatterns
+getDocDEPatternAll
   :: SupportsServantReflex t m
   => Event t ()
   -> m (Event t (ReqResult () (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)))
+
+getDocDEPattern
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text DE.Pattern)
+  -> Dynamic t (Either Text Greediness)
+  -> Event t ()
+  -> m (Event t (ReqResult () [(PatternPos, [(Text, RawSteno)])]))
+
+getDocDEPattern'
+  :: SupportsServantReflex t m
+  => DE.Pattern
+  -> Greediness
+  -> Event t ()
+  -> m (Event t (ReqResult () [(PatternPos, [(Text, RawSteno)])]))
+
+getDocDEPattern' p g =
+  getDocDEPattern (constDyn $ Right p) (constDyn $ Right g)
 
 getDictDE
   :: SupportsServantReflex t m
@@ -86,7 +106,7 @@ getDictDE'
 getDictDE' p g =
   getDictDE (constDyn $ Right p) (constDyn $ Right g)
 
-postConfigNew :<|> getDocDEPatterns :<|> getDictDE =
+postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

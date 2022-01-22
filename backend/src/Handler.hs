@@ -76,6 +76,7 @@ import Palantype.Common
     ( RawSteno (..),
       parseStenoKey,
       patternDoc,
+      PatternPos
     )
 import qualified Palantype.DE.Keys as DE
 import qualified Palantype.EN.Keys as EN
@@ -92,9 +93,13 @@ import Snap.Core (Snap)
 import Data.Tuple (snd)
 
 handlers :: ServerT Routes '[] Snap
-handlers = handleConfigNew :<|> handleDocDEPatterns :<|> handleDictDE
+handlers =
+       handleConfigNew
+  :<|> handleDocDEPatternAll
+  :<|> handleDocDEPattern
+  :<|> handleDictDE
 
--- handleDocDEPatterns
+-- handleDocDEPatternAll
 
 getDocMapDE :: Snap (MapStenoWordTake100 DE.Key)
 getDocMapDE = do
@@ -106,11 +111,23 @@ getDocMapDE = do
   mMap <- liftIO $ Json.decodeFileStrict' $(staticFilePath "palantype-DE-doc.json")
   maybe (Snap.throwError errCouldNotDecode) pure mMap
 
-handleDocDEPatterns
+handleDocDEPatternAll
   :: Snap (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
-handleDocDEPatterns = do
+handleDocDEPatternAll = do
   map <- getDocMapDE
   pure (patternDoc, map)
+
+-- handleDocDEPattern
+
+handleDocDEPattern
+  :: DE.Pattern
+  -> Greediness
+  -> Snap [(PatternPos, [(Text, RawSteno)])]
+handleDocDEPattern p g =
+  pure $ Map.findWithDefault [] g
+           $ Map.fromList
+           $ Map.findWithDefault [] p
+           $ Map.fromList patternDoc
 
 -- handleDict
 

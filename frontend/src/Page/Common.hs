@@ -49,7 +49,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Palantype.Common               (unparts, fromChord,  Chord
+import           Palantype.Common               (PatternPos, unparts, fromChord,  Chord
                                                 , Palantype
                                                 , Lang (..)
                                                 )
@@ -57,7 +57,7 @@ import           Palantype.Common      ( RawSteno
 
                                                 , parseSteno
                                                 )
-import           Reflex.Dom                     (dyn_, updated, foldDyn, zipDyn, performEvent,  DomBuilder
+import           Reflex.Dom                     (elAttr, (=:), dyn_, updated, foldDyn, zipDyn, performEvent,  DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
@@ -88,7 +88,7 @@ import qualified Palantype.Common.Indices as KI
 import Palantype.Common (kiBackUp, kiEnter)
 import Control.Monad (Monad)
 import Data.Int (Int)
-import Data.Text (Text)
+import Data.Text (toLower, Text)
 import Data.Map.Strict (Map)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Random (evalRand, newStdGen)
@@ -104,6 +104,10 @@ import Data.List ((!!))
 import Data.Foldable (for_)
 import Data.List (intersperse)
 import Data.Foldable (Foldable(null))
+import GHC.Float (Double)
+import GHC.Real ((/), fromIntegral)
+import Data.Text (length)
+import Data.Monoid (Monoid(mempty))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -368,3 +372,30 @@ taskWords eMaps = do
                     "Cleared. Press any key to start over."
 
             pure $ void $ filter id eDone
+
+elPatterns
+  :: forall (m :: * -> *) t
+  .  DomBuilder t m
+  => (PatternPos, [(Text, RawSteno)])
+  -> m ()
+elPatterns (pPos, pairs) = do
+        let strPPos = toLower $ showt pPos
+        elClass "hr" strPPos blank
+        elClass "span" ("patternPosition " <> strPPos) $ text strPPos
+        elClass "br" "clearBoth" blank
+        for_ pairs $ \(orig, steno) ->
+          elClass "div" "floatLeft" $ do
+            let
+                lOrig :: Double = fromIntegral $ length orig
+                styleOrig =
+                  if lOrig > 6
+                    then "style" =: ("font-size: " <> showt ((1 + 6 / lOrig) / 2) <> "em")
+                    else mempty
+                lSteno :: Double = fromIntegral $ length $ showt steno
+                styleSteno =
+                  if lSteno > 6
+                    then "style" =: ("font-size: " <> showt (6 / lSteno) <> "em")
+                    else mempty
+            elAttr "div" ("class" =: "orig" <> styleOrig) $ text orig
+            elAttr "code" ("class" =: "steno" <> styleSteno) $ text $ showt steno
+        elClass "br" "clearBoth" blank
