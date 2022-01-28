@@ -3,7 +3,7 @@
         "PatSimple",
         {
             "0": [
-                647,
+                609,
                 [
                     [
                         "und",
@@ -164,10 +164,6 @@
                     [
                         "Mai",
                         "MAI"
-                    ],
-                    [
-                        "Geld",
-                        "BDJNN/GELD"
                     ],
                     [
                         "bin",
@@ -390,10 +386,6 @@
                         "RALF"
                     ],
                     [
-                        "San",
-                        "BDJNN/SAN"
-                    ],
-                    [
                         "Grand",
                         "GRAND"
                     ],
@@ -404,6 +396,14 @@
                     [
                         "Rad",
                         "RAD"
+                    ],
+                    [
+                        "Mail",
+                        "MAIL"
+                    ],
+                    [
+                        "hab",
+                        "HAB"
                     ]
                 ]
             ]
@@ -413,7 +413,7 @@
         "PatSimpleMulti",
         {
             "0": [
-                15206,
+                15191,
                 [
                     [
                         "einem",
@@ -616,10 +616,6 @@
                         "BUN/DES/LI/GA"
                     ],
                     [
-                        "Musik",
-                        "BDJNN/MU/SIK"
-                    ],
-                    [
                         "ehemalige",
                         "E/HE/MA/LI/GE"
                     ],
@@ -814,6 +810,10 @@
                     [
                         "II",
                         "I/I"
+                    ],
+                    [
+                        "weshalb",
+                        "WES/HALB"
                     ]
                 ]
             ]
@@ -823,7 +823,7 @@
         "PatReplCommon",
         {
             "0": [
-                152448,
+                152304,
                 [
                     [
                         "mit",
@@ -1006,10 +1006,6 @@
                         "A+B/RIL"
                     ],
                     [
-                        "halten",
-                        "HAL/DJEN"
-                    ],
-                    [
                         "zudem",
                         "SHMU/DEM"
                     ],
@@ -1019,7 +1015,7 @@
                     ],
                     [
                         "sechs",
-                        "SEKs"
+                        "SEKS"
                     ],
                     [
                         "tun",
@@ -1095,7 +1091,7 @@
                     ],
                     [
                         "Auto",
-                        "BDJNN/AU/DJO"
+                        "AU/DJO"
                     ],
                     [
                         "SPD",
@@ -1224,11 +1220,15 @@
                     [
                         "Gruppe",
                         "GRU+B/BDE"
+                    ],
+                    [
+                        "tatsächlich",
+                        "DJA+D/SÄKʃ/LIKʃ"
                     ]
                 ]
             ],
             "1": [
-                20472,
+                20410,
                 [
                     [
                         "nicht",
@@ -1241,10 +1241,6 @@
                     [
                         "gilt",
                         "GILD"
-                    ],
-                    [
-                        "Welt",
-                        "BDJNN/WELD"
                     ],
                     [
                         "zunächst",
@@ -1307,10 +1303,6 @@
                         "HAN/DELD"
                     ],
                     [
-                        "Sicht",
-                        "BDJNN/SIKʃD"
-                    ],
-                    [
                         "bringt",
                         "BRI+ND"
                     ],
@@ -1357,10 +1349,6 @@
                     [
                         "Konzept",
                         "GDON/SHME+BD"
-                    ],
-                    [
-                        "Gesicht",
-                        "BDJNN/GE/SIKʃD"
                     ],
                     [
                         "folgt",
@@ -1591,10 +1579,6 @@
                         "AUS/GDUNFD"
                     ],
                     [
-                        "Typ",
-                        "BDJNN/DJI+B"
-                    ],
-                    [
                         "Effekt",
                         "EF/FEKD"
                     ],
@@ -1629,11 +1613,27 @@
                     [
                         "weltweite",
                         "WELD/WEI/DJE"
+                    ],
+                    [
+                        "bricht",
+                        "BRIKʃD"
+                    ],
+                    [
+                        "höchst",
+                        "HÄOKSD"
+                    ],
+                    [
+                        "prüft",
+                        "BDRÜFD"
+                    ],
+                    [
+                        "rechtliche",
+                        "REKʃD/LI/SJE"
                     ]
                 ]
             ],
             "2": [
-                2364,
+                2358,
                 [
                     [
                         "möglich",
@@ -1730,14 +1730,6 @@
                     [
                         "OLG",
                         "NÜM/OLK"
-                    ],
-                    [
-                        "Typs",
-                        "BDJNN/DJIBS"
-                    ],
-                    [
-                        "VG",
-                        "FK"
                     ],
                     [
                         "bestmögliche",
@@ -1878,10 +1870,6 @@
                     [
                         "empfänglich",
                         "EMB/FÄ+N/LIKʃ"
-                    ],
-                    [
-                        "Alp",
-                        "BDJNN/ALB"
                     ],
                     [
                         "gebeugt",
@@ -2034,11 +2022,23 @@
                     [
                         "beugte",
                         "BEUK/DJE"
+                    ],
+                    [
+                        "SVG",
+                        "SFK"
+                    ],
+                    [
+                        "ALG",
+                        "NÜM/ALK"
+                    ],
+                    [
+                        "holprige",
+                        "HOLB/RI/GE"
                     ]
                 ]
             ],
             "3": [
-                8139,
+                8141,
                 [
                     [
                         "schreibt",
@@ -2448,7 +2448,7 @@
         "PatDiConsonant",
         {
             "0": [
-                25622,
+                25569,
                 [
                     [
                         "kann",
@@ -2831,10 +2831,6 @@
                         "FWOL/SDÄN/DI/GE"
                     ],
                     [
-                        "Wolff",
-                        "BDJNN/WOLF"
-                    ],
-                    [
                         "abgestellt",
                         "AB/GE/SDELD"
                     ],
@@ -2849,11 +2845,15 @@
                     [
                         "ausfällt",
                         "AUS/FÄLD"
+                    ],
+                    [
+                        "kannte",
+                        "GDAN/DJE"
                     ]
                 ]
             ],
             "1": [
-                3222,
+                3218,
                 [
                     [
                         "muss",
@@ -2890,10 +2890,6 @@
                     [
                         "Hass",
                         "HAS"
-                    ],
-                    [
-                        "Swiss",
-                        "BDJNN/SWIS"
                     ],
                     [
                         "Stress",
@@ -3216,10 +3212,6 @@
                         "SJUL/SLUS"
                     ],
                     [
-                        "Kitt",
-                        "BDJNN/GDID"
-                    ],
-                    [
                         "tappt",
                         "DJABD"
                     ],
@@ -3254,11 +3246,19 @@
                     [
                         "Punkteschnitt",
                         "BDU+N/DJE/SNID"
+                    ],
+                    [
+                        "Schnappatmung",
+                        "SNAB/AD/MU+N"
+                    ],
+                    [
+                        "Mittwochnacht",
+                        "MID/WOKʃ/NAKʃD"
                     ]
                 ]
             ],
             "2": [
-                1066,
+                1020,
                 [
                     [
                         "schnell",
@@ -3431,10 +3431,6 @@
                     [
                         "Eckball",
                         "EK/BAL"
-                    ],
-                    [
-                        "Till",
-                        "BDJNN/DJIL"
                     ],
                     [
                         "hell",
@@ -3637,10 +3633,6 @@
                         "MO/DEL/BDRO/JEKD"
                     ],
                     [
-                        "Schall",
-                        "BDJNN/SJAL"
-                    ],
-                    [
                         "originell",
                         "O/RI/GI/NEL"
                     ],
@@ -3659,6 +3651,14 @@
                     [
                         "Kristallkugel",
                         "GDRIS/DJAL/GDU/GEL"
+                    ],
+                    [
+                        "Vollmond",
+                        "FOL/MOND"
+                    ],
+                    [
+                        "substanziell",
+                        "SUBS/DJAN/SHMI/EL"
                     ]
                 ]
             ]
@@ -3668,7 +3668,7 @@
         "PatCodaH",
         {
             "0": [
-                44691,
+                44687,
                 [
                     [
                         "diese",
@@ -3719,10 +3719,6 @@
                         "D~I/SEN"
                     ],
                     [
-                        "ihrem",
-                        "~I/REM"
-                    ],
-                    [
                         "sieht",
                         "S~I+D"
                     ],
@@ -3733,10 +3729,6 @@
                     [
                         "wohl",
                         "W~OL"
-                    ],
-                    [
-                        "vielen",
-                        "FW~I/LEN"
                     ],
                     [
                         "Regierung",
@@ -3801,10 +3793,6 @@
                     [
                         "Wohnung",
                         "W~O/NU+N"
-                    ],
-                    [
-                        "ihres",
-                        "~I/RES"
                     ],
                     [
                         "sowohl",
@@ -4043,6 +4031,10 @@
                         "ÄÜN/LI/SHJE"
                     ],
                     [
+                        "fielen",
+                        "F~I/LEN"
+                    ],
+                    [
                         "Bielefeld",
                         "B~I/LE/FELD"
                     ],
@@ -4069,11 +4061,19 @@
                     [
                         "Papiere",
                         "BDA/BD~I/RE"
+                    ],
+                    [
+                        "Heimspiel",
+                        "HEIM/BF~IL"
+                    ],
+                    [
+                        "Technologie",
+                        "DJEKʃ/NO/LO/G~I"
                     ]
                 ]
             ],
             "1": [
-                4914,
+                4871,
                 [
                     [
                         "die",
@@ -4142,6 +4142,10 @@
                     [
                         "fliegt",
                         "FLIKD"
+                    ],
+                    [
+                        "biete",
+                        "BI/DJE"
                     ],
                     [
                         "Mitgliedschaft",
@@ -4242,10 +4246,6 @@
                     [
                         "riecht",
                         "RIKʃD"
-                    ],
-                    [
-                        "Anstiegs",
-                        "AN/SDIKS"
                     ],
                     [
                         "besiegelt",
@@ -4483,7 +4483,7 @@
         "PatCodaR",
         {
             "0": [
-                314628,
+                314310,
                 [
                     [
                         "der",
@@ -4888,7 +4888,7 @@
                 ]
             ],
             "1": [
-                6029,
+                6024,
                 [
                     [
                         "kurz",
@@ -4924,7 +4924,7 @@
                     ],
                     [
                         "Erfurt",
-                        "BDJNN/EÜ/F~UD"
+                        "EÜ/F~UD"
                     ],
                     [
                         "Geburt",
@@ -5081,6 +5081,10 @@
                     [
                         "Korneuburg",
                         "GD~O/NEU/B~UK"
+                    ],
+                    [
+                        "Rotenburg",
+                        "RO/DJEN/B~UK"
                     ],
                     [
                         "Kurzarbeiter",
@@ -5285,10 +5289,6 @@
                     [
                         "Steinburg",
                         "SDEIN/B~UK"
-                    ],
-                    [
-                        "Burgruine",
-                        "B~UK/RU/I/NE"
                     ]
                 ]
             ],
@@ -5311,15 +5311,11 @@
         "PatCodaRR",
         {
             "0": [
-                2162,
+                2160,
                 [
                     [
                         "gesperrt",
                         "GE/BFEÜ+D"
-                    ],
-                    [
-                        "Herr",
-                        "BDJNN/HEÜ+"
                     ],
                     [
                         "herrscht",
@@ -5460,10 +5456,6 @@
                     [
                         "Absperrgitter",
                         "AB/BFEÜ+/GI+D/DJEÜ"
-                    ],
-                    [
-                        "Murr",
-                        "BDJNN/M~U+"
                     ],
                     [
                         "Schirmherr",
@@ -5712,6 +5704,14 @@
                     [
                         "Chorherr",
                         "SHJ~O/HEÜ+"
+                    ],
+                    [
+                        "Kaiserschmarrn",
+                        "GDAI/SEÜ/SMAÜ+N"
+                    ],
+                    [
+                        "Feldherr",
+                        "FELD/HEÜ+"
                     ]
                 ]
             ]
@@ -5721,7 +5721,7 @@
         "PatCodaHR",
         {
             "0": [
-                15666,
+                15642,
                 [
                     [
                         "mehr",
@@ -5742,6 +5742,10 @@
                     [
                         "ihr",
                         "~I"
+                    ],
+                    [
+                        "ihren",
+                        "~I/EN"
                     ],
                     [
                         "ihrer",
@@ -5964,10 +5968,6 @@
                         "BE/R~Ü+D"
                     ],
                     [
-                        "Ohr",
-                        "BDJNN/~O"
-                    ],
-                    [
                         "jährliche",
                         "JÄÜ/LI/SHJE"
                     ],
@@ -6004,16 +6004,8 @@
                         "FAÜ/EÜ/LAUB/NIS"
                     ],
                     [
-                        "wehrte",
-                        "WEÜ/DJE"
-                    ],
-                    [
                         "Abwehrspieler",
                         "AB/WEÜ/BF~I/LEÜ"
-                    ],
-                    [
-                        "Ruhr",
-                        "BDJNN/R~U"
                     ],
                     [
                         "Mehrwert",
@@ -6045,7 +6037,7 @@
                     ],
                     [
                         "begehrt",
-                        "BE/GEÜ+D"
+                        "BE/GEÜD"
                     ],
                     [
                         "Verzehr",
@@ -6122,6 +6114,14 @@
                     [
                         "Luftfahrt",
                         "LUFD/FAÜD"
+                    ],
+                    [
+                        "höchstwahrscheinlich",
+                        "HÄOKSD/WAÜ/SJEIN/LIKʃ"
+                    ],
+                    [
+                        "Fahrspur",
+                        "FAÜ/BF~U+"
                     ]
                 ]
             ]
@@ -6131,7 +6131,7 @@
         "PatDt",
         {
             "0": [
-                40,
+                36,
                 [
                     [
                         "Stadt",
@@ -6226,20 +6226,16 @@
                         "LIND/D"
                     ],
                     [
-                        "Stadtwerk",
-                        "SDAD/D/WEÜK"
-                    ],
-                    [
-                        "Karlstadt",
-                        "GDAÜL/SDAD/D"
-                    ],
-                    [
                         "Berendt",
                         "BE/REND/D"
                     ],
                     [
                         "Stadtklub",
                         "SDAD/D/GDLUB"
+                    ],
+                    [
+                        "Fachwerkstadt",
+                        "FAKʃ/WEÜK/SDAD/D"
                     ],
                     [
                         "Vorstadtklub",
@@ -6262,20 +6258,12 @@
                         "SDAD/D/DJEIL/GDLUBS"
                     ],
                     [
-                        "Stadtkasino",
-                        "SDAD/D/GDA/SI/NO"
-                    ],
-                    [
                         "Domstadtklub",
                         "DOM/SDAD/D/GDLUB"
                     ],
                     [
                         "Domstadtklubs",
                         "DOM/SDAD/D/GDLUBS"
-                    ],
-                    [
-                        "Stadtkasinos",
-                        "SDAD/D/GDA/SI/NOS"
                     ],
                     [
                         "Stadtsportklub",
@@ -6286,17 +6274,13 @@
                         "SDAD/D/BF~O+D/GDLUBS"
                     ],
                     [
-                        "Vorstadtklubs",
-                        "FW~O/SDAD/D/GDLUBS"
-                    ],
-                    [
                         "zurückgewandt",
                         "SHMU/RÜK/GE/WAND/D"
                     ]
                 ]
             ],
             "1": [
-                2621,
+                2623,
                 [
                     [
                         "Hauptstadt",
@@ -6421,10 +6405,6 @@
                     [
                         "Rudolstadt",
                         "RU/DOL/SDAD"
-                    ],
-                    [
-                        "verwandt",
-                        "FEÜ/WAND"
                     ],
                     [
                         "Stadtpräsident",
@@ -6652,7 +6632,7 @@
                     ],
                     [
                         "Hauptstadtklub",
-                        "HAUBD/SDAD/GDLUB"
+                        "HAU+BD/SDAD/GDLUB"
                     ],
                     [
                         "stadtweit",
@@ -6697,6 +6677,10 @@
                     [
                         "Stadtquartier",
                         "SDAD/GDWAÜ/DJ~I"
+                    ],
+                    [
+                        "Stadtführer",
+                        "SDAD/F~Ü/REÜ"
                     ]
                 ]
             ]
@@ -6706,7 +6690,7 @@
         "PatDiphtong",
         {
             "0": [
-                3181,
+                3173,
                 [
                     [
                         "Joe",
@@ -6719,10 +6703,6 @@
                     [
                         "Andrea",
                         "AND/RE/A"
-                    ],
-                    [
-                        "Meyer",
-                        "BDJNN/MÄI/EÜ"
                     ],
                     [
                         "Disney",
@@ -6861,10 +6841,6 @@
                         "SE/A+D"
                     ],
                     [
-                        "dauere",
-                        "DAU/E/RE"
-                    ],
-                    [
                         "realistische",
                         "RE/A/LIS/DJI/SJE"
                     ],
@@ -6878,7 +6854,7 @@
                     ],
                     [
                         "Beyer",
-                        "BDJNN/BÄI/EÜ"
+                        "BÄI/EÜ"
                     ],
                     [
                         "reiht",
@@ -7107,6 +7083,14 @@
                     [
                         "Südkoreas",
                         "SÜD/GDO/RE/AS"
+                    ],
+                    [
+                        "Pointe",
+                        "BDEUN/DJE"
+                    ],
+                    [
+                        "koreanische",
+                        "GDO/RE/A/NI/SJE"
                     ]
                 ]
             ],
@@ -7120,7 +7104,7 @@
                 ]
             ],
             "2": [
-                1610,
+                1612,
                 [
                     [
                         "tue",
@@ -7137,6 +7121,10 @@
                     [
                         "graue",
                         "GRAÜ"
+                    ],
+                    [
+                        "dauere",
+                        "DAÜ/RE"
                     ],
                     [
                         "Buenos",
@@ -7517,10 +7505,6 @@
                     [
                         "Ampelsteuerung",
                         "AM/BDEL/SDEÜ/RU+N"
-                    ],
-                    [
-                        "ausbaue",
-                        "AUS/BAÜ"
                     ]
                 ]
             ]
@@ -7530,7 +7514,7 @@
         "PatReplC",
         {
             "0": [
-                6494,
+                6521,
                 [
                     [
                         "Corona",
@@ -7719,6 +7703,10 @@
                     [
                         "Nicolas",
                         "NI/GDMO/LAS"
+                    ],
+                    [
+                        "Victoria",
+                        "FWI+K/DJO/RI/A"
                     ],
                     [
                         "Costa",
@@ -7927,15 +7915,11 @@
                     [
                         "KFC",
                         "KF/+K"
-                    ],
-                    [
-                        "ca",
-                        "GDMA"
                     ]
                 ]
             ],
             "1": [
-                1028,
+                1005,
                 [
                     [
                         "City",
@@ -8098,16 +8082,12 @@
                         "JA/FAS/GDRI+BD"
                     ],
                     [
-                        "Creuzburg",
-                        "GDREU+S/B~UK"
-                    ],
-                    [
                         "Facility",
                         "FA/GDJLI/DJI"
                     ],
                     [
                         "Hauptstadtclub",
-                        "HAU+BD/SDAD/GDLUB"
+                        "HAUBD/SDAD/GDLUB"
                     ],
                     [
                         "Carroll",
@@ -8170,6 +8150,10 @@
                         "LU/GDJA/NA"
                     ],
                     [
+                        "ICT",
+                        "IKD"
+                    ],
+                    [
                         "Altpapiercontainer",
                         "ALD/BDA/BD~I/GDON/DJAI/NEÜ"
                     ],
@@ -8220,10 +8204,6 @@
                     [
                         "Boccia",
                         "BOK/GDJA"
-                    ],
-                    [
-                        "Stadtcasino",
-                        "SDAD/GDA/SI/NO"
                     ],
                     [
                         "Murcia",
@@ -8336,6 +8316,10 @@
                     [
                         "Financier",
                         "FI/NAN/GDJEÜ"
+                    ],
+                    [
+                        "Hauptstadtclubs",
+                        "HAUBD/SDAD/GDLUBS"
                     ]
                 ]
             ]
@@ -8345,7 +8329,7 @@
         "PatCodaGK",
         {
             "0": [
-                40027,
+                39943,
                 [
                     [
                         "sagte",
@@ -8664,10 +8648,6 @@
                         "F~ÜK/DJE"
                     ],
                     [
-                        "König",
-                        "BDJNN/GDÄO/NIK"
-                    ],
-                    [
                         "geprägt",
                         "GE/BDRÄÜKD"
                     ],
@@ -8746,11 +8726,15 @@
                     [
                         "verteidigt",
                         "FEÜ/DJEI/DIKD"
+                    ],
+                    [
+                        "Nachhaltigkeit",
+                        "NAKʃ/HAL/DJIK/GDEI+D"
                     ]
                 ]
             ],
             "1": [
-                2933,
+                2932,
                 [
                     [
                         "Paket",
@@ -9009,6 +8993,10 @@
                         "BDROS/DJA/DJAÜ/GDREBS"
                     ],
                     [
+                        "Aktienpaket",
+                        "AK/DJI/EN/BDAÜ/GDED"
+                    ],
+                    [
                         "Brakel",
                         "BRAÜ/GDEL"
                     ],
@@ -9147,10 +9135,6 @@
                     [
                         "Klimakiller",
                         "GDLI/MAÜ/GDIL/LEÜ"
-                    ],
-                    [
-                        "Rehaklinik",
-                        "RE/HAÜ/GDLI/NIK"
                     ]
                 ]
             ]
@@ -9160,7 +9144,7 @@
         "PatSZ",
         {
             "0": [
-                8695,
+                8690,
                 [
                     [
                         "weiß",
@@ -9565,7 +9549,7 @@
                 ]
             ],
             "5": [
-                5233,
+                5241,
                 [
                     [
                         "große",
@@ -9672,6 +9656,10 @@
                         "FEÜ/HÄLD/NIS/MÄÜ/SIK"
                     ],
                     [
+                        "ließe",
+                        "L~I/SE"
+                    ],
+                    [
                         "Verstoßes",
                         "FEÜ/SD~O/SES"
                     ],
@@ -9682,6 +9670,10 @@
                     [
                         "Bahnhofstraße",
                         "BAÜN/HOF/SDRAÜ/SE"
+                    ],
+                    [
+                        "weißer",
+                        "WEI/SEÜ"
                     ],
                     [
                         "Landesstraße",
@@ -9734,6 +9726,10 @@
                     [
                         "mäßig",
                         "MÄÜ/SIK"
+                    ],
+                    [
+                        "weißes",
+                        "WEI/SES"
                     ],
                     [
                         "begrüße",
@@ -9802,6 +9798,10 @@
                     [
                         "regelmäßiger",
                         "RE/GEL/MÄÜ/SI/GEÜ"
+                    ],
+                    [
+                        "weißem",
+                        "WEI/SEM"
                     ],
                     [
                         "Schulschließung",
@@ -9950,22 +9950,6 @@
                     [
                         "schwerpunktmäßig",
                         "SWEÜ/BDU+ND/MÄÜ/SIK"
-                    ],
-                    [
-                        "Vorstöße",
-                        "F~O/SDÄO/SE"
-                    ],
-                    [
-                        "Gießener",
-                        "G~I/SE/NEÜ"
-                    ],
-                    [
-                        "scheiße",
-                        "SJEI/SE"
-                    ],
-                    [
-                        "Zwangsschließung",
-                        "SWA+NS/SL~I/SU+N"
                     ]
                 ]
             ]
@@ -9975,7 +9959,7 @@
         "PatIJ",
         {
             "0": [
-                3669,
+                3653,
                 [
                     [
                         "Borussia",
@@ -10118,16 +10102,8 @@
                         "SIL/FJO"
                     ],
                     [
-                        "Ian",
-                        "BDJNN/JAN"
-                    ],
-                    [
                         "Westfalia",
                         "WESD/FA/JLA"
-                    ],
-                    [
-                        "Audio",
-                        "AU/DJO"
                     ],
                     [
                         "Olivia",
@@ -10376,11 +10352,19 @@
                     [
                         "Börsianern",
                         "BÄO/SJA/NEÜN"
+                    ],
+                    [
+                        "Kardiologe",
+                        "GDAÜ/DJO/LO/GE"
+                    ],
+                    [
+                        "psychiatrisches",
+                        "SDJÄIKʃ/JA/DJRI/SJES"
                     ]
                 ]
             ],
             "2": [
-                26746,
+                26730,
                 [
                     [
                         "Situation",
@@ -10631,10 +10615,6 @@
                         "FRAK/DJONS/SJEF"
                     ],
                     [
-                        "Victoria",
-                        "FIK/DJO/JRA"
-                    ],
-                    [
                         "Rio",
                         "JRO"
                     ],
@@ -10669,6 +10649,10 @@
                     [
                         "Fabio",
                         "FA/BJO"
+                    ],
+                    [
+                        "Viktoria",
+                        "FIK/DJO/JRA"
                     ],
                     [
                         "Definition",
@@ -10790,7 +10774,7 @@
         "PatTsDsPs",
         {
             "0": [
-                63638,
+                63600,
                 [
                     [
                         "jetzt",
@@ -11303,6 +11287,10 @@
                         "DJA+D/DJO/O"
                     ],
                     [
+                        "gepaart",
+                        "GE/BDA/AÜ+D"
+                    ],
+                    [
                         "Rees",
                         "RE/ES"
                     ],
@@ -11597,15 +11585,11 @@
                     [
                         "Superfood",
                         "SU/BDEÜ/FO/OD"
-                    ],
-                    [
-                        "Booms",
-                        "BO/OMS"
                     ]
                 ]
             ],
             "1": [
-                11051,
+                11046,
                 [
                     [
                         "paar",
@@ -11832,10 +11816,6 @@
                         "SNEs/FAL"
                     ],
                     [
-                        "gepaart",
-                        "GE/BDAÜD"
-                    ],
-                    [
                         "leerer",
                         "LEs/REÜ"
                     ],
@@ -11850,10 +11830,6 @@
                     [
                         "Klimaaktivistin",
                         "GDLI/MAÜK/DJI/FIS/DJIN"
-                    ],
-                    [
-                        "Waadt",
-                        "BDJNN/WAÜD"
                     ],
                     [
                         "Saale",
@@ -12006,6 +11982,14 @@
                     [
                         "Badesee",
                         "BA/DE/SEs"
+                    ],
+                    [
+                        "Staatsführung",
+                        "SDAÜs/F~Ü/RU+N"
+                    ],
+                    [
+                        "Saalfelder",
+                        "SAÜL/FEL/DEÜ"
                     ]
                 ]
             ]
@@ -12015,7 +11999,7 @@
         "PatReplH",
         {
             "0": [
-                8855,
+                8850,
                 [
                     [
                         "Thema",
@@ -12068,14 +12052,6 @@
                     [
                         "Gotha",
                         "GO/BHJA"
-                    ],
-                    [
-                        "Roth",
-                        "BDJNN/RO+D"
-                    ],
-                    [
-                        "Fürth",
-                        "BDJNN/F~Ü+D"
                     ],
                     [
                         "Theorie",
@@ -12160,10 +12136,6 @@
                     [
                         "Niederrhein",
                         "N~I/DEÜ/HREIN"
-                    ],
-                    [
-                        "Kathrin",
-                        "GDA+D/RIN"
                     ],
                     [
                         "Judith",
@@ -12416,6 +12388,18 @@
                     [
                         "Chemotherapie",
                         "SHJE/MO/BHJE/RA/BD~I"
+                    ],
+                    [
+                        "Athlet",
+                        "A+D/LE+D"
+                    ],
+                    [
+                        "Mathe",
+                        "MA/BHJE"
+                    ],
+                    [
+                        "Biathlon",
+                        "BI/A+D/LON"
                     ]
                 ]
             ],
@@ -12429,6 +12413,10 @@
                     [
                         "Health",
                         "HE/ALD"
+                    ],
+                    [
+                        "Kathrin",
+                        "GDAD/RIN"
                     ],
                     [
                         "Stadtbibliothek",
@@ -12487,10 +12475,6 @@
                         "LA/BJRIND"
                     ],
                     [
-                        "Kurth",
-                        "BDJNN/GD~UD"
-                    ],
-                    [
                         "Burgtheater",
                         "B~UK/DJE/A/DJEÜ"
                     ],
@@ -12511,6 +12495,10 @@
                         "MED"
                     ],
                     [
+                        "Othmar",
+                        "OD/MAÜ"
+                    ],
+                    [
                         "Commonwealth",
                         "GDOM/MON/WE/ALD"
                     ],
@@ -12529,10 +12517,6 @@
                     [
                         "Nationalbibliothek",
                         "NA/DJO/NAL/BIB/JLO/DJEK"
-                    ],
-                    [
-                        "Rothenburg",
-                        "RO/DJEN/B~UK"
                     ],
                     [
                         "Nationaltheater",
@@ -12703,10 +12687,6 @@
                         "BJO/RID/MUS"
                     ],
                     [
-                        "Linth",
-                        "BDJNN/LIND"
-                    ],
-                    [
                         "Kombinationstherapie",
                         "GDOM/BI/NA/DJONS/DJE/RA/BDI"
                     ],
@@ -12725,10 +12705,6 @@
                     [
                         "Flüchtlingsthema",
                         "FLÜKʃD/LI+NS/DJE/MA"
-                    ],
-                    [
-                        "Rothsee",
-                        "ROD/SEs"
                     ],
                     [
                         "Improvisationstheater",
@@ -12821,6 +12797,14 @@
                     [
                         "Thiersee",
                         "DJI/EÜ/SEs"
+                    ],
+                    [
+                        "Wheelie",
+                        "WEs/LI"
+                    ],
+                    [
+                        "Stadtapotheke",
+                        "SDAD/A/BDO/DJE/GDE"
                     ]
                 ]
             ]
@@ -12830,7 +12814,7 @@
         "PatSmallS",
         {
             "0": [
-                8390,
+                8362,
                 [
                     [
                         "aufs",
@@ -12951,14 +12935,6 @@
                     [
                         "Lkws",
                         "LKFs"
-                    ],
-                    [
-                        "Verkaufs",
-                        "BDJNN/FWEÜ/GDAUFs"
-                    ],
-                    [
-                        "Tiefs",
-                        "BDJNN/DJ~IFs"
                     ],
                     [
                         "Verkaufsstart",
@@ -13093,10 +13069,6 @@
                         "BI/SJOFs"
                     ],
                     [
-                        "Einkaufs",
-                        "BDJNN/EIN/GDAUFs"
-                    ],
-                    [
                         "TVs",
                         "NÜM/DJFs"
                     ],
@@ -13189,16 +13161,8 @@
                         "D~OFs"
                     ],
                     [
-                        "Kaufs",
-                        "BDJNN/GDAUFs"
-                    ],
-                    [
                         "Verkaufsprozess",
                         "FWEÜ/GDAUFs/BDRO/SHMESs"
-                    ],
-                    [
-                        "Golfs",
-                        "BDJNN/GOLFs"
                     ],
                     [
                         "Einkaufszettel",
@@ -13231,11 +13195,31 @@
                     [
                         "tiefstes",
                         "DJ~IFs/DJES"
+                    ],
+                    [
+                        "Stoffs",
+                        "SDOFs"
+                    ],
+                    [
+                        "BMWs",
+                        "NÜM/BMFs"
+                    ],
+                    [
+                        "Wolfsrudel",
+                        "WOLFs/RU/DEL"
+                    ],
+                    [
+                        "Raumschiffs",
+                        "RAUM/SJIFs"
+                    ],
+                    [
+                        "vs",
+                        "Fs"
                     ]
                 ]
             ],
             "4": [
-                561,
+                560,
                 [
                     [
                         "freie",
@@ -13645,7 +13629,7 @@
         "PatReplRare",
         {
             "0": [
-                24599,
+                24568,
                 [
                     [
                         "Kampf",
@@ -13658,6 +13642,10 @@
                     [
                         "Impfstoff",
                         "IMBF/SDOF"
+                    ],
+                    [
+                        "Phase",
+                        "BHA/SE"
                     ],
                     [
                         "Szene",
@@ -13756,6 +13744,10 @@
                         "BFLE/GEÜ"
                     ],
                     [
+                        "Phasen",
+                        "BHA/SEN"
+                    ],
+                    [
                         "Pferd",
                         "BFEÜD"
                     ],
@@ -13782,10 +13774,6 @@
                     [
                         "Inszenierung",
                         "IN/SHME/N~I/RU+N"
-                    ],
-                    [
-                        "Pferde",
-                        "BDJNN/BFEÜ/DE"
                     ],
                     [
                         "Abstiegskampf",
@@ -13880,10 +13868,6 @@
                         "BHEO/NIKS"
                     ],
                     [
-                        "Ski",
-                        "BDJNN/GDMI"
-                    ],
-                    [
                         "Kopfhörer",
                         "GDOBF/HÄO/REÜ"
                     ],
@@ -13960,10 +13944,6 @@
                         "GDMULB/DJ~U"
                     ],
                     [
-                        "Stephen",
-                        "SDE/BHEN"
-                    ],
-                    [
                         "Oberpfalz",
                         "O/BEÜ/BFALS"
                     ],
@@ -13982,10 +13962,6 @@
                     [
                         "Physik",
                         "BHJ/SIK"
-                    ],
-                    [
-                        "Pfanne",
-                        "BDJNN/BFAN/NE"
                     ],
                     [
                         "Task",
@@ -14046,11 +14022,19 @@
                     [
                         "Pfad",
                         "BFAD"
+                    ],
+                    [
+                        "Philosoph",
+                        "BHI/LO/SO+F"
+                    ],
+                    [
+                        "Schlusspfiff",
+                        "SLUS/BFIF"
                     ]
                 ]
             ],
             "1": [
-                640,
+                611,
                 [
                     [
                         "Triumph",
@@ -14165,6 +14149,10 @@
                         "BDO/GDAL/DJRI/UMF"
                     ],
                     [
+                        "phantasievoll",
+                        "FAN/DJA/SI/FOL"
+                    ],
+                    [
                         "Biophysiker",
                         "BJO/FJ/SI/GDEÜ"
                     ],
@@ -14209,10 +14197,6 @@
                         "AUF/SDIKS/EU/FO/RI"
                     ],
                     [
-                        "Kartograph",
-                        "BDJNN/GDAÜ/DJO/GRAF"
-                    ],
-                    [
                         "Filmbiographie",
                         "FI+/BJO/GRA/FI"
                     ],
@@ -14242,7 +14226,7 @@
                     ],
                     [
                         "Altsaxophon",
-                        "BDJNN/ALD/SA/GDMO/FON"
+                        "ALD/SA/GDMO/FON"
                     ],
                     [
                         "Altphilologe",
@@ -14279,10 +14263,6 @@
                     [
                         "Lymphfluss",
                         "LIMF/FLUS"
-                    ],
-                    [
-                        "Phantasiewelt",
-                        "BDJNN/FAN/DJA/SI/WELD"
                     ],
                     [
                         "Schlepphorst",
@@ -14438,7 +14418,7 @@
                     ],
                     [
                         "Altsaxophonist",
-                        "BDJNN/ALD/SA/GDMO/FO/NISD"
+                        "ALD/SA/GDMO/FO/NISD"
                     ],
                     [
                         "Pharmakon",
@@ -14451,6 +14431,10 @@
                     [
                         "Suchtprophylaxe",
                         "SUKʃD/BDRO/FJLA/GDME"
+                    ],
+                    [
+                        "Triumphgeschrei",
+                        "DJRI/UMF/GE/SREI"
                     ]
                 ]
             ]
@@ -14460,12 +14444,8 @@
         "PatSCStretch",
         {
             "0": [
-                542,
+                541,
                 [
-                    [
-                        "Route",
-                        "BDJNN/R~U/DJE"
-                    ],
                     [
                         "Routinier",
                         "RU/DJI/NI/EÜ"
@@ -14687,10 +14667,6 @@
                         "MI/GRA/DJONS/R~U/DJE"
                     ],
                     [
-                        "Pik",
-                        "BDJNN/BD~IK"
-                    ],
-                    [
                         "Routineeingriff",
                         "RU/DJI/NE/EIN/GRIF"
                     ],
@@ -14799,6 +14775,10 @@
                         "RU/DJI/NEÜ/BU+N"
                     ],
                     [
+                        "geroutet",
+                        "GE/R~U/DJE+D"
+                    ],
+                    [
                         "Arbeitsroutine",
                         "AÜ/BEIs/RU/DJI/NE"
                     ],
@@ -14861,6 +14841,10 @@
                     [
                         "Schiffsrouten",
                         "SJIFs/R~U/DJEN"
+                    ],
+                    [
+                        "Schmuggelrouten",
+                        "SM~UK/GEL/R~U/DJEN"
                     ]
                 ]
             ]
@@ -14870,7 +14854,7 @@
         "PatSCPlus",
         {
             "0": [
-                1912,
+                1904,
                 [
                     [
                         "Mann",
@@ -14921,10 +14905,6 @@
                         "HOF/MA+N"
                     ],
                     [
-                        "Hofmann",
-                        "BDJNN/HOF/MA+N"
-                    ],
-                    [
                         "Klinsmann",
                         "GDLINS/MA+N"
                     ],
@@ -14947,10 +14927,6 @@
                     [
                         "Kaufmann",
                         "GDAUF/MA+N"
-                    ],
-                    [
-                        "Lehmann",
-                        "LEÜ/MA+N"
                     ],
                     [
                         "Mannheimer",
@@ -15177,10 +15153,6 @@
                         "HAUS/MA+N"
                     ],
                     [
-                        "Winkelmann",
-                        "BDJNN/WIN/GDEL/MA+N"
-                    ],
-                    [
                         "Teichmann",
                         "DJEIKʃ/MA+N"
                     ],
@@ -15271,6 +15243,18 @@
                     [
                         "roh",
                         "R~O+"
+                    ],
+                    [
+                        "Heilmann",
+                        "HEIL/MA+N"
+                    ],
+                    [
+                        "Großmann",
+                        "GR~O+S/MA+N"
+                    ],
+                    [
+                        "Eichmann",
+                        "EIKʃ/MA+N"
                     ]
                 ]
             ]
@@ -15472,7 +15456,7 @@
                     ],
                     [
                         "Souveränitätsanspruchs",
-                        "SU/FE/RÄ/NI/DJÄs/AN/BFRUKs"
+                        "SU/FE/RÄ/NI/DJÄs/AN/BFRUKS"
                     ],
                     [
                         "Souveränitätsprinzip",
@@ -15543,10 +15527,420 @@
         }
     ],
     [
+        "PatCapitalize",
+        {
+            "0": [
+                981,
+                [
+                    [
+                        "Welt",
+                        "BDJNN/WELD"
+                    ],
+                    [
+                        "Geld",
+                        "BDJNN/GELD"
+                    ],
+                    [
+                        "Sicht",
+                        "BDJNN/SIKʃD"
+                    ],
+                    [
+                        "Bank",
+                        "BDJNN/BA+N"
+                    ],
+                    [
+                        "Musik",
+                        "BDJNN/MU/SIK"
+                    ],
+                    [
+                        "Gesicht",
+                        "BDJNN/GE/SIKʃD"
+                    ],
+                    [
+                        "Herr",
+                        "BDJNN/HEÜ+"
+                    ],
+                    [
+                        "Trend",
+                        "BDJNN/DJREND"
+                    ],
+                    [
+                        "Formel",
+                        "BDJNN/F~O/MEL"
+                    ],
+                    [
+                        "Flick",
+                        "BDJNN/FLIK"
+                    ],
+                    [
+                        "Karl",
+                        "BDJNN/GDAÜL"
+                    ],
+                    [
+                        "Mark",
+                        "BDJNN/MAÜK"
+                    ],
+                    [
+                        "Brücke",
+                        "BDJNN/BRÜ/GDE"
+                    ],
+                    [
+                        "König",
+                        "BDJNN/GDÄO/NIK"
+                    ],
+                    [
+                        "Ärger",
+                        "BDJNN/ÄÜ/GEÜ"
+                    ],
+                    [
+                        "Ulrich",
+                        "BDJNN/UL/RIKʃ"
+                    ],
+                    [
+                        "Linz",
+                        "BDJNN/LI+NS"
+                    ],
+                    [
+                        "Meyer",
+                        "BDJNN/MÄI/EÜ"
+                    ],
+                    [
+                        "Swiss",
+                        "BDJNN/SWIS"
+                    ],
+                    [
+                        "San",
+                        "BDJNN/SAN"
+                    ],
+                    [
+                        "Typ",
+                        "BDJNN/DJI+B"
+                    ],
+                    [
+                        "Sex",
+                        "BDJNN/SEKS"
+                    ],
+                    [
+                        "Fan",
+                        "BDJNN/FAN"
+                    ],
+                    [
+                        "Ford",
+                        "BDJNN/F~OD"
+                    ],
+                    [
+                        "Küste",
+                        "BDJNN/GDÜS/DJE"
+                    ],
+                    [
+                        "Leon",
+                        "BDJNN/LEON"
+                    ],
+                    [
+                        "Schild",
+                        "BDJNN/SJILD"
+                    ],
+                    [
+                        "Papst",
+                        "BDJNN/BDA+BSD"
+                    ],
+                    [
+                        "Hofmann",
+                        "BDJNN/HOF/MA+N"
+                    ],
+                    [
+                        "Sand",
+                        "BDJNN/SAND"
+                    ],
+                    [
+                        "Ängste",
+                        "BDJNN/Ä+NS/DJE"
+                    ],
+                    [
+                        "Roth",
+                        "BDJNN/RO+D"
+                    ],
+                    [
+                        "Radweg",
+                        "BDJNN/RAD/WEÜK"
+                    ],
+                    [
+                        "Fürth",
+                        "BDJNN/F~Ü+D"
+                    ],
+                    [
+                        "Wolff",
+                        "BDJNN/WOLF"
+                    ],
+                    [
+                        "Gerd",
+                        "BDJNN/GEÜD"
+                    ],
+                    [
+                        "AMD",
+                        "BDJNN/AMD"
+                    ],
+                    [
+                        "Handwerk",
+                        "BDJNN/HAND/WEÜK"
+                    ],
+                    [
+                        "Jagd",
+                        "BDJNN/JAÜKD"
+                    ],
+                    [
+                        "Ohr",
+                        "BDJNN/~O"
+                    ],
+                    [
+                        "Terror",
+                        "BDJNN/DJEÜ/R~O"
+                    ],
+                    [
+                        "Reis",
+                        "BDJNN/REIS"
+                    ],
+                    [
+                        "Pferde",
+                        "BDJNN/BFEÜ/DE"
+                    ],
+                    [
+                        "Wirt",
+                        "BDJNN/W~I+D"
+                    ],
+                    [
+                        "Juan",
+                        "BDJNN/JU/AN"
+                    ],
+                    [
+                        "Nachbar",
+                        "BDJNN/NAKʃ/BAÜ"
+                    ],
+                    [
+                        "Bär",
+                        "BDJNN/BÄÜ"
+                    ],
+                    [
+                        "Held",
+                        "BDJNN/HELD"
+                    ],
+                    [
+                        "Katar",
+                        "BDJNN/GDA/DJAÜ"
+                    ],
+                    [
+                        "Route",
+                        "BDJNN/R~U/DJE"
+                    ],
+                    [
+                        "Watch",
+                        "BDJNN/WAʃD"
+                    ],
+                    [
+                        "Tablets",
+                        "BDJNN/DJA/BLEs"
+                    ],
+                    [
+                        "Lehmann",
+                        "BDJNN/LEÜ/MA+N"
+                    ],
+                    [
+                        "Sergej",
+                        "BDJNN/SEÜ/GEI"
+                    ],
+                    [
+                        "Einlass",
+                        "BDJNN/EIN/LASs"
+                    ],
+                    [
+                        "Ruhr",
+                        "BDJNN/R~U"
+                    ],
+                    [
+                        "Abwicklung",
+                        "BDJNN/AB/WIK/LU+N"
+                    ],
+                    [
+                        "Piste",
+                        "BDJNN/BDIS/DJE"
+                    ],
+                    [
+                        "Grades",
+                        "BDJNN/GRA/DES"
+                    ],
+                    [
+                        "Ski",
+                        "BDJNN/GDMI"
+                    ],
+                    [
+                        "Kunstwerk",
+                        "BDJNN/GDUNSD/WEÜK"
+                    ],
+                    [
+                        "Kraftwerk",
+                        "BDJNN/GDRAFD/WEÜK"
+                    ],
+                    [
+                        "Höxter",
+                        "BDJNN/HÄOKS/DJEÜ"
+                    ],
+                    [
+                        "Reinhold",
+                        "BDJNN/REIN/HOLD"
+                    ],
+                    [
+                        "Bierhoff",
+                        "BDJNN/B~I/HOF"
+                    ],
+                    [
+                        "Takt",
+                        "BDJNN/DJAKD"
+                    ],
+                    [
+                        "Bauwerk",
+                        "BDJNN/BAU/WEÜK"
+                    ],
+                    [
+                        "Fifa",
+                        "BDJNN/FI/FA"
+                    ],
+                    [
+                        "GTA",
+                        "BDJNN/GDJA"
+                    ],
+                    [
+                        "Harz",
+                        "BDJNN/HAÜ+S"
+                    ],
+                    [
+                        "Arne",
+                        "BDJNN/AÜ/NE"
+                    ],
+                    [
+                        "Jasmin",
+                        "BDJNN/JAS/MIN"
+                    ],
+                    [
+                        "Till",
+                        "BDJNN/DJIL"
+                    ],
+                    [
+                        "Fürst",
+                        "BDJNN/F~ÜSD"
+                    ],
+                    [
+                        "Typs",
+                        "BDJNN/DJIBS"
+                    ],
+                    [
+                        "Alfa",
+                        "BDJNN/AL/FA"
+                    ],
+                    [
+                        "Pfanne",
+                        "BDJNN/BFAN/NE"
+                    ],
+                    [
+                        "Hemd",
+                        "BDJNN/HEMD"
+                    ],
+                    [
+                        "Merck",
+                        "BDJNN/MEÜK"
+                    ],
+                    [
+                        "Äste",
+                        "BDJNN/ÄS/DJE"
+                    ],
+                    [
+                        "Maik",
+                        "BDJNN/MAIK"
+                    ],
+                    [
+                        "Models",
+                        "BDJNN/MO/DELS"
+                    ],
+                    [
+                        "Heimweg",
+                        "BDJNN/HEIM/WEÜK"
+                    ],
+                    [
+                        "Anstiegs",
+                        "BDJNN/AN/SDIKS"
+                    ],
+                    [
+                        "Swing",
+                        "BDJNN/SWI+N"
+                    ],
+                    [
+                        "Pakt",
+                        "BDJNN/BDAKD"
+                    ],
+                    [
+                        "Nike",
+                        "BDJNN/NI/GDE"
+                    ],
+                    [
+                        "Bangladesch",
+                        "BDJNN/BAN/GLA/DEʃ"
+                    ],
+                    [
+                        "Sarg",
+                        "BDJNN/SAÜK"
+                    ],
+                    [
+                        "Regelwerk",
+                        "BDJNN/RE/GEL/WEÜK"
+                    ],
+                    [
+                        "Anlehnung",
+                        "BDJNN/AN/LEÜ/NU+N"
+                    ],
+                    [
+                        "Fink",
+                        "BDJNN/FI+N"
+                    ],
+                    [
+                        "List",
+                        "BDJNN/LISD"
+                    ],
+                    [
+                        "Ian",
+                        "BDJNN/JAN"
+                    ],
+                    [
+                        "Audio",
+                        "BDJNN/AU/DJO"
+                    ],
+                    [
+                        "Inn",
+                        "BDJNN/IN"
+                    ],
+                    [
+                        "Track",
+                        "BDJNN/DJRAK"
+                    ],
+                    [
+                        "Könige",
+                        "BDJNN/GDÄO/NI/GE"
+                    ],
+                    [
+                        "Lift",
+                        "BDJNN/LIFD"
+                    ],
+                    [
+                        "Bug",
+                        "BDJNN/B~UK"
+                    ]
+                ]
+            ]
+        }
+    ],
+    [
         "PatShortSyllable",
         {
             "4": [
-                791250,
+                791265,
                 [
                     [
                         "den",
@@ -15615,10 +16009,6 @@
                     [
                         "seinen",
                         "SEINn"
-                    ],
-                    [
-                        "ihren",
-                        "~In"
                     ],
                     [
                         "machen",
@@ -15701,6 +16091,10 @@
                         "GR~O+Sn"
                     ],
                     [
+                        "vielen",
+                        "FILn"
+                    ],
+                    [
                         "eigenen",
                         "EI/GNn"
                     ],
@@ -15747,6 +16141,10 @@
                     [
                         "Maßnahmen",
                         "MAÜ+S/NAÜMn"
+                    ],
+                    [
+                        "halten",
+                        "HAL/DJN"
                     ],
                     [
                         "zusammen",
@@ -15902,7 +16300,7 @@
                     ],
                     [
                         "offenbar",
-                        "OFn/BAÜ"
+                        "OF/FN/BAÜ"
                     ],
                     [
                         "einigen",
@@ -15943,15 +16341,11 @@
                     [
                         "mussten",
                         "MUS/DJN"
-                    ],
-                    [
-                        "beispielsweise",
-                        "BEI/BFILS/WEISs"
                     ]
                 ]
             ],
             "3": [
-                169876,
+                169856,
                 [
                     [
                         "bereits",
@@ -15987,7 +16381,7 @@
                     ],
                     [
                         "Familie",
-                        "FA/MLI"
+                        "BDJNN/FA/MLI"
                     ],
                     [
                         "berichtet",
@@ -16451,7 +16845,7 @@
         "PatCommonPrefix",
         {
             "2": [
-                18172,
+                18158,
                 [
                     [
                         "Entscheidung",
@@ -16856,7 +17250,7 @@
                 ]
             ],
             "3": [
-                56854,
+                56858,
                 [
                     [
                         "über",
@@ -17768,7 +18162,7 @@
                     ],
                     [
                         "Frankreichs",
-                        "FRÄ+N/REIKs"
+                        "FRÄ+N/REIKS"
                     ],
                     [
                         "Lungenkrankheit",
@@ -18138,7 +18532,7 @@
         "PatAnglI",
         {
             "0": [
-                1946,
+                1944,
                 [
                     [
                         "Team",
@@ -18926,7 +19320,7 @@
         "PatAnglEI",
         {
             "0": [
-                31125,
+                31108,
                 [
                     [
                         "weiterhin",
@@ -19551,7 +19945,7 @@
         "PatAnglU",
         {
             "0": [
-                616,
+                609,
                 [
                     [
                         "Facebook",
@@ -20662,7 +21056,7 @@
                     ],
                     [
                         "Coachs",
-                        "GDMOKs"
+                        "GDMOKS"
                     ],
                     [
                         "Notepad",
@@ -21228,7 +21622,7 @@
                     ],
                     [
                         "Ameisencode",
-                        "A/MEISn/GDOD"
+                        "BDJNN/A/MEISn/GDOD"
                     ],
                     [
                         "Anweisungscodeprozessoren",
@@ -21710,7 +22104,7 @@
                     ],
                     [
                         "retournieren",
-                        "RE/DJ~U/NIn"
+                        "RE/DJ~U/N~I/REN"
                     ],
                     [
                         "Europatour",
@@ -22004,7 +22398,7 @@
                     ],
                     [
                         "Offensivfoul",
-                        "OFn/SF/FAU/EL"
+                        "OF/FN/SF/FAU/EL"
                     ],
                     [
                         "Count",
@@ -23078,7 +23472,7 @@
         "PatAnglOther",
         {
             "0": [
-                3770,
+                3771,
                 [
                     [
                         "Bayern",
@@ -23098,7 +23492,7 @@
                     ],
                     [
                         "Bayer",
-                        "BÄI/EÜ"
+                        "BDJNN/BÄI/EÜ"
                     ],
                     [
                         "Smartphone",
@@ -23458,7 +23852,7 @@
                     ],
                     [
                         "Scooter",
-                        "GDMO/O/DJEÜ"
+                        "BDJNN/GDMO/O/DJEÜ"
                     ],
                     [
                         "bayernweit",
@@ -23483,7 +23877,7 @@
                 ]
             ],
             "1": [
-                1060,
+                1061,
                 [
                     [
                         "Show",
@@ -23564,6 +23958,10 @@
                     [
                         "Castingshow",
                         "GDAS/DJI+N/SJOF"
+                    ],
+                    [
+                        "Marshall",
+                        "MAÜ/SJAL"
                     ],
                     [
                         "Talkshows",
@@ -23755,7 +24153,7 @@
                     ],
                     [
                         "Shopper",
-                        "SJOB/BDEÜ"
+                        "SJO+B/BDEÜ"
                     ],
                     [
                         "Showmaster",
@@ -23880,10 +24278,6 @@
                     [
                         "Shader",
                         "SJA/DEÜ"
-                    ],
-                    [
-                        "Radioshow",
-                        "RA/DJO/SJOF"
                     ]
                 ]
             ]
@@ -23893,7 +24287,7 @@
         "PatFrankOther",
         {
             "0": [
-                9009,
+                9004,
                 [
                     [
                         "passiert",
@@ -23949,7 +24343,7 @@
                     ],
                     [
                         "Performance",
-                        "BDEÜ/F~O/MA+NS"
+                        "BDJNN/BDEÜ/F~O/MA+NS"
                     ],
                     [
                         "anpassen",
@@ -24038,10 +24432,6 @@
                     [
                         "Force",
                         "F~OS"
-                    ],
-                    [
-                        "passte",
-                        "BDA+S/DJE"
                     ],
                     [
                         "Science",
@@ -24253,7 +24643,7 @@
                     ],
                     [
                         "Jacqueline",
-                        "JAK/LAIN"
+                        "BDJNN/JAK/LAIN"
                     ],
                     [
                         "Passantin",
@@ -24281,7 +24671,7 @@
                     ],
                     [
                         "passten",
-                        "BDA+S/DJN"
+                        "BDA+S/DJEN"
                     ],
                     [
                         "passender",
@@ -24294,6 +24684,10 @@
                     [
                         "Kommandeur",
                         "GDOM/MAN/DÄO"
+                    ],
+                    [
+                        "Friseursalons",
+                        "FRI/SÄO/SA/LONS"
                     ]
                 ]
             ],
