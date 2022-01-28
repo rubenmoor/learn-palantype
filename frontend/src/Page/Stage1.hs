@@ -81,7 +81,7 @@ import           Palantype.Common               (Lang(..),  Chord(..)
                                                 , fromIndex
                                                 , showH
                                                 )
-import           Reflex.Dom                     ( DomBuilder
+import           Reflex.Dom                     (never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)
                                                 , PostBuild(getPostBuild)
@@ -103,7 +103,6 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , widgetHold_
                                                 )
 import           Shared                         ( dynSimple
-                                                , widgetHoldSimple
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -445,7 +444,7 @@ taskLetters dynLetters = do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-    widgetHoldSimple $ eStdGen <&> \stdGen -> do
+    fmap switchDyn $ widgetHold (pure never) $ eStdGen <&> \stdGen ->
         dynSimple $ dynLetters <&> \letters -> mdo
             let len = length letters
 

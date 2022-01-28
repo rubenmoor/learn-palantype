@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
@@ -973,7 +974,7 @@ landingPage = elClass "div" "landing" $ do
         elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
 
 stages
-    :: forall key (proxy :: * -> *) t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
        , MonadFix m
@@ -983,83 +984,85 @@ stages
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )
-    => proxy key
-    -> Lang
+    => Lang
     -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
     -- -> RoutedT
     --        t
     --        Stage
     --        (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m))
     --        ()
-stages p navLang = do
-  dynCurrent <- askRoute
-  dyn_ $ dynCurrent <&> stages' p navLang
+stages navLang = do
+    dynCurrent <- askRoute
+    dyn_ $ dynCurrent <&> stages'
+  where
+    stages'
+      :: Stage
+      -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    stages' current = elClass "div" "box" $ do
+          eChord <- el "header" $ do
+              settings navLang
+              message
+              stenoInput @key navLang
 
-stages'
-    :: forall key (proxy :: * -> *) t (m :: * -> *)
-     . ( DomBuilder t m
-       , MonadHold t m
-       , MonadFix m
-       , Palantype key
-       , PostBuild t m
-       , Prerender t m
-       , RouteToUrl (R FrontendRoute) m
-       , SetRoute t (R FrontendRoute) m
-       )
-    => proxy key
-    -> Lang
-    -> Stage
-    -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-stages' _ navLang current = elClass "div" "box" $ do
-      eChord <- el "header" $ do
-          settings navLang
-          message
-          stenoInput @key navLang
+          navigation <- elClass "div" "row" $ mdo
 
-      navigation <- elClass "div" "row" $ mdo
+              toc navLang current
 
-          toc navLang current
+              let
+                  setEnv =
+                    let
+                        navMPrevious = mPrev current
+                        navCurrent = current
+                        navMNext = mNext current
+                    in  mapRoutedT
+                          (withReaderT $ \dynState -> Env
+                              { envDynState   = dynState
+                              , envEChord     = eChord
+                              , envNavigation = Navigation { .. }
+                              }
+                          )
+              navigation <-
+                elAttr "section" ("id" =: "content") $ do
+                  elClass "div" "scrollTop" $
+                      text $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
+                  nav <-
+                    elClass "div" "content" $ setEnv $ case current of
+                      "introduction" -> introduction
+                      "stage_1-1"    -> Stage1.exercise1
+                      "stage_1-2"    -> Stage1.exercise2
+                      "stage_1-3"    -> Stage1.exercise3
+                      "stage_1-4"    -> Stage1.exercise4
+                      "stage_1-5"    -> Stage1.exercise5
+                      "stage_1-6"    -> Stage1.exercise6
+                      "stage_1-7"    -> Stage1.exercise7
+                      "stage_2-1"    -> Stage2.exercise1
+                      "stage_2-2"    -> Stage2.exercise2
+                      "stage_2-3"    -> Stage2.exercise3
+                      "stage_2-4"    -> Stage2.exercise4
+                      "stage_3-1"    -> Stage3.exercise1
+                      "stage_3-2"    -> Stage3.exercise2
+                      "stage_3-3"    -> Stage3.exercise3
+                      "stage_3-4"    -> Stage3.exercise4
+                      "stage_3-5"    -> Stage3.exercise5
+                      "stage_3-6"    -> Stage3.exercise6
+                      "stage_3-7"    -> Stage3.exercise7
+                      "stage_3-8"    -> Stage3.exercise8
+                      "stage_3-9"    -> Stage3.exercise9
+                      "stage_3-10"   -> Stage3.exercise10
+                      "stage_3-11"   -> Stage3.exercise11
+                      "stage_3-12"   -> Stage3.exercise12
+                      "stage_3-13"   -> Stage3.exercise13
+                      "stage_3-14"   -> Stage3.exercise14
+                      "stage_3-15"   -> Stage3.exercise15
+                      "stage_3-16"   -> Stage3.exercise16
+                      "patternoverview" -> Patterns.overview
+                      other          ->
+                        elClass "div" "small anthrazit" $
+                          text ("Page not found: " <> showt other)
+                            $> Navigation navLang Nothing "introduction" Nothing
 
-          let
-              setEnv =
-                let
-                    navMPrevious = mPrev current
-                    navCurrent = current
-                    navMNext = mNext current
-                in  mapRoutedT
-                      (withReaderT $ \dynState -> Env
-                          { envDynState   = dynState
-                          , envEChord     = eChord
-                          , envNavigation = Navigation { .. }
-                          }
-                      )
-          navigation <-
-            elAttr "section" ("id" =: "content") $ do
-              elClass "div" "scrollTop" $
-                  text $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
-              nav <-
-                elClass "div" "content" $ setEnv $ case current of
-                  "introduction" -> introduction
-                  "stage_1-1"    -> Stage1.exercise1
-                  "stage_1-2"    -> Stage1.exercise2
-                  "stage_1-3"    -> Stage1.exercise3
-                  "stage_1-4"    -> Stage1.exercise4
-                  "stage_1-5"    -> Stage1.exercise5
-                  "stage_1-6"    -> Stage1.exercise6
-                  "stage_1-7"    -> Stage1.exercise7
-                  "stage_2-1"    -> Stage2.exercise1
-                  "stage_2-2"    -> Stage2.exercise2
-                  "stage_2-3"    -> Stage2.exercise3
-                  "stage_2-4"    -> Stage2.exercise4
-                  "stage_3-1"    -> Stage3.exercise1
-                  "patternoverview" -> Patterns.overview
-                  other          ->
-                    elClass "div" "small anthrazit" $
-                      text ("Page not found: " <> showt other)
-                        $> Navigation navLang Nothing "introduction" Nothing
-
-              elClass "div" "scrollBottom" $
-                  text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
-              pure nav
-          pure navigation
-      elFooter navLang navigation
+                  elClass "div" "scrollBottom" $
+                      text $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
+                  pure nav
+              pure navigation
+          elFooter navLang navigation

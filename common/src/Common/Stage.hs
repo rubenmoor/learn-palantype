@@ -87,6 +87,18 @@ strsStage =
   , "stage_3-2"
   , "stage_3-3"
   , "stage_3-4"
+  , "stage_3-5"
+  , "stage_3-6"
+  , "stage_3-7"
+  , "stage_3-8"
+  , "stage_3-9"
+  , "stage_3-10"
+  , "stage_3-11"
+  , "stage_3-12"
+  , "stage_3-13"
+  , "stage_3-14"
+  , "stage_3-15"
+  , "stage_3-16"
   , "patternoverview"
   ]
 

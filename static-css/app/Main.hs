@@ -298,6 +298,7 @@ main = putCss $ do
         paddingLeft $ px 12
         paddingTop $ px 12
         flexShrink 0
+        overflowY auto
         div ? marginRight (px 12)
         ul ? do
             listStyleType none
@@ -704,6 +705,8 @@ main = putCss $ do
         padding (px 6) (px 6) (px 6) (px 6)
 
     div # ".patternTable" ? do
+      marginTop $ em 1.5
+      marginBottom $ em 2
       div # ".orig" ? do
         backgroundColor myLightgray
         paddingRight $ em 0.5

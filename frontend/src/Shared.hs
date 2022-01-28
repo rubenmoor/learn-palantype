@@ -134,14 +134,6 @@ dynSimple a = switchHold never =<< dyn a
 --   -> m (Event t a)
 -- prerenderSimple a = switchDyn <$> prerender (pure never) a
 
-widgetHoldSimple
-  :: forall a t (m :: * -> *).
-  ( Adjustable t m
-  , MonadHold t m
-  )
-  => Event t (m (Event t a)) -> m (Event t a)
-widgetHoldSimple a = switchDyn <$> widgetHold (pure never) a
-
 loadingScreen
   :: DomBuilder t m
   => m ()

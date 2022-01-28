@@ -101,7 +101,7 @@ import GHC.Enum (pred, Enum(succ))
 import Data.Witherable (Filterable(catMaybes))
 import Control.Monad (when)
 import Data.List ((!!))
-import Data.Foldable (for_)
+import Data.Foldable (traverse_, for_)
 import Data.List (intersperse)
 import Data.Foldable (Foldable(null))
 import GHC.Float (Double)
@@ -254,9 +254,10 @@ taskWords
        , PostBuild t m
        , Prerender t m
        )
-    => Event t (Map RawSteno Text, Map Text [RawSteno])
+    => Map RawSteno Text
+    -> Map Text [RawSteno]
     -> m (Event t ())
-taskWords eMaps = do
+taskWords mapStenoWord mapWordStenos = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -266,12 +267,10 @@ taskWords eMaps = do
         performEvent $ ePb $> liftIO newStdGen
 
     dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
-    dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
 
-    dynSimple $ zipDyn dynMStdGen dynMMaps <&> \case
-        (Nothing    , _      ) -> pure never
-        (_          , Nothing) -> pure never
-        (Just stdGen, Just (mapStenoWord, mapWordStenos)) -> do
+    dynSimple $ dynMStdGen <&> \case
+        Nothing -> pure never
+        Just stdGen -> do
             let len = Map.size mapWordStenos
 
                 step :: Chord key -> StenoWordsState -> StenoWordsState
@@ -376,9 +375,12 @@ taskWords eMaps = do
 elPatterns
   :: forall (m :: * -> *) t
   .  DomBuilder t m
-  => (PatternPos, [(Text, RawSteno)])
+  => [(PatternPos, [(Text, RawSteno)])]
   -> m ()
-elPatterns (pPos, pairs) = do
+elPatterns doc =
+    elClass "div" "patternTable" $ traverse_ elPatterns' doc
+  where
+    elPatterns' (pPos, pairs) = do
         let strPPos = toLower $ showt pPos
         elClass "hr" strPPos blank
         elClass "span" ("patternPosition " <> strPPos) $ text strPPos

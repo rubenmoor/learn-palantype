@@ -132,8 +132,8 @@ frontendBody = mdo
 
                                 -- or show the landing page
                                 Nothing -> landingPage
-                FrontendRoute_EN -> stages (Proxy :: Proxy EN.Key) EN
-                FrontendRoute_DE -> stages (Proxy :: Proxy DE.Key) DE
+                FrontendRoute_EN -> stages @EN.Key EN
+                FrontendRoute_DE -> stages @DE.Key DE
     blank
 
 frontendHead ::

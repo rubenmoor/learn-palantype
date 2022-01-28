@@ -63,7 +63,6 @@ import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable
                                                     ( catMaybes
                                                     , filter
-                                                    , mapMaybe
                                                     )
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
@@ -73,7 +72,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Page.Common                    (taskWords, loading, elBackUp,  elCongraz
+import           Page.Common                    (elPatterns, taskWords, loading, elBackUp,  elCongraz
                                                 , elNotImplemented
                                                 )
 import           Palantype.Common               ( Chord(..)
@@ -84,7 +83,7 @@ import           Palantype.Common               ( Chord(..)
 import           Palantype.Common    (kiEnter,  kiBackUp )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.Common      ( RawSteno(..) , parseStenoLenient)
-import           Reflex.Dom                     ((=:)
+import           Reflex.Dom                     (widgetHold, switchDyn, filterRight, (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
@@ -108,10 +107,7 @@ import           Reflex.Dom                     ((=:)
                                                 , widgetHold_
                                                 , zipDyn
                                                 )
-import           Servant.Common.Req             ( ReqResult(..)
-                                                , reqSuccess
-                                                )
-import           Shared                         ( dynSimple
+import           Shared                         (dynSimple
                                                 , whenJust
                                                 )
 import           State                          ( Env(..)
@@ -125,7 +121,9 @@ import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
 import Palantype.DE (Pattern(..))
-import Data.Either (isRight, Either(..))
+import Data.Either (Either(..))
+import Data.Functor (Functor((<$)))
+import Data.Functor (Functor(fmap))
 
 -- Ex. 2.1
 
@@ -657,7 +655,7 @@ exercise3 = do
       Left  str -> elClass "div" "paragraph small red"
         $ text $ "Could not load resource: " <> str
 
-    eDone <- taskSingletons $ mapMaybe eEDict
+    eDone <- taskSingletons $ filterRight eEDict
 
     elCongraz eDone envNavigation
     pure envNavigation
@@ -724,22 +722,13 @@ exercise4 = do
     elClass "div" "paragraph" $ text "Type the following words as they appear!"
 
     ePb      <- postRender $ delay 0.1 =<< getPostBuild
-    eResDict <- postRender $ getDictDE' PatSimpleMulti 0 ePb
-    eResDoc  <- postRender $ getDocDEPattern' PatSimple 0 ePb
-    let
-        eDict = mapMaybe reqSuccess eResDict
+    evEDict <- request $ getDictDE' PatSimpleMulti 0 ePb
+    evEDoc  <- request $ getDocDEPattern' PatSimple 0 ePb
 
-    widgetHold_ loading $ eResDict <&> \case
-      ResponseSuccess {} -> blank
-      _                  -> elClass "div" "paragraph small red"
-        $ text "Could not load resource: dict"
-
-    widgetHold_ loading $ eResDoc <&> \case
-      ResponseSuccess {} -> blank
-      _                  -> elClass "div" "paragraph small red"
-        $ text "Could not load resource: doc"
-
-    eDone <- taskWords eDict
+    evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
+      Right (mST, mTSs) -> taskWords mST mTSs
+      Left  str         -> never <$ elClass "div" "paragraph small red"
+        ( text $ "Could not load resource: dict: " <> str )
 
     elClass "div" "paragraph"
         $ text
@@ -753,8 +742,34 @@ exercise4 = do
 
     elClass "div" "paragraph"
         $ text
-              "For completeness sake, find here the \"substitution rules\" \
-              \that have been applied so far:"
+              "For completeness sake, find below the \"substitution rules\" \
+              \that have been applied so far. They look trivial still, but will \
+              \more complicated soon enough."
 
-    elCongraz eDone envNavigation
+    widgetHold_ loading $ evEDoc <&> \case
+      Right doc -> elPatterns doc
+      Left  str -> elClass "div" "paragraph small red"
+        $ text $ "Could not load resource: doc: " <> str
+
+    elClass "div" "paragraph"
+        $ text
+              "Each lowercase letter in the table is a letter of natural \
+              \language. Next to it you find a steno code, denoted as \
+              \uppercase letter. The entries are sorted alphabetically. \
+              \Remember, though, letters generally have different steno codes \
+              \depending where we are: The onset is the beginning of a word \
+              \part (think of a syllable), the nucleus is one or more vowels \
+              \thereafter and the coda is what comes at the end of a word part."
+
+    elClass "div" "paragraph" $ do
+        text "E.g. the letter "
+        el "em" $ text "k"
+        text " is only simply "
+        el "code" $ text "K"
+        text " when it appears in the coda. In practice, this won't be a \
+               \problem as the steno key "
+        el "code" $ text "K"
+        text " exists for your right hand only, anyway."
+
+    elCongraz evDone envNavigation
     pure envNavigation

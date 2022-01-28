@@ -57,7 +57,7 @@ overview = do
     Right (patternDoc, m) -> for_ patternDoc \(p, lsPattern) -> do
 
       el "h2" $ text $ toDescription p
-      elClass "div" "patternTable" $ for_ lsPattern $ \(g, lsPPosPairs) -> do
+      el "div" $ for_ lsPattern $ \(g, doc) -> do
         let (n, lsExamples) =
               Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
         el "h3" $ text $ "Greediness " <> showt g
@@ -80,6 +80,6 @@ overview = do
             el "code" $ text $ showt s
             text ", "
 
-        traverse_ elPatterns lsPPosPairs
+        elPatterns doc
 
   pure envNavigation
