@@ -20,7 +20,7 @@ import           Client                         ( postConfigNew
                                                 , postRender
                                                 , reqFailure
                                                 )
-import           Common.Stage                   ( Stage (), stageDescription, mPrev, mNext )
+import           Common.Stage                   ( Stage (), mPrev, mNext )
 import           Common.Api                     ( CfgName(..)
                                                 , PloverSystemCfg(..)
                                                 , keyMapToPloverCfg
@@ -132,14 +132,14 @@ import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
 import qualified Page.Stage3                   as Stage3
 import qualified Page.Patterns as Patterns
-import           Palantype.Common               (fromChord, Lang (..),  Chord(..)
+import           Palantype.Common               (toDescription, fromChord, Lang (..),  Chord(..)
                                                 , KeyIndex(..)
                                                 , Palantype(fromIndex, keyCode)
                                                 , mkChord, kiDown
                                                 , kiUp
                                                 , RawSteno(..) )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (EventSelector(select), fanMap, KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
+import           Reflex.Dom                     (elDynClass', EventSelector(select), fanMap, KeyCode, EventTag(KeyupTag, KeydownTag),  (=:)
                                                 , DomBuilder
                                                     ( DomBuilderSpace
                                                     , inputElement
@@ -203,6 +203,8 @@ import           TextShow                       ( TextShow(showt) )
 import Data.Word (Word)
 import Data.Ord (Ord)
 import Data.Functor.Misc (Const2 (Const2))
+import Palantype.DE (Pattern(..))
+import Data.Int (Int)
 
 default (Text)
 
@@ -252,17 +254,6 @@ settings
     -> m ()
 settings lang = do
     dynState <- ask
-
-    -- button to toggle keyboard
-    let dynShowKeyboard = stShowKeyboard <$> dynState
-    dyn_ $ dynShowKeyboard <&> \showKeyboard -> do
-        (s, _) <- if showKeyboard
-            then elClass' "span" "btnHeader keyboardVisible"
-                $ iFa "far fa-keyboard"
-            else elClass' "span" "btnHeader keyboardHidden"
-                $ iFa "fas fa-keyboard"
-
-        updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
 
     -- button to show configuration dropdown
     eFile <- elClass "div" "dropdown" $ do
@@ -328,6 +319,8 @@ settings lang = do
 
             pure eFile'
 
+    -- button to switch between palantype systems, i.e. DE and EN
+
     elClass "div" "dropdown" $ do
         elClass "span" "dropdown-button" $ text $ showSymbol lang
         elClass "div" "dropdown-content" $ do
@@ -377,6 +370,18 @@ settings lang = do
                                    (unRawSteno <$> pcfgUnrecognizedStenos)
                 in  field @"stMsg" .~ Just Message { .. }
         ]
+
+    -- button to toggle keyboard
+    let
+        dynClass = dynState <&> \st -> "btnToggleKeyboard " <> if stShowKeyboard st
+          then "keyboardVisible"
+          else "keyboardHidden"
+    (s, _) <- elDynClass' "span" dynClass $ do
+      iFa "fas fa-keyboard"
+      el "code" $ text $ showt $ rawToggleKeyboard lang
+
+    updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
+
 
 data KeyState key
   = KeyStateDown key
@@ -787,7 +792,7 @@ toc lang current = elClass "section" "toc" $ do
         dyn_ $ dynCleared <&> \cleared -> do
 
             let
-                elLi stage = do
+                elLi stage description = do
                     let cls = if stage == current
                           then "bgLightgray"
                           else ""
@@ -795,13 +800,11 @@ toc lang current = elClass "section" "toc" $ do
                         if stage `Set.member` cleared
                             then iFa "fas fa-check"
                             else el "span" $ text "○"
-                        routeLink (stageUrl lang stage)
-                            $ text
-                            $ stageDescription stage
+                        routeLink (stageUrl lang stage) $ text description
 
             el "ul" $ do
 
-                elLi "introduction"
+                elLi "introduction" "Introduction"
 
                 (s1, _) <- elClass' "li" "stage" $ do
 
@@ -819,13 +822,13 @@ toc lang current = elClass "section" "toc" $ do
 
                 elDynClass "ul" dynClassUl1 $ do
 
-                    elLi "stage_1-1"
-                    elLi "stage_1-2"
-                    elLi "stage_1-3"
-                    elLi "stage_1-4"
-                    elLi "stage_1-5"
-                    elLi "stage_1-6"
-                    elLi "stage_1-7"
+                    elLi "stage_1-1" "Ex. 1: Type the letters"
+                    elLi "stage_1-2" "Ex. 2: Memorize the order"
+                    elLi "stage_1-3" "Ex. 3: Type the letters blindly"
+                    elLi "stage_1-4" "Ex. 4: Memorize the order blindly"
+                    elLi "stage_1-5" "Ex. 5: Memorize the left hand"
+                    elLi "stage_1-6" "Ex. 6: Memorize the right hand"
+                    elLi "stage_1-7" "Ex. 7: Memorize them all"
 
                 (s2, _) <- elClass' "li" "stage" $ do
 
@@ -842,10 +845,10 @@ toc lang current = elClass "section" "toc" $ do
                 let dynClassUl2 = bool "displayNone" "" <$> dynShowStage2
 
                 elDynClass "ul" dynClassUl2 $ do
-                    elLi "stage_2-1"
-                    elLi "stage_2-2"
-                    elLi "stage_2-3"
-                    elLi "stage_2-4"
+                    elLi "stage_2-1" "Ex. 1: Make use of home row"
+                    elLi "stage_2-2" "Ex. 2: Learn your first chords"
+                    elLi "stage_2-3" "Ex. 3: Onset, nucleus, and coda"
+                    elLi "stage_2-4" "Ex. 4: Syllables and word parts"
 
                 (s3, _) <- elClass' "li" "stage" $ do
 
@@ -861,13 +864,29 @@ toc lang current = elClass "section" "toc" $ do
 
                 let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
 
-                elDynClass "ul" dynClassUl3 $ do
-                    elLi "stage_3-1"
-                    elLi "stage_3-2"
-                    elLi "stage_3-3"
-                    elLi "stage_3-4"
+                    description :: Int -> Pattern -> Text
+                    description i pat =
+                      "Ex. " <> showt i <> ": " <> toDescription pat
 
-                elLi "patternoverview"
+                elDynClass "ul" dynClassUl3 $ do
+                    elLi "stage_3-1"  $ description 1 PatReplCommon
+                    elLi "stage_3-2"  $ description 2 PatDiConsonant
+                    elLi "stage_3-3"  $ description 3 PatCodaH
+                    elLi "stage_3-4"  $ description 4 PatCodaR
+                    elLi "stage_3-5"  $ description 5 PatCodaRR
+                    elLi "stage_3-6"  $ description 6 PatCodaHR
+                    elLi "stage_3-7"  $ description 7 PatDt
+                    elLi "stage_3-8"  $ description 8 PatDiphtong
+                    elLi "stage_3-9"  $ description 9 PatReplC
+                    elLi "stage_3-10" $ description 10 PatCodaGK
+                    elLi "stage_3-11" $ description 11 PatSZ
+                    elLi "stage_3-12" $ description 12 PatIJ
+                    elLi "stage_3-13" $ description 13 PatTsDsPs
+                    elLi "stage_3-14" $ description 14 PatDiVowel
+                    elLi "stage_3-15" $ description 15 PatReplH
+                    elLi "stage_3-16" $ description 16 PatSmallS
+
+                elLi "patternoverview" "Pattern Overview"
 
 landingPage
     :: forall t (m :: * -> *)

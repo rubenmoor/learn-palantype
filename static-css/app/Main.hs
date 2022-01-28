@@ -182,6 +182,7 @@ import Clay (borderTopStyle)
 import Clay (borderTopWidth)
 import qualified Clay.Flexbox as Flex
 import Clay (nowrap)
+import Clay (borderColor)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -468,13 +469,28 @@ main = putCss $ do
                         color gray
                         marginTop $ px (-6)
 
-    span # ".btnHeader" ? do
+    -- span # ".btnHeader" ? do
+    --     color gray
+    --     fontSize $ pt 24
+    --     padding (px 8) (px 8) (px 8) (px 8)
+    --     cursor pointer
+    --     hover & color darkblue
+
+    span # ".btnToggleKeyboard" ? do
+        cursor pointer
         color gray
-        fontSize $ pt 24
-        padding (px 8) (px 8) (px 8) (px 8)
-        ".keyboardVisible" & do
-            backgroundColor myLightgray
-            color white
+        display inlineFlex
+        code ? do
+          fontSize (pt 10)
+          padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
+        i ? fontSize (pt 22)
+        padding (px 0) (px 2) (px 0) (px 2)
+        borderRadius (px 8) (px 8) (px 8) (px 8)
+        border solid (px 2) gray
+        ".keyboardVisible" & color darkblue
+        hover & do
+          color darkblue
+          borderColor darkblue
 
     span # ".btn" ? do
         color gray
@@ -493,6 +509,8 @@ main = putCss $ do
             color gray
             fontSize $ pt 24
             padding (px 8) (px 8) (px 8) (px 8)
+            cursor pointer
+            hover & color darkblue
 
         div # ".dropdown-content" ? do
             display none
@@ -694,7 +712,7 @@ main = putCss $ do
         marginLeft $ em 1
         marginRight $ em 1
 
-    div # ".taskWords" |> span # ".word" ? width (px 120)
+    div # ".taskWords" |> span # ".word" ? minWidth (px 120)
 
     span # ".btnSteno" ? do
         fontSize $ pt 12

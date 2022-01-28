@@ -601,7 +601,7 @@ exercise3 = do
             " can only appear in exactly that order and always mean «Busch». \
            \The word «Schub» has to be typed using different keys \
            \, and indeed here it is: "
-        el "code" $ text "SJUP"
+        el "code" $ text "SJUB"
         text "."
 
 

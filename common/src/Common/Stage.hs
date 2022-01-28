@@ -15,7 +15,6 @@
 
 module Common.Stage
   ( Stage ()
-  , stageDescription
   , mPrev
   , mNext
   ) where
@@ -127,28 +126,6 @@ instance IsString Stage where
   | PatReplH
   | PatSmallS
 -}
-
-stageDescription :: Stage -> Text
-stageDescription (Stage stage) = case elemIndex stage strsStage of
-    Just 0  -> "Introduction"
-    Just 1  -> "Ex. 1: Type the letters"
-    Just 2  -> "Ex. 2: Memorize the order"
-    Just 3  -> "Ex. 3: Type the letters blindly"
-    Just 4  -> "Ex. 4: Memorize the order blindly"
-    Just 5  -> "Ex. 5: Memorize the left hand"
-    Just 6  -> "Ex. 6: Memorize the right hand"
-    Just 7  -> "Ex. 7: Memorize them all"
-    Just 8  -> "Ex. 1: Make use of home row"
-    Just 9  -> "Ex. 2: Learn your first chords"
-    Just 10 -> "Ex. 3: Onset, nucleus, and coda"
-    Just 11 -> "Ex. 4: Syllables and word parts"
-    Just 12 -> "Ex. 1: Common letter substitutions"
-    Just 13 -> "Ex. 2: Double consonants"
-    Just 14 -> "Ex. 3: Long vowels"
-    Just 15 -> "Ex. 4: Vowels followed by -r"
-    Just 16 -> "Pattern overview"
-    Just _  -> "Page not implemented: " <> stage
-    Nothing -> "Page not found: " <> stage
 
 mPrev :: Stage -> Maybe Stage
 mPrev (Stage s) = do
