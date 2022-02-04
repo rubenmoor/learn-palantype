@@ -14,7 +14,7 @@ module Page.Patterns where
 
 --
 
-import Reflex.Dom (dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, blank, elClass, el, text, DomBuilder)
+import Reflex.Dom (dynText, el', (=:), elAttr, dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, blank, elClass, el, text, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
 import Palantype.Common (toDescription)
 import Data.Semigroup ((<>))
@@ -53,33 +53,50 @@ overview = do
   eEDoc <- request $ getDocDEPatternAll ePb
 
   widgetHold_ loading $ eEDoc <&> \case
-    Left str -> elClass "span" "red small" $ text str
-    Right (patternDoc, m) -> for_ patternDoc \(p, lsPattern) -> do
+    Left str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
+    Right (patternDoc, m) -> do
 
-      el "h2" $ text $ toDescription p
-      el "div" $ for_ lsPattern $ \(g, doc) -> do
-        let (n, lsExamples) =
-              Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
-        el "h3" $ text $ "Greediness " <> showt g
+      -- TOC embedded in content
+      elClass "div" "embeddedToc" $ mdo
+        dynToggle <- foldDyn (\_ -> not) False (domEvent Click elToggle)
+        elToggle <- el "div" $ do
+          el "strong" $ text "Contents"
+          text " ("
+          (elT, _) <- el' "a" $ dynText $ bool "show" "hide" <$> dynToggle
+          text ")"
+          pure elT
+        let dynCls = bool "displayNone" "block" <$> dynToggle
+        elDynClass "ul" dynCls $ for_ patternDoc \(p, _) -> do
+          el "li" $ elAttr "a" ("href" =: ("#" <> showt p)) $
+            text $ toDescription p
 
-        elClass "div" "patternExamples" $ mdo
-          elClass "strong" "floatLeft" $ text "Examples"
-          (btn, _) <- elClass' "button" "floatLeft" $ dyn_ $ dynToggle <&> \case
-            False -> iFa "fas fa-plus"
-            True  -> iFa "fas fa-minus"
-          elClass "em" "floatRight" $ do
-            text "# total: "
-            text $ showt n
-          elClass "br" "clearBoth" blank
+      -- pattern documentation content
+      for_ patternDoc \(p, lsPattern) -> do
 
-          dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
-          let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
-          elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
-            el "span" $ text w
-            text " "
-            el "code" $ text $ showt s
-            text ", "
+        elAttr "h2" ("id" =: showt p) $ elAttr "a" ("href" =: ("#" <> showt p)) $ text $ toDescription p
+        el "div" $ for_ lsPattern $ \(g, doc) -> do
+          let (n, lsExamples) =
+                Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
+          el "h3" $ text $ "Greediness " <> showt g
 
-        elPatterns doc
+          elClass "div" "patternExamples" $ mdo
+            elClass "strong" "floatLeft" $ text "Examples"
+            (btn, _) <- elClass' "button" "floatLeft" $ dyn_ $ dynToggle <&> \case
+              False -> iFa "fas fa-plus"
+              True  -> iFa "fas fa-minus"
+            elClass "em" "floatRight" $ do
+              text "# total: "
+              text $ showt n
+            elClass "br" "clearBoth" blank
+
+            dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
+            let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
+            elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
+              el "span" $ text w
+              text " "
+              el "code" $ text $ showt s
+              text ", "
+
+          elPatterns doc
 
   pure envNavigation

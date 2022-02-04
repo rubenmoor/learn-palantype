@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -216,6 +216,9 @@ main = putCss $ do
         h2 ? do
           color darkblue
           marginTop $ px 60
+          a ? do
+            textDecoration none
+            color inherit
         h3 ? color anthrazit
     star ? boxSizing borderBox
 
@@ -602,6 +605,7 @@ main = putCss $ do
         cursor pointer
 
     ".displayNone" ? display none
+    ".block" ? display block
     ".inline" ? display inline
     ".inlineBlock" ? display inlineBlock
 
@@ -777,3 +781,12 @@ main = putCss $ do
         fontSize $ em 0.5
 
     ".whiteSpaceNoWrap" ? whiteSpace nowrap
+
+    div # ".embeddedToc" ? do
+      border solid (px 1) anthrazit
+      borderRadius (px 4) (px 4) (px 4) (px 4)
+      fontSize $ pt 12
+      padding (px 8) (px 8) (px 8) (px 8)
+      ul ? do
+        listStyleType none
+        paddingLeft $ px 0
