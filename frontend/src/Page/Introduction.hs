@@ -13,7 +13,6 @@
 module Page.Introduction where
 
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( Stage () )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)

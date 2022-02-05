@@ -16,7 +16,6 @@
 module Page.Common where
 
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( Stage ())
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( Category(id) )
 import           Control.Lens                   ( (%~)
@@ -86,7 +85,6 @@ import           State                          ( Env(..)
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
 import Palantype.Common (kiBackUp, kiEnter)
-import Control.Monad (Monad)
 import Data.Int (Int)
 import Data.Text (toLower, Text)
 import Data.Map.Strict (Map)

@@ -24,7 +24,6 @@ import State (
 import Common.Route (FrontendRoute (..))
 import Control.Monad.Reader (ReaderT (runReaderT))
 import qualified Data.Aeson as Aeson
-import Data.Data (Proxy (Proxy))
 import Data.Functor (
     ($>),
     (<&>),

@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -183,6 +183,7 @@ import Clay (borderTopWidth)
 import qualified Clay.Flexbox as Flex
 import Clay (nowrap)
 import Clay (borderColor)
+import Clay.Color (darkgray)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -204,10 +205,10 @@ main = putCss $ do
         fontSize $ pt 18
         margin (px 0) (px 0) (px 0) (px 0)
         a ? do
-            ":link" & do
+            link & do
                 textDecoration none
                 color colorLink
-            ":hover" & textDecoration underline
+            hover & textDecoration underline
             visited & color colorLinkVisited
             ".normalLink" & do
                 color colorLink
@@ -216,10 +217,16 @@ main = putCss $ do
         h2 ? do
           color darkblue
           marginTop $ px 60
-          a ? do
+          a # link ? do
             textDecoration none
             color inherit
+          a # hover ? textDecoration none
         h3 ? color anthrazit
+        h3 |> a # link ? do
+          textDecoration none
+          color anthrazit
+        h3 |> a # hover ? color darkblue
+        h3 |> i ? color myLightgray
     star ? boxSizing borderBox
 
     -- flex layout

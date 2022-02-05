@@ -15,6 +15,7 @@
 
 module Common.Stage
   ( Stage ()
+  , fromStringMaybe
   , mPrev
   , mNext
   ) where
@@ -36,7 +37,6 @@ import Data.Function (($))
 import qualified Data.Text as Text
 import Data.Foldable (Foldable(elem))
 import Data.List (elemIndex)
-import Control.Lens (element, (^?))
 import Data.Functor ((<$>))
 import GHC.Enum (succ, Enum(pred))
 import Data.Text (uncons)
@@ -81,23 +81,23 @@ strsStage =
   , "stage_2-1"
   , "stage_2-2"
   , "stage_2-3"
-  , "stage_2-4"
-  , "stage_3-1"
-  , "stage_3-2"
-  , "stage_3-3"
-  , "stage_3-4"
-  , "stage_3-5"
-  , "stage_3-6"
-  , "stage_3-7"
-  , "stage_3-8"
-  , "stage_3-9"
-  , "stage_3-10"
-  , "stage_3-11"
-  , "stage_3-12"
-  , "stage_3-13"
-  , "stage_3-14"
-  , "stage_3-15"
-  , "stage_3-16"
+  , "stage_PatSimple-0" -- 2.4
+  , "stage_PatReplCommon-0" -- 3.1
+  , "stage_PatDiConsonant-0"
+  , "stage_PatCodaH-0"
+  , "stage_PatCodaR-0"
+  , "stage_PatCodaRR-0"
+  , "stage_PatCodaHR-0"
+  , "stage_PatDt-0"
+  , "stage_PatDiphtong-0"
+  , "stage_PatReplC-0"
+  , "stage_PatCodaGK-0"
+  , "stage_PatSZ-0"
+  , "stage_PatIJ-0"
+  , "stage_PatTsDsPs-0"
+  , "stage_PatDiVowel-0"
+  , "stage_PatReplH-0"
+  , "stage_PatSmallS-0"
   , "patternoverview"
   ]
 
@@ -107,6 +107,12 @@ instance IsString Stage where
     in  if txt `elem` strsStage
            then Stage txt
            else error $ "Does not exist: Stage: " <> str
+
+fromStringMaybe :: Text -> Maybe Stage
+fromStringMaybe str =
+  if str `elem` strsStage
+    then Just $ Stage str
+    else Nothing
 
 {-
   | PatReplCommon

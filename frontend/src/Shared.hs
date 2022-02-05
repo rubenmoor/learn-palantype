@@ -33,8 +33,7 @@ import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace,
                                         elementConfig_initialAttributes, ffor,
                                         inputElementConfig_elementConfig,
                                         inputElementConfig_initialChecked,
-                                        inputElementConfig_setChecked, leftmost,
-                                        switchDyn, switchHold, text, widgetHold,
+                                        inputElementConfig_setChecked, leftmost, switchHold, text,
                                         (&), (=:))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)

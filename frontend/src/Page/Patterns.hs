@@ -14,12 +14,12 @@ module Page.Patterns where
 
 --
 
-import Reflex.Dom (dynText, el', (=:), elAttr, dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, blank, elClass, el, text, DomBuilder)
+import Reflex.Dom (dynText, (=:), elAttr, dyn_, PostBuild, EventName(Click), domEvent, elClass', foldDyn, elDynClass, MonadHold, widgetHold_, Prerender, delay, getPostBuild, blank, elClass, el, text, DomBuilder)
 import Control.Monad.Reader.Class (ask, MonadReader)
 import Palantype.Common (toDescription)
 import Data.Semigroup ((<>))
-import State (Env (..), Navigation (..))
-import Data.Foldable (traverse_, for_)
+import State (stageUrl, Env (..), Navigation (..))
+import Data.Foldable (for_)
 import TextShow (TextShow(showt))
 import Data.Function (($))
 import Control.Applicative (Applicative(pure))
@@ -33,6 +33,12 @@ import Control.Monad.Fix (MonadFix)
 import Data.Functor ((<$>))
 import Page.Common (elPatterns, loading)
 import Data.Either (Either(..))
+import Data.List (zip)
+import Data.Int (Int)
+import Obelisk.Route.Frontend (SetRoute, R, RouteToUrl, routeLink)
+import Common.Route (FrontendRoute)
+import Common.Stage (fromStringMaybe)
+import Data.Maybe (Maybe(..))
 
 overview
     :: forall key t (m :: * -> *)
@@ -42,10 +48,13 @@ overview
        , MonadReader (Env t key) m
        , PostBuild t m
        , Prerender t m
+       , RouteToUrl (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
 overview = do
   Env {..} <- ask
+  let Navigation {..} = envNavigation
 
   el "h1" $ text "Pattern group overview"
 
@@ -57,27 +66,34 @@ overview = do
     Right (patternDoc, m) -> do
 
       -- TOC embedded in content
+      let iPatternDoc = zip [1 .. ] patternDoc
       elClass "div" "embeddedToc" $ mdo
         dynToggle <- foldDyn (\_ -> not) False (domEvent Click elToggle)
         elToggle <- el "div" $ do
           el "strong" $ text "Contents"
           text " ("
-          (elT, _) <- el' "a" $ dynText $ bool "show" "hide" <$> dynToggle
+          (elT, _) <- elClass' "a" "normalLink" $ dynText $ bool "show" "hide" <$> dynToggle
           text ")"
           pure elT
         let dynCls = bool "displayNone" "block" <$> dynToggle
-        elDynClass "ul" dynCls $ for_ patternDoc \(p, _) -> do
+        elDynClass "ul" dynCls $ for_ iPatternDoc \(i, (p, _)) -> do
           el "li" $ elAttr "a" ("href" =: ("#" <> showt p)) $
-            text $ toDescription p
+            text $ showt @Int i <> " " <> toDescription p
 
       -- pattern documentation content
-      for_ patternDoc \(p, lsPattern) -> do
+      for_ iPatternDoc \(i, (p, lsPattern)) -> do
 
-        elAttr "h2" ("id" =: showt p) $ elAttr "a" ("href" =: ("#" <> showt p)) $ text $ toDescription p
+        elAttr "h2" ("id" =: showt p) $
+          elAttr "a" ("href" =: ("#" <> showt p)) $
+            text $ showt i <> " " <> toDescription p
         el "div" $ for_ lsPattern $ \(g, doc) -> do
           let (n, lsExamples) =
                 Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
-          el "h3" $ text $ "Greediness " <> showt g
+          el "h3" $ do
+            text $ "Greediness " <> showt g
+            case fromStringMaybe $ "stage_" <> showt p <> "-" <> showt g of
+              Just stage -> routeLink (stageUrl navLang stage) $ iFa "fas fa-book-open"
+              Nothing    -> elClass "span" "lightgray" $ iFa "fas fa-book-open"
 
           elClass "div" "patternExamples" $ mdo
             elClass "strong" "floatLeft" $ text "Examples"

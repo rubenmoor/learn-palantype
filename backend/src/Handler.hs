@@ -56,7 +56,6 @@ import Data.Function
       const,
     )
 import Data.Functor ((<$>))
-import Data.Int (Int)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe (maybe, Maybe (..))
@@ -67,9 +66,8 @@ import qualified Data.Text as Text
 import GHC.Show (Show (show))
 import Obelisk.Generated.Static (staticFilePath)
 import Palantype.Common
-    (MapStenoWordTake100, PatternDoc,  KeyIndex,
+    (MapStenoWordTake100, PatternDoc,  KeyIndex, keyIndex,
       Lang (..),
-      Palantype (keyIndex),
       Greediness
     )
 import Palantype.Common

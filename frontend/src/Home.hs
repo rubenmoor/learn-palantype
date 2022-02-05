@@ -132,9 +132,9 @@ import qualified Page.Stage1                   as Stage1
 import qualified Page.Stage2                   as Stage2
 import qualified Page.Stage3                   as Stage3
 import qualified Page.Patterns as Patterns
-import           Palantype.Common               (toDescription, fromChord, Lang (..),  Chord(..)
-                                                , KeyIndex(..)
-                                                , Palantype(fromIndex, keyCode)
+import           Palantype.Common               (fromIndex, toDescription, fromChord, Lang (..),  Chord(..)
+                                                , KeyIndex
+                                                , Palantype(keyCode)
                                                 , mkChord, kiDown
                                                 , kiUp
                                                 , RawSteno(..) )
@@ -848,7 +848,7 @@ toc lang current = elClass "section" "toc" $ do
                     elLi "stage_2-1" "Ex. 1: Make use of home row"
                     elLi "stage_2-2" "Ex. 2: Learn your first chords"
                     elLi "stage_2-3" "Ex. 3: Onset, nucleus, and coda"
-                    elLi "stage_2-4" "Ex. 4: Syllables and word parts"
+                    elLi "stage_PatSimple-0" "Ex. 4: Syllables and word parts"
 
                 (s3, _) <- elClass' "li" "stage" $ do
 
@@ -869,22 +869,22 @@ toc lang current = elClass "section" "toc" $ do
                       "Ex. " <> showt i <> ": " <> toDescription pat
 
                 elDynClass "ul" dynClassUl3 $ do
-                    elLi "stage_3-1"  $ description 1 PatReplCommon
-                    elLi "stage_3-2"  $ description 2 PatDiConsonant
-                    elLi "stage_3-3"  $ description 3 PatCodaH
-                    elLi "stage_3-4"  $ description 4 PatCodaR
-                    elLi "stage_3-5"  $ description 5 PatCodaRR
-                    elLi "stage_3-6"  $ description 6 PatCodaHR
-                    elLi "stage_3-7"  $ description 7 PatDt
-                    elLi "stage_3-8"  $ description 8 PatDiphtong
-                    elLi "stage_3-9"  $ description 9 PatReplC
-                    elLi "stage_3-10" $ description 10 PatCodaGK
-                    elLi "stage_3-11" $ description 11 PatSZ
-                    elLi "stage_3-12" $ description 12 PatIJ
-                    elLi "stage_3-13" $ description 13 PatTsDsPs
-                    elLi "stage_3-14" $ description 14 PatDiVowel
-                    elLi "stage_3-15" $ description 15 PatReplH
-                    elLi "stage_3-16" $ description 16 PatSmallS
+                    elLi "stage_PatReplCommon-0"  $ description 1 PatReplCommon
+                    elLi "stage_PatDiConsonant-0" $ description 2 PatDiConsonant
+                    elLi "stage_PatCodaH-0"       $ description 3 PatCodaH
+                    elLi "stage_PatCodaR-0"       $ description 4 PatCodaR
+                    elLi "stage_PatCodaRR-0"      $ description 5 PatCodaRR
+                    elLi "stage_PatCodaHR-0"      $ description 6 PatCodaHR
+                    elLi "stage_PatDt-0"          $ description 7 PatDt
+                    elLi "stage_PatDiphtong-0"    $ description 8 PatDiphtong
+                    elLi "stage_PatReplC-0"       $ description 9 PatReplC
+                    elLi "stage_PatCodaGK-0"      $ description 10 PatCodaGK
+                    elLi "stage_PatSZ-0"          $ description 11 PatSZ
+                    elLi "stage_PatIJ-0"          $ description 12 PatIJ
+                    elLi "stage_PatTsDsPs-0"      $ description 13 PatTsDsPs
+                    elLi "stage_PatDiVowel-0"     $ description 14 PatDiVowel
+                    elLi "stage_PatReplH-0"       $ description 15 PatReplH
+                    elLi "stage_PatSmallS-0"      $ description 16 PatSmallS
 
                 elLi "patternoverview" "Pattern Overview"
 
@@ -1057,23 +1057,23 @@ stages navLang = do
                       "stage_2-1"    -> Stage2.exercise1
                       "stage_2-2"    -> Stage2.exercise2
                       "stage_2-3"    -> Stage2.exercise3
-                      "stage_2-4"    -> Stage2.exercise4
-                      "stage_3-1"    -> Stage3.exercise1
-                      "stage_3-2"    -> Stage3.exercise2
-                      "stage_3-3"    -> Stage3.exercise3
-                      "stage_3-4"    -> Stage3.exercise4
-                      "stage_3-5"    -> Stage3.exercise5
-                      "stage_3-6"    -> Stage3.exercise6
-                      "stage_3-7"    -> Stage3.exercise7
-                      "stage_3-8"    -> Stage3.exercise8
-                      "stage_3-9"    -> Stage3.exercise9
-                      "stage_3-10"   -> Stage3.exercise10
-                      "stage_3-11"   -> Stage3.exercise11
-                      "stage_3-12"   -> Stage3.exercise12
-                      "stage_3-13"   -> Stage3.exercise13
-                      "stage_3-14"   -> Stage3.exercise14
-                      "stage_3-15"   -> Stage3.exercise15
-                      "stage_3-16"   -> Stage3.exercise16
+                      "stage_PatSimple-0"      -> Stage2.exercise4
+                      "stage_PatReplCommon-0"  -> Stage3.exercise1
+                      "stage_PatDiConsonant-0" -> Stage3.exercise2
+                      "stage_PatCodaH-0"       -> Stage3.exercise3
+                      "stage_PatCodaR-0"       -> Stage3.exercise4
+                      "stage_PatCodaRR-0"      -> Stage3.exercise5
+                      "stage_PatCodaHR-0"      -> Stage3.exercise6
+                      "stage_PatDt-0"          -> Stage3.exercise7
+                      "stage_PatDiphtong-0"    -> Stage3.exercise8
+                      "stage_PatReplC-0"       -> Stage3.exercise9
+                      "stage_PatCodaGK-0"      -> Stage3.exercise10
+                      "stage_PatSZ-0"          -> Stage3.exercise11
+                      "stage_PatIJ-0"          -> Stage3.exercise12
+                      "stage_PatTsDsPs-0"      -> Stage3.exercise13
+                      "stage_PatDiVowel-0"     -> Stage3.exercise14
+                      "stage_PatReplH-0"       -> Stage3.exercise15
+                      "stage_PatSmallS-0"      -> Stage3.exercise16
                       "patternoverview" -> Patterns.overview
                       other          ->
                         elClass "div" "small anthrazit" $
