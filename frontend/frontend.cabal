@@ -11,12 +11,14 @@ library
     , common
     , containers
     , data-default
+    , generic-lens
     , ghcjs-dom
 
     -- jsaddle needed for
     -- eval
     -- liftJSM
     , jsaddle 
+    , lens
     , MonadRandom
     , mtl
     , my-palantype
@@ -24,7 +26,6 @@ library
     , obelisk-frontend
     , obelisk-generated-static
     , obelisk-route
-    , optics-core
     , patch
     , proxied
     , random

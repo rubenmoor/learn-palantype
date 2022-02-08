@@ -43,13 +43,13 @@ in
         sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
       }) {});
 
-      # servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-      #   owner = "imalsogreg";
-      #   repo = "servant-reflex";
-      #   rev = "f76dbeb9416c03fc26784b29ba5852374d91b0d2";
-      #   sha256 = "1ly62i7b1bsdmpg0l8hvvzrdmmh97ac8bhc8z35223jjmsfcp9j6";
-      # }) {};
-      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
+      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+        owner = "imalsogreg";
+        repo = "servant-reflex";
+        rev = "a6f859e52857e0eda753cf113fabfff61f06da6a";
+        sha256 = "0j36sl7l553iy1vpwy6263xdpj3m2n2rkkkdcsxpkr48p328lac4";
+      }) {};
+      #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
       servant-snap = dontCheck (self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";
