@@ -13,7 +13,7 @@ import           Common.Api                     ( PloverCfg
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
                                                 )
-import           Common.Stage                   ( Stage ())
+import           Common.Stage                   (Stage ())
 import           Control.Applicative            ( (<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
@@ -37,6 +37,7 @@ import           Palantype.Common               (Lang (..),  Chord )
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
+import Text.Read (read)
 
 -- environment for frontend pages
 
@@ -93,7 +94,9 @@ instance Default State where
         , stMLang         = Nothing
         , stMsg           = Nothing
         , stPloverCfg     = def
-        , stProgress = Map.fromList [(EN, "introduction"), (DE, "introduction")]
+        , stProgress      =
+            let stage_introduction = read "introduction"
+            in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
         , stShowKeyboard  = True
         , stShowTOC       = False
         , stTOCShowStage1 = False

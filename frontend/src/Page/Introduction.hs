@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE GADTs               #-}
@@ -57,6 +58,7 @@ import           State                          ( Env(..)
                                                 , updateState
                                                 )
 import           TextShow                       ( TextShow(showt) )
+import Common.Stage.TH (readLoc)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -168,7 +170,7 @@ introduction = do
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stProgress" %~ Map.update (\_ -> Just "stage_1-1") navLang
+            $> [ field @"stProgress" %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
                , field @"stCleared" %~ Set.insert navCurrent
                , field @"stTOCShowStage1" .~ True
                ]

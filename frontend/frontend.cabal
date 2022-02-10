@@ -28,6 +28,7 @@ library
     , obelisk-route
     , patch
     , proxied
+    , lens
     , random
     , random-shuffle
     , reflex-dom

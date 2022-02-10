@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Page.Stage3 where
 
 import Client (getDictDE', getDocDEPattern', postRender, request)
@@ -15,6 +17,8 @@ import Palantype.DE (Pattern (..))
 import Reflex.Dom (DomBuilder, EventWriter, MonadHold, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
 import State (stageUrl, Env (..), Navigation (..), State)
 import TextShow (TextShow (showt))
+import Common.Stage.TH (readLoc)
+import Common.Stage (stageMeta, StageMeta(StageSubLevel))
 
 exercise ::
     forall key t (m :: * -> *).
@@ -101,7 +105,10 @@ exercise1 =
               text
                   "First of all, note that these patterns are in addition to the \
                   \simple patterns of the previous "
-              routeLink (stageUrl navLang "stage_2-4") (text "Exercise 2.4")
+              let stageSimplePatterns = $readLoc "stage_PatSimple_0"
+                  StageSubLevel iS iE _ = stageMeta stageSimplePatterns
+              routeLink (stageUrl navLang stageSimplePatterns) $
+                  text $ "Exercise " <> showt iS <> "." <> showt iE
               text ". Thus, if you are missing a letter, it might be among the \
                   \simple patterns. Also, note that the minus sign, -, isn't an actual \
                   \steno key. Instead, it's used to distinguish between the left-hand and \
@@ -211,13 +218,9 @@ exercise3 =
                   \Vowels that are being stretched out, e.g. with an h, are typed using \
                   \one of the stretch keys. You can call "
               el "code" $ text "~"
-              el "em" $
-                  text
-                      "stretch"
+              el "em" $ text "stretch"
               text " or "
-              el "em" $
-                  text
-                      "Dehnung"
+              el "em" $ text "Dehnung"
               text ". With "
               el "code" $ text "~"
               text
@@ -274,7 +277,10 @@ exercise4 =
               text " for the way more frequent "
               el "em" $ text "uhr"
               text ". But about this one, we will learn in "
-              routeLink (stageUrl navLang "stage_3-6") (text "Exercise 3.6")
+              let stageCodaHR = $readLoc "stage_PatCodaHR_0"
+                  StageSubLevel iS iE _ = stageMeta stageCodaHR
+              routeLink (stageUrl navLang stageCodaHR) $ text $
+                  "Exercise " <> showt iS <> "." <> showt iE
         )
 
 exercise5 ::
@@ -302,7 +308,7 @@ exercise5 =
             text " key in addition to the appropriate stretch key."
         )
         PatCodaRR
-        (\_ -> elClass "div" "paragraph" $ do
+        (\_ -> elClass "div" "paragraph" $
               text "You might have noticed already, how the exercises become \
                    \more difficult as the rules stack up."
         )
@@ -323,14 +329,15 @@ exercise6 ::
 exercise6 =
     exercise
         5
-        (\_ -> elClass "div" "paragraph" $ do
+        (\_ -> elClass "div" "paragraph" $
               text "This is the last rule regarding regular vowel streting and \
                    \it is fairly easy."
         )
         PatCodaHR
-        (\_ -> elClass "div" "paragraph" $ do
+        (\_ -> elClass "div" "paragraph" $
               text "For the most part, you don't have to care at all that much \
-                   \about -h, -r, and -hr as the steno keys are identical."
+                   \about -h, -r, and -hr. \
+                   \If the vowel is stretched, you will have to use a stretch key."
         )
 
 exercise7 ::
@@ -343,18 +350,43 @@ exercise7 ::
       Palantype key,
       PostBuild t m,
       Prerender t m,
+      RouteToUrl (R FrontendRoute) m,
       SetRoute t (R FrontendRoute) m
     ) =>
     m Navigation
 exercise7 =
     exercise
         5
-        (\_ -> elClass "div" "paragraph" $ do
-              text "intro"
+        (\_ -> do
+            elClass "div" "paragraph" $ do
+              text
+                "Now for something a bit odd. \
+                \A word part that ends with -dt, requires an additional stroke. \
+                \The main reason for this is the fact that in German, \
+                \there exists both, -dt and -tt next to regular -t. \
+                \The idea behind this cumbersome extrastroke is, to have a \
+                \distinct way of writing -dt, when the same word with -t exists, \
+                \too. E.g. "
+              el "em" $ text "Brand"
+              text " and "
+              el "em" $ text "Brandt"
+              text "."
+            elClass "div" "paragraph" $ do
+              text
+                "Luckily, there are not that many words at all that suffer \
+                \from ambiguity regarding -dt and this exercise is quite small. \
+                \A lot of -dt words are typed simply with "
+              el "code" $ text "-D"
+              text " alone."
         )
         PatDt
-        (\_ -> elClass "div" "paragraph" $ do
-              text "explication"
+        (\lang -> elClass "div" "paragraph" $ do
+              text
+                "You can find more information and examples of this \
+                \rule in the "
+              routeLink (stageUrl lang $ $readLoc "patternoverview") $
+                text "pattern overview"
+              text "."
         )
 
 exercise8 ::
