@@ -101,6 +101,7 @@ strsStage =
       "stage_2-3",
       "stage_PatSimple_0", -- 2.4
       "stage_PatReplCommon_0", -- 3.1
+      "stage_PatSmallS_0",
       "stage_PatDiConsonant_0",
       "stage_PatCodaH_0",
       "stage_PatCodaR_0",
@@ -112,31 +113,14 @@ strsStage =
       "stage_PatCodaGK_0",
       "stage_PatSZ_0",
       "stage_PatIJ_0",
-      "stage_PatTsDsPs_0",
+      "stage_PatSwapS_0",
+      "stage_PatSwapSch_0",
+      "stage_PatSwapZ_0",
       "stage_PatDiVowel_0",
       "stage_PatReplH_0",
       "stage_PatSmallS_0",
       "patternoverview"
     ]
-
-{-
-  | PatReplCommon
-  | PatDiConsonant
-  | PatCodaH
-  | PatCodaR
-  | PatCodaRR
-  | PatCodaHR
-  | PatDt
-  | PatDiphtong
-  | PatReplC
-  | PatCodaGK
-  | PatSZ
-  | PatIJ
-  | PatTsDsPs
-  | PatDiVowel
-  | PatReplH
-  | PatSmallS
--}
 
 mPrev :: Stage -> Maybe Stage
 mPrev (Stage s) = do
@@ -169,20 +153,22 @@ stageMeta = unStage >>> \case
     "stage_2-3" -> StageSubLevel 2 3 "Onset, nucleus, and coda"
     "stage_PatSimple_0"      -> StageSubLevel 2 4  "Syllables and word parts"
     "stage_PatReplCommon_0"  -> StageSubLevel 3 1  $ toDescription PatReplCommon
-    "stage_PatDiConsonant_0" -> StageSubLevel 3 2  $ toDescription PatDiConsonant
-    "stage_PatCodaH_0"       -> StageSubLevel 3 3  $ toDescription PatCodaH
-    "stage_PatCodaR_0"       -> StageSubLevel 3 4  $ toDescription PatCodaR
-    "stage_PatCodaRR_0"      -> StageSubLevel 3 5  $ toDescription PatCodaRR
-    "stage_PatCodaHR_0"      -> StageSubLevel 3 6  $ toDescription PatCodaHR
-    "stage_PatDt_0"          -> StageSubLevel 3 7  $ toDescription PatDt
-    "stage_PatDiphtong_0"    -> StageSubLevel 3 8  $ toDescription PatDiphtong
-    "stage_PatReplC_0"       -> StageSubLevel 3 9  $ toDescription PatReplC
-    "stage_PatCodaGK_0"      -> StageSubLevel 3 10 $ toDescription PatCodaGK
-    "stage_PatSZ_0"          -> StageSubLevel 3 11 $ toDescription PatSZ
-    "stage_PatIJ_0"          -> StageSubLevel 3 12 $ toDescription PatIJ
-    "stage_PatTsDsPs_0"      -> StageSubLevel 3 13 $ toDescription PatTsDsPs
-    "stage_PatDiVowel_0"     -> StageSubLevel 3 14 $ toDescription PatDiVowel
-    "stage_PatReplH_0"       -> StageSubLevel 3 15 $ toDescription PatReplH
-    "stage_PatSmallS_0"      -> StageSubLevel 3 16 $ toDescription PatSmallS
+    "stage_PatSmallS_0"      -> StageSubLevel 3 2  $ toDescription PatSmallS
+    "stage_PatDiConsonant_0" -> StageSubLevel 3 3  $ toDescription PatDiConsonant
+    "stage_PatCodaH_0"       -> StageSubLevel 3 4  $ toDescription PatCodaH
+    "stage_PatCodaR_0"       -> StageSubLevel 3 5  $ toDescription PatCodaR
+    "stage_PatCodaRR_0"      -> StageSubLevel 3 6  $ toDescription PatCodaRR
+    "stage_PatCodaHR_0"      -> StageSubLevel 3 7  $ toDescription PatCodaHR
+    "stage_PatDt_0"          -> StageSubLevel 3 8  $ toDescription PatDt
+    "stage_PatDiphtong_0"    -> StageSubLevel 3 9  $ toDescription PatDiphtong
+    "stage_PatReplC_0"       -> StageSubLevel 3 10 $ toDescription PatReplC
+    "stage_PatCodaGK_0"      -> StageSubLevel 3 11 $ toDescription PatCodaGK
+    "stage_PatSZ_0"          -> StageSubLevel 3 12 $ toDescription PatSZ
+    "stage_PatIJ_0"          -> StageSubLevel 3 13 $ toDescription PatIJ
+    "stage_PatSwapS_0"       -> StageSubLevel 3 14 $ toDescription PatSwapS
+    "stage_PatSwapSch_0"     -> StageSubLevel 3 15 $ toDescription PatSwapSch
+    "stage_PatSwapZ_0"       -> StageSubLevel 3 16 $ toDescription PatSwapZ
+    "stage_PatDiVowel_0"     -> StageSubLevel 3 17 $ toDescription PatDiVowel
+    "stage_PatReplH_0"       -> StageSubLevel 3 18 $ toDescription PatReplH
     "patternoverview"        -> StageTopLevel "Pattern overview"
     str          -> error $ "stageMeta: Invalid stage id: " <> Text.unpack str

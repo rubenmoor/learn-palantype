@@ -153,12 +153,12 @@ introduction = do
              \quite straightforward."
             DE ->
                 text
-                    "Currently, the German word list contains over 100'000 words. \
-             \An update for 2 Million words is in progress. \
+                    "Currently, the steno dictionary for German contains \
+             \1,945,685 words. Additional words are added regularly. \
              \Basic quality-of-life features (commands, special characters) \
              \are missing and will be added shortly. \
-             \The steno key layout is in an experimental state, too, \
-             \and might undergo changes in the near future."
+             \The steno key layout is not expected to change at this stage, \
+             \anymore."
 
     let (rsStart, desc) = case navLang of
             EN -> ("START", "S-, T-, A, -R, and -T")

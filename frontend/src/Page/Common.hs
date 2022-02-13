@@ -17,7 +17,7 @@ module Page.Common where
 
 import Client (postRender)
 import Common.Route (FrontendRoute (..))
-import Common.Stage (stageMeta, StageMeta (..))
+import Common.Stage (stageMeta)
 import Control.Applicative (Applicative (pure))
 import Control.Category (Category (id))
 import Control.Lens
@@ -31,7 +31,6 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Random (evalRand, newStdGen)
 import Control.Monad.Reader
     ( MonadReader,
-      ask,
       asks,
     )
 import Data.Bool (Bool (..))
@@ -109,7 +108,6 @@ import Reflex.Dom
       performEvent,
       text,
       updated,
-      zipDyn,
     )
 import Safe (atMay, initMay)
 import Shared

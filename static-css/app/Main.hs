@@ -226,7 +226,10 @@ main = putCss $ do
           textDecoration none
           color anthrazit
         h3 |> a # hover ? color darkblue
-        h3 |> i ? color myLightgray
+        h3 ? i ? do
+          color myLightgray
+          paddingLeft $ em 1
+          paddingRight $ em 1
     star ? boxSizing borderBox
 
     -- flex layout
@@ -617,6 +620,7 @@ main = putCss $ do
     ".inlineBlock" ? display inlineBlock
 
     ".blinking" ? animation "blink" (sec 1) ease (sec 0) infinite normal none
+    ".lightgray" ? color myLightgray
 
     keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]
 

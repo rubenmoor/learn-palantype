@@ -907,6 +907,7 @@ toc lang current = elClass "section" "toc" $ do
 
                     elDynClass "ul" dynClassUl3 $ do
                         elLi $ $readLoc "stage_PatReplCommon_0"
+                        elLi $ $readLoc "stage_PatSmallS_0"
                         elLi $ $readLoc "stage_PatDiConsonant_0"
                         elLi $ $readLoc "stage_PatCodaH_0"
                         elLi $ $readLoc "stage_PatCodaR_0"
@@ -918,10 +919,11 @@ toc lang current = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatCodaGK_0"
                         elLi $ $readLoc "stage_PatSZ_0"
                         elLi $ $readLoc "stage_PatIJ_0"
-                        elLi $ $readLoc "stage_PatTsDsPs_0"
+                        elLi $ $readLoc "stage_PatSwapS_0"
+                        elLi $ $readLoc "stage_PatSwapSch_0"
+                        elLi $ $readLoc "stage_PatSwapZ_0"
                         elLi $ $readLoc "stage_PatDiVowel_0"
                         elLi $ $readLoc "stage_PatReplH_0"
-                        elLi $ $readLoc "stage_PatSmallS_0"
 
                     elLi $ $readLoc "patternoverview"
 
@@ -1044,76 +1046,75 @@ stages ::
 stages navLang = do
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
-    where
-        stages' ::
-            Stage ->
-            RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-        stages' current = elClass "div" "box" $ do
-            eChord <- el "header" $ do
-                settings navLang
-                message
-                stenoInput @key navLang
+  where
+    stages' ::
+        Stage ->
+        RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    stages' current = elClass "div" "box" $ do
+        eChord <- el "header" $ do
+            settings navLang
+            message
+            stenoInput @key navLang
 
-            navigation <- elClass "div" "row" $ mdo
-                toc navLang current
+        navigation <- elClass "div" "row" $ mdo
+            toc navLang current
 
-                let setEnv =
-                        let navMPrevious = mPrev current
-                            navCurrent = current
-                            navMNext = mNext current
-                         in mapRoutedT
-                                ( withReaderT $ \dynState ->
-                                      Env
-                                          { envDynState = dynState,
-                                            envEChord = eChord,
-                                            envNavigation = Navigation {..}
-                                          }
-                                )
-                navigation <-
-                    elAttr "section" ("id" =: "content") $ do
-                        elClass "div" "scrollTop"
-                            $ text
-                            $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
-                        nav <-
-                            elClass "div" "content" $ setEnv $
-                                if
-                                        | $readLoc "introduction" == current -> introduction
-                                        | $readLoc "stage_1-1" == current -> Stage1.exercise1
-                                        | $readLoc "stage_1-2" == current -> Stage1.exercise2
-                                        | $readLoc "stage_1-3" == current -> Stage1.exercise3
-                                        | $readLoc "stage_1-4" == current -> Stage1.exercise4
-                                        | $readLoc "stage_1-5" == current -> Stage1.exercise5
-                                        | $readLoc "stage_1-6" == current -> Stage1.exercise6
-                                        | $readLoc "stage_1-7" == current -> Stage1.exercise7
-                                        | $readLoc "stage_2-1" == current -> Stage2.exercise1
-                                        | $readLoc "stage_2-2" == current -> Stage2.exercise2
-                                        | $readLoc "stage_2-3" == current -> Stage2.exercise3
-                                        | $readLoc "stage_PatSimple_0" == current -> Stage2.exercise4
-                                        | $readLoc "stage_PatReplCommon_0" == current -> Stage3.exercise1
-                                        | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise2
-                                        | $readLoc "stage_PatCodaH_0" == current -> Stage3.exercise3
-                                        | $readLoc "stage_PatCodaR_0" == current -> Stage3.exercise4
-                                        | $readLoc "stage_PatCodaRR_0" == current -> Stage3.exercise5
-                                        | $readLoc "stage_PatCodaHR_0" == current -> Stage3.exercise6
-                                        | $readLoc "stage_PatDt_0" == current -> Stage3.exercise7
-                                        | $readLoc "stage_PatDiphtong_0" == current -> Stage3.exercise8
-                                        | $readLoc "stage_PatReplC_0" == current -> Stage3.exercise9
-                                        | $readLoc "stage_PatCodaGK_0" == current -> Stage3.exercise10
-                                        | $readLoc "stage_PatSZ_0" == current -> Stage3.exercise11
-                                        | $readLoc "stage_PatIJ_0" == current -> Stage3.exercise12
-                                        | $readLoc "stage_PatTsDsPs_0" == current -> Stage3.exercise13
-                                        | $readLoc "stage_PatDiVowel_0" == current -> Stage3.exercise14
-                                        | $readLoc "stage_PatReplH_0" == current -> Stage3.exercise15
-                                        | $readLoc "stage_PatSmallS_0" == current -> Stage3.exercise16
-                                        | $readLoc "patternoverview" == current -> Patterns.overview
-                                        | otherwise ->
-                                            elClass "div" "small anthrazit" $
-                                                text ("Page not implemented: " <> showt current)
-                                                    $> Navigation navLang Nothing ($readLoc "introduction") Nothing
+            let setEnv =
+                    let navMPrevious = mPrev current
+                        navCurrent = current
+                        navMNext = mNext current
+                     in mapRoutedT
+                            ( withReaderT $ \dynState ->
+                                  Env
+                                      { envDynState = dynState,
+                                        envEChord = eChord,
+                                        envNavigation = Navigation {..}
+                                      }
+                            )
+            navigation <- elAttr "section" ("id" =: "content") $ do
+                elClass "div" "scrollTop" $ text
+                    $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
+                nav <- elClass "div" "content" $ setEnv $
+                    if
+                        | $readLoc "introduction" == current -> introduction
+                        | $readLoc "stage_1-1" == current -> Stage1.exercise1
+                        | $readLoc "stage_1-2" == current -> Stage1.exercise2
+                        | $readLoc "stage_1-3" == current -> Stage1.exercise3
+                        | $readLoc "stage_1-4" == current -> Stage1.exercise4
+                        | $readLoc "stage_1-5" == current -> Stage1.exercise5
+                        | $readLoc "stage_1-6" == current -> Stage1.exercise6
+                        | $readLoc "stage_1-7" == current -> Stage1.exercise7
+                        | $readLoc "stage_2-1" == current -> Stage2.exercise1
+                        | $readLoc "stage_2-2" == current -> Stage2.exercise2
+                        | $readLoc "stage_2-3" == current -> Stage2.exercise3
+                        | $readLoc "stage_PatSimple_0" == current -> Stage2.exercise4
+                        | $readLoc "stage_PatReplCommon_0" == current -> Stage3.exercise1
+                        | $readLoc "stage_PatSmallS_0" == current -> Stage3.exercise2
+                        | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise3
+                        | $readLoc "stage_PatCodaH_0" == current -> Stage3.exercise4
+                        | $readLoc "stage_PatCodaR_0" == current -> Stage3.exercise5
+                        | $readLoc "stage_PatCodaRR_0" == current -> Stage3.exercise6
+                        | $readLoc "stage_PatCodaHR_0" == current -> Stage3.exercise7
+                        | $readLoc "stage_PatDt_0" == current -> Stage3.exercise8
+                        | $readLoc "stage_PatDiphtong_0" == current -> Stage3.exercise9
+                        | $readLoc "stage_PatReplC_0" == current -> Stage3.exercise10
+                        | $readLoc "stage_PatCodaGK_0" == current -> Stage3.exercise11
+                        | $readLoc "stage_PatSZ_0" == current -> Stage3.exercise12
+                        | $readLoc "stage_PatIJ_0" == current -> Stage3.exercise13
+                        | $readLoc "stage_PatSwapS_0" == current -> Stage3.exercise14
+                        | $readLoc "stage_PatSwapSch_0" == current -> Stage3.exercise15
+                        | $readLoc "stage_PatSwapZ_0" == current -> Stage3.exercise16
+                        | $readLoc "stage_PatDiVowel_0" == current -> Stage3.exercise17
+                        | $readLoc "stage_PatReplH_0" == current -> Stage3.exercise18
+                        | $readLoc "patternoverview" == current -> Patterns.overview
+                        | otherwise ->
+                            elClass "div" "small anthrazit" $
+                                text ("Page not implemented: " <> showt current)
+                                    $> Navigation navLang Nothing ($readLoc "introduction") Nothing
 
-                        elClass "div" "scrollBottom"
-                            $ text
-                            $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
-                        pure nav
-                pure navigation
-            elFooter navLang navigation
+                elClass "div" "scrollBottom"
+                    $ text
+                    $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
+                pure nav
+            pure navigation
+        elFooter navLang navigation
