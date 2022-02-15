@@ -21,12 +21,11 @@ import Client
       request,
     )
 import Common.Route (FrontendRoute (..))
-import Common.Stage.TH (readLoc)
 import Control.Applicative
     ( (<$>),
       Applicative (pure),
     )
-import Control.Category (Category ((.), id))
+import Control.Category (Category ((.), id), (<<<))
 import Control.Lens
     ( (%~),
       (<&>),
@@ -107,7 +106,7 @@ import Palantype.Common
       fromChord,
     )
 import Palantype.Common (kiBackUp, kiEnter)
-import Palantype.Common (RawSteno (..), parseStenoLenient)
+import Palantype.Common (RawSteno (..), parseStenoMaybe)
 import qualified Palantype.Common.Indices as KI
 import Palantype.DE (Pattern (..))
 import Reflex.Dom
@@ -151,7 +150,9 @@ import State
     )
 import System.Random (newStdGen)
 import System.Random.Shuffle (shuffleM)
+import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
+import Palantype.Common.TH (fromJust, readLoc)
 
 -- Ex. 2.1
 
@@ -253,7 +254,7 @@ walkWords words raw = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
-    let chords = parseStenoLenient raw
+    let chords = $fromJust $ parseStenoMaybe raw
         len = length chords
         step :: Chord key -> WalkState -> WalkState
         step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
@@ -398,7 +399,7 @@ exercise2 = do
                     \output."
 
             -- TODO: punctuation
-            let raw = "MID DEM WISn WÄKSD DEÜ SWEI/FEL"
+            let raw = "MID DEM WISn WÄ+GSD DEÜ SWEI/FEL"
                 txt = "Mit dem Wissen wächst der Zweifel"
 
             eDone <- walkWords (Text.words txt) raw

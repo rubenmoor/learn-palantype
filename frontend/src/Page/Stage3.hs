@@ -4,6 +4,7 @@ module Page.Stage3 where
 
 import Client (getDictDE', getDocDEPattern', postRender, request)
 import Common.Route (FrontendRoute)
+import Control.Category ((<<<))
 import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
@@ -16,9 +17,10 @@ import Palantype.Common (Lang (..), Palantype, toDescription)
 import Palantype.DE (Pattern (..))
 import Reflex.Dom (DomBuilder, EventWriter, MonadHold, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
 import State (stageUrl, Env (..), Navigation (..), State)
+import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
-import Common.Stage.TH (readLoc)
-import Common.Stage (stageMeta, StageMeta(StageSubLevel))
+import Palantype.Common.TH (readLoc, failure)
+import Common.Stage (stageMeta, StageMeta(..))
 
 exercise ::
     forall key t (m :: * -> *).
@@ -106,7 +108,9 @@ exercise1 =
                   "First of all, note that these patterns are in addition to the \
                   \simple patterns of the previous "
               let stageSimplePatterns = $readLoc "stage_PatSimple_0"
-                  StageSubLevel iS iE _ = stageMeta stageSimplePatterns
+                  (iS, iE) = case stageMeta stageSimplePatterns of
+                      StageSubLevel jS jE _ -> (jS, jE)
+                      StageTopLevel {}  -> $failure "StageSubLebel expected"
               routeLink (stageUrl navLang stageSimplePatterns) $
                   text $ "Exercise " <> showt iS <> "." <> showt iE
               text ". Thus, if you are missing a letter, it might be among the \
@@ -349,7 +353,9 @@ exercise6 =
               el "code" $ text "+D"
               text " in "
               let stageReplCommon0 = $readLoc "stage_PatReplCommon_0"
-                  StageSubLevel iS iE _ = stageMeta stageReplCommon0
+                  (iS, iE) = case stageMeta stageReplCommon0 of
+                    StageSubLevel jS jE _ -> (jS, jE)
+                    StageTopLevel {}      -> $failure "StageSubLevel expected"
               routeLink (stageUrl lang stageReplCommon0) $
                   text $ "Exercise " <> showt iS <> "." <> showt iE
               text ". Naively following the rule of reaching "

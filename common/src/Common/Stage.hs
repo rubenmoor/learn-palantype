@@ -18,7 +18,6 @@ module Common.Stage
     ( Stage (),
       mPrev,
       mNext,
-      readLoc,
       stageMeta,
       StageMeta (..),
     )
@@ -50,12 +49,17 @@ import Text.Show (Show)
 import TextShow (TextShow (showb), fromText)
 import Palantype.Common (Palantype(toDescription))
 import Palantype.DE (Pattern(..))
-import Text.Read (get, Read (readPrec))
+import Text.Read (readMaybe, read, get, Read (readPrec))
 import Control.Applicative (Applicative(pure))
 import Control.Monad (guard)
-import Common.Stage.TH (readLoc)
+import Palantype.Common.TH (failure, readLoc)
 import Control.Applicative (Alternative(some))
 
+{-|
+The complete type is given along with `strsStage`.
+Any string within that list is a valid stage,
+serving as route slug.
+-}
 newtype Stage = Stage {unStage :: Text}
     deriving stock (Eq, Generic, Ord, Show)
 

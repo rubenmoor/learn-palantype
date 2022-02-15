@@ -34,10 +34,11 @@ import Common.Api
 import Common.Route
     ( FrontendRoute (..),
     )
-import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, readLoc, stageMeta)
+import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
+import Palantype.Common.TH (readLoc)
 import Control.Applicative (Applicative (..))
 import Control.Category
-    ( (>>>),
+    ( (>>>), (<<<),
       Category ((.), id),
     )
 import Control.Lens
@@ -236,6 +237,7 @@ import State
       stageUrl,
       updateState,
     )
+import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
 
 default (Text)

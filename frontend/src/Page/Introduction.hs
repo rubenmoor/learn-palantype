@@ -15,6 +15,7 @@ module Page.Introduction where
 
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
+import Control.Category ((<<<))
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
@@ -38,7 +39,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , SetRoute(setRoute)
                                                 )
 import           Palantype.Common               (Lang(..),  Palantype )
-import           Palantype.Common.RawSteno      ( parseChordLenient )
+import           Palantype.Common.RawSteno      ( parseChordMaybe )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
@@ -57,8 +58,10 @@ import           State                          ( Env(..)
                                                 , State
                                                 , updateState
                                                 )
+import Text.Read (readMaybe)
 import           TextShow                       ( TextShow(showt) )
-import Common.Stage.TH (readLoc)
+import Palantype.Common.TH (readLoc)
+import Palantype.Common.TH (fromJust)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -163,7 +166,7 @@ introduction = do
     let (rsStart, desc) = case navLang of
             EN -> ("START", "S-, T-, A, -R, and -T")
             DE -> ("SDAÜD", "S-, D-, A-, -Ü, -D")
-        eChordSTART = void $ filter (== parseChordLenient rsStart) envEChord
+        eChordSTART = void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
 
     elClass "div" "start" $ do
         (btn, _) <- elClass' "button" "start" $ text "Get Started!"
