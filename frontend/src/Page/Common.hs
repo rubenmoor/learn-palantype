@@ -88,7 +88,7 @@ import Palantype.Common
 import Palantype.Common (kiBackUp, kiEnter)
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    ( (=:),
+    (holdUniqDyn, uniqDynamic,  (=:),
       DomBuilder,
       EventName (Click),
       EventWriter,
@@ -126,6 +126,7 @@ import State
 import System.Random.Shuffle (shuffleM)
 import TextShow (showt)
 import Text.Read (read)
+import Data.Functor (Functor(fmap))
 
 elFooter ::
     forall t (m :: * -> *).
@@ -258,7 +259,7 @@ loading =
 
 data StenoWordsState = StenoWordsState
     { swsCounter :: Int,
-      swsDone :: Maybe Bool,
+      swsDone :: Bool,
       swsChords :: [RawSteno],
       swsWords :: [Text],
       swsNMistakes :: Int,
@@ -294,13 +295,12 @@ taskWords mapStenoWord mapWordStenos = do
                 let len = Map.size mapWordStenos
                     step :: Chord key -> StenoWordsState -> StenoWordsState
                     step c ls@StenoWordsState {..} =
-                        -- let raw = Text.intercalate "/" $ showt <$> swsChords ++ [fromChord c]
                         case (fromChord c, swsWords `atMay` swsCounter) of
                             -- reset after done
                             (_, Nothing) ->
                                 let words' = evalRand (shuffleM swsWords) stdGen
                                  in ls
-                                        { swsDone = Just False,
+                                        { swsDone = False,
                                           swsCounter = 0,
                                           swsWords = words',
                                           swsMHint = Nothing
@@ -310,40 +310,30 @@ taskWords mapStenoWord mapWordStenos = do
                                 case initMay swsChords of
                                     Just cs ->
                                         ls
-                                            { swsDone = Nothing,
-                                              swsChords = cs,
+                                            { swsChords = cs,
                                               swsNMistakes = succ swsNMistakes,
                                               swsMHint = Nothing
                                             }
                                     Nothing ->
-                                        ls
-                                            { swsMHint = Just $ Map.findWithDefault [] word mapWordStenos
-                                            }
+                                        ls { swsMHint = Just $ Map.findWithDefault [] word mapWordStenos
+                                           }
                             (raw, Just word) ->
                                 let rawWord = unparts $ swsChords <> [raw]
                                     isCorrect = Map.findWithDefault "" rawWord mapStenoWord == word
                                  in if isCorrect
                                         then -- correct
-
-                                            ls
-                                                { swsDone =
-                                                      if swsCounter == pred len
-                                                          then Just True
-                                                          else Nothing,
-                                                  swsCounter = swsCounter + 1,
-                                                  swsMHint = Nothing,
-                                                  swsChords = []
-                                                }
+                                            ls { swsDone = swsCounter == pred len
+                                               , swsCounter = swsCounter + 1
+                                               , swsMHint = Nothing
+                                               , swsChords = []
+                                               }
                                         else
-                                            ls
-                                                { swsDone = Nothing,
-                                                  swsChords = swsChords <> [raw]
-                                                }
+                                            ls { swsChords = swsChords <> [raw] }
                     stepInitial =
                         StenoWordsState
                             { swsCounter = 0,
                               swsChords = [],
-                              swsDone = Nothing,
+                              swsDone = False,
                               swsWords = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen,
                               swsNMistakes = 0,
                               swsMHint = Nothing
@@ -351,7 +341,8 @@ taskWords mapStenoWord mapWordStenos = do
 
                 dynStenoWords <- foldDyn step stepInitial eChord
 
-                let eDone = catMaybes $ swsDone <$> updated dynStenoWords
+                dynDone <- holdUniqDyn $ swsDone <$> dynStenoWords
+                let eDone = updated dynDone
 
                 elClass "div" "taskWords"
                     $ dyn_
@@ -385,18 +376,15 @@ taskWords mapStenoWord mapWordStenos = do
                                 el "br" blank
 
                 let dynCounter = swsCounter <$> dynStenoWords
-                dyn_ $
-                    dynCounter <&> \c -> elClass "div" "paragraph" $ do
+                dyn_ $ dynCounter <&> \c ->
+                    elClass "div" "paragraph" $ do
                         el "strong" $ text $ showt c
                         text " / "
                         text $ showt len
 
-                dynDone <- holdDyn False eDone
-                dyn_ $
-                    dynDone <&> \bDone ->
-                        when bDone $ elClass "div" "small anthrazit" $
-                            text
-                                "Cleared. Press any key to start over."
+                dyn_ $ dynDone <&> \bDone ->
+                    when bDone $ elClass "div" "small anthrazit" $
+                        text "Cleared. Press any key to start over."
 
                 pure $ void $ filter id eDone
 

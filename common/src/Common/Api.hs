@@ -41,6 +41,8 @@ type RoutesApi = "api" :>
      :<|> "dict"   :> "DE" :> Capture "pattern-group" DE.Pattern
                            :> Capture "greediness" Greediness
                            :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
+     :<|> "dict"   :> "DE" :> "Numbers"
+                           :> Get '[JSON] (Map RawSteno Text)
      )
 
 type Routes = RoutesApi

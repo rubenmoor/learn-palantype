@@ -106,7 +106,12 @@ getDictDE'
 getDictDE' p g =
   getDictDE (constDyn $ Right p) (constDyn $ Right g)
 
-postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE =
+getDictDENumbers
+  :: SupportsServantReflex t m
+  => Event t ()
+  -> m (Event t (ReqResult () (Map RawSteno Text)))
+
+postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

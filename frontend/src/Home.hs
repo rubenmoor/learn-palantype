@@ -66,7 +66,7 @@ import Control.Monad.Reader
       withReaderT,
     )
 import Data.Bool
-    (Bool (..),
+    ((&&), (||), Bool (..),
       bool,
       not,
       otherwise,
@@ -95,11 +95,11 @@ import Data.Generics.Product (field)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe
-    ( Maybe (..),
+    (isJust, fromMaybe,  Maybe (..),
       listToMaybe,
     )
 import Data.Monoid ((<>))
-import Data.Ord (Ord)
+import Data.Ord ((>), Ord)
 import Data.Proxy (Proxy (..))
 import Data.Semigroup (Endo (..))
 import Data.Set (Set)
@@ -173,7 +173,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    ( (=:),
+    ((=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -241,6 +241,7 @@ import State
     )
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
+import qualified Palantype.Common.Numbers as Numbers
 
 default (Text)
 
@@ -472,20 +473,7 @@ data StateInput key = StateInput
   -- state upon release, whereas dynDownKeys changes state
   -- every time a new key is pushed down AND upon release
   , stiMChord      :: Maybe (Chord key)
-
-  -- | whether or not number input mode is active
-  , stiNumberMode  :: Maybe Bool
   }
-
-setModeKeys :: Palantype key => Set key
-setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
-
-modeKeysInKeyStates :: Palantype key => [KeyState key] -> Bool
-modeKeysInKeyStates = foldl acc False
-  where
-    acc True _ = True
-    acc False (KeyStateUp   k) = k `Set.member` setModeKeys
-    acc False (KeyStateDown k) = k `Set.member` setModeKeys
 
 stenoInput ::
     forall key t (m :: * -> *).
@@ -533,17 +521,10 @@ stenoInput lang = do
                             , Nothing
                             )
 
-                    -- check if one of the mode keys (DE: W, N) has been
-                    -- pressed or released
-                    stiNumberMode = if modeKeysInKeyStates es
-                      then Just $ setModeKeys `Set.isSubsetOf` stiKeysPressed'
-                      else Nothing
-
                 in  StateInput
                       { stiKeysPressed = stiKeysPressed'
                       , stiKeysDown    = stiKeysDown'
                       , stiMChord
-                      , stiNumberMode
                       }
                  -- in (setKeys', word', release')
                 where
@@ -555,10 +536,8 @@ stenoInput lang = do
         dynInput <-
             foldDyn
                 register
-                (StateInput Set.empty Set.empty Nothing Nothing)
+                (StateInput Set.empty Set.empty Nothing)
                 eKeyChange
-
-        dynNumberMode <- holdDyn False $ catMaybes $ updated $ stiNumberMode <$> dynInput
 
         let
             dynClass = bool "displayNone" "" <$> dynShowKeyboard
@@ -630,6 +609,7 @@ stenoInput lang = do
         performEvent_ $ eChordUp $> void (liftJSM $ eval jsUp)
 
         pure eChordOther
+
 
 elKeyboard ::
     forall key t (m :: * -> *).
@@ -769,23 +749,38 @@ elCell ::
     Text ->
     m1 ()
 elCell stenoKeys dynPressedKeys i colspan strCls =
+  -- -- | whether or not number input mode is active
+  --, stiNumberMode  :: Bool
+  -- -- check if the mode keys (DE: W, N) are being pressed
     case Map.lookup i stenoKeys of
         Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "inactive") blank
         Just qwerties -> do
             let k = fromIndex i
+                strNumberMode = fromMaybe "_" $ Numbers.fromIndex i
                 inactive = keyCode k == '_'
                 attrs = dynPressedKeys <&> \set' ->
-                    let lsClass =
-                            catMaybes
-                                [ if Set.member k set' then Just "pressed" else Nothing
-                                , if inactive then Just "inactive" else Nothing
-                                ]
-                     in "colspan" =: colspan <> "class"
-                            =: unwords
-                                (strCls : lsClass)
+                    let
+                        isNumberMode = setModeKeys `Set.isSubsetOf` set'
+                        hasNumberMode = isJust $ Numbers.fromIndex i
+                        lsClass = catMaybes
+                            [ if k `Set.member` set' then Just "pressed" else Nothing
+                            , if isNumberMode then Just "numberMode" else Nothing
+                            , if inactive || (isNumberMode && not hasNumberMode)
+                                  then Just "inactive"
+                                  else Nothing
+                            , if Text.length strNumberMode > 2
+                                  then Just "small"
+                                  else Nothing
+                            ]
+                     in
+                           "colspan" =: colspan
+                        <> "class"   =: unwords (strCls : lsClass)
             elDynAttr "td" attrs $ do
                 elClass "div" "steno" $ text $ showt k
+                elClass "div" "numberMode" $ text strNumberMode
                 elClass "div" "qwerty" $ text $ Text.unwords qwerties
+  where
+    setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
 
 elStenoOutput ::
     forall key t (m :: * -> *).
@@ -796,11 +791,11 @@ elStenoOutput dynDownKeys = mdo
     let eFocus = updated (_inputElement_hasFocus i) <&> \case
             True -> ("Type!", "class" =: Just "anthrazit")
             False -> ("Click me!", "class" =: Just "red")
-        eTyping = updated dynDownKeys <&> \pressedKeys ->
-            if Set.null pressedKeys
+        eTyping = updated dynDownKeys <&> \downKeys ->
+            if Set.null downKeys
                 then ("...", "class" =: Nothing)
                 else
-                    ( showt $ mkChord $ Set.elems pressedKeys,
+                    ( showt $ mkChord $ Set.elems downKeys,
                       "class" =: Nothing
                     )
         eChange = leftmost [eFocus, eTyping]

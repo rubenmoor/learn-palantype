@@ -96,6 +96,7 @@ handlers =
   :<|> handleDocDEPatternAll
   :<|> handleDocDEPattern
   :<|> handleDictDE
+  :<|> handleDictDENumbers
 
 -- handleDocDEPatternAll
 
@@ -141,6 +142,17 @@ handleDictDE p g = do
               , Map.insertWith (<>) w [s] mWSs
               )
            ) (Map.empty, Map.empty) ls
+
+handleDictDENumbers :: Snap (Map RawSteno Text)
+handleDictDENumbers = do
+  let
+      errCouldNotDecode = err500
+          { errBody = "Could not load map palantype-DE-numbers"
+          }
+
+  mMap <- liftIO $ Json.decodeFileStrict'
+      $(staticFilePath "palantype-DE-numbers.json")
+  maybe (Snap.throwError errCouldNotDecode) pure mMap
 
 -- handleConfigNew
 

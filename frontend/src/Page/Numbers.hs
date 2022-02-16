@@ -14,7 +14,7 @@ module Page.Numbers where
 
 --
 
-import Client (getDocDEPatternAll, postRender, request)
+import Client (getDictDENumbers, getDocDEPatternAll, postRender, request)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
 import Control.Monad ((=<<))
@@ -59,63 +59,13 @@ overview = do
 
     el "h1" $ text "Typing numbers"
 
-    ePb <- postRender $ delay 0.1 =<< getPostBuild
-    eEDoc <- request $ getDocDEPatternAll ePb
+    evPb <- postRender $ delay 0.1 =<< getPostBuild
+    evEDict <- request $ getDictDENumbers evPb
 
     widgetHold_ loading $
-        eEDoc <&> \case
+        evEDict <&> \case
             Left str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-            Right (patternDoc, m) -> do
-                -- TOC embedded in content
-                let iPatternDoc = zip [1 ..] patternDoc
-                elClass "div" "embeddedToc" $ mdo
-                    dynToggle <- foldDyn (\_ -> not) False (domEvent Click elToggle)
-                    elToggle <- el "div" $ do
-                        el "strong" $ text "Contents"
-                        text " ("
-                        (elT, _) <- elClass' "a" "normalLink" $ dynText $ bool "show" "hide" <$> dynToggle
-                        text ")"
-                        pure elT
-                    let dynCls = bool "displayNone" "block" <$> dynToggle
-                    elDynClass "ul" dynCls $ for_ iPatternDoc \(i, (p, _)) -> do
-                        el "li" $ elAttr "a" ("href" =: ("#" <> showt p))
-                            $ text
-                            $ showt @Int i <> " " <> toDescription p
-
-                -- pattern documentation content
-                for_ iPatternDoc \(i, (p, lsPattern)) -> do
-                    elAttr "h2" ("id" =: showt p)
-                        $ elAttr "a" ("href" =: ("#" <> showt p))
-                        $ text
-                        $ showt i <> " " <> toDescription p
-                    el "div" $ for_ lsPattern $ \(g, doc) -> do
-                        let (n, lsExamples) =
-                                Map.findWithDefault (0, []) g $ Map.findWithDefault Map.empty p m
-                        el "h3" $ do
-                            text $ "Greediness " <> showt g
-                            case readMaybe $ "stage_" <> show p <> "_" <> show g of
-                                Just stage -> routeLink (stageUrl navLang stage) $ iFa "fas fa-book-open"
-                                Nothing -> elClass "span" "lightgray" $ iFa "fas fa-book-open"
-
-                        elClass "div" "patternExamples" $ mdo
-                            elClass "strong" "floatLeft" $ text "Examples"
-                            (btn, _) <- elClass' "button" "floatLeft" $ dyn_ $
-                                dynToggle <&> \case
-                                    False -> iFa "fas fa-plus"
-                                    True -> iFa "fas fa-minus"
-                            elClass "em" "floatRight" $ do
-                                text "# total: "
-                                text $ showt n
-                            elClass "br" "clearBoth" blank
-
-                            dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
-                            let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
-                            elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
-                                el "span" $ text w
-                                text " "
-                                el "code" $ text $ showt s
-                                text ", "
-
-                        elPatterns doc
+            Right map -> do
+              blank
 
     pure envNavigation

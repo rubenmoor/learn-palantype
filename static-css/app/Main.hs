@@ -471,7 +471,12 @@ main = putCss $ do
                     backgroundColor myLightgray
                     color anthrazit
                     div # ".steno" ? visibility hidden
+                    div # ".numberMode" ? visibility hidden
                 ".inactive.pressed" & boxShadow (pure none)
+                ".numberMode" & do
+                    div # ".steno" ? display none
+                    div # ".numberMode" ? display block
+                ".numberMode.small" & div # ".numberMode" ? fontSize (pt 10)
 
                 div ? do
                     ".steno" & do
@@ -481,6 +486,10 @@ main = putCss $ do
                         fontSize $ pt 10
                         color gray
                         marginTop $ px (-6)
+                    ".numberMode" & do
+                        fontWeight bold
+                        fontSize $ pt 18
+                        display none
 
     -- span # ".btnHeader" ? do
     --     color gray
