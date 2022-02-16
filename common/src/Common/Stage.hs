@@ -123,6 +123,7 @@ strsStage =
       "stage_PatDiVowel_0",
       "stage_PatReplH_0",
       "stage_PatSmallS_0",
+      "numbers",
       "patternoverview"
     ]
 
@@ -174,5 +175,6 @@ stageMeta = unStage >>> \case
     "stage_PatSwapZ_0"       -> StageSubLevel 3 16 $ toDescription PatSwapZ
     "stage_PatDiVowel_0"     -> StageSubLevel 3 17 $ toDescription PatDiVowel
     "stage_PatReplH_0"       -> StageSubLevel 3 18 $ toDescription PatReplH
+    "numbers"                -> StageTopLevel "Typing numbers"
     "patternoverview"        -> StageTopLevel "Pattern overview"
     str          -> error $ "stageMeta: Invalid stage id: " <> Text.unpack str

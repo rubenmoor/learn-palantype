@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -65,7 +66,7 @@ import Control.Monad.Reader
       withReaderT,
     )
 import Data.Bool
-    ( Bool (..),
+    (Bool (..),
       bool,
       not,
       otherwise,
@@ -74,7 +75,7 @@ import Data.Default (Default (def))
 import Data.Either (Either (..))
 import Data.Eq (Eq ((==)))
 import Data.Foldable
-    ( Foldable (foldl, null),
+    (Foldable (foldl, null),
       concat,
     )
 import Data.Function
@@ -154,6 +155,7 @@ import Page.Common
     )
 import Page.Introduction (introduction)
 import qualified Page.Patterns as Patterns
+import qualified Page.Numbers as Numbers
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
@@ -455,6 +457,36 @@ data FanChord
     | FanOther
     deriving (Eq, Ord)
 
+data StateInput key = StateInput
+  {
+    -- | the set of keys that are currently pressed
+    stiKeysPressed :: Set key
+
+  -- | the set of keys that have been pressed since the last
+  --   release; a release is the event of no key pressed
+  , stiKeysDown    :: Set key
+
+  -- | a key chord, made from the set of keys that have been
+  -- pressed since the last release
+  -- the difference to `dynDownKeys`: dynChord changes
+  -- state upon release, whereas dynDownKeys changes state
+  -- every time a new key is pushed down AND upon release
+  , stiMChord      :: Maybe (Chord key)
+
+  -- | whether or not number input mode is active
+  , stiNumberMode  :: Maybe Bool
+  }
+
+setModeKeys :: Palantype key => Set key
+setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
+
+modeKeysInKeyStates :: Palantype key => [KeyState key] -> Bool
+modeKeysInKeyStates = foldl acc False
+  where
+    acc True _ = True
+    acc False (KeyStateUp   k) = k `Set.member` setModeKeys
+    acc False (KeyStateDown k) = k `Set.member` setModeKeys
+
 stenoInput ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
@@ -470,117 +502,134 @@ stenoInput ::
 stenoInput lang = do
     dynPloverCfg <- asks (stPloverCfg <$>)
     dynShowKeyboard <- asks (stShowKeyboard <$>)
-    dynSimple $
-        dynPloverCfg
-            <&> view (_Wrapped' . at lang . non def)
-            <&> \PloverSystemCfg {..} ->
-                postRender $ elClass "div" "stenoInput" $ mdo
-                    let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
-                            [ keydown (fromIntegral qwertyKey) kbInput
-                                  $> [KeyStateDown $ fromIndex kI],
-                              keyup qwertyKey kbInput
-                                  $> [KeyStateUp $ fromIndex kI]
-                            ]
-                        eKeyChange = mergeWith (<>) $ concat keyChanges
-                        register ::
-                            [KeyState key] ->
-                            (Set key, Set key, Maybe (Chord key)) ->
-                            (Set key, Set key, Maybe (Chord key))
-                        register es (keys, word, _) =
-                            let setKeys' = foldl accDownUp keys es
-                                (word', release') =
-                                    if Set.null setKeys'
-                                        then
-                                            ( Set.empty,
-                                              Just $ mkChord $ Set.elems word
-                                            )
-                                        else (foldl accDown word es, Nothing)
-                             in (setKeys', word', release')
-                            where
-                                accDownUp s (KeyStateDown k) = Set.insert k s
-                                accDownUp s (KeyStateUp k) = Set.delete k s
-                                accDown s (KeyStateDown k) = Set.insert k s
-                                accDown s (KeyStateUp _) = s
+    dynSimple $ dynPloverCfg
+        <&> view (_Wrapped' . at lang . non def)
+        <&> \pcfg -> postRender
+                     $ elClass "div" "stenoInput"
+                     $ stenoInput' pcfg dynShowKeyboard
+  where
+    stenoInput' PloverSystemCfg{..} dynShowKeyboard = mdo
+        let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
+                [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
+                , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
+                ]
+            eKeyChange = mergeWith (<>) $ concat keyChanges
 
-                    dynInput <-
-                        foldDyn
-                            register
-                            (Set.empty, Set.empty, Nothing)
-                            eKeyChange
-                    let dynPressedKeys = dynInput <&> \(keys, _, _) -> keys
-                        dynDownKeys = dynInput <&> \(_, down, _) -> down
-                        dynChord = dynInput <&> \(_, _, release) -> release
+            register
+              :: [KeyState key]
+              -> StateInput key
+              -> StateInput key
+            register es StateInput{ stiKeysPressed, stiKeysDown } =
+                let
+                    stiKeysPressed' = foldl accDownUp stiKeysPressed es
+                    (stiKeysDown', stiMChord) =
+                        if Set.null stiKeysPressed'
+                        then
+                            ( Set.empty
+                            , Just $ mkChord $ Set.elems stiKeysDown
+                            )
+                        else
+                            ( foldl accDown stiKeysDown es
+                            , Nothing
+                            )
 
-                    let dynClass = bool "displayNone" "" <$> dynShowKeyboard
-                    elDynClass "div" dynClass $ case lang of
-                        -- a bit of a hack to switch to the original Palantype
-                        -- keyboard layout for English
-                        -- that original layout I will consider the exception
-                        EN ->
-                            elKeyboardEN
-                                pcfgName
-                                pcfgMapStenoKeys
-                                dynPressedKeys
-                        _ ->
-                            elKeyboard
-                                pcfgName
-                                pcfgMapStenoKeys
-                                dynPressedKeys
-                                lang
+                    -- check if one of the mode keys (DE: W, N) has been
+                    -- pressed or released
+                    stiNumberMode = if modeKeysInKeyStates es
+                      then Just $ setModeKeys `Set.isSubsetOf` stiKeysPressed'
+                      else Nothing
 
-                    kbInput <- elStenoOutput dynDownKeys
+                in  StateInput
+                      { stiKeysPressed = stiKeysPressed'
+                      , stiKeysDown    = stiKeysDown'
+                      , stiMChord
+                      , stiNumberMode
+                      }
+                 -- in (setKeys', word', release')
+                where
+                    accDownUp s (KeyStateDown k) = Set.insert k s
+                    accDownUp s (KeyStateUp   k) = Set.delete k s
+                    accDown   s (KeyStateDown k) = Set.insert k s
+                    accDown   s (KeyStateUp   _) = s
 
-                    -- TODO: doesn't seem to have the desired effect
-                    let eLostFocus =
-                            filter not $ updated $
-                                _inputElement_hasFocus
-                                    kbInput
-                    performEvent_ $
-                        eLostFocus
-                            $> focus
-                                (_inputElement_raw kbInput)
+        dynInput <-
+            foldDyn
+                register
+                (StateInput Set.empty Set.empty Nothing Nothing)
+                eKeyChange
 
-                    -- post build auto focus: the post build event happens before the element
-                    -- is mounted. postmount event waits for pull request to be accepted
-                    -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
-                    ePb <- delay 0.1 =<< getPostBuild
-                    performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
+        dynNumberMode <- holdDyn False $ catMaybes $ updated $ stiNumberMode <$> dynInput
 
-                    let eChordAll = catMaybes $ updated dynChord
-                        selector = fanMap $
-                            eChordAll <&> \c ->
-                                if
-                                        | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
-                                        | fromChord c == KI.toRaw @key kiDown -> Map.singleton FanDown c
-                                        | fromChord c == KI.toRaw @key kiUp -> Map.singleton FanUp c
-                                        | otherwise -> Map.singleton FanOther c
-                        eChordToggle = select selector (Const2 FanToggle)
-                        eChordDown = select selector (Const2 FanDown)
-                        eChordUp = select selector (Const2 FanUp)
-                        eChordOther = select selector (Const2 FanOther)
+        let
+            dynClass = bool "displayNone" "" <$> dynShowKeyboard
+        elDynClass "div" dynClass $ case lang of
+            -- a bit of a hack to switch to the original Palantype
+            -- keyboard layout for English
+            -- that original layout I will consider the exception
+            EN ->
+                elKeyboardEN
+                    pcfgName
+                    pcfgMapStenoKeys
+                    (stiKeysPressed <$> dynInput)
+            _ ->
+                elKeyboard
+                    pcfgName
+                    pcfgMapStenoKeys
+                    (stiKeysPressed <$> dynInput)
+                    lang
 
-                    updateState $
-                        eChordToggle $> [field @"stShowKeyboard" %~ not]
+        kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
 
-                    -- this is a workaround
-                    -- scroll, like focus, is not available in reflex dom
-                    -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
-                    -- GhcjsDomSpace requires the elements to be build post render
-                    let jsDown =
-                            "let el = document.getElementById(\"content\"); \
-                            \el.scrollBy(0,100)" ::
-                                Text
-                    performEvent_ $
-                        eChordDown
-                            $> void
-                                (liftJSM $ eval jsDown)
-                    let jsUp =
-                            "let el = document.getElementById(\"content\"); \
-                            \el.scrollBy(0,-100)" ::
-                                Text
-                    performEvent_ $ eChordUp $> void (liftJSM $ eval jsUp)
+        -- TODO: doesn't seem to have the desired effect
+        let eLostFocus =
+                filter not $ updated $
+                    _inputElement_hasFocus
+                        kbInput
+        performEvent_ $
+            eLostFocus
+                $> focus
+                    (_inputElement_raw kbInput)
 
-                    pure eChordOther
+        -- post build auto focus: the post build event happens before the element
+        -- is mounted. postmount event waits for pull request to be accepted
+        -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
+        ePb <- delay 0.1 =<< getPostBuild
+        performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
+
+        let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
+            selector = fanMap $
+                eChordAll <&> \c -> if
+                    | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
+                    | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+                    | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
+                    | otherwise                             -> Map.singleton FanOther c
+            eChordToggle = select selector (Const2 FanToggle)
+            eChordDown   = select selector (Const2 FanDown  )
+            eChordUp     = select selector (Const2 FanUp    )
+            eChordOther  = select selector (Const2 FanOther )
+
+        updateState $
+            eChordToggle $> [field @"stShowKeyboard" %~ not]
+
+        -- this is a workaround
+        -- scroll, like focus, is not available in reflex dom
+        -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
+        -- GhcjsDomSpace requires the elements to be build post render
+        let jsDown =
+                "let el = document.getElementById(\"content\"); \
+                \el.scrollBy(0,100)" ::
+                    Text
+        performEvent_ $
+            eChordDown
+                $> void
+                    (liftJSM $ eval jsDown)
+        let jsUp =
+                "let el = document.getElementById(\"content\"); \
+                \el.scrollBy(0,-100)" ::
+                    Text
+        performEvent_ $ eChordUp $> void (liftJSM $ eval jsUp)
+
+        pure eChordOther
 
 elKeyboard ::
     forall key t (m :: * -> *).
@@ -721,17 +770,15 @@ elCell ::
     m1 ()
 elCell stenoKeys dynPressedKeys i colspan strCls =
     case Map.lookup i stenoKeys of
-        Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "gap") blank
+        Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "inactive") blank
         Just qwerties -> do
             let k = fromIndex i
                 inactive = keyCode k == '_'
                 attrs = dynPressedKeys <&> \set' ->
                     let lsClass =
                             catMaybes
-                                [ if Set.member k set'
-                                      then Just "pressed"
-                                      else Nothing,
-                                  if inactive then Just "inactive" else Nothing
+                                [ if Set.member k set' then Just "pressed" else Nothing
+                                , if inactive then Just "inactive" else Nothing
                                 ]
                      in "colspan" =: colspan <> "class"
                             =: unwords
@@ -927,6 +974,7 @@ toc lang current = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatDiVowel_0"
                         elLi $ $readLoc "stage_PatReplH_0"
 
+                    elLi $ $readLoc "numbers"
                     elLi $ $readLoc "patternoverview"
 
 landingPage ::
@@ -1089,25 +1137,26 @@ stages navLang = do
                         | $readLoc "stage_2-1" == current -> Stage2.exercise1
                         | $readLoc "stage_2-2" == current -> Stage2.exercise2
                         | $readLoc "stage_2-3" == current -> Stage2.exercise3
-                        | $readLoc "stage_PatSimple_0" == current -> Stage2.exercise4
-                        | $readLoc "stage_PatReplCommon_0" == current -> Stage3.exercise1
-                        | $readLoc "stage_PatSmallS_0" == current -> Stage3.exercise2
+                        | $readLoc "stage_PatSimple_0"      == current -> Stage2.exercise4
+                        | $readLoc "stage_PatReplCommon_0"  == current -> Stage3.exercise1
+                        | $readLoc "stage_PatSmallS_0"      == current -> Stage3.exercise2
                         | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise3
-                        | $readLoc "stage_PatCodaH_0" == current -> Stage3.exercise4
-                        | $readLoc "stage_PatCodaR_0" == current -> Stage3.exercise5
-                        | $readLoc "stage_PatCodaRR_0" == current -> Stage3.exercise6
-                        | $readLoc "stage_PatCodaHR_0" == current -> Stage3.exercise7
-                        | $readLoc "stage_PatDt_0" == current -> Stage3.exercise8
-                        | $readLoc "stage_PatDiphtong_0" == current -> Stage3.exercise9
-                        | $readLoc "stage_PatReplC_0" == current -> Stage3.exercise10
-                        | $readLoc "stage_PatCodaGK_0" == current -> Stage3.exercise11
-                        | $readLoc "stage_PatSZ_0" == current -> Stage3.exercise12
-                        | $readLoc "stage_PatIJ_0" == current -> Stage3.exercise13
-                        | $readLoc "stage_PatSwapS_0" == current -> Stage3.exercise14
-                        | $readLoc "stage_PatSwapSch_0" == current -> Stage3.exercise15
-                        | $readLoc "stage_PatSwapZ_0" == current -> Stage3.exercise16
-                        | $readLoc "stage_PatDiVowel_0" == current -> Stage3.exercise17
-                        | $readLoc "stage_PatReplH_0" == current -> Stage3.exercise18
+                        | $readLoc "stage_PatCodaH_0"       == current -> Stage3.exercise4
+                        | $readLoc "stage_PatCodaR_0"       == current -> Stage3.exercise5
+                        | $readLoc "stage_PatCodaRR_0"      == current -> Stage3.exercise6
+                        | $readLoc "stage_PatCodaHR_0"      == current -> Stage3.exercise7
+                        | $readLoc "stage_PatDt_0"          == current -> Stage3.exercise8
+                        | $readLoc "stage_PatDiphtong_0"    == current -> Stage3.exercise9
+                        | $readLoc "stage_PatReplC_0"       == current -> Stage3.exercise10
+                        | $readLoc "stage_PatCodaGK_0"      == current -> Stage3.exercise11
+                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise12
+                        | $readLoc "stage_PatIJ_0"          == current -> Stage3.exercise13
+                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise14
+                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise15
+                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise16
+                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise17
+                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise18
+                        | $readLoc "numbers"         == current -> Numbers.overview
                         | $readLoc "patternoverview" == current -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $

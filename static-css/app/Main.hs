@@ -228,8 +228,8 @@ main = putCss $ do
         h3 |> a # hover ? color darkblue
         h3 ? i ? do
           color myLightgray
-          paddingLeft $ em 1
-          paddingRight $ em 1
+          paddingLeft $ em 0.5
+          paddingRight $ em 0.5
     star ? boxSizing borderBox
 
     -- flex layout
