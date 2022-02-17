@@ -988,7 +988,7 @@ landingPage = elClass "div" "landing" $ do
             elClass "div" "countrycode" $ text "DE"
             elClass "div" "description" $
                 text
-                    "100'000+ words and growing. A steno system designed for \
+                    "2 Million words and growing. A steno system designed for \
                     \the German language."
 
         (elEN, _) <- el' "button" $ do

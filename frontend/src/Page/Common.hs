@@ -61,7 +61,6 @@ import qualified Data.Set as Set
 import Data.Text (Text, toLower)
 import Data.Text (length)
 import Data.Witherable (Filterable (filter))
-import Data.Witherable (Filterable (catMaybes))
 import GHC.Enum (Enum (succ), pred)
 import GHC.Float (Double)
 import GHC.Num (Num ((+)))
@@ -88,7 +87,7 @@ import Palantype.Common
 import Palantype.Common (kiBackUp, kiEnter)
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (holdUniqDyn, uniqDynamic,  (=:),
+    (holdUniqDyn, (=:),
       DomBuilder,
       EventName (Click),
       EventWriter,
@@ -126,7 +125,6 @@ import State
 import System.Random.Shuffle (shuffleM)
 import TextShow (showt)
 import Text.Read (read)
-import Data.Functor (Functor(fmap))
 
 elFooter ::
     forall t (m :: * -> *).
@@ -194,7 +192,7 @@ elCongraz eDone Navigation {..} = mdo
                             el "em" $ text "Enter "
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
-                        elClass' "a" "normalLink" (text $ showt nxt)
+                        elClass' "a" "normalLink" $ text $ showt $ stageMeta nxt
                     let eContinue = leftmost [eChordEnter, domEvent Click elACont]
                     updateState $
                         eContinue

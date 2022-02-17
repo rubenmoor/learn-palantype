@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -40,6 +41,7 @@ import State (Env (..), Navigation (..), stageUrl)
 import TextShow (TextShow (showt))
 import Text.Read (readMaybe)
 import Text.Show (Show(show))
+import Obelisk.Generated.Static (static)
 
 overview ::
     forall key t (m :: * -> *).
@@ -62,10 +64,41 @@ overview = do
     evPb <- postRender $ delay 0.1 =<< getPostBuild
     evEDict <- request $ getDictDENumbers evPb
 
-    widgetHold_ loading $
-        evEDict <&> \case
-            Left str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-            Right map -> do
-              blank
+    widgetHold_ loading $ evEDict <&> \case
+        Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
+        Right map -> do
+            elClass "div" "paragraph" $ do
+                text "For typing numbers, the virtual keyboard above can assist \
+                     \you quite a bit. Just hold down "
+                el "code" $ text "WN-"
+                text " and you can see, how to reach numbers and related symbols."
+
+            elClass "div" "paragraph" $
+                elAttr "img" (  "src" =: $(static "numbermode.png")
+                             <> "alt" =: "Keyboard layout in number mode"
+                             ) blank
+
+            elClass "div" "paragraph" $ do
+                text "Note how, apart from the digits 0-9 for the fingers of your \
+                     \right hand, the extra keys for the thumbs allow to input \
+                     \even longer numbers all at once, in particular common dates \
+                     \like "
+                el "em" $ text "1990"
+                text ", or "
+                el "em" $ text "2022"
+                text "."
+
+            elClass "div" "paragraph" $ do
+                text "Also, the input of common shortcuts that involve numbers \
+                     \is possible by adding a modifier key to any input. \
+                     \The available modifiers are "
+                el "code" $ text "Control"
+                text ", "
+                el "code" $ text "Super"
+                text ", and "
+                el "code" $ text "Alt"
+                text ". "
+                el "code" $ text "Super"
+                text " is usually called the Windows-key."
 
     pure envNavigation
