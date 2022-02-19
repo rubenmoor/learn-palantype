@@ -101,4 +101,6 @@ overview = do
                 el "code" $ text "Super"
                 text " is usually called the Windows-key."
 
+    -- TODO: shift key documentation: special characters
+
     pure envNavigation
