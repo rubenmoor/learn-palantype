@@ -95,11 +95,11 @@ import Data.Generics.Product (field)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe
-    (isJust, fromMaybe,  Maybe (..),
+    (fromMaybe,  Maybe (..),
       listToMaybe,
     )
 import Data.Monoid ((<>))
-import Data.Ord ((>), Ord)
+import Data.Ord ((>=), Ord)
 import Data.Proxy (Proxy (..))
 import Data.Semigroup (Endo (..))
 import Data.Set (Set)
@@ -155,10 +155,14 @@ import Page.Common
     )
 import Page.Introduction (introduction)
 import qualified Page.Patterns as Patterns
-import qualified Page.Numbers as Numbers
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
+import Page.Stage4.PloverCommands (ploverCommands)
+import Page.Stage4.Fingerspelling (fingerspelling)
+import Page.Stage4.NumberMode (numberMode)
+import Page.Stage4.CommandKeys (commandKeys)
+import Page.Stage4.SpecialCharacters (specialCharacters)
 import Palantype.Common
     ( Chord (..),
       KeyIndex,
@@ -241,7 +245,7 @@ import State
     )
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
-import qualified Palantype.Common.Numbers as Numbers
+import qualified Palantype.Common.Dictionary.Numbers as Numbers
 
 default (Text)
 
@@ -756,21 +760,42 @@ elCell stenoKeys dynPressedKeys i colspan strCls =
         Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "inactive") blank
         Just qwerties -> do
             let k = fromIndex i
-                strNumberMode = fromMaybe "_" $ Numbers.fromIndex i
-                inactive = keyCode k == '_'
+                (strNumberMode, strNumberModeShift) = case Numbers.fromIndex i of
+                    Nothing -> ("", "")
+                    Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
                 attrs = dynPressedKeys <&> \set' ->
                     let
                         isNumberMode = setModeKeys `Set.isSubsetOf` set'
-                        hasNumberMode = isJust $ Numbers.fromIndex i
+                                     && not (fromIndex 2 `Set.member` set')
+                        isNumberModeShift = setModeKeys `Set.isSubsetOf` set'
+                                         && fromIndex 2 `Set.member` set'
+                        noNumberMode = Text.null strNumberMode
+                        noNumberModeShift = Text.null strNumberModeShift
                         lsClass = catMaybes
                             [ if k `Set.member` set' then Just "pressed" else Nothing
                             , if isNumberMode then Just "numberMode" else Nothing
-                            , if inactive || (isNumberMode && not hasNumberMode)
+                            , if isNumberModeShift then Just "numberModeShift" else Nothing
+                            , if     keyCode k == '_'
+                                  || (isNumberMode && noNumberMode)
+                                  || (isNumberModeShift && noNumberModeShift)
                                   then Just "inactive"
                                   else Nothing
-                            , if Text.length strNumberMode > 2
-                                  then Just "small"
-                                  else Nothing
+                            , if isNumberMode
+                                then
+                                    if Text.length strNumberMode >= 3
+                                        then Just "verySmall"
+                                        else if Text.length strNumberMode >= 2
+                                            then Just "small"
+                                            else Nothing
+                                else Nothing
+                            , if isNumberModeShift
+                                then
+                                    if Text.length strNumberModeShift >= 3
+                                        then Just "verySmall"
+                                        else if Text.length strNumberModeShift >= 2
+                                            then Just "small"
+                                            else Nothing
+                                else Nothing
                             ]
                      in
                            "colspan" =: colspan
@@ -778,6 +803,7 @@ elCell stenoKeys dynPressedKeys i colspan strCls =
             elDynAttr "td" attrs $ do
                 elClass "div" "steno" $ text $ showt k
                 elClass "div" "numberMode" $ text strNumberMode
+                elClass "div" "numberModeShift" $ text strNumberModeShift
                 elClass "div" "qwerty" $ text $ Text.unwords qwerties
   where
     setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
@@ -849,6 +875,7 @@ toc lang current = elClass "section" "toc" $ do
         dynShowStage1 = stTOCShowStage1 <$> dynState
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
+        dynShowStage4 = stTOCShowStage4 <$> dynState
     -- button to toggle TOC
     dyn_ $
         dynShowTOC <&> \showTOC -> do
@@ -944,8 +971,8 @@ toc lang current = elClass "section" "toc" $ do
                         elDynClass "i" dynClass blank
                         text "Stage 3: Common replacement rules"
 
-                    let eClickS3 = domEvent Click s3
-                    updateState $ eClickS3 $> [field @"stTOCShowStage3" %~ not]
+                    updateState $ domEvent Click s3 $>
+                        [field @"stTOCShowStage3" %~ not]
 
                     let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
 
@@ -969,7 +996,24 @@ toc lang current = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatDiVowel_0"
                         elLi $ $readLoc "stage_PatReplH_0"
 
-                    elLi $ $readLoc "numbers"
+                    (s4, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage4
+                        elDynClass "i" dynClass blank
+                        text "Stage 4: Real-life text input"
+
+                    updateState $ domEvent Click s4 $>
+                        [field @"stTOCShowStage4" %~ not]
+
+                    let dynClassUl4 = bool "displayNone" "" <$> dynShowStage4
+                    elDynClass "ul" dynClassUl4 $ do
+                        elLi $ $readLoc "stage_ploverCommands"
+                        elLi $ $readLoc "stage_fingerspelling"
+                        elLi $ $readLoc "stage_numbermode"
+                        elLi $ $readLoc "stage_commandKeys"
+                        elLi $ $readLoc "stage_specialCharacters"
+
                     elLi $ $readLoc "patternoverview"
 
 landingPage ::
@@ -1151,7 +1195,11 @@ stages navLang = do
                         | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise16
                         | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise17
                         | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise18
-                        | $readLoc "numbers"         == current -> Numbers.overview
+                        | $readLoc "stage_ploverCommands"   == current -> ploverCommands
+                        | $readLoc "stage_fingerspelling"   == current -> fingerspelling
+                        | $readLoc "stage_numbermode"       == current -> numberMode
+                        | $readLoc "stage_commandKeys"      == current -> commandKeys
+                        | $readLoc "stage_specialCharacters"== current -> specialCharacters
                         | $readLoc "patternoverview" == current -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $

@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (rem, link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -320,6 +320,7 @@ main = putCss $ do
             padding (px 0) (px 0) (px 0) (px 0)
             li ? do
                 lineHeight $ em 1.8
+                whiteSpace nowrap
                 ".stage" & do
                     cursor pointer
                     marginTop $ em 0.2
@@ -472,11 +473,20 @@ main = putCss $ do
                     color anthrazit
                     div # ".steno" ? visibility hidden
                     div # ".numberMode" ? visibility hidden
+                    div # ".numberModeShift" ? visibility hidden
                 ".inactive.pressed" & boxShadow (pure none)
                 ".numberMode" & do
                     div # ".steno" ? display none
                     div # ".numberMode" ? display block
-                ".numberMode.small" & div # ".numberMode" ? fontSize (pt 10)
+                    div # ".numberModeShift" ? display none
+                ".numberModeShift" & do
+                    div # ".steno" ? display none
+                    div # ".numberMode" ? display none
+                    div # ".numberModeShift" ? display block
+                ".numberMode.small" & div # ".numberMode" ? fontSize (pt 14)
+                ".numberMode.verySmall" & div # ".numberMode" ? fontSize (pt 8)
+                ".numberModeShift.small" & div # ".numberModeShift" ? fontSize (pt 14)
+                ".numberModeShift.verySmall" & div # ".numberModeShift" ? fontSize (pt 8)
 
                 div ? do
                     ".steno" & do
@@ -490,6 +500,12 @@ main = putCss $ do
                         fontWeight bold
                         fontSize $ pt 18
                         display none
+                        height $ rem 2
+                    ".numberModeShift" & do
+                        fontWeight bold
+                        fontSize $ pt 18
+                        display none
+                        height $ rem 2
 
     -- span # ".btnHeader" ? do
     --     color gray
@@ -587,6 +603,7 @@ main = putCss $ do
     ".fgTransparent" ? color transparent
     ".red" ? color red
     ".small" ? fontSize (pt 12)
+    ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
 
     pre ? do

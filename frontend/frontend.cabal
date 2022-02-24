@@ -48,11 +48,14 @@ library
     Page.Common
     Page.Introduction
     Page.Patterns
-    Page.Numbers
     Page.Stage1
     Page.Stage2
     Page.Stage3
-    Page.Stage4
+    Page.Stage4.PloverCommands
+    Page.Stage4.Fingerspelling
+    Page.Stage4.NumberMode
+    Page.Stage4.CommandKeys
+    Page.Stage4.SpecialCharacters
     Page.Stage5
     State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits

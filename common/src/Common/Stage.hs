@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE EmptyCase #-}
@@ -45,15 +46,17 @@ import GHC.Base (Maybe (..), error)
 import GHC.Enum (Enum (pred), succ)
 import GHC.Generics (Generic)
 import Safe (atMay)
-import Text.Show (Show)
+import Text.Show (show, Show)
 import TextShow (TextShow (showb), fromText)
 import Palantype.Common (Palantype(toDescription))
 import Palantype.DE (Pattern(..))
-import Text.Read (readMaybe, read, get, Read (readPrec))
+import Text.Read (readMaybe, get, Read (readPrec))
 import Control.Applicative (Applicative(pure))
 import Control.Monad (guard)
-import Palantype.Common.TH (failure, readLoc)
+import Palantype.Common.TH (readLoc)
 import Control.Applicative (Alternative(some))
+import Data.Bool (otherwise)
+import Data.Eq (Eq((==)))
 
 {-|
 The complete type is given along with `strsStage`.
@@ -92,39 +95,43 @@ instance TextShow Stage where
 
 strsStage :: [Text]
 strsStage =
-    [ "introduction",
-      "stage_1-1",
-      "stage_1-2",
-      "stage_1-3",
-      "stage_1-4",
-      "stage_1-5",
-      "stage_1-6",
-      "stage_1-7",
-      "stage_2-1",
-      "stage_2-2",
-      "stage_2-3",
-      "stage_PatSimple_0", -- 2.4
-      "stage_PatReplCommon_0", -- 3.1
-      "stage_PatSmallS_0",
-      "stage_PatDiConsonant_0",
-      "stage_PatCodaH_0",
-      "stage_PatCodaR_0",
-      "stage_PatCodaRR_0",
-      "stage_PatCodaHR_0",
-      "stage_PatDt_0",
-      "stage_PatDiphtong_0",
-      "stage_PatReplC_0",
-      "stage_PatCodaGK_0",
-      "stage_PatSZ_0",
-      "stage_PatIJ_0",
-      "stage_PatSwapS_0",
-      "stage_PatSwapSch_0",
-      "stage_PatSwapZ_0",
-      "stage_PatDiVowel_0",
-      "stage_PatReplH_0",
-      "stage_PatSmallS_0",
-      "numbers",
-      "patternoverview"
+    [ "introduction"
+    , "stage_1-1"
+    , "stage_1-2"
+    , "stage_1-3"
+    , "stage_1-4"
+    , "stage_1-5"
+    , "stage_1-6"
+    , "stage_1-7"
+    , "stage_2-1"
+    , "stage_2-2"
+    , "stage_2-3"
+    , "stage_PatSimple_0" -- 2.4
+    , "stage_PatReplCommon_0" -- 3.1
+    , "stage_PatSmallS_0"
+    , "stage_PatDiConsonant_0"
+    , "stage_PatCodaH_0"
+    , "stage_PatCodaR_0"
+    , "stage_PatCodaRR_0"
+    , "stage_PatCodaHR_0"
+    , "stage_PatDt_0"
+    , "stage_PatDiphtong_0"
+    , "stage_PatReplC_0"
+    , "stage_PatCodaGK_0"
+    , "stage_PatSZ_0"
+    , "stage_PatIJ_0"
+    , "stage_PatSwapS_0"
+    , "stage_PatSwapSch_0"
+    , "stage_PatSwapZ_0"
+    , "stage_PatDiVowel_0"
+    , "stage_PatReplH_0"
+    , "stage_PatSmallS_0"
+    , "stage_ploverCommands"
+    , "stage_fingerspelling"
+    , "stage_numbermode"
+    , "stage_commandKeys"
+    , "stage_specialCharacters"
+    , "patternoverview"
     ]
 
 mPrev :: Stage -> Maybe Stage
@@ -144,37 +151,41 @@ instance TextShow StageMeta where
   showb (StageSubLevel s i str) = showb s <> "." <> showb i <> ": " <> fromText str
 
 stageMeta :: Stage -> StageMeta
-stageMeta = unStage >>> \case
-    "introduction" -> StageTopLevel "Introduction"
-    "stage_1-1" -> StageSubLevel 1 1 "Type the letters"
-    "stage_1-2" -> StageSubLevel 1 2 "Memorize the order"
-    "stage_1-3" -> StageSubLevel 1 3 "Type the letters blindly"
-    "stage_1-4" -> StageSubLevel 1 4 "Memorize the order blindly"
-    "stage_1-5" -> StageSubLevel 1 5 "Memorize the left hand"
-    "stage_1-6" -> StageSubLevel 1 6 "Memorize the right hand"
-    "stage_1-7" -> StageSubLevel 1 7 "Memorize them all"
-    "stage_2-1" -> StageSubLevel 2 1 "Make use of home row"
-    "stage_2-2" -> StageSubLevel 2 2 "Learn your first chords"
-    "stage_2-3" -> StageSubLevel 2 3 "Onset, nucleus, and coda"
-    "stage_PatSimple_0"      -> StageSubLevel 2 4  "Syllables and word parts"
-    "stage_PatReplCommon_0"  -> StageSubLevel 3 1  $ toDescription PatReplCommon
-    "stage_PatSmallS_0"      -> StageSubLevel 3 2  $ toDescription PatSmallS
-    "stage_PatDiConsonant_0" -> StageSubLevel 3 3  $ toDescription PatDiConsonant
-    "stage_PatCodaH_0"       -> StageSubLevel 3 4  $ toDescription PatCodaH
-    "stage_PatCodaR_0"       -> StageSubLevel 3 5  $ toDescription PatCodaR
-    "stage_PatCodaRR_0"      -> StageSubLevel 3 6  $ toDescription PatCodaRR
-    "stage_PatCodaHR_0"      -> StageSubLevel 3 7  $ toDescription PatCodaHR
-    "stage_PatDt_0"          -> StageSubLevel 3 8  $ toDescription PatDt
-    "stage_PatDiphtong_0"    -> StageSubLevel 3 9  $ toDescription PatDiphtong
-    "stage_PatReplC_0"       -> StageSubLevel 3 10 $ toDescription PatReplC
-    "stage_PatCodaGK_0"      -> StageSubLevel 3 11 $ toDescription PatCodaGK
-    "stage_PatSZ_0"          -> StageSubLevel 3 12 $ toDescription PatSZ
-    "stage_PatIJ_0"          -> StageSubLevel 3 13 $ toDescription PatIJ
-    "stage_PatSwapS_0"       -> StageSubLevel 3 14 $ toDescription PatSwapS
-    "stage_PatSwapSch_0"     -> StageSubLevel 3 15 $ toDescription PatSwapSch
-    "stage_PatSwapZ_0"       -> StageSubLevel 3 16 $ toDescription PatSwapZ
-    "stage_PatDiVowel_0"     -> StageSubLevel 3 17 $ toDescription PatDiVowel
-    "stage_PatReplH_0"       -> StageSubLevel 3 18 $ toDescription PatReplH
-    "numbers"                -> StageTopLevel "Typing numbers"
-    "patternoverview"        -> StageTopLevel "Pattern overview"
-    str          -> error $ "stageMeta: Invalid stage id: " <> Text.unpack str
+stageMeta stage = if
+    | $readLoc "introduction"           == stage -> StageTopLevel "Introduction"
+    | $readLoc "stage_1-1"              == stage -> StageSubLevel 1 1 "Type the letters"
+    | $readLoc "stage_1-2"              == stage -> StageSubLevel 1 2 "Memorize the order"
+    | $readLoc "stage_1-3"              == stage -> StageSubLevel 1 3 "Type the letters blindly"
+    | $readLoc "stage_1-4"              == stage -> StageSubLevel 1 4 "Memorize the order blindly"
+    | $readLoc "stage_1-5"              == stage -> StageSubLevel 1 5 "Memorize the left hand"
+    | $readLoc "stage_1-6"              == stage -> StageSubLevel 1 6 "Memorize the right hand"
+    | $readLoc "stage_1-7"              == stage -> StageSubLevel 1 7 "Memorize them all"
+    | $readLoc "stage_2-1"              == stage -> StageSubLevel 2 1 "Make use of home row"
+    | $readLoc "stage_2-2"              == stage -> StageSubLevel 2 2 "Learn your first chords"
+    | $readLoc "stage_2-3"              == stage -> StageSubLevel 2 3 "Onset, nucleus, and coda"
+    | $readLoc "stage_PatSimple_0"      == stage -> StageSubLevel 2 4  "Syllables and word parts"
+    | $readLoc "stage_PatReplCommon_0"  == stage -> StageSubLevel 3 1  $ toDescription PatReplCommon
+    | $readLoc "stage_PatSmallS_0"      == stage -> StageSubLevel 3 2  $ toDescription PatSmallS
+    | $readLoc "stage_PatDiConsonant_0" == stage -> StageSubLevel 3 3  $ toDescription PatDiConsonant
+    | $readLoc "stage_PatCodaH_0"       == stage -> StageSubLevel 3 4  $ toDescription PatCodaH
+    | $readLoc "stage_PatCodaR_0"       == stage -> StageSubLevel 3 5  $ toDescription PatCodaR
+    | $readLoc "stage_PatCodaRR_0"      == stage -> StageSubLevel 3 6  $ toDescription PatCodaRR
+    | $readLoc "stage_PatCodaHR_0"      == stage -> StageSubLevel 3 7  $ toDescription PatCodaHR
+    | $readLoc "stage_PatDt_0"          == stage -> StageSubLevel 3 8  $ toDescription PatDt
+    | $readLoc "stage_PatDiphtong_0"    == stage -> StageSubLevel 3 9  $ toDescription PatDiphtong
+    | $readLoc "stage_PatReplC_0"       == stage -> StageSubLevel 3 10 $ toDescription PatReplC
+    | $readLoc "stage_PatCodaGK_0"      == stage -> StageSubLevel 3 11 $ toDescription PatCodaGK
+    | $readLoc "stage_PatSZ_0"          == stage -> StageSubLevel 3 12 $ toDescription PatSZ
+    | $readLoc "stage_PatIJ_0"          == stage -> StageSubLevel 3 13 $ toDescription PatIJ
+    | $readLoc "stage_PatSwapS_0"       == stage -> StageSubLevel 3 14 $ toDescription PatSwapS
+    | $readLoc "stage_PatSwapSch_0"     == stage -> StageSubLevel 3 15 $ toDescription PatSwapSch
+    | $readLoc "stage_PatSwapZ_0"       == stage -> StageSubLevel 3 16 $ toDescription PatSwapZ
+    | $readLoc "stage_PatDiVowel_0"     == stage -> StageSubLevel 3 17 $ toDescription PatDiVowel
+    | $readLoc "stage_PatReplH_0"       == stage -> StageSubLevel 3 18 $ toDescription PatReplH
+    | $readLoc "stage_ploverCommands"   == stage -> StageSubLevel 4 1 "Formatting input"
+    | $readLoc "stage_fingerspelling"   == stage -> StageSubLevel 4 2 "Fingerspelling"
+    | $readLoc "stage_numbermode"       == stage -> StageSubLevel 4 3 "Number input"
+    | $readLoc "stage_commandKeys"      == stage -> StageSubLevel 4 4 "Command keys"
+    | $readLoc "stage_specialCharacters"== stage -> StageSubLevel 4 5 "Special characters"
+    | $readLoc "patternoverview"        == stage -> StageTopLevel "Pattern overview"
+    | otherwise                                  -> error $ "stageMeta: pattern missing: " <> show stage

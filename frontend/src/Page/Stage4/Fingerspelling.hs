@@ -11,9 +11,9 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Numbers where
-
---
+module Page.Stage4.Fingerspelling
+    ( fingerspelling
+    ) where
 
 import Client (getDictDENumbers, getDocDEPatternAll, postRender, request)
 import Common.Route (FrontendRoute)
@@ -43,7 +43,7 @@ import Text.Read (readMaybe)
 import Text.Show (Show(show))
 import Obelisk.Generated.Static (static)
 
-overview ::
+fingerspelling ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
       MonadFix m,
@@ -55,7 +55,7 @@ overview ::
       SetRoute t (R FrontendRoute) m
     ) =>
     m Navigation
-overview = do
+fingerspelling = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
@@ -123,6 +123,6 @@ overview = do
 
     widgetHold_ loading $ evEDict <&> \case
         Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-        Right map -> do
+        Right map -> blank
 
     pure envNavigation

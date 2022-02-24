@@ -82,6 +82,7 @@ data State = State
     , stTOCShowStage1 :: Bool
     , stTOCShowStage2 :: Bool
     , stTOCShowStage3 :: Bool
+    , stTOCShowStage4 :: Bool
     }
     deriving Generic
 
@@ -102,6 +103,7 @@ instance Default State where
         , stTOCShowStage1 = False
         , stTOCShowStage2 = False
         , stTOCShowStage3 = False
+        , stTOCShowStage4 = False
         }
 
 updateState

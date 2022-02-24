@@ -68,11 +68,7 @@ exercise iEx elIntro pat elExplication = do
     eDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
             Right (mSW, mWSs) -> taskWords mSW mWSs
-            Left str ->
-                never
-                    <$ elClass
-                        "div"
-                        "paragraph small red"
+            Left str -> never <$ elClass "div" "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
     elCongraz eDone envNavigation
@@ -220,7 +216,7 @@ exercise3 ::
     m Navigation
 exercise3 =
     exercise
-        2
+        3
         (\_ -> elClass "div" "paragraph" $
               text
                   "Now you'll learn a nice simplification. When you encounter one of the \
@@ -253,7 +249,7 @@ exercise4 ::
     m Navigation
 exercise4 =
     exercise
-        3
+        4
         (\_ -> elClass "div" "paragraph" $ do
               text
                   "You might have wondered why there is no key for h for your right hand. \
@@ -297,7 +293,7 @@ exercise5 ::
     m Navigation
 exercise5 =
     exercise
-        4
+        5
         ( \_ -> elClass "div" "paragraph" $ do
               text "This might come as a little surprise but, just like with "
               el "em" $ text "h"
@@ -333,7 +329,7 @@ exercise6 ::
     m Navigation
 exercise6 =
     exercise
-        5
+        6
         (\_ -> elClass "div" "paragraph" $ do
             text "Following the idea of stretching vowels, a "
             el "em" $ text "rr"
@@ -387,7 +383,7 @@ exercise7 ::
     m Navigation
 exercise7 =
     exercise
-        5
+        7
         (\_ -> elClass "div" "paragraph" $
               text "This is the last rule regarding regular vowel streting and \
                    \it is fairly straightforward."
@@ -419,7 +415,7 @@ exercise8 ::
     m Navigation
 exercise8 =
     exercise
-        5
+        8
         (\_ -> do
             elClass "div" "paragraph" $ do
               text
@@ -448,7 +444,7 @@ exercise8 =
                 "You can find more information and examples of this \
                 \rule in the correspondig section of the "
               routeLink (stageUrl lang $ $readLoc "patternoverview") $
-                text "pattern overview"
+                  text "pattern overview"
               text "."
         )
 
