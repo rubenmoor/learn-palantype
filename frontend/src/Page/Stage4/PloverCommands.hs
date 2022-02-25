@@ -59,7 +59,281 @@ ploverCommands = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
-    el "h1" $ text "Typing numbers"
+    el "h1" $ text "Formatting input"
+
+    el "h2" $ text "On our way to actual typing"
+
+    elClass "div" "paragraph" $
+        text "Learning to type individual words is fun and all, \
+             \but so far we are still missing the basics of formatting. \
+             \The exercises of Chapter 4 are all about that. \
+             \Let's close some gaps to get closer to productive use of \
+             \our palantype-style steno skills."
+
+    el "h3" $ text "Punctuation"
+
+    elClass "div" "paragraph" $
+        text "The list below is long. Luckily you won't have to remember \
+             \all of the commands. Rather, learn them as you feel the necessity."
+
+    elClass "div" "paragraph" $ do
+        text "Most importantly, use "
+        el "code" $ text "A"
+        text " for comma, "
+        el "code" $ text "N-"
+        text " for full stop, and "
+        el "code" $ text "B-"
+        text " to capitalize last word retroactively. This last one is important \
+             \because Plover will try to handle capitalization for you. This \
+             \means the first word of each sentence will be capitalized and \
+             \usually nouns will be. However, whenever a german word does not \
+             \solely exists as noun, the system will output the word \
+             \uncapitalized and leave the decision to you."
+
+    -- common orthography
+    el "table" $ do
+        el "tr" $ do
+            el "th" $ text "Short"
+            el "th" $ text "Key"
+            el "th" $ text "Description"
+            el "th" $ text "Plover code"
+        el "tr" $ do
+            el "td" $ text ","
+            el "td" $ el "code" $ text "A"
+            el "td" $ text "attach comma"
+            el "td" $ el "code" $ text "{^,}"
+        el "tr" $ do
+            el "td" $ text ";"
+            el "td" $ el "code" $ text "NA"
+            el "td" $ text "attach semicolon"
+            el "td" $ el "code" $ text "{^;}"
+        el "tr" $ do
+            el "td" $ text "-"
+            el "td" $ el "code" $ text "~"
+            el "td" $ text "hyphen to attach words"
+            el "td" $ el "code" $ text "{^-^}"
+        el "tr" $ do
+            el "td" $ text "\\t"
+            el "td" $ el "code" $ text "DJ"
+            el "td" $ text "tab like t"
+            el "td" $ el "code" $ text "{^\\t^}"
+        el "tr" $ do
+            el "td" $ text " "
+            el "td" $ el "code" $ text "B-"
+            el "td" $ text "capitalize last word"
+            el "td" $ el "code" $ text "{*-|}"
+        el "tr" $ do
+            el "td" $ text " "
+            el "td" $ el "code" $ text "D-"
+            el "td" $ text "capitalize next word"
+            el "td" $ el "code" $ text "{-|}"
+        el "tr" $ do
+            el "td" $ text " "
+            el "td" $ el "code" $ text "S-"
+            el "td" $ text "uncapitalize last word"
+            el "td" $ el "code" $ text "{*>}"
+        el "tr" $ do
+            el "td" $ text "␣"
+            el "td" $ el "code" $ text "G-"
+            el "td" $ text "retroactively add space"
+            el "td" $ el "code" $ text "{*?}"
+        el "tr" $ do
+            el "td" $ text "\n"
+            el "td" $ el "code" $ text "J"
+            el "td" $ text "paragraph: period, two newlines"
+            el "td" $ el "code" $ text "{^.\n\n^}{-|}"
+        el "tr" $ do
+            el "td" $ text " "
+            el "td" $ el "code" $ text "F-"
+            el "td" $ text "retroactively delete space"
+            el "td" $ el "code" $ text "{*!}"
+        el "tr" $ do
+            el "td" $ text "."
+            el "td" $ el "code" $ text "N-"
+            el "td" $ text "full stop: period"
+            el "td" $ el "code" $ text "{^.}{-|}"
+        el "tr" $ do
+            el "td" $ text ":"
+            el "td" $ el "code" $ text "L-"
+            el "td" $ text "attach colon"
+            el "td" $ el "code" $ text "{^:}"
+        el "tr" $ do
+            el "td" $ text ":"
+            el "td" $ el "code" $ text "JL-"
+            el "td" $ text "colon and capitalize"
+            el "td" $ el "code" $ text "{^:}{-|}"
+        el "tr" $ do
+            el "td" $ text "?"
+            el "td" $ el "code" $ text "JN-"
+            el "td" $ text "question mark and capitalize"
+            el "td" $ el "code" $ text "{^?}{-|}"
+        el "tr" $ do
+            el "td" $ text "!"
+            el "td" $ el "code" $ text "JR"
+            el "td" $ text "exclamation mark and capitalize"
+            el "td" $ el "code" $ text "{^!}{-|}"
+        el "tr" $ do
+            el "td" $ text "#"
+            el "td" $ el "code" $ text "H"
+            el "td" $ text "hash with next word attached"
+            el "td" $ el "code" $ text "{\\#^}"
+        el "tr" $ do
+            el "td" $ text "§"
+            el "td" $ el "code" $ text "BD-"
+            el "td" $ text "legal paragraph symbol"
+            el "td" $ el "code" $ text "§"
+        el "tr" $ do
+            el "td" $ text "°"
+            el "td" $ el "code" $ text "GD-"
+            el "td" $ text "attach degree symbol"
+            el "td" $ el "code" $ text "{^°}"
+        el "tr" $ do
+            el "td" $ text "™"
+            el "td" $ el "code" $ text "DM-"
+            el "td" $ text "attach trademark symbol"
+            el "td" $ el "code" $ text "{^™}"
+        el "tr" $ do
+            el "td" $ text "©"
+            el "td" $ el "code" $ text "GDM-"
+            el "td" $ text "attach copyright symbol"
+            el "td" $ el "code" $ text "{^©}"
+        el "tr" $ do
+            el "td" $ text "€"
+            el "td" $ el "code" $ text "E"
+            el "td" $ text "euro symbol"
+            el "td" $ el "code" $ text "€"
+        el "tr" $ do
+            el "td" $ text "—"
+            el "td" $ el "code" $ text "~Ü"
+            el "td" $ text "em dash"
+            el "td" $ el "code" $ text "—"
+
+    -- parentheses
+    el "h3" $ text "Opening and closing"
+
+    elClass "div" "paragraph" $
+        text "The commands that follow adhere to a strict logic \
+             \and thus aren't that scary. Your fingers of your right \
+             \hand take care of any thing that opens and closes."
+
+    el "table" $ do
+        el "tr" $ do
+            el "th" $ text "Short"
+            el "th" $ text "Description"
+            el "th" $ text "Key 1"
+            el "th" $ text "Key 2"
+            el "th" $ text "Plover code"
+        el "tr" $ do
+            el "td" $ text "«»"
+            el "td" $ text "Guillemets"
+            el "td" $ el "code" $ text "+"
+            el "td" $ el "code" $ text "-G"
+            el "td" $ do
+                el "code" $ text "{«^}"
+                text ","
+                el "code" $ text "{^»}"
+        el "tr" $ do
+            el "td" $ text "„“"
+            el "td" $ text "german quotes"
+            el "td" $ el "code" $ text "-L"
+            el "td" $ el "code" $ text "-N"
+            el "td" $ do
+                el "code" $ text "{„^}"
+                text ","
+                el "code" $ text "{^“}"
+        el "tr" $ do
+            el "td" $ text "‹›"
+            el "td" $ text "chevrons"
+            el "td" $ el "code" $ text "-M"
+            el "td" $ el "code" $ text "-B"
+            el "td" $ do
+                el "code" $ text "{‹^}"
+                text ","
+                el "code" $ text "{^›}"
+        el "tr" $ do
+            el "td" $ text "[]"
+            el "td" $ text "square brackets"
+            el "td" $ el "code" $ text "-F"
+            el "td" $ el "code" $ text "s"
+            el "td" $ do
+                el "code" $ text "{[^}"
+                text ","
+                el "code" $ text "{^]}"
+        el "tr" $ do
+            el "td" $ text "()"
+            el "td" $ text "parenthesis"
+            el "td" $ el "code" $ text "-S"
+            el "td" $ el "code" $ text "-D"
+            el "td" $ do
+                el "code" $ text "{(^}"
+                text ","
+                el "code" $ text "{^)}"
+        el "tr" $ do
+            el "td" $ text "{}"
+            el "td" $ text "brackets"
+            el "td" $ el "code" $ text "ʃ"
+            el "td" $ el "code" $ text "n"
+            el "td" $ do
+                el "code" $ text "{\\{^}"
+                text ","
+                el "code" $ text "{^\\}}"
+
+    -- ascii smileys
+    el "h3" $ text "ASCII art"
+
+    elClass "div" "paragraph" $
+        text "Steno typing lends itself well to all kinds of makros, \
+             \among them I included my personal selection of ASCII \
+             \emoticons."
+
+    el "table" $ do
+        el "tr" $ do
+            el "td" $ el "code" $ text "SLNSD"
+            el "td" $ el "code" $ text "¯\\_(ツ)_/¯"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BLNSD"
+            el "td" $ el "code" $ text "ʕ•ᴥ•ʔ"
+        el "tr" $ do
+            el "td" $ el "code" $ text "GLNSD"
+            el "td" $ el "code" $ text "(´･_･`)"
+        el "tr" $ do
+            el "td" $ el "code" $ text "HLNSD"
+            el "td" $ el "code" $ text "(⊃｡•́‿•̀｡)⊃"
+        el "tr" $ do
+            el "td" $ el "code" $ text "DLNSD"
+            el "td" $ el "code" $ text "(╯°□°）╯︵ ┻━┻"
+        el "tr" $ do
+            el "td" $ el "code" $ text "FLNSD"
+            el "td" $ el "code" $ text "(☞ﾟヮﾟ)☞"
+        el "tr" $ do
+            el "td" $ el "code" $ text "MLNSD"
+            el "td" $ el "code" $ text "(๑•́ ₃ •̀๑)"
+        el "tr" $ do
+            el "td" $ el "code" $ text "JLNSD"
+            el "td" $ el "code" $ text "┬─┬⃰͡ (ᵔᵕᵔ͜ )"
+        el "tr" $ do
+            el "td" $ el "code" $ text "WLNSD"
+            el "td" $ el "code" $ text "( ˘ ³˘)♥"
+        el "tr" $ do
+            el "td" $ el "code" $ text "LLNSD"
+            el "td" $ el "code" $ text "( ͡° ͜ʖ ͡°)"
+        el "tr" $ do
+            el "td" $ el "code" $ text "NLNSD"
+            el "td" $ el "code" $ text "( ಠ ʖ̯ ಠ )"
+        el "tr" $ do
+            el "td" $ el "code" $ text "RLNSD"
+            el "td" $ el "code" $ text "(ᵔᴥᵔ)"
+
+    -- -- plover
+    -- , ("=undo"                   , "ILNSD" ) -- undo last input
+    -- , ("{PLOVER:TOGGLE}"         , "BDJN+D")
+    -- , ("{PLOVER:ADD_TRANSLATION}", "BDJNA" )
+    -- , ("{PLOVER:LOOKUP}"         , "BDJNL" ) -- plover search dialogue
+    -- , ("{PLOVER:SUGGESTIONS}"    , "BDJNS" ) -- plover suggestions window
+    -- , ("{PLOVER:FOCUS}"          , "BDJNF" ) -- focus plvoer main window
+    -- , ("{PLOVER:CONFIGURE}"      , "BDJNG" ) -- plover configuration window
+    -- , ("{PLOVER:CONFIGURE}"      , "BDJN+G") -- quit plover
+    -- ]
 
     evPb <- postRender $ delay 0.1 =<< getPostBuild
     evEDict <- request $ getDictDENumbers evPb

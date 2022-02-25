@@ -91,9 +91,6 @@ numberMode = do
 
     el "h1" $ text "Typing numbers"
 
-    evPb <- postRender $ delay 0.1 =<< getPostBuild
-    evEDict <- request $ getDictDENumbers evPb
-
     el "h2" $ text "Palantype number mode"
 
     el "h3" $ text "Digits and related symbols"
@@ -166,9 +163,22 @@ numberMode = do
             text $ "Exercise " <> showt (stageMeta stageSpecialCharacters)
         text "."
 
+    el "h3" $ text "Practicing dates"
+
+    elClass "div" "paragraph" $ do
+        text "Feel free to practice dates here. The format is fairly common \
+             \in Germany and you will learn numbers just fine this way. \
+             \There are alternative ways to reach the same output now: \
+             \Feel free to type digit by digit or use as many fingers as \
+             \possible at once."
+
+    evPb <- postRender $ delay 0.1 =<< getPostBuild
+    evEDict <- request $ getDictDENumbers evPb
     eDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
-            Left  str -> never <$ elClass "span" "red small" (text $ "Couldn't load resource: " <> str)
+            Left  str -> never <$
+                elClass "span" "red small"
+                        (text $ "Couldn't load resource: " <> str)
             Right map -> taskDates map
 
     elCongraz eDone envNavigation
