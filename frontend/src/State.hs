@@ -77,6 +77,7 @@ data State = State
     , stMsg           :: Maybe Message
     , stPloverCfg     :: PloverCfg
     , stShowKeyboard  :: Bool
+    , stKeyboardShowQwerty :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map Lang Stage
     , stTOCShowStage1 :: Bool
@@ -99,6 +100,7 @@ instance Default State where
             let stage_introduction = read "introduction"
             in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
         , stShowKeyboard  = True
+        , stKeyboardShowQwerty = True
         , stShowTOC       = False
         , stTOCShowStage1 = False
         , stTOCShowStage2 = False

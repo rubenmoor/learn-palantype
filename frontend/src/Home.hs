@@ -177,7 +177,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    ((=:),
+    (zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -246,6 +246,7 @@ import State
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
 import qualified Palantype.Common.Dictionary.Numbers as Numbers
+import Control.Monad (when)
 
 default (Text)
 
@@ -493,14 +494,15 @@ stenoInput ::
     m (Event t (Chord key))
 stenoInput lang = do
     dynPloverCfg <- asks (stPloverCfg <$>)
+    dynKeyboardShowQwerty <- asks (stKeyboardShowQwerty <$>)
     dynShowKeyboard <- asks (stShowKeyboard <$>)
-    dynSimple $ dynPloverCfg
-        <&> view (_Wrapped' . at lang . non def)
-        <&> \pcfg -> postRender
+    dynSimple $ zipDyn (dynPloverCfg <&> view (_Wrapped' . at lang . non def))
+                       dynKeyboardShowQwerty
+        <&> \(pcfg, showQwerty) -> postRender
                      $ elClass "div" "stenoInput"
-                     $ stenoInput' pcfg dynShowKeyboard
+                     $ stenoInput' pcfg showQwerty dynShowKeyboard
   where
-    stenoInput' PloverSystemCfg{..} dynShowKeyboard = mdo
+    stenoInput' PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
         let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
                 [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
                 , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
@@ -560,6 +562,7 @@ stenoInput lang = do
                     pcfgMapStenoKeys
                     (stiKeysPressed <$> dynInput)
                     lang
+                    showQwerty
 
         kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
 
@@ -615,74 +618,90 @@ stenoInput lang = do
         pure eChordOther
 
 
-elKeyboard ::
-    forall key t (m :: * -> *).
-    (DomBuilder t m, Palantype key, PostBuild t m) =>
-    CfgName ->
-    Map KeyIndex [Text] ->
-    Dynamic t (Set key) ->
-    Lang ->
-    m ()
-elKeyboard cfgName stenoKeys dynPressedKeys lang =
+elKeyboard
+  :: forall key t (m :: * -> *)
+  .  ( DomBuilder t m
+     , EventWriter t (Endo State) m
+     , Palantype key
+     , PostBuild t m
+     )
+  => CfgName
+  -> Map KeyIndex [Text]
+  -> Dynamic t (Set key)
+  -> Lang
+  -> Bool
+  -> m ()
+elKeyboard cfgName stenoKeys dynPressedKeys lang showQwerty =
     elClass "div" "keyboard" $ do
         el "table" $ do
             el "tr" $ do
-                elCell stenoKeys dynPressedKeys 1 "1" "pinkyYOffset"
-                elCell stenoKeys dynPressedKeys 4 "1" ""
-                elCell stenoKeys dynPressedKeys 7 "1" ""
-                elCell stenoKeys dynPressedKeys 10 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 1 "1" "pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 4 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 7 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 10 "1" ""
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
                 elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell stenoKeys dynPressedKeys 21 "1" ""
-                elCell stenoKeys dynPressedKeys 24 "1" ""
-                elCell stenoKeys dynPressedKeys 27 "1" ""
-                elCell stenoKeys dynPressedKeys 30 "1" "pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 21 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 24 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 27 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 30 "1" "pinkyYOffset"
             el "tr" $ do
-                elCell stenoKeys dynPressedKeys 2 "1" "homerow pinkyYOffset"
-                elCell stenoKeys dynPressedKeys 5 "1" "homerow"
-                elCell stenoKeys dynPressedKeys 8 "1" "homerow"
-                elCell stenoKeys dynPressedKeys 11 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 2 "1" "homerow pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 5 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 8 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 11 "1" "homerow"
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
                 elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell stenoKeys dynPressedKeys 22 "1" "homerow"
-                elCell stenoKeys dynPressedKeys 25 "1" "homerow"
-                elCell stenoKeys dynPressedKeys 28 "1" "homerow"
-                elCell stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 22 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 25 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 28 "1" "homerow"
+                elCell showQwerty stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
             el "tr" $ do
-                elCell stenoKeys dynPressedKeys 3 "1" "pinkyYOffset"
-                elCell stenoKeys dynPressedKeys 6 "1" ""
-                elCell stenoKeys dynPressedKeys 9 "1" ""
-                elCell stenoKeys dynPressedKeys 12 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 3 "1" "pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 6 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 9 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 12 "1" ""
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
                 elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell stenoKeys dynPressedKeys 23 "1" ""
-                elCell stenoKeys dynPressedKeys 26 "1" ""
-                elCell stenoKeys dynPressedKeys 29 "1" ""
-                elCell stenoKeys dynPressedKeys 32 "1" "pinkyYOffset"
+                elCell showQwerty stenoKeys dynPressedKeys 23 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 26 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 29 "1" ""
+                elCell showQwerty stenoKeys dynPressedKeys 32 "1" "pinkyYOffset"
             el "tr" $ do
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
 
                 -- left thumb
-                elCell stenoKeys dynPressedKeys 13 "1" "thumbrow"
-                elCell stenoKeys dynPressedKeys 14 "1" "thumbrow"
-                elCell stenoKeys dynPressedKeys 15 "1" "homerow thumbrow"
-                elCell stenoKeys dynPressedKeys 16 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 13 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 14 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 15 "1" "homerow thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 16 "1" "thumbrow"
 
                 elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
 
                 -- right thumb
-                elCell stenoKeys dynPressedKeys 17 "1" "thumbrow"
-                elCell stenoKeys dynPressedKeys 18 "1" "homerow thumbrow"
-                elCell stenoKeys dynPressedKeys 19 "1" "thumbrow"
-                elCell stenoKeys dynPressedKeys 20 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 17 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 18 "1" "homerow thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 19 "1" "thumbrow"
+                elCell showQwerty stenoKeys dynPressedKeys 20 "1" "thumbrow"
 
                 elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-        elClass "span" "system" $ do
+        elClass "div" "configuration" $ do
             el "div" $ text $ showt lang
             el "div" $ text $ showt cfgName
+
+            ev <- _inputElement_checkedChange <$> inputElement
+                ( def & inputElementConfig_initialChecked .~ showQwerty
+                      & inputElementConfig_elementConfig
+                          . elementConfig_initialAttributes
+                              .~ (  "id"   =: "showQwerties"
+                                 <> "type" =: "checkbox"
+                                 )
+                )
+            updateState $ ev $> [field @"stKeyboardShowQwerty" %~ not]
+            elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
 
 -- | original Palantype keyboard layout
 -- | unfortunately the keys don't follow the simple order
@@ -699,60 +718,61 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
     el "table" $ do
         el "tr" $ do
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 4 "1" ""
-            elCell stenoKeys dynPressedKeys 7 "1" ""
-            elCell stenoKeys dynPressedKeys 10 "1" ""
+            elCell True stenoKeys dynPressedKeys 4 "1" ""
+            elCell True stenoKeys dynPressedKeys 7 "1" ""
+            elCell True stenoKeys dynPressedKeys 10 "1" ""
             -- elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 21 "1" ""
-            elCell stenoKeys dynPressedKeys 24 "1" ""
-            elCell stenoKeys dynPressedKeys 27 "1" ""
+            elCell True stenoKeys dynPressedKeys 21 "1" ""
+            elCell True stenoKeys dynPressedKeys 24 "1" ""
+            elCell True stenoKeys dynPressedKeys 27 "1" ""
             elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 1 "1" ""
-            elCell stenoKeys dynPressedKeys 5 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 8 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 11 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 1 "1" ""
+            elCell True stenoKeys dynPressedKeys 5 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 8 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 11 "1" "homerow"
             elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 22 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 25 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 28 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 30 "1" ""
+            elCell True stenoKeys dynPressedKeys 22 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 25 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 28 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 30 "1" ""
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 2 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 6 "1" ""
-            elCell stenoKeys dynPressedKeys 9 "1" ""
-            elCell stenoKeys dynPressedKeys 12 "1" ""
+            elCell True stenoKeys dynPressedKeys 2 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 6 "1" ""
+            elCell True stenoKeys dynPressedKeys 9 "1" ""
+            elCell True stenoKeys dynPressedKeys 12 "1" ""
             elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell stenoKeys dynPressedKeys 23 "1" ""
-            elCell stenoKeys dynPressedKeys 26 "1" ""
-            elCell stenoKeys dynPressedKeys 29 "1" ""
-            elCell stenoKeys dynPressedKeys 31 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 23 "1" ""
+            elCell True stenoKeys dynPressedKeys 26 "1" ""
+            elCell True stenoKeys dynPressedKeys 29 "1" ""
+            elCell True stenoKeys dynPressedKeys 31 "1" "homerow"
         el "tr" $ do
-            elCell stenoKeys dynPressedKeys 3 "3" ""
-            elCell stenoKeys dynPressedKeys 14 "1" ""
-            elCell stenoKeys dynPressedKeys 15 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 17 "2" ""
-            elCell stenoKeys dynPressedKeys 18 "1" "homerow"
-            elCell stenoKeys dynPressedKeys 19 "1" ""
-            elCell stenoKeys dynPressedKeys 32 "3" ""
+            elCell True stenoKeys dynPressedKeys 3 "3" ""
+            elCell True stenoKeys dynPressedKeys 14 "1" ""
+            elCell True stenoKeys dynPressedKeys 15 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 17 "2" ""
+            elCell True stenoKeys dynPressedKeys 18 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 19 "1" ""
+            elCell True stenoKeys dynPressedKeys 32 "3" ""
     elClass "span" "system" $ do
         el "div" $ text $ showt EN
         el "div" $ text $ showt cfgName
 
-elCell ::
-    forall key t (m1 :: * -> *).
-    (DomBuilder t m1, Palantype key, PostBuild t m1) =>
-    Map KeyIndex [Text] ->
-    Dynamic t (Set key) ->
-    KeyIndex ->
-    Text ->
-    Text ->
-    m1 ()
-elCell stenoKeys dynPressedKeys i colspan strCls =
+elCell
+  :: forall key t (m1 :: * -> *)
+  . (DomBuilder t m1, Palantype key, PostBuild t m1)
+  => Bool
+  -> Map KeyIndex [Text]
+  -> Dynamic t (Set key)
+  -> KeyIndex
+  -> Text
+  -> Text
+  -> m1 ()
+elCell showQwerty stenoKeys dynPressedKeys i colspan strCls =
   -- -- | whether or not number input mode is active
   --, stiNumberMode  :: Bool
   -- -- check if the mode keys (DE: W, N) are being pressed
@@ -804,7 +824,7 @@ elCell stenoKeys dynPressedKeys i colspan strCls =
                 elClass "div" "steno" $ text $ showt k
                 elClass "div" "numberMode" $ text strNumberMode
                 elClass "div" "numberModeShift" $ text strNumberModeShift
-                elClass "div" "qwerty" $ text $ Text.unwords qwerties
+                when showQwerty $ elClass "div" "qwerty" $ text $ Text.unwords qwerties
   where
     setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
 
@@ -830,28 +850,22 @@ elStenoOutput dynDownKeys = mdo
     i <-
         inputElement $
             (def :: InputElementConfig EventResult t (DomBuilderSpace m))
-                & inputElementConfig_setValue
-                .~ eSetValue
-                & inputElementConfig_elementConfig
-                    . elementConfig_modifyAttributes
-                .~ (snd <$> eChange)
-                & inputElementConfig_initialValue
-                .~ "Click me!"
+                & inputElementConfig_setValue .~ eSetValue
+                & inputElementConfig_elementConfig . elementConfig_modifyAttributes
+                    .~ (snd <$> eChange)
+                & inputElementConfig_initialValue .~ "Click me!"
                 & inputElementConfig_elementConfig
                     . elementConfig_initialAttributes
-                .~ ( "readonly"
-                         =: "readonly"
-                         <> "autofocus"
-                         =: "autofocus"
-                         <> "class"
-                         =: "red"
+                .~ ( "readonly"  =: "readonly"
+                  <> "autofocus" =: "autofocus"
+                  <> "class"     =: "red"
+                  <> "id"        =: "stenoOutput"
                    )
-                & inputElementConfig_elementConfig
-                    . elementConfig_eventSpec
-                %~ addEventSpecFlags
-                    (Proxy :: Proxy (DomBuilderSpace m))
-                    Keydown
-                    (const preventDefault)
+                & inputElementConfig_elementConfig . elementConfig_eventSpec
+                    %~ addEventSpecFlags
+                        (Proxy :: Proxy (DomBuilderSpace m))
+                        Keydown
+                        (const preventDefault)
     pure i
 
 -- Table of Contents
@@ -876,31 +890,22 @@ toc lang current = elClass "section" "toc" $ do
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
         dynShowStage4 = stTOCShowStage4 <$> dynState
-    -- button to toggle TOC
-    dyn_ $
-        dynShowTOC <&> \showTOC -> do
-            (s, _) <-
-                if showTOC
-                    then
-                        elAttr'
-                            "span"
-                            ( "class"
-                                  =: "btn TOCVisible"
-                                  <> "title"
-                                  =: "Hide Table of Contents"
-                            )
-                            $ iFa "fas fa-times"
-                    else
-                        elAttr'
-                            "span"
-                            ( "class"
-                                  =: "btn TOCHidden"
-                                  <> "title"
-                                  =: "Show Table of Contents"
-                            )
-                            $ iFa "fas fa-bars"
 
-            updateState $ domEvent Click s $> [field @"stShowTOC" %~ not]
+    -- button to toggle TOC
+    dyn_ $ dynShowTOC <&> \showTOC -> do
+        (s, _) <- if showTOC
+            then
+                elAttr' "span"
+                    (  "class" =: "btn TOCVisible"
+                    <> "title" =: "Hide Table of Contents"
+                    ) $ iFa "fas fa-times"
+            else
+                elAttr' "span"
+                    (  "class" =: "btn TOCHidden"
+                    <> "title" =: "Show Table of Contents"
+                    ) $ iFa "fas fa-bars"
+
+        updateState $ domEvent Click s $> [field @"stShowTOC" %~ not]
 
     let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
     elDynClass "div" dynClassDisplay $ do

@@ -87,23 +87,6 @@ btnSend inner = do
   (e, _) <- elAttr' "button" cls inner
   pure $ domEvent Click e
 
-checkbox ::
-  ( DomBuilder t m
-  , MonadHold t m
-  , MonadFix m
-  ) => Bool -> Text -> m (Dynamic t Bool)
-checkbox initial description = mdo
-    cb <- inputElement $
-      def & inputElementConfig_elementConfig
-          . elementConfig_initialAttributes .~ "type" =: "checkbox"
-          & inputElementConfig_initialChecked .~ initial
-          & inputElementConfig_setChecked .~ eClickCB
-    (elSpan, _) <- el' "span" $ text description
-    let dynCbChecked = _inputElement_checked cb
-        eToggle = leftmost [void $ updated dynCbChecked, domEvent Click elSpan]
-        eClickCB = attachWith (const . not) (current dynCbChecked) eToggle
-    holdDyn initial eClickCB
-
 whenJust ::
   forall a t.
   Applicative t =>

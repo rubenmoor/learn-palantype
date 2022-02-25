@@ -395,7 +395,7 @@ main = putCss $ do
         marginRight auto
         textAlign center
         borderBottom dotted (px 1) lightgray
-        input ? do
+        input # "#stenoOutput" ? do
             width $ px keyboardWidth
             textAlign center
             fontSize $ pt 32
@@ -412,7 +412,7 @@ main = putCss $ do
         marginLeft auto
         marginRight auto
 
-        span # ".system" ? do
+        div # ".configuration" ? do
             position absolute
             top $ px 12
             left $ px 0
