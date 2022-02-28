@@ -382,7 +382,7 @@ taskAlphabet showAlphabet = do
         dynWalk <- foldDyn step stepInitial envEChord
         let eDone = catMaybes $ wsDone <$> updated dynWalk
 
-        el "pre" $ el "code" $ do
+        elClass "div" "exerciseField" $ el "code" $ do
             let clsLetter = if showAlphabet then "" else "fgTransparent"
             for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
                 let
@@ -498,7 +498,7 @@ taskLetters dynLetters = do
                         Nothing -> ""
                         Just _  -> "bgRed"
                 when (slsCounter < len)
-                    $  el "pre"
+                    $  elClass "div" "exerciseField"
                     $  elClass "code" clsMistake
                     $  text
                     $  showH

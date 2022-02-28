@@ -18,11 +18,12 @@ module Page.Stage4.PloverCommands
 import Client (getDictDENumbers, getDocDEPatternAll, postRender, request)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
-import Control.Monad ((=<<))
+import Control.Monad ((=<<), unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Bool (Bool (..), bool, not)
 import Data.Either (Either (..))
+import Data.Eq (Eq ((==)))
 import Data.Foldable (for_)
 import Data.Function (($))
 import Data.Functor ((<&>))
@@ -33,8 +34,8 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (Maybe (..))
 import Data.Semigroup ((<>))
 import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
-import Page.Common (elPatterns, loading)
-import Palantype.Common (toDescription)
+import Page.Common (elPatterns, loading, elNotImplemented)
+import Palantype.Common (Lang(DE))
 import Reflex.Dom ((=:), DomBuilder, EventName (Click), MonadHold, PostBuild, Prerender, blank, delay, domEvent, dynText, dyn_, el, elAttr, elClass, elClass', elDynClass, foldDyn, getPostBuild, text, widgetHold_)
 import Shared (iFa)
 import State (Env (..), Navigation (..), stageUrl)
@@ -58,6 +59,7 @@ ploverCommands ::
 ploverCommands = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Formatting input"
 
@@ -91,7 +93,10 @@ ploverCommands = do
              \uncapitalized and leave the decision to you."
 
     -- common orthography
-    el "table" $ do
+    elAttr "table"
+           (  "class" =: "ploverCommands"
+           <> "id"    =: "punctuation"
+           ) $ do
         el "tr" $ do
             el "th" $ text "Short"
             el "th" $ text "Key"
@@ -101,112 +106,112 @@ ploverCommands = do
             el "td" $ text ","
             el "td" $ el "code" $ text "A"
             el "td" $ text "attach comma"
-            el "td" $ el "code" $ text "{^,}"
+            elClass "td" "plover" $ el "code" $ text "{^,}"
         el "tr" $ do
             el "td" $ text ";"
             el "td" $ el "code" $ text "NA"
             el "td" $ text "attach semicolon"
-            el "td" $ el "code" $ text "{^;}"
+            elClass "td" "plover" $ el "code" $ text"{^;}"
         el "tr" $ do
             el "td" $ text "-"
             el "td" $ el "code" $ text "~"
             el "td" $ text "hyphen to attach words"
-            el "td" $ el "code" $ text "{^-^}"
+            elClass "td" "plover" $ el "code" $ text"{^-^}"
         el "tr" $ do
             el "td" $ text "\\t"
             el "td" $ el "code" $ text "DJ"
             el "td" $ text "tab like t"
-            el "td" $ el "code" $ text "{^\\t^}"
+            elClass "td" "plover" $ el "code" $ text"{^\\t^}"
         el "tr" $ do
             el "td" $ text " "
             el "td" $ el "code" $ text "B-"
             el "td" $ text "capitalize last word"
-            el "td" $ el "code" $ text "{*-|}"
+            elClass "td" "plover" $ el "code" $ text"{*-|}"
         el "tr" $ do
             el "td" $ text " "
             el "td" $ el "code" $ text "D-"
             el "td" $ text "capitalize next word"
-            el "td" $ el "code" $ text "{-|}"
+            elClass "td" "plover" $ el "code" $ text"{-|}"
         el "tr" $ do
             el "td" $ text " "
             el "td" $ el "code" $ text "S-"
             el "td" $ text "uncapitalize last word"
-            el "td" $ el "code" $ text "{*>}"
+            elClass "td" "plover" $ el "code" $ text"{*>}"
         el "tr" $ do
             el "td" $ text "␣"
             el "td" $ el "code" $ text "G-"
             el "td" $ text "retroactively add space"
-            el "td" $ el "code" $ text "{*?}"
+            elClass "td" "plover" $ el "code" $ text"{*?}"
         el "tr" $ do
             el "td" $ text "\n"
             el "td" $ el "code" $ text "J"
             el "td" $ text "paragraph: period, two newlines"
-            el "td" $ el "code" $ text "{^.\n\n^}{-|}"
+            elClass "td" "plover" $ el "code" $ text"{^.\n\n^}{-|}"
         el "tr" $ do
             el "td" $ text " "
             el "td" $ el "code" $ text "F-"
             el "td" $ text "retroactively delete space"
-            el "td" $ el "code" $ text "{*!}"
+            elClass "td" "plover" $ el "code" $ text"{*!}"
         el "tr" $ do
             el "td" $ text "."
             el "td" $ el "code" $ text "N-"
             el "td" $ text "full stop: period"
-            el "td" $ el "code" $ text "{^.}{-|}"
+            elClass "td" "plover" $ el "code" $ text"{^.}{-|}"
         el "tr" $ do
             el "td" $ text ":"
             el "td" $ el "code" $ text "L-"
             el "td" $ text "attach colon"
-            el "td" $ el "code" $ text "{^:}"
+            elClass "td" "plover" $ el "code" $ text"{^:}"
         el "tr" $ do
             el "td" $ text ":"
             el "td" $ el "code" $ text "JL-"
             el "td" $ text "colon and capitalize"
-            el "td" $ el "code" $ text "{^:}{-|}"
+            elClass "td" "plover" $ el "code" $ text"{^:}{-|}"
         el "tr" $ do
             el "td" $ text "?"
             el "td" $ el "code" $ text "JN-"
             el "td" $ text "question mark and capitalize"
-            el "td" $ el "code" $ text "{^?}{-|}"
+            elClass "td" "plover" $ el "code" $ text"{^?}{-|}"
         el "tr" $ do
             el "td" $ text "!"
             el "td" $ el "code" $ text "JR"
             el "td" $ text "exclamation mark and capitalize"
-            el "td" $ el "code" $ text "{^!}{-|}"
+            elClass "td" "plover" $ el "code" $ text"{^!}{-|}"
         el "tr" $ do
             el "td" $ text "#"
             el "td" $ el "code" $ text "H"
             el "td" $ text "hash with next word attached"
-            el "td" $ el "code" $ text "{\\#^}"
+            elClass "td" "plover" $ el "code" $ text"{\\#^}"
         el "tr" $ do
             el "td" $ text "§"
             el "td" $ el "code" $ text "BD-"
             el "td" $ text "legal paragraph symbol"
-            el "td" $ el "code" $ text "§"
+            elClass "td" "plover" $ el "code" $ text "§"
         el "tr" $ do
             el "td" $ text "°"
             el "td" $ el "code" $ text "GD-"
             el "td" $ text "attach degree symbol"
-            el "td" $ el "code" $ text "{^°}"
+            elClass "td" "plover" $ el "code" $ text"{^°}"
         el "tr" $ do
             el "td" $ text "™"
             el "td" $ el "code" $ text "DM-"
             el "td" $ text "attach trademark symbol"
-            el "td" $ el "code" $ text "{^™}"
+            elClass "td" "plover" $ el "code" $ text"{^™}"
         el "tr" $ do
             el "td" $ text "©"
             el "td" $ el "code" $ text "GDM-"
             el "td" $ text "attach copyright symbol"
-            el "td" $ el "code" $ text "{^©}"
+            elClass "td" "plover" $ el "code" $ text"{^©}"
         el "tr" $ do
             el "td" $ text "€"
             el "td" $ el "code" $ text "E"
             el "td" $ text "euro symbol"
-            el "td" $ el "code" $ text "€"
+            elClass "td" "plover" $ el "code" $ text "€"
         el "tr" $ do
             el "td" $ text "—"
             el "td" $ el "code" $ text "~Ü"
             el "td" $ text "em dash"
-            el "td" $ el "code" $ text "—"
+            elClass "td" "plover" $ el "code" $ text "—"
 
     -- parentheses
     el "h3" $ text "Opening and closing"
@@ -216,7 +221,10 @@ ploverCommands = do
              \and thus aren't that scary. Your fingers of your right \
              \hand take care of any thing that opens and closes."
 
-    el "table" $ do
+    elAttr "table"
+           (  "class" =: "ploverCommands"
+           <> "id"    =: "openingClosing"
+           ) $ do
         el "tr" $ do
             el "th" $ text "Short"
             el "th" $ text "Description"
@@ -228,7 +236,7 @@ ploverCommands = do
             el "td" $ text "Guillemets"
             el "td" $ el "code" $ text "+"
             el "td" $ el "code" $ text "-G"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{«^}"
                 text ","
                 el "code" $ text "{^»}"
@@ -237,7 +245,7 @@ ploverCommands = do
             el "td" $ text "german quotes"
             el "td" $ el "code" $ text "-L"
             el "td" $ el "code" $ text "-N"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{„^}"
                 text ","
                 el "code" $ text "{^“}"
@@ -246,7 +254,7 @@ ploverCommands = do
             el "td" $ text "chevrons"
             el "td" $ el "code" $ text "-M"
             el "td" $ el "code" $ text "-B"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{‹^}"
                 text ","
                 el "code" $ text "{^›}"
@@ -255,7 +263,7 @@ ploverCommands = do
             el "td" $ text "square brackets"
             el "td" $ el "code" $ text "-F"
             el "td" $ el "code" $ text "s"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{[^}"
                 text ","
                 el "code" $ text "{^]}"
@@ -264,7 +272,7 @@ ploverCommands = do
             el "td" $ text "parenthesis"
             el "td" $ el "code" $ text "-S"
             el "td" $ el "code" $ text "-D"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{(^}"
                 text ","
                 el "code" $ text "{^)}"
@@ -273,7 +281,7 @@ ploverCommands = do
             el "td" $ text "brackets"
             el "td" $ el "code" $ text "ʃ"
             el "td" $ el "code" $ text "n"
-            el "td" $ do
+            elClass "td" "plover" $ do
                 el "code" $ text "{\\{^}"
                 text ","
                 el "code" $ text "{^\\}}"
@@ -286,7 +294,10 @@ ploverCommands = do
              \among them I included my personal selection of ASCII \
              \emoticons."
 
-    el "table" $ do
+    elAttr "table"
+           (  "class" =: "ploverCommands"
+           <> "id"    =: "asciiArt"
+           ) $ do
         el "tr" $ do
             el "td" $ el "code" $ text "SLNSD"
             el "td" $ el "code" $ text "¯\\_(ツ)_/¯"
@@ -324,79 +335,58 @@ ploverCommands = do
             el "td" $ el "code" $ text "RLNSD"
             el "td" $ el "code" $ text "(ᵔᴥᵔ)"
 
-    -- -- plover
-    -- , ("=undo"                   , "ILNSD" ) -- undo last input
-    -- , ("{PLOVER:TOGGLE}"         , "BDJN+D")
-    -- , ("{PLOVER:ADD_TRANSLATION}", "BDJNA" )
-    -- , ("{PLOVER:LOOKUP}"         , "BDJNL" ) -- plover search dialogue
-    -- , ("{PLOVER:SUGGESTIONS}"    , "BDJNS" ) -- plover suggestions window
-    -- , ("{PLOVER:FOCUS}"          , "BDJNF" ) -- focus plvoer main window
-    -- , ("{PLOVER:CONFIGURE}"      , "BDJNG" ) -- plover configuration window
-    -- , ("{PLOVER:CONFIGURE}"      , "BDJN+G") -- quit plover
-    -- ]
-
-    evPb <- postRender $ delay 0.1 =<< getPostBuild
-    evEDict <- request $ getDictDENumbers evPb
-
-    el "h2" $ text "Palantype number mode"
-
-    el "h3" $ text "Digits and related symbols"
+    -- plover
+    el "h3" $ text "Plover application shortcuts"
 
     elClass "div" "paragraph" $ do
-        text "For typing numbers, the virtual keyboard above can assist \
-             \you quite a bit. Just hold down "
-        el "code" $ text "WN-"
-        text " and you can see, how to reach numbers and related symbols."
+        text "When actually using the Plover software instead of practicing \
+             \on this website, you will find those shortcuts useful. They \
+             \all follow the same scheme: "
+        el "code" $ text "BDJN"
+        text " plus some letter related to the plover command."
 
-    elClass "div" "paragraph" $
-        elAttr "img" (  "src" =: $(static "numbermode.png")
-                     <> "alt" =: "Keyboard layout in number mode"
-                     ) blank
+    elClass "table" "ploverCommands" $ do
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJN+D"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:TOGGLE}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJNA"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:ADD_TRANSLATION}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJNL"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:LOOKUP}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJNS"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:SUGGESTIONS}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJNF"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:FOCUS}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJNG"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:CONFIGURE}"
+        el "tr" $ do
+            el "td" $ el "code" $ text "BDJN+G"
+            elClass "td" "plover" $ el "code" $ text "{PLOVER:CONFIGURE}"
 
     elClass "div" "paragraph" $ do
-        text "Note how, apart from the digits 0-9 for the fingers of your \
-             \right hand, the extra keys for the thumbs allow to input \
-             \even longer numbers all at once, in particular common dates \
-             \like "
-        el "em" $ text "1990"
-        text ", or "
-        el "em" $ text "2022"
+        text "Sooner or later you will add your own dictionary entries, or \
+             \make adjustments to the default. The "
+        elAttr "a" ("href" =: "https://github.com/openstenoproject/plover/wiki/Dictionary-Format"
+                   ) $ text "Plover syntax"
+        text " is documented well for exactly that purpose."
+
+    el "h2" $ text "Practicing for the real-life"
+
+    elClass "div" "paragraph" $ do
+        text "There are more interactive exercises on this page, however, if \
+             \you have not already done so, it's high time you actually install \
+             \the "
+        elAttr "a" ("href" =: "https://github.com/openstenoproject/plover/releases/tag/v4.0.0.dev10"
+                   ) $ text "Plover Software"
         text "."
 
-    elClass "div" "paragraph" $ do
-        text "Also, the input of common shortcuts that involve numbers \
-             \is possible by adding a modifier key to any input. \
-             \The available modifiers are "
-        el "code" $ text "Control"
-        text ", "
-        el "code" $ text "Super"
-        text ", and "
-        el "code" $ text "Alt"
-        text ". "
-        el "code" $ text "Super"
-        text " is usually called the Windows-key."
-
-    el "h3" $ text "Special characters"
-
     elClass "div" "paragraph" $
-        text "Following the standard US keyboard layout, you can reach \
-             \special characters using the Shift modifier key with numbers. \
-             \The virtual keyboard assists you here again."
-
-    elClass "div" "paragraph" $
-        elAttr "img" (  "src" =: $(static "numbermode.png")
-                     <> "alt" =: "Keyboard layout in number mode"
-                     ) blank
-
-    elClass "div" "paragraph" $
-        text "Note that access to these special chars via the number mode \
-             \shouldn't be usually necessary."
-
-    -- TODO: link to further special chars
-    -- TODO: link to plover commands
-
-    widgetHold_ loading $ evEDict <&> \case
-        Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-        Right map -> blank
+        text "Plover Version 4 comes with a 'Plugin Manager' where you can find \
+             \\"Palantype DE\". Try it out and type a few paragraphs!"
 
     pure envNavigation

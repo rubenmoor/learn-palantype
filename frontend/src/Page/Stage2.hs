@@ -541,7 +541,7 @@ taskSingletons eMaps = do
                         $ dynStenoWords
                             <&> \StenoSingletonsState {..} -> do
                                 when (ssstCounter < len)
-                                    $ el "pre"
+                                    $ elClass "div" "exerciseField"
                                     $ el "code"
                                     $ text
                                     $ ssstWords

@@ -33,8 +33,8 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (maybe, fromMaybe, Maybe (..))
 import Data.Semigroup (Endo, (<>))
 import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
-import Page.Common (elCongraz, loading)
-import Palantype.Common (renderPlover, kiBackUp, fromChord, Chord, Palantype, RawSteno)
+import Page.Common (elNotImplemented, elCongraz, loading)
+import Palantype.Common (Lang (DE), renderPlover, kiBackUp, fromChord, Chord, Palantype, RawSteno)
 import Reflex.Dom (EventWriter, switchDyn, widgetHold, updated, holdUniqDyn, holdDyn, never, performEvent, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, delay, dyn_, el, elAttr, elClass, foldDyn, getPostBuild, text)
 import Shared (dynSimple)
 import State (State, Env (..), Navigation (..), stageUrl)
@@ -70,6 +70,7 @@ import Data.Functor (Functor(fmap))
 import Data.Functor (Functor((<$)))
 import Data.List (take)
 import qualified Palantype.Common.RawSteno as Raw
+import Control.Monad (unless)
 
 numberMode ::
     forall key t (m :: * -> *).
@@ -88,6 +89,7 @@ numberMode ::
 numberMode = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
+    unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Typing numbers"
 
@@ -268,7 +270,7 @@ taskDates map = do
                     $ dynStenoDates <&> \StenoDatesState {..} -> do
                         elClass "span" "word"
                             $ when (sdsCounter < numDates)
-                            $ el "pre"
+                            $ elClass "div" "exerciseField multiline"
                             $ el "code"
                             $ text
                             $ renderDate

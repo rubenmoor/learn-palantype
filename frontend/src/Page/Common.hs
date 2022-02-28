@@ -347,22 +347,19 @@ taskWords mapStenoWord mapWordStenos = do
                     $ dynStenoWords <&> \StenoWordsState {..} -> do
                         elClass "span" "word"
                             $ when (swsCounter < len)
-                            $ el "pre"
+                            $ elClass "div" "exerciseField"
                             $ el "code"
                             $ text
                             $ swsWords
                                 !! swsCounter
 
-                        elClass "span" "input"
-                            $ for_
-                                (intersperse "/" $ (showt <$> swsChords) <> ["…"])
-                            $ \str -> el "code" $ text str
+                        elClass "span" "input" $
+                            for_ ( intersperse "/" $ (showt <$> swsChords) <> [" …"]
+                                 ) $ \str -> el "code" $ text str
 
                         el "span" $ do
                             elClass "span" "btnSteno" $ text $
-                                "↤ "
-                                    <> showt
-                                        (KI.toRaw @key kiBackUp) -- U+21A4
+                                "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                             elClass "span" "small" $ text $
                                 if null swsChords
                                     then " to show hint"

@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (rem, link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           (breakWord, overflowWrap, sideCenter, collapse, nthChild, tr, th, rem, link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -121,7 +121,6 @@ import           Clay                           (rem, link, inherit, background,
                                                 , pct
                                                 , pointer
                                                 , position
-                                                , pre
                                                 , preWrap
                                                 , pt
                                                 , putCss
@@ -184,12 +183,17 @@ import qualified Clay.Flexbox as Flex
 import Clay (nowrap)
 import Clay (borderColor)
 import Clay.Color (darkgray)
+import Clay (borderCollapse)
+import Data.Semigroup (Semigroup((<>)))
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
 
 myLightgray :: Color
 myLightgray = rgb 230 230 230
+
+myLightblue :: Color
+myLightblue = rgb 204 238 255
 
 colorLink :: Color
 colorLink = blue
@@ -606,12 +610,17 @@ main = putCss $ do
     ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
 
-    pre ? do
+    div # ".exerciseField" ? do
         backgroundColor myLightgray
-        width $ other "fit-content"
         borderRadius (px 4) (px 4) (px 4) (px 4)
+        width $ other "fit-content"
         padding (px 6) (px 6) (px 6) (px 6)
         span ? padding (px 2) (px 2) (px 2) (px 2)
+        marginBottom $ em 0.5
+    div # ".exerciseField.multiline" ? do
+        width $ pct 100
+        overflowWrap breakWord
+        lineHeight $ em 1.8
 
     div # ".congraz" ? do
         textAlign center
@@ -621,6 +630,7 @@ main = putCss $ do
             padding (px 8) (px 8) (px 8) (px 8)
 
     div # ".paragraph" ? marginBottom (em 0.5)
+    div # ".paragraph" |> code ? fontSize (pt 12)
 
     ".floatLeft" ? float floatLeft
     ".floatRight" ? float floatRight
@@ -827,3 +837,26 @@ main = putCss $ do
       ul ? do
         listStyleType none
         paddingLeft $ px 0
+
+    table # ".ploverCommands" ? do
+      marginTop $ rem 1.5
+      marginBottom $ rem 1.5
+      borderCollapse collapse
+      td <> th ? do
+        padding (px 6) (px 6) (px 6) (px 6)
+      td # ".plover" ? do
+        fontSize $ pt 10
+      tr # nthChild "even" ? do
+        backgroundColor myLightblue
+
+    table #  "#punctuation" ? do
+      td # nthChild "1" ? textAlign (alignSide sideCenter)
+      td # nthChild "2" ? textAlign (alignSide sideCenter)
+
+    table #  "#openingClosing" ? do
+      td # nthChild "1" ? textAlign (alignSide sideCenter)
+      td # nthChild "3" ? textAlign (alignSide sideCenter)
+      td # nthChild "4" ? textAlign (alignSide sideCenter)
+
+    table #  "#asciiArt" ? do
+      td # nthChild "2" ? fontSize (pt 12)
