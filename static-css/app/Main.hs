@@ -747,7 +747,7 @@ main = putCss $ do
     div # ".taskSingletons" ? do
         display flex
         alignItems center
-        span ? do
+        span # ".exerciseField" ? do
             display inlineBlock
             marginLeft $ em 1
             marginRight $ em 1
@@ -772,6 +772,7 @@ main = putCss $ do
         color white
         borderRadius (px 12) (px 12) (px 12) (px 12)
         padding (px 6) (px 6) (px 6) (px 6)
+        display inlineBlock
 
     div # ".patternTable" ? do
       marginTop $ em 1.5

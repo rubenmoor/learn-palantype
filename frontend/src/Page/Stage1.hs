@@ -75,11 +75,10 @@ import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
                                                 , rawToggleKeyboard
                                                 )
-import           Palantype.Common               (Lang(..),  Chord(..)
+import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex
-                                                , showH
                                                 )
 import           Reflex.Dom                     (never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
@@ -390,7 +389,7 @@ taskAlphabet showAlphabet = do
                         Just (j, _) -> if i == j then "bgRed" else clsLetter
                         Nothing ->
                             if wsCounter > i then "bgGreen" else clsLetter
-                elDynClass "span" dynCls $ text $ showt c
+                elDynClass "span" dynCls $ text $ Text.singleton $ keyCode c
         elClass "div" "paragraph" $ do
             dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
             text $ " / " <> Text.pack (show len)
@@ -501,9 +500,8 @@ taskLetters dynLetters = do
                     $  elClass "div" "exerciseField"
                     $  elClass "code" clsMistake
                     $  text
-                    $  showH
-                    $  slsLetters
-                    !! slsCounter
+                    $  showt
+                    $  slsLetters !! slsCounter
                 elClass "div" "paragraph" $ do
                     el "strong" $ text (Text.pack $ show slsCounter)
                     text " / "

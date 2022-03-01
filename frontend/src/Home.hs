@@ -410,7 +410,7 @@ settings lang = do
                               "Your key map contains unrecognized entries:\n"
                                   <> Text.intercalate
                                       "\n"
-                                      (unRawSteno <$> pcfgUnrecognizedStenos)
+                                      (showt <$> pcfgUnrecognizedStenos)
                        in field @"stMsg" .~ Just Message {..}
             ]
 
@@ -821,7 +821,7 @@ elCell showQwerty stenoKeys dynPressedKeys i colspan strCls =
                            "colspan" =: colspan
                         <> "class"   =: unwords (strCls : lsClass)
             elDynAttr "td" attrs $ do
-                elClass "div" "steno" $ text $ showt k
+                elClass "div" "steno" $ text $ Text.singleton $ keyCode k
                 elClass "div" "numberMode" $ text strNumberMode
                 elClass "div" "numberModeShift" $ text strNumberModeShift
                 when showQwerty $ elClass "div" "qwerty" $ text $ Text.unwords qwerties
