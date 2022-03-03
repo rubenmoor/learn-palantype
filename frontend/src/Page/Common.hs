@@ -22,7 +22,7 @@ import Client (postRender)
 import Common.Route (FrontendRoute (..))
 import Common.Stage (stageMeta)
 import Control.Applicative (Applicative (pure))
-import Control.Category (Category (id, (.)))
+import Control.Category ((<<<), Category (id, (.)))
 import Control.Lens
     (preview, (?~), (%~),
       (.~),
@@ -89,7 +89,7 @@ import Palantype.Common
 import Palantype.Common (kiBackUp, kiEnter)
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (dynText, TriggerEvent, tickLossyFrom', Performable, PerformEvent, widgetHold, switchDyn, holdUniqDyn, (=:),
+    (tickLossyFromPostBuildTime, dynText, TriggerEvent, tickLossyFrom', Performable, PerformEvent, widgetHold, switchDyn, holdUniqDyn, (=:),
       DomBuilder, TickInfo (..),
       EventName (Click),
       EventWriter,
@@ -417,20 +417,17 @@ taskWords mapStenoWord mapWordStenos = do
         evStartStop <- fmap updated $ holdUniqDyn $ dynStateWords <&> \case
             StateWords _ StepPause   -> False
             StateWords _ (StepRun _) -> True
-        evStopwatch <- performEvent $ evStartStop <&> \b ->
-            bool Left Right b <$> liftIO getCurrentTime
-        -- evStopTime  <- performEvent $ filter not evStartStop $> liftIO getCurrentTime
-        -- evTick <- tickLossyFrom' ((0.1,) <$> evStartTime)
-        dynStopwatch <- holdDyn 0 $ _tickInfo_alreadyElapsed <$> evTick
-        dynText $ formatTime <$> dynStopwatch
+        evToggle <- performEvent $ evStartStop $> (ESWToggle <$> liftIO getCurrentTime)
+        evTick <- fmap (ESWTick <<< _tickInfo_lastUTC) <$> tickLossyFromPostBuildTime 0.1
 
-        let startStop :: Either UTCTime UTCTime -> StateStopwatch -> StateStopwatch
-            -- startStop (Left timeStop) Nothing = $failure "impossible"
-            startStop (Right timeStart) SWInitial = SWStart timeStart
-            startStop (Left timeStop) (SWStart timeStart) = SWStop $ diffUTCTime timeStop timeStart
-            startStop (Right timeStart) (SWStop _) = SWStart timeStart
+        let startStop :: EventStopwatch -> StateStopwatch -> StateStopwatch
+            startStop (ESWTick timeTick  ) (SWRun timeStart _) =
+                SWRun timeStart $ diffUTCTime timeTick timeStart
+            startStop (ESWToggle timeStop) (SWRun timeStart _) =
+                SWStop $ diffUTCTime timeStop timeStart
+            startStop (ESWToggle timeStart) _ = SWRun timeStart 0
 
-        foldDyn startStop SWInitial evStopwatch
+        dynStopWatch <- foldDyn startStop SWInitial $ leftmost [evToggle, evTick]
 
         pure $ void $ filter id eDone
   where
@@ -449,8 +446,12 @@ taskWords mapStenoWord mapWordStenos = do
 
 data StateStopwatch
     = SWInitial
-    | SWStart UTCTime
+    | SWRun UTCTime NominalDiffTime
     | SWStop  NominalDiffTime
+
+data EventStopwatch
+    = ESWToggle UTCTime
+    | ESWTick UTCTime
 
 elPatterns ::
     forall (m :: * -> *) t.
