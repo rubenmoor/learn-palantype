@@ -15,34 +15,19 @@ module Page.Stage4.PloverCommands
     ( ploverCommands
     ) where
 
-import Client (getDictDENumbers, getDocDEPatternAll, postRender, request)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
-import Control.Monad ((=<<), unless)
+import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
-import Data.Bool (Bool (..), bool, not)
-import Data.Either (Either (..))
 import Data.Eq (Eq ((==)))
-import Data.Foldable (for_)
 import Data.Function (($))
-import Data.Functor ((<&>))
-import Data.Functor ((<$>))
-import Data.Int (Int)
-import Data.List (zip)
-import qualified Data.Map.Strict as Map
-import Data.Maybe (Maybe (..))
 import Data.Semigroup ((<>))
-import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
-import Page.Common (elPatterns, loading, elNotImplemented)
+import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute)
+import Page.Common (elNotImplemented)
 import Palantype.Common (Lang(DE))
-import Reflex.Dom ((=:), DomBuilder, EventName (Click), MonadHold, PostBuild, Prerender, blank, delay, domEvent, dynText, dyn_, el, elAttr, elClass, elClass', elDynClass, foldDyn, getPostBuild, text, widgetHold_)
-import Shared (iFa)
-import State (Env (..), Navigation (..), stageUrl)
-import TextShow (TextShow (showt))
-import Text.Read (readMaybe)
-import Text.Show (Show(show))
-import Obelisk.Generated.Static (static)
+import Reflex.Dom ((=:), DomBuilder, MonadHold, PostBuild, Prerender, el, elAttr, elClass, text)
+import State (Env (..), Navigation (..))
 
 ploverCommands ::
     forall key t (m :: * -> *).

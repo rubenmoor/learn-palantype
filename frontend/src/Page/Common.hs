@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -20,9 +22,9 @@ import Client (postRender)
 import Common.Route (FrontendRoute (..))
 import Common.Stage (stageMeta)
 import Control.Applicative (Applicative (pure))
-import Control.Category (Category (id))
+import Control.Category (Category (id, (.)))
 import Control.Lens
-    ((^?), (^.),  (%~),
+    (preview, (?~), (%~),
       (.~),
       (<&>),
     )
@@ -34,7 +36,7 @@ import Control.Monad.Reader
     ( MonadReader,
       asks,
     )
-import Data.Bool (Bool (..))
+import Data.Bool (bool, not, Bool (..))
 import Data.Either (Either (..))
 import Data.Eq (Eq ((==)))
 import Data.Foldable (for_, traverse_)
@@ -64,8 +66,8 @@ import Data.Text (length)
 import Data.Witherable (Filterable (filter))
 import GHC.Enum (Enum (succ), pred)
 import GHC.Float (Double)
-import GHC.Num (Num ((+)))
-import GHC.Real ((/), fromIntegral)
+import GHC.Num ((*), (-), fromInteger, Num ((+)))
+import GHC.Real (div, floor, realToFrac, (/), fromIntegral)
 import Obelisk.Route.Frontend
     ( R,
       RouteToUrl,
@@ -78,7 +80,6 @@ import Palantype.Common
       Lang (..),
       Palantype,
       PatternPos,
-      fromChord,
       unparts,
     )
 import Palantype.Common
@@ -88,8 +89,8 @@ import Palantype.Common
 import Palantype.Common (kiBackUp, kiEnter)
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (widgetHold, switchDyn, holdUniqDyn, (=:),
-      DomBuilder,
+    (dynText, TriggerEvent, tickLossyFrom', Performable, PerformEvent, widgetHold, switchDyn, holdUniqDyn, (=:),
+      DomBuilder, TickInfo (..),
       EventName (Click),
       EventWriter,
       HasDomEvent (domEvent),
@@ -109,7 +110,7 @@ import Reflex.Dom
       text,
       updated,
     )
-import Safe (atMay, initMay)
+import Safe (initMay)
 import Shared
     ( dynSimple,
       iFa,
@@ -131,6 +132,10 @@ import qualified Palantype.Common.RawSteno as Raw
 import Data.Function ((&))
 import Data.Functor (Functor(fmap))
 import Data.Foldable (Foldable(elem))
+import Data.Time (diffUTCTime, UTCTime, NominalDiffTime, getCurrentTime)
+import qualified Data.Text as Text
+import Text.Printf (printf)
+import Palantype.Common.TH (failure)
 
 elFooter ::
     forall t (m :: * -> *).
@@ -192,13 +197,16 @@ elCongraz eDone Navigation {..} = mdo
                 el "div" $ text "Task cleared!"
                 el "div" $ iFa "fas fa-check-circle"
                 whenJust navMNext $ \nxt -> do
-                    (elACont, _) <- elClass "div" "anthrazit" $ do
+                    elACont <- elClass "div" "anthrazit" $ do
                         text "Type "
                         elClass "span" "btnSteno" $ do
                             el "em" $ text "Enter "
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
-                        elClass' "a" "normalLink" $ text $ showt $ stageMeta nxt
+                        elClass "div" "paragraph" $ do
+                            (e, _) <- elClass' "a" "normalLink" $ text $ showt $ stageMeta nxt
+                            text "."
+                            pure e
                     let eContinue = leftmost [eChordEnter, domEvent Click elACont]
                     updateState $
                         eContinue
@@ -263,45 +271,41 @@ loading =
 
 data StateWords = StateWords
     { _stDone :: Bool
-    , _stStep :: StateStep
+    , _stStep :: Step
     }
 
-data StateStep
-    = StateStepPause
-    | StateStepRun
-        { _stCounter   :: Int
-        , _stChords    :: [RawSteno]
-        , _stWords     :: [Text]
-        , _stNMistakes :: Int
-        , _stMHint     :: Maybe [RawSteno]
-        }
+data Step
+    = StepPause
+    | StepRun Run
+
+data Run = Run
+    { _stCounter   :: Int
+    , _stChords    :: [RawSteno]
+    , _stWords     :: [Text]
+    , _stNMistakes :: Int
+    , _stMHint     :: Maybe [RawSteno]
+    }
 
 makeLenses ''StateWords
-makeLenses ''StateStep
-makePrisms ''StateStep
+makePrisms ''Step
+makeLenses ''Run
 
--- data StenoWordsState = StenoWordsState
---     { swsCounter :: Int,
---       swsDone :: Bool,
---       swsChords :: [RawSteno],
---       swsWords :: [Text],
---       swsNMistakes :: Int,
---       swsMHint :: Maybe [RawSteno]
---     }
-
-taskWords ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadFix m,
-      MonadHold t m,
-      MonadReader (Env t key) m,
-      Palantype key,
-      PostBuild t m,
-      Prerender t m
-    ) =>
-    Map RawSteno Text ->
-    Map Text [RawSteno] ->
-    m (Event t ())
+taskWords
+  :: forall key t (m :: * -> *)
+  . ( DomBuilder t m
+    , MonadFix m
+    , MonadHold t m
+    , MonadIO (Performable m)
+    , MonadReader (Env t key) m
+    , Palantype key
+    , PerformEvent t m
+    , PostBuild t m
+    , Prerender t m
+    , TriggerEvent t m
+    )
+  => Map RawSteno Text
+  -> Map Text [RawSteno]
+  -> m (Event t ())
 taskWords mapStenoWord mapWordStenos = do
     eChord <- asks envEChord
 
@@ -314,67 +318,72 @@ taskWords mapStenoWord mapWordStenos = do
             len = Map.size mapWordStenos
 
             step :: Chord key -> StateWords -> StateWords
-            step c = \case
-                st@(StateWords _ StateStepPause) ->
+            step c st = case st of
+                StateWords _ StepPause ->
                     if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                         then stepStart
                         else st
-                -- reset after done
-                StateWords True _ -> stepStart
-                st@(StateWords _ sstep@StateStepRun{..}) ->
-                    -- undo last input
-                    if Raw.fromChord c == KI.toRaw @key kiBackUp
-                        then case initMay _stChords of
-                                Just cs -> st & stStep .~
-                                    ( sstep & stChords .~ cs
-                                            & stNMistakes %~ succ
-                                            & stMHint .~ Nothing
-                                    )
-                                Nothing -> st & stStep .~
-                                    ( sstep & stMHint .~ Just
-                                        ( Map.findWithDefault []
-                                              (_stWords !! _stCounter)
-                                              mapWordStenos
-                                        )
-                                    )
-                        else
-                            let rawWord = unparts $ _stChords <> [Raw.fromChord c]
-                                isCorrect =
-                                       Map.findWithDefault "" rawWord mapStenoWord
-                                    == _stWords !! _stCounter
-                            in  if isCorrect
-                                    -- correct
-                                    then if _stCounter == pred len
-                                        then StateWords True StateStepPause
-                                        else st & stStep .~
-                                            ( sstep & stCounter %~ succ
-                                                    & stMHint .~ Nothing
-                                                    & stChords .~ []
-                                            )
-                                    else st & stStep .~
-                                           ( sstep & stChords .~ _stChords <> [Raw.fromChord c]
-                                           )
-            stepStart =
-                        StateWords False StateStepRun
-                            { _stCounter = 0,
-                              _stChords = [],
-                              _stWords = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen,
-                              _stNMistakes = 0,
-                              _stMHint = Nothing
-                            }
+                -- undo last input
+                StateWords _ (StepRun Run{..})
+                    | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                        case initMay _stChords of
+                           Just cs -> st & stStep . _StepRun %~
+                                 ( stChords .~ cs )
+                               . ( stNMistakes %~ succ )
+                               . ( stMHint .~ Nothing )
+                           Nothing -> st & stStep . _StepRun . stMHint ?~
+                               ( Map.findWithDefault []
+                                     (_stWords !! _stCounter)
+                                     mapWordStenos
+                               )
+                StateWords _ (StepRun Run{..}) ->
+                    let rawSteno = unparts $ _stChords <> [Raw.fromChord c]
+                        word = Map.findWithDefault "" rawSteno mapStenoWord
+                    in  if word == _stWords !! _stCounter
 
-        dynStateWords <- foldDyn step (StateWords False StateStepPause) eChord
+                            -- correct
+                            then if _stCounter == pred len
+                                then st & stDone .~ True
+                                        & stStep .~ StepPause
+                                else st & stStep . _StepRun %~
+                                      ( stCounter %~ succ )
+                                    . ( stMHint .~ Nothing )
+                                    . ( stChords .~ [] )
+
+                            -- not correct
+                            else st & stStep
+                                    . _StepRun
+                                    . stChords
+                                    .~ (_stChords <> [Raw.fromChord c])
+            stepStart = StateWords
+                { _stDone = False
+                , _stStep = StepRun Run
+                    { _stCounter = 0
+                    , _stChords = []
+                    , _stWords =
+                        evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
+                    , _stNMistakes = 0
+                    , _stMHint = Nothing
+                    }
+                }
+
+            stateInitial = StateWords
+                { _stDone = False
+                , _stStep = StepPause
+                }
+
+        dynStateWords <- foldDyn step stateInitial eChord
 
         eDone <- fmap updated $ holdUniqDyn $ _stDone <$> dynStateWords
 
         elClass "div" "taskWords" $ dyn_ $ dynStateWords <&> \case
-            StateWords _ StateStepPause -> el "div" $ do
+            StateWords _ StepPause -> el "div" $ do
                 text "Type "
                 elClass "span" "btnSteno blinking" $ do
                     text "Start "
                     el "code" $ text "SDAÜD"
                 text " to begin the exercise."
-            (StateWords _ StateStepRun{..}) -> when (_stCounter < len) $ do
+            StateWords _ (StepRun Run{..}) -> when (_stCounter < len) $ do
                 -- elClass "span" "exerciseField"
                 elClass "span" "word"
                     $ elClass "div" "exerciseField"
@@ -397,14 +406,51 @@ taskWords mapStenoWord mapWordStenos = do
                         text $ showt r
                         el "br" blank
 
-        let dynCounter = dynStateWords <&> \st -> st ^. stStep ^? stCounter
-        dyn_ $ dynCounter <&> \mC -> whenJust mC $ \c ->
+        let dynCounter =
+                dynStateWords <&> preview (stStep . _StepRun . stCounter)
+        dyn_ $ dynCounter <&> \mC -> whenJust mC \c ->
             elClass "div" "paragraph" $ do
                 el "strong" $ text $ showt c
                 text " / "
                 text $ showt len
 
+        evStartStop <- fmap updated $ holdUniqDyn $ dynStateWords <&> \case
+            StateWords _ StepPause   -> False
+            StateWords _ (StepRun _) -> True
+        evStopwatch <- performEvent $ evStartStop <&> \b ->
+            bool Left Right b <$> liftIO getCurrentTime
+        -- evStopTime  <- performEvent $ filter not evStartStop $> liftIO getCurrentTime
+        -- evTick <- tickLossyFrom' ((0.1,) <$> evStartTime)
+        dynStopwatch <- holdDyn 0 $ _tickInfo_alreadyElapsed <$> evTick
+        dynText $ formatTime <$> dynStopwatch
+
+        let startStop :: Either UTCTime UTCTime -> StateStopwatch -> StateStopwatch
+            -- startStop (Left timeStop) Nothing = $failure "impossible"
+            startStop (Right timeStart) SWInitial = SWStart timeStart
+            startStop (Left timeStop) (SWStart timeStart) = SWStop $ diffUTCTime timeStop timeStart
+            startStop (Right timeStart) (SWStop _) = SWStart timeStart
+
+        foldDyn startStop SWInitial evStopwatch
+
         pure $ void $ filter id eDone
+  where
+    -- in time 1.8.0.2 there is not FormatTime instance for Difftime
+    -- (or NominalDifftime)
+    -- and GHC 8.6.5 depends on that one specifically
+    formatTime :: NominalDiffTime -> Text
+    formatTime dt =
+        let seconds = realToFrac dt
+            secondsFull = floor @Double @Int seconds
+            secondsTenth = floor @Double @Int $ (seconds - fromIntegral secondsFull) * 10
+            minutes = secondsFull `div` 60
+            strMinutes = if minutes > 0 then printf "%1d:" minutes else ""
+            strSeconds = printf "%1d." secondsFull
+        in  Text.pack (strMinutes <> strSeconds) <> showt secondsTenth
+
+data StateStopwatch
+    = SWInitial
+    | SWStart UTCTime
+    | SWStop  NominalDiffTime
 
 elPatterns ::
     forall (m :: * -> *) t.

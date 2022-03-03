@@ -221,10 +221,10 @@ handleConfigNew str = do
                     DE ->
                         either (const Nothing) (Just . keyIndex) $
                             parseStenoKey @DE.Key raw
-                acc ::
-                    ([(KeyIndex, [Text])], [RawSteno]) ->
-                    (RawSteno, [Text]) ->
-                    ([(KeyIndex, [Text])], [RawSteno])
+                acc
+                  :: ([(KeyIndex, [Text])], [RawSteno])
+                  -> (RawSteno, [Text])
+                  -> ([(KeyIndex, [Text])], [RawSteno])
                 acc (ls, uSteno) (raw, plovers) = case rawToIndex raw of
                     Just i -> ((i, plovers) : ls, uSteno)
                     Nothing | raw `elem` ["no-op", "arpeggiate"] -> (ls, uSteno)

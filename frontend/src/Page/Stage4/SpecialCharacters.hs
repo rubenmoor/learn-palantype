@@ -15,47 +15,29 @@ module Page.Stage4.SpecialCharacters
     ( specialCharacters
     ) where
 
-import Client (getDictDENumbers, getDocDEPatternAll, postRender, request)
-import Common.Route (FrontendRoute)
+import Client (getDictDENumbers, postRender, request)
 import Control.Applicative (Applicative (pure))
 import Control.Monad (unless, (=<<))
-import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
-import Data.Bool (Bool (..), bool, not)
 import Data.Either (Either (..))
-import Data.Foldable (for_)
 import Data.Function (($))
 import Data.Functor ((<&>))
-import Data.Functor ((<$>))
-import Data.Int (Int)
-import Data.List (zip)
-import qualified Data.Map.Strict as Map
-import Data.Maybe (Maybe (..))
 import Data.Semigroup ((<>))
-import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
-import Page.Common (elNotImplemented, elPatterns, loading)
-import Palantype.Common (Lang (DE), toDescription)
-import Reflex.Dom ((=:), DomBuilder, EventName (Click), MonadHold, PostBuild, Prerender, blank, delay, domEvent, dynText, dyn_, el, elAttr, elClass, elClass', elDynClass, foldDyn, getPostBuild, text, widgetHold_)
-import Shared (iFa)
-import State (Env (..), Navigation (..), stageUrl)
-import TextShow (TextShow (showt))
-import Text.Read (readMaybe)
-import Text.Show (Show(show))
+import Page.Common (elNotImplemented, loading)
+import Palantype.Common (Lang (DE))
+import Reflex.Dom ((=:), DomBuilder, MonadHold, Prerender, blank, delay, el, elAttr, elClass, getPostBuild, text, widgetHold_)
+import State (Env (..), Navigation (..))
 import Obelisk.Generated.Static (static)
 import Data.Eq (Eq((==)))
 
-specialCharacters ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadFix m,
-      MonadHold t m,
-      MonadReader (Env t key) m,
-      PostBuild t m,
-      Prerender t m,
-      RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
-    ) =>
-    m Navigation
+specialCharacters
+  :: forall key t (m :: * -> *)
+  . ( DomBuilder t m
+    , MonadHold t m
+    , MonadReader (Env t key) m
+    , Prerender t m
+    )
+  => m Navigation
 specialCharacters = do
     Env {..} <- ask
     let Navigation {..} = envNavigation

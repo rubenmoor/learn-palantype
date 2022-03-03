@@ -377,7 +377,7 @@ main = putCss $ do
         color myLightgray
         fontSize (pt 12)
         padding (px 12) (px 12) (px 12) (px 12)
-        position absolute
+        position fixed
         zIndex 3
         span ? whiteSpace preWrap
         div ? fontWeight bold
@@ -627,7 +627,7 @@ main = putCss $ do
         i ? do
             fontSize $ pt 72
             color green
-            padding (px 8) (px 8) (px 8) (px 8)
+            padding (px 32) (px 32) (px 32) (px 32)
 
     div # ".paragraph" ? marginBottom (em 0.5)
     div # ".paragraph" |> code ? fontSize (pt 12)

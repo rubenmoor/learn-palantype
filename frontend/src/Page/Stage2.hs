@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
@@ -27,11 +28,10 @@ import Control.Applicative
     )
 import Control.Category (Category ((.), id), (<<<))
 import Control.Lens
-    (non, ix, at, (^.), (^?), (?~), (%~), (.~),
+    (preview, (+~), (?~), (%~), (.~),
       (<&>)
     )
 import Control.Lens.TH
-import Control.Lens.Prism (_Just)
 import Control.Monad
     ( (=<<),
       unless,
@@ -68,9 +68,7 @@ import Data.List
     )
 import qualified Data.Map as Map
 import Data.Map.Strict (Map)
-import Data.Maybe
-    ( Maybe (..),
-    )
+import Data.Maybe (Maybe (..))
 import Data.Ord (Ord ((<), (>)))
 import Data.Semigroup
     ( (<>),
@@ -108,11 +106,11 @@ import Palantype.Common
       fromChord,
     )
 import Palantype.Common (kiBackUp, kiEnter)
-import Palantype.Common (RawSteno (..), parseStenoMaybe)
+import Palantype.Common (RawSteno, parseStenoMaybe)
 import qualified Palantype.Common.Indices as KI
 import Palantype.DE (Pattern (..))
 import Reflex.Dom
-    (holdUniqDyn,  (=:),
+    (TriggerEvent, Performable, holdUniqDyn,  (=:),
       DomBuilder,
       EventName (Click),
       EventWriter,
@@ -155,7 +153,7 @@ import TextShow (TextShow (showt))
 import Palantype.Common.TH (fromJust, readLoc)
 import qualified Palantype.Common.RawSteno as Raw
 import Data.Function ((&))
-import GHC.Enum (Enum(succ))
+import Control.Monad (join)
 import Data.Bifunctor (Bifunctor(second))
 
 -- Ex. 2.1
@@ -444,25 +442,28 @@ exercise2 = do
 
 data StateSingletons = StateSingletons
     { _stDone :: Bool
-    , _stStep :: StateStep
+    , _stStep :: Step
     }
 
-data StateStep
-    = StateStepPause
-    | StateStepRun
-        { _stCounter   :: Int
-        , _stMMistake  :: Maybe StateMistake
-        , _stWords     :: [Text]
-        , _stNMistakes :: Int
-        }
+data Step
+    = StepPause
+    | StepRun Run
 
-data StateMistake
+data Run = Run
+    { _stCounter   :: Int
+    , _stMMistake  :: Maybe Mistake
+    , _stWords     :: [Text]
+    , _stNMistakes :: Int
+    }
+
+data Mistake
     = MistakeOne RawSteno
     | MistakeTwo RawSteno [RawSteno]
 
 makeLenses ''StateSingletons
-makeLenses ''StateStep
-makePrisms ''StateStep
+-- makeLenses ''StateStep
+makeLenses ''Run
+makePrisms ''Step
 
 taskSingletons
     :: forall key t (m :: * -> *)
@@ -488,7 +489,7 @@ taskSingletons eMaps = do
     let evReady = catMaybes $ updated $
             zipDyn dynMStdGen dynMMaps <&> \(mStdGen, mMaps) -> do
                 stdGen <- mStdGen
-                maps   <- mMaps
+                maps   <- second (Map.take 10) <$> mMaps
                 pure (stdGen, maps)
 
     fmap switchDyn $ widgetHold (loading $> never) $ evReady <&>
@@ -500,12 +501,12 @@ taskSingletons eMaps = do
                 :: Chord key
                 -> StateSingletons
                 -> StateSingletons
-            step c = \case
-                st@(StateSingletons _ StateStepPause) ->
+            step c st = case st of
+                StateSingletons _ StepPause ->
                     if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                         then stepStart
                         else st
-                st@(StateSingletons _ sstep@StateStepRun{..}) ->
+                StateSingletons _ (StepRun Run{..}) ->
                     let
                         raw = Raw.fromChord c
                         word = _stWords !! _stCounter
@@ -513,58 +514,66 @@ taskSingletons eMaps = do
                             Map.findWithDefault "" raw mapStenoWord == word
                     in  if isCorrect
                             then if _stCounter == len - 1
-                                     then StateSingletons True StateStepPause
-                                     else st & stStep .~
-                                         ( sstep & stCounter %~ succ
-                                                 & stMMistake .~ Nothing
-                                         )
+                                     then st & stDone .~ True
+                                             & stStep .~ StepPause
+                                     else st & stStep
+                                             . _StepRun %~ (stCounter +~ 1)
+                                                         . (stMMistake .~ Nothing)
                             else case _stMMistake of
                                     -- first mistake
-                                    Nothing -> st & stStep .~
-                                        (sstep & stMMistake ?~ MistakeOne raw)
+                                    Nothing -> st & stStep
+                                                  . _StepRun
+                                                  . stMMistake ?~ MistakeOne raw
                                     -- second mistake
                                     Just (MistakeOne _) ->
                                         let corrects =
                                                 Map.findWithDefault [] word mapWordStenos
-                                        in  st & stStep .~
-                                                (sstep & stMMistake .~ Just (MistakeTwo raw corrects))
+                                        in  st & stStep
+                                               . _StepRun
+                                               . stMMistake
+                                               ?~ MistakeTwo raw corrects
                                     -- third mistake and so forth
                                     Just (MistakeTwo _ _) -> st
             stepStart =
-                StateSingletons False StateStepRun
-                    { _stCounter   = 0
-                    , _stMMistake  = Nothing
-                    , _stWords     =
-                          evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
-                    , _stNMistakes = 0
+                StateSingletons
+                    { _stDone = False
+                    , _stStep = StepRun Run
+                        { _stCounter   = 0
+                        , _stMMistake  = Nothing
+                        , _stWords     =
+                              evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
+                        , _stNMistakes = 0
+                        }
                     }
 
-        dynSingletons <- foldDyn step (StateSingletons False StateStepPause) eChord
+        let stateInitial = StateSingletons
+                { _stDone = False
+                , _stStep = StepPause
+                }
+        dynSingletons <- foldDyn step stateInitial eChord
 
         evDone <- updated <$> holdUniqDyn (_stDone <$> dynSingletons)
 
         elClass "div" "taskSingletons" $ do
             dyn_ $ dynSingletons <&> \case
-                StateSingletons _ StateStepPause -> el "div" $ do
+                StateSingletons _ StepPause -> el "div" $ do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
                         el "code" $ text "SDAÜD"
                     text " to begin the exercise."
-                (StateSingletons _ StateStepRun{..}) -> when (_stCounter < len) $
+                StateSingletons _ (StepRun Run{..}) -> when (_stCounter < len) $
                     elClass "span" "exerciseField" $
                         elClass "div" "exerciseField" $ el "code" $ text $
                             _stWords !! _stCounter
 
-            let eMMistake =
-                    updated dynSingletons <&> \st ->
-                        st ^. stStep ^? stMMistake . _Just
-            widgetHold_ blank $
-                eMMistake <&> \case
-                    Just (MistakeOne raw) -> do
+            let evMMMistake =
+                    updated dynSingletons <&> preview (stStep . _StepRun . stMMistake)
+            widgetHold_ blank $ evMMMistake <&> \m -> whenJust (join m) \case
+                    MistakeOne raw -> do
                         elClass "code" "red small" $ text $ showt raw
                         elClass "span" "small" $ text " try again!"
-                    Just (MistakeTwo raw corrects) -> do
+                    MistakeTwo raw corrects -> do
                         elClass "code" "red small" $ text $ showt raw
                         elClass "span" "small" $ text $
                             if length corrects == 1
@@ -572,10 +581,9 @@ taskSingletons eMaps = do
                                 else " try one of these: "
                         for_ corrects $ \correct ->
                             elClass "code" "small" $ text $ showt correct
-                    Nothing -> blank
 
-        let dynCounter = dynSingletons <&> \st -> st ^. stStep ^? stCounter
-        dyn_ $ dynCounter <&> \mC -> whenJust mC $ \c ->
+        let dynMCounter = dynSingletons <&> preview (stStep . _StepRun . stCounter)
+        dyn_ $ dynMCounter <&> \mc -> whenJust mc \c ->
             elClass "div" "paragraph" $ do
                 el "strong" $ text $ showt c
                 text " / "
@@ -677,11 +685,14 @@ exercise3 = do
 
     el "h4" $ text "Practice simple words"
 
-    elClass "div" "paragraph" $
+    elClass "div" "paragraph" $ do
         text
             "To get started, we start with the most simple words. \
             \Every letter can be typed as it is, just make sure to use the \
-            \right finger."
+            \right finger. The only specialy for now is -sch in the coda, \
+            \for which you will have to use "
+        el "code" $ text "ʃ"
+        text "."
 
     ePb <- postRender $ delay 0.1 =<< getPostBuild
     eEDict <- request $ getDictDE' PatSimple 0 ePb
@@ -704,12 +715,15 @@ exercise4 ::
       EventWriter t (Endo State) m,
       MonadFix m,
       MonadHold t m,
+      MonadIO (Performable m),
       MonadReader (Env t key) m,
       Palantype key,
+      PerformEvent t m,
       PostBuild t m,
       Prerender t m,
       RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
+      SetRoute t (R FrontendRoute) m,
+      TriggerEvent t m
     ) =>
     m Navigation
 exercise4 = do

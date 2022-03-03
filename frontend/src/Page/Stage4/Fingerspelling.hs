@@ -15,9 +15,10 @@ module Page.Stage4.Fingerspelling
     ( fingerspelling
     ) where
 
+import Shared (whenJust)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
-import Control.Monad (when, unless)
+import Control.Monad (join, when, unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Bool (Bool (..))
@@ -27,24 +28,24 @@ import Data.Functor ((<&>))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import Data.List ((!!), zip)
-import Data.Maybe (Maybe (..))
+import Data.Maybe (fromMaybe, Maybe (..))
 import Data.Semigroup (Endo, (<>))
 import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
 import Page.Common (elCongraz, elNotImplemented)
-import Palantype.Common (kiBackUp, Chord, Palantype)
+import Palantype.Common (kiChordsStart, kiBackUp, Chord, Palantype)
 import Reflex.Dom (EventWriter, holdUniqDyn, updated, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, dynText, dyn_, el, elAttr, elClass, elDynClass, foldDyn, text, widgetHold_)
 import State (State, Env (..), Navigation (..), stageUrl)
 import TextShow (TextShow (showt))
 import Text.Read (readMaybe)
 import Text.Show (Show(show))
 import Palantype.Common.TH (readLoc)
-import Control.Category ((<<<))
+import Control.Category ((<<<) ,(.))
 import Common.Stage (stageMeta)
 import Palantype.DE.FingerSpelling (dictLiterals, keysLetterOther, keysLetterUS)
 import qualified Data.Text as Text
 import Palantype.Common (Lang(DE))
 import Data.Eq (Eq((==)))
-import GHC.Num ((+), Num((-)))
+import GHC.Num (Num((-)))
 import Data.Tuple (fst)
 import qualified Palantype.Common.RawSteno as Raw
 import qualified Palantype.Common.Indices as KI
@@ -53,6 +54,119 @@ import Data.Ord (Ord((>)))
 import Data.Functor (void)
 import Data.Witherable (Filterable(filter))
 import Control.Category (Category(id))
+import Control.Lens (preview, (?~), (+~), makeLenses, makePrisms, (.~))
+import Data.Foldable (Foldable(elem))
+import Data.Function ((&))
+import Data.Functor (Functor(fmap))
+
+data StateLiterals k = StateLiterals
+    { _stDone :: Bool
+    , _stStep :: Step k
+    }
+
+data Step k
+    = StepPause
+    | StepRun (Run k)
+
+data Run k = Run
+    { _stCounter  :: Int
+    , _stMMistake :: Maybe (Int, Chord k)
+    }
+
+makeLenses ''StateLiterals
+makePrisms ''Step
+makeLenses ''Run
+
+{-|
+Pass through all the letters of the steno alphabet one by one
+-}
+taskLiterals
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       )
+    => m (Event t ())
+taskLiterals = do
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+
+        len = length dictLiterals
+
+        step :: Chord key -> StateLiterals key -> StateLiterals key
+        step c st = case st of
+            StateLiterals _ StepPause ->
+                if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
+                    then stepStart
+                    else st
+            StateLiterals _ (StepRun Run{..}) ->
+                let current = KI.toRaw @key $ fst $ dictLiterals !! _stCounter
+                in  case _stMMistake of
+
+                        -- mistake mode ...
+                        -- ... back up
+                        Just _ | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                            st & stStep . _StepRun . stMMistake .~ Nothing
+                        -- ... or do nothing
+                        Just _ -> st
+
+                        -- correct
+                        Nothing | Raw.fromChord c == current ->
+                            if _stCounter == len - 1
+                            then st & stDone .~ True
+                                    & stStep .~ StepPause
+                            else st & stStep . _StepRun . stCounter +~ 1
+                                    & stDone .~ (_stCounter == len - 1)
+
+                        -- mistake
+                        Nothing -> st & stStep
+                                      . _StepRun
+                                      . stMMistake
+                                      ?~ (_stCounter, c)
+
+        stepStart = StateLiterals
+            { _stDone = False
+            , _stStep = StepRun Run
+                { _stCounter  = 0
+                , _stMMistake = Nothing
+                }
+            }
+        stateInitial = StateLiterals
+            { _stDone = False
+            , _stStep = StepPause
+            }
+
+    dynLiterals <- foldDyn step stateInitial envEChord
+    eDone <- fmap updated $ holdUniqDyn $ _stDone <$> dynLiterals
+
+    elClass "div" "paragraph" $ dyn_ $ dynLiterals <&> \case
+        StateLiterals _ StepPause -> el "div" $ do
+            text "Type "
+            elClass "span" "btnSteno blinking" $ do
+                text "Start "
+                el "code" $ text "SDAÜD"
+            text " to begin the exercise."
+        StateLiterals _ (StepRun Run{..}) -> do
+            elClass "div" "exerciseField multiline" $ el "code" $
+                for_ (zip [0 :: Int ..] dictLiterals) $ \(i, (_, lit)) ->
+                    let cls = case _stMMistake of
+                            Just (j, _) -> if i == j         then "bgRed"   else ""
+                            Nothing     -> if _stCounter > i then "bgGreen" else ""
+                    in  elClass "span" cls $ text lit
+
+            elClass "div" "paragraph" $
+                text $ showt _stCounter <> " / " <> showt len
+
+            whenJust _stMMistake $ \(_, w) ->
+                elClass "div" "red small paragraph" $ do
+                    text $ "You typed " <> showt w <> " "
+                    elClass "span" "btnSteno blinking" $
+                        text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+
+    pure $ void $ filter id eDone
 
 fingerspelling
   :: forall key t (m :: * -> *)
@@ -190,11 +304,8 @@ fingerspelling = do
                 elAttr "code" ("class" =: "steno") $ text steno
         elClass "br" "clearBoth" blank
 
-    elClass "div" "paragraph" $
-        text "Fingerspell the letters as they appear!"
-
-    eDone <- taskLiterals
-    elCongraz eDone envNavigation
+    evDone <- taskLiterals
+    elCongraz evDone envNavigation
 
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
@@ -205,96 +316,3 @@ fingerspelling = do
              \without any additional configuration."
 
     pure envNavigation
-
-data WalkLiteralsState k = WalkLiteralsState
-    { wlsCounter  :: Int
-    , wlsMMistake :: Maybe (Int, Chord k)
-    , wlsDone     :: Bool
-    }
-
-{-|
-Pass through all the letters of the steno alphabet one by one
--}
-taskLiterals
-    :: forall key t (m :: * -> *)
-     . ( DomBuilder t m
-       , MonadFix m
-       , MonadHold t m
-       , MonadReader (Env t key) m
-       , Palantype key
-       , PostBuild t m
-       )
-    => m (Event t ())
-taskLiterals = do
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
-
-        len = length dictLiterals
-
-        step :: Chord key -> WalkLiteralsState key -> WalkLiteralsState key
-        step c wls@WalkLiteralsState {..} =
-            let current = KI.toRaw @key (fst (dictLiterals !! wlsCounter))
-            in  case (wlsMMistake, wlsDone) of
-
-                  -- reset after done
-                  (_, True) ->
-                      wls { wlsDone = False, wlsCounter = 0 }
-
-                  -- back up after mistake
-                  (Just _, _) | Raw.fromChord c == KI.toRaw @key kiBackUp ->
-                      wls { wlsMMistake = Nothing }
-
-                  -- ... or stay in mistake mode
-                  (Just _, _) -> wls
-
-                  -- correct
-                  _ | current == Raw.fromChord c -> wls
-                      { wlsDone    = if wlsCounter == len - 1
-                                        then True
-                                        else False
-                      , wlsCounter = wlsCounter + 1
-                      }
-
-                  -- mistake
-                  _ -> wls
-                      { wlsDone     = False
-                      , wlsMMistake = Just (wlsCounter, c)
-                      }
-
-        stepInitial = WalkLiteralsState
-            { wlsCounter  = 0
-            , wlsMMistake = Nothing
-            , wlsDone     = False
-            }
-
-    dynWalk <- foldDyn step stepInitial envEChord
-    dynDone <- holdUniqDyn $ wlsDone <$> dynWalk
-    let eDone = updated dynDone
-
-    elClass "div" "exerciseField multiline" $ el "code" $ do
-        for_ (zip [0 :: Int ..] dictLiterals) $ \(i, (_, lit)) -> do
-            let
-                dynCls = dynWalk <&> \WalkLiteralsState {..} -> case wlsMMistake of
-                    Just (j, _) -> if i == j         then "bgRed"   else ""
-                    Nothing     -> if wlsCounter > i then "bgGreen" else ""
-            elDynClass "span" dynCls $ text lit
-
-    elClass "div" "paragraph" $ do
-        dynText $ dynWalk <&> \WalkLiteralsState {..} -> Text.pack $ show wlsCounter
-        text $ " / " <> Text.pack (show len)
-
-    let eMistake = wlsMMistake <$> updated dynWalk
-    widgetHold_ blank $ eMistake <&> \case
-        Just (_, w) -> do
-            elClass "div" "red small paragraph" $ do
-                text $ "You typed " <> showt w <> " "
-                elClass "span" "btnSteno blinking" $
-                    text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
-
-        Nothing -> blank
-
-    dyn_ $ dynDone <&> \bDone ->
-        when bDone $ elClass "div" "small anthrazit" $ text
-            "Cleared. Press any key to start over."
-
-    pure $ void $ filter id eDone

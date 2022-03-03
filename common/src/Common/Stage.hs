@@ -24,7 +24,7 @@ module Common.Stage
     )
 where
 
-import Control.Category ((>>>), (<<<))
+import Control.Category ((<<<))
 import Control.Lens.TH (makeWrapped)
 import Data.Aeson (ToJSON)
 import Data.Aeson (FromJSON)

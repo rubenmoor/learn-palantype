@@ -168,7 +168,6 @@ import Palantype.Common
       KeyIndex,
       Lang (..),
       Palantype (keyCode),
-      RawSteno (..),
       fromChord,
       fromIndex,
       kiDown,
@@ -177,7 +176,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (zipDyn, inputElementConfig_initialChecked, (=:),
+    (TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -247,6 +246,7 @@ import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
 import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
+import Control.Monad.IO.Class (MonadIO)
 
 default (Text)
 
@@ -1128,12 +1128,15 @@ stages ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
       MonadHold t m,
+      MonadIO (Performable m),
       MonadFix m,
       Palantype key,
+      PerformEvent t m,
       PostBuild t m,
       Prerender t m,
       RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
+      SetRoute t (R FrontendRoute) m,
+      TriggerEvent t m
     ) =>
     Lang ->
     RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
