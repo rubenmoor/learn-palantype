@@ -159,7 +159,7 @@ exercise1 = do
     updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
     eDone <- taskAlphabet True
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
 
     when (navLang == DE)
         $ elClass "div" "paragraph"
@@ -205,7 +205,7 @@ exercise2 = do
     updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
     eDone <- taskAlphabet False
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -267,7 +267,7 @@ exercise3 = do
     updateState $ ePb $> [field @"stShowKeyboard" .~ False]
 
     eDone <- taskAlphabet True
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -315,7 +315,7 @@ exercise4 = do
     updateState $ ePb $> [field @"stShowKeyboard" .~ False]
 
     eDone <- taskAlphabet False
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
 
 {-|
@@ -577,7 +577,7 @@ exercise5 = do
 
     eDone <- taskLetters dynLeftHand
 
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
 
 exercise6
@@ -625,7 +625,7 @@ exercise6 = do
 
     eDone <- taskLetters dynRightHand
 
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
 
 exercise7
@@ -682,5 +682,5 @@ exercise7 = do
            \are presented to you, by reloading the page, if you feel the need to."
 
 
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation

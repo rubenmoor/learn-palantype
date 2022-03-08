@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (breakWord, overflowWrap, sideCenter, collapse, nthChild, tr, th, rem, link, inherit, background, strong, br, overflowEllipsis, textOverflow, vAlignBottom, middle, verticalAlign, violet, orange, pink, hr, sideLeft, sideRight, alignSide,  (#)
+import           Clay                           ( (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -24,7 +24,9 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , absolute
                                                 , after
                                                 , alignItems
+                                                , alignSide
                                                 , animation
+                                                , background
                                                 , backgroundColor
                                                 , before
                                                 , black
@@ -41,11 +43,14 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , bottom
                                                 , boxShadow
                                                 , boxSizing
+                                                , br
+                                                , breakWord
                                                 , bsColor
                                                 , bsInset
                                                 , button
                                                 , clear
                                                 , code
+                                                , collapse
                                                 , color
                                                 , column
                                                 , content
@@ -80,11 +85,13 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , height
                                                 , hidden
                                                 , hover
+                                                , hr
                                                 , html
                                                 , i
                                                 , img
                                                 , important
                                                 , infinite
+                                                , inherit
                                                 , inline
                                                 , inlineBlock
                                                 , inlineFlex
@@ -99,6 +106,7 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , lightgreen
                                                 , lineHeight
                                                 , linear
+                                                , link
                                                 , listStyleType
                                                 , margin
                                                 , marginBottom
@@ -106,12 +114,18 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , marginRight
                                                 , marginTop
                                                 , maxWidth
+                                                , middle
                                                 , minHeight
                                                 , minWidth
+                                                , monospace
+                                                , nthChild
                                                 , opacity
+                                                , orange
                                                 , outline
                                                 , overflow
                                                 , overflowClip
+                                                , overflowEllipsis
+                                                , overflowWrap
                                                 , overflowY
                                                 , padding
                                                 , paddingBottom
@@ -119,6 +133,7 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , paddingRight
                                                 , paddingTop
                                                 , pct
+                                                , pink
                                                 , pointer
                                                 , position
                                                 , preWrap
@@ -128,6 +143,7 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , queryOnly
                                                 , red
                                                 , relative
+                                                , rem
                                                 , rgb
                                                 , rgba
                                                 , right
@@ -136,6 +152,9 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , section
                                                 , shadowWithBlur
                                                 , shadowWithSpread
+                                                , sideCenter
+                                                , sideLeft
+                                                , sideRight
                                                 , small
                                                 , smaller
                                                 , solid
@@ -143,17 +162,24 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , star
                                                 , sticky
                                                 , stringContent
+                                                , strong
                                                 , table
                                                 , td
                                                 , textAlign
                                                 , textDecoration
+                                                , textOverflow
+                                                , th
                                                 , top
+                                                , tr
                                                 , transform
                                                 , transition
                                                 , translate
                                                 , transparent
                                                 , ul
                                                 , underline
+                                                , vAlignBottom
+                                                , verticalAlign
+                                                , violet
                                                 , visibility
                                                 , visited
                                                 , white
@@ -163,28 +189,27 @@ import           Clay                           (breakWord, overflowWrap, sideCe
                                                 , zIndex
                                                 , (|>)
                                                 )
+import           Clay                           ( borderTopColor )
+import           Clay                           ( borderTopStyle )
+import           Clay                           ( borderTopWidth )
+import           Clay                           ( nowrap )
+import           Clay                           ( borderColor )
+import           Clay                           ( borderCollapse )
 import           Clay.Border                    ( borderBottom
                                                 , borderTop
                                                 , dotted
                                                 )
-import           Clay.Flexbox                   ( row
-                                                )
+import           Clay.Color                     ( darkgray )
+import           Clay.Flexbox                   ( row )
+import qualified Clay.Flexbox                  as Flex
 import qualified Clay.Media                    as Media
 import           Control.Applicative            ( Applicative(pure) )
 import           Data.Function                  ( ($) )
 import           Data.Monoid                    ( Monoid(mempty) )
+import           Data.Semigroup                 ( Semigroup((<>)) )
 import           GHC.IO                         ( IO )
 import           GHC.Num                        ( Num((*), (+), (-), negate) )
 import           System.IO                      ( putStrLn )
-import Clay (borderTopColor)
-import Clay (borderTopStyle)
-import Clay (borderTopWidth)
-import qualified Clay.Flexbox as Flex
-import Clay (nowrap)
-import Clay (borderColor)
-import Clay.Color (darkgray)
-import Clay (borderCollapse)
-import Data.Semigroup (Semigroup((<>)))
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -219,21 +244,21 @@ main = putCss $ do
                 cursor pointer
         height $ pct 100
         h2 ? do
-          color darkblue
-          marginTop $ px 60
-          a # link ? do
-            textDecoration none
-            color inherit
-          a # hover ? textDecoration none
+            color darkblue
+            marginTop $ px 60
+            a # link ? do
+                textDecoration none
+                color inherit
+            a # hover ? textDecoration none
         h3 ? color anthrazit
         h3 |> a # link ? do
-          textDecoration none
-          color anthrazit
+            textDecoration none
+            color anthrazit
         h3 |> a # hover ? color darkblue
         h3 ? i ? do
-          color myLightgray
-          paddingLeft $ em 0.5
-          paddingRight $ em 0.5
+            color myLightgray
+            paddingLeft $ em 0.5
+            paddingRight $ em 0.5
     star ? boxSizing borderBox
 
     -- flex layout
@@ -364,7 +389,7 @@ main = putCss $ do
                   $ shadowWithSpread (px 0) (px 8) (px 16) (px 0)
             ]
         padding (px 24) (px 24) (px 24) (px 24)
-        position absolute
+        position fixed
         zIndex 2
 
     div # ".msgOverlay" ? do
@@ -489,8 +514,12 @@ main = putCss $ do
                     div # ".numberModeShift" ? display block
                 ".numberMode.small" & div # ".numberMode" ? fontSize (pt 14)
                 ".numberMode.verySmall" & div # ".numberMode" ? fontSize (pt 8)
-                ".numberModeShift.small" & div # ".numberModeShift" ? fontSize (pt 14)
-                ".numberModeShift.verySmall" & div # ".numberModeShift" ? fontSize (pt 8)
+                ".numberModeShift.small" & div # ".numberModeShift" ? fontSize
+                    (pt 14)
+                ".numberModeShift.verySmall"
+                    & div
+                    # ".numberModeShift"
+                    ? fontSize (pt 8)
 
                 div ? do
                     ".steno" & do
@@ -523,16 +552,16 @@ main = putCss $ do
         color gray
         display inlineFlex
         code ? do
-          fontSize (pt 10)
-          padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
+            fontSize (pt 10)
+            padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
         i ? fontSize (pt 22)
         padding (px 0) (px 2) (px 0) (px 2)
         borderRadius (px 8) (px 8) (px 8) (px 8)
         border solid (px 2) gray
         ".keyboardVisible" & color darkblue
         hover & do
-          color darkblue
-          borderColor darkblue
+            color darkblue
+            borderColor darkblue
 
     span # ".btn" ? do
         color gray
@@ -610,7 +639,7 @@ main = putCss $ do
     ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
 
-    div # ".exerciseField" ? do
+    ".exerciseField" ? do
         backgroundColor myLightgray
         borderRadius (px 4) (px 4) (px 4) (px 4)
         width $ other "fit-content"
@@ -651,6 +680,7 @@ main = putCss $ do
         cursor pointer
 
     ".displayNone" ? display none
+    ".visibilityHidden" ? visibility hidden
     ".block" ? display block
     ".inline" ? display inline
     ".inlineBlock" ? display inlineBlock
@@ -745,22 +775,16 @@ main = putCss $ do
             width $ pct 90
 
     div # ".taskSingletons" ? do
-        display flex
-        alignItems center
-        span # ".exerciseField" ? do
-            display inlineBlock
-            marginLeft $ em 1
-            marginRight $ em 1
-            width $ px 120
+        padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
 
-    div # ".taskSingletons" |> code ? marginRight (em 1)
+    div # ".taskSingletons" |> code ? do
+        marginLeft  $ em 1
+        marginRight $ em 1
 
     div # ".taskWords" ? do
-        display flex
-        alignItems center
+        padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
 
     div # ".taskWords" |> span ? do
-        marginLeft $ em 1
         marginRight $ em 1
 
     div # ".taskWords" |> span # ".word" ? minWidth (px 120)
@@ -775,89 +799,95 @@ main = putCss $ do
         display inlineBlock
 
     div # ".patternTable" ? do
-      marginTop $ em 1.5
-      marginBottom $ em 2
-      div # ".orig" ? do
-        backgroundColor myLightgray
-        paddingRight $ em 0.5
-        width $ px 100
-        height $ px 31
-        textAlign $ alignSide sideRight
-        display inlineBlock
-        verticalAlign vAlignBottom
-      code # ".steno" ? do
-        width $ px 100
-        paddingLeft $ em 0.5
-        textAlign $ alignSide sideLeft
-        display inlineBlock
-        fontSize $ pt 14
-      hr ? do
-        border none (px 0) black
-        height $ px 1
-        marginBottom $ px $ -20
-      hr # ".onset" ? backgroundColor pink
-      hr # ".nucleus" ? backgroundColor lightgreen
-      hr # ".coda" ? backgroundColor lightblue
-      hr # ".multiple" ? backgroundColor violet
-      span # ".patternPosition" ? do
-        float floatRight
-        fontSize $ px 14
-        fontWeight bold
-        position relative
-        top $ px 20
-      span # ".onset" ? color pink
-      span # ".nucleus" ? color lightgreen
-      span # ".coda" ? color lightblue
-      span # ".multiple" ? color violet
+        marginTop $ em 1.5
+        marginBottom $ em 2
+        div # ".orig" ? do
+            backgroundColor myLightgray
+            paddingRight $ em 0.5
+            width $ px 100
+            height $ px 31
+            textAlign $ alignSide sideRight
+            display inlineBlock
+            verticalAlign vAlignBottom
+        code # ".steno" ? do
+            width $ px 100
+            paddingLeft $ em 0.5
+            textAlign $ alignSide sideLeft
+            display inlineBlock
+            fontSize $ pt 14
+        hr ? do
+            border none (px 0) black
+            height $ px 1
+            marginBottom $ px $ -20
+        hr # ".onset" ? backgroundColor pink
+        hr # ".nucleus" ? backgroundColor lightgreen
+        hr # ".coda" ? backgroundColor lightblue
+        hr # ".multiple" ? backgroundColor violet
+        span # ".patternPosition" ? do
+            float floatRight
+            fontSize $ px 14
+            fontWeight bold
+            position relative
+            top $ px 20
+        span # ".onset" ? color pink
+        span # ".nucleus" ? color lightgreen
+        span # ".coda" ? color lightblue
+        span # ".multiple" ? color violet
 
     div # ".patternExamples" ? do
-      backgroundColor lightblue
-      fontSize $ pt 12
-      padding (px 8) (px 8) (px 8) (px 8)
-      borderRadius (px 8) (px 8) (px 8) (px 8)
-      strong ? marginBottom (em 0.5)
+        backgroundColor lightblue
+        fontSize $ pt 12
+        padding (px 8) (px 8) (px 8) (px 8)
+        borderRadius (px 8) (px 8) (px 8) (px 8)
+        strong ? marginBottom (em 0.5)
 
-      div ? do
-        overflow hidden
-        textOverflow overflowEllipsis
+        div ? do
+            overflow hidden
+            textOverflow overflowEllipsis
 
-      button ? do
-        backgroundColor transparent
-        border none (px 0) black
-        cursor pointer
-        color anthrazit
-        fontSize $ em 0.5
+        button ? do
+            backgroundColor transparent
+            border none (px 0) black
+            cursor pointer
+            color anthrazit
+            fontSize $ em 0.5
 
     ".whiteSpaceNoWrap" ? whiteSpace nowrap
 
     div # ".embeddedToc" ? do
-      border solid (px 1) anthrazit
-      borderRadius (px 4) (px 4) (px 4) (px 4)
-      fontSize $ pt 12
-      padding (px 8) (px 8) (px 8) (px 8)
-      ul ? do
-        listStyleType none
-        paddingLeft $ px 0
+        border solid (px 1) anthrazit
+        borderRadius (px 4) (px 4) (px 4) (px 4)
+        fontSize $ pt 12
+        padding (px 8) (px 8) (px 8) (px 8)
+        ul ? do
+            listStyleType none
+            paddingLeft $ px 0
 
     table # ".ploverCommands" ? do
-      marginTop $ rem 1.5
-      marginBottom $ rem 1.5
-      borderCollapse collapse
-      td <> th ? do
-        padding (px 6) (px 6) (px 6) (px 6)
-      td # ".plover" ? do
-        fontSize $ pt 10
-      tr # nthChild "even" ? do
-        backgroundColor myLightblue
+        marginTop $ rem 1.5
+        marginBottom $ rem 1.5
+        borderCollapse collapse
+        td <> th ? do
+            padding (px 6) (px 6) (px 6) (px 6)
+        td # ".plover" ? do
+            fontSize $ pt 10
+        tr # nthChild "even" ? do
+            backgroundColor myLightblue
 
-    table #  "#punctuation" ? do
-      td # nthChild "1" ? textAlign (alignSide sideCenter)
-      td # nthChild "2" ? textAlign (alignSide sideCenter)
+    table # "#punctuation" ? do
+        td # nthChild "1" ? textAlign (alignSide sideCenter)
+        td # nthChild "2" ? textAlign (alignSide sideCenter)
 
-    table #  "#openingClosing" ? do
-      td # nthChild "1" ? textAlign (alignSide sideCenter)
-      td # nthChild "3" ? textAlign (alignSide sideCenter)
-      td # nthChild "4" ? textAlign (alignSide sideCenter)
+    table # "#openingClosing" ? do
+        td # nthChild "1" ? textAlign (alignSide sideCenter)
+        td # nthChild "3" ? textAlign (alignSide sideCenter)
+        td # nthChild "4" ? textAlign (alignSide sideCenter)
 
-    table #  "#asciiArt" ? do
-      td # nthChild "2" ? fontSize (pt 12)
+    table # "#asciiArt" ? do
+        td # nthChild "2" ? fontSize (pt 12)
+
+    span # ".stopwatch" ? do
+        fontSize $ pt 14
+        color gray
+        fontFamily ["DejaVu Sans Mono"] [monospace]
+        paddingLeft $ em 1.5

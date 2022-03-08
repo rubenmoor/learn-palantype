@@ -46,6 +46,7 @@ library
     Home
     Shared
     Page.Common
+    Page.Common.Stopwatch
     Page.Introduction
     Page.Patterns
     Page.Stage1

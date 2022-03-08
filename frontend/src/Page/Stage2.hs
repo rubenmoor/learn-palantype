@@ -28,7 +28,7 @@ import Control.Applicative
     )
 import Control.Category (Category ((.), id), (<<<))
 import Control.Lens
-    (preview, (+~), (?~), (%~), (.~),
+    ((+~), (?~), (%~), (.~),
       (<&>)
     )
 import Control.Lens.TH
@@ -69,7 +69,7 @@ import Data.List
 import qualified Data.Map as Map
 import Data.Map.Strict (Map)
 import Data.Maybe (Maybe (..))
-import Data.Ord (Ord ((<), (>)))
+import Data.Ord (Ord ((>)))
 import Data.Semigroup
     ( (<>),
       Endo,
@@ -99,6 +99,7 @@ import Page.Common
       loading,
       taskWords,
     )
+import Page.Common.Stopwatch
 import Palantype.Common
     (kiChordsStart,  Chord (..),
       Lang (..),
@@ -110,7 +111,7 @@ import Palantype.Common (RawSteno, parseStenoMaybe)
 import qualified Palantype.Common.Indices as KI
 import Palantype.DE (Pattern (..))
 import Reflex.Dom
-    (TriggerEvent, Performable, holdUniqDyn,  (=:),
+    (dyn, TriggerEvent, Performable, holdUniqDyn,  (=:),
       DomBuilder,
       EventName (Click),
       EventWriter,
@@ -153,8 +154,8 @@ import TextShow (TextShow (showt))
 import Palantype.Common.TH (fromJust, readLoc)
 import qualified Palantype.Common.RawSteno as Raw
 import Data.Function ((&))
-import Control.Monad (join)
 import Data.Bifunctor (Bifunctor(second))
+import Data.Time (NominalDiffTime)
 
 -- Ex. 2.1
 
@@ -286,7 +287,7 @@ walkWords words raw = do
                 }
 
     dynWalk <- foldDyn step stepInitial envEChord
-    let eDone = catMaybes $ wsDone <$> updated dynWalk
+    let evDone = catMaybes $ wsDone <$> updated dynWalk
 
     el "blockquote" $ el "table" $ do
         el "tr" $ traverse_ (el "td" . text) words
@@ -306,14 +307,14 @@ walkWords words raw = do
                             elBackUp @key
                         Nothing -> blank
 
-    dynDone <- holdDyn False eDone
+    dynDone <- holdDyn False evDone
     dyn_ $
         dynDone <&> \bDone ->
             when bDone $ elClass "div" "small anthrazit" $
                 text
                     "Cleared. Press any key to start over."
 
-    pure $ void $ filter id eDone
+    pure $ void $ filter id evDone
 
 exercise2 ::
     forall key t (m :: * -> *).
@@ -336,7 +337,7 @@ exercise2 = do
     el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 2"
 
-    eDone <- case navLang of
+    evDone <- case navLang of
         EN -> do
             elClass "div" "paragraph" $ do
                 text
@@ -369,7 +370,7 @@ exercise2 = do
                       "."
                     ]
 
-            eDone <- walkWords lsWord raw
+            evDone <- walkWords lsWord raw
 
             elClass "div" "paragraph" $ do
                 text
@@ -390,7 +391,7 @@ exercise2 = do
                     \Some words are almost beyond recognition. \
                     \No worries, we'll get to that."
 
-            pure eDone
+            pure evDone
         DE -> do
             elClass "div" "paragraph" $
                 text
@@ -404,7 +405,7 @@ exercise2 = do
             let raw = "MID DEM WISn WÄ+GSD DEÜ SWEI/FEL N-"
                 txt = "Mit dem Wissen wächst der Zwei fel ."
 
-            eDone <- walkWords (Text.words txt) raw
+            evDone <- walkWords (Text.words txt) raw
 
             elClass "div" "paragraph" $ do
                 text
@@ -425,7 +426,7 @@ exercise2 = do
                     \Some words are almost beyond recognition. \
                     \No worries, we'll get to that."
 
-            pure eDone
+            pure evDone
 
     elClass "div" "paragraph" $ do
         text "Let me introduce yet another useful chord: "
@@ -434,20 +435,15 @@ exercise2 = do
             ". It is the homerow of your right hand and deletes your last \
             \input. Now you can correct your mistakes!"
 
-    elCongraz eDone envNavigation
+    elCongraz (evDone $> Nothing) envNavigation
 
     pure envNavigation
 
 -- Ex 2.3
 
-data StateSingletons = StateSingletons
-    { _stDone :: Bool
-    , _stStep :: Step
-    }
-
-data Step
-    = StepPause
-    | StepRun Run
+data StateSingletons
+    = StatePause
+    | StateRun Run
 
 data Run = Run
     { _stCounter   :: Int
@@ -460,23 +456,24 @@ data Mistake
     = MistakeOne RawSteno
     | MistakeTwo RawSteno [RawSteno]
 
-makeLenses ''StateSingletons
--- makeLenses ''StateStep
 makeLenses ''Run
-makePrisms ''Step
+makePrisms ''StateSingletons
 
 taskSingletons
     :: forall key t (m :: * -> *)
     . ( DomBuilder t m
       , MonadFix m
       , MonadHold t m
+      , MonadIO (Performable m)
       , MonadReader (Env t key) m
       , Palantype key
+      , PerformEvent t m
       , PostBuild t m
       , Prerender t m
+      , TriggerEvent t m
       )
     => Event t (Map RawSteno Text, Map Text [RawSteno])
-    -> m (Event t ())
+    -> m (Event t NominalDiffTime)
 taskSingletons eMaps = do
     eChord <- asks envEChord
 
@@ -502,11 +499,11 @@ taskSingletons eMaps = do
                 -> StateSingletons
                 -> StateSingletons
             step c st = case st of
-                StateSingletons _ StepPause ->
+                StatePause ->
                     if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                         then stepStart
                         else st
-                StateSingletons _ (StepRun Run{..}) ->
+                StateRun Run{..} ->
                     let
                         raw = Raw.fromChord c
                         word = _stWords !! _stCounter
@@ -514,100 +511,91 @@ taskSingletons eMaps = do
                             Map.findWithDefault "" raw mapStenoWord == word
                     in  if isCorrect
                             then if _stCounter == len - 1
-                                     then st & stDone .~ True
-                                             & stStep .~ StepPause
-                                     else st & stStep
-                                             . _StepRun %~ (stCounter +~ 1)
-                                                         . (stMMistake .~ Nothing)
+                                     then StatePause
+                                     else st & _StateRun %~
+                                                (stCounter +~ 1)
+                                              . (stMMistake .~ Nothing)
                             else case _stMMistake of
                                     -- first mistake
-                                    Nothing -> st & stStep
-                                                  . _StepRun
-                                                  . stMMistake ?~ MistakeOne raw
+                                    Nothing -> st & _StateRun . stMMistake ?~
+                                        MistakeOne raw
                                     -- second mistake
                                     Just (MistakeOne _) ->
                                         let corrects =
                                                 Map.findWithDefault [] word mapWordStenos
-                                        in  st & stStep
-                                               . _StepRun
-                                               . stMMistake
-                                               ?~ MistakeTwo raw corrects
+                                        in  st & _StateRun . stMMistake ?~
+                                                MistakeTwo raw corrects
                                     -- third mistake and so forth
                                     Just (MistakeTwo _ _) -> st
             stepStart =
-                StateSingletons
-                    { _stDone = False
-                    , _stStep = StepRun Run
-                        { _stCounter   = 0
-                        , _stMMistake  = Nothing
-                        , _stWords     =
-                              evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
-                        , _stNMistakes = 0
-                        }
+                StateRun Run
+                    { _stCounter   = 0
+                    , _stMMistake  = Nothing
+                    , _stWords     =
+                          evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
+                    , _stNMistakes = 0
                     }
 
-        let stateInitial = StateSingletons
-                { _stDone = False
-                , _stStep = StepPause
-                }
+        let stateInitial = StatePause
         dynSingletons <- foldDyn step stateInitial eChord
-
-        evDone <- updated <$> holdUniqDyn (_stDone <$> dynSingletons)
+        evStartStop <-
+            fmap updated $ holdUniqDyn $ dynSingletons <&> \case
+                StatePause -> False
+                StateRun _ -> True
+        dynStopwatch <- mkStopwatch evStartStop
 
         elClass "div" "taskSingletons" $ do
             dyn_ $ dynSingletons <&> \case
-                StateSingletons _ StepPause -> el "div" $ do
+                StatePause -> el "div" $ do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
                         el "code" $ text "SDAÜD"
                     text " to begin the exercise."
-                StateSingletons _ (StepRun Run{..}) -> when (_stCounter < len) $
-                    elClass "span" "exerciseField" $
-                        elClass "div" "exerciseField" $ el "code" $ text $
-                            _stWords !! _stCounter
+                StateRun Run{..} -> do
+                    elClass "span" "exerciseField" $ el "code" $
+                        text $ _stWords !! _stCounter
 
-            let evMMMistake =
-                    updated dynSingletons <&> preview (stStep . _StepRun . stMMistake)
-            widgetHold_ blank $ evMMMistake <&> \m -> whenJust (join m) \case
-                    MistakeOne raw -> do
-                        elClass "code" "red small" $ text $ showt raw
-                        elClass "span" "small" $ text " try again!"
-                    MistakeTwo raw corrects -> do
-                        elClass "code" "red small" $ text $ showt raw
-                        elClass "span" "small" $ text $
-                            if length corrects == 1
-                                then " try this: "
-                                else " try one of these: "
-                        for_ corrects $ \correct ->
-                            elClass "code" "small" $ text $ showt correct
+                    whenJust _stMMistake \case
+                        MistakeOne raw -> do
+                            elClass "code" "red small" $ text $ showt raw
+                            elClass "span" "small" $ text " try again!"
+                        MistakeTwo raw corrects -> do
+                            elClass "code" "red small" $ text $ showt raw
+                            elClass "span" "small" $ text $
+                                if length corrects == 1
+                                    then " try this: "
+                                    else " try one of these: "
+                            for_ corrects $ \correct ->
+                                elClass "code" "small" $ text $ showt correct
 
-        let dynMCounter = dynSingletons <&> preview (stStep . _StepRun . stCounter)
-        dyn_ $ dynMCounter <&> \mc -> whenJust mc \c ->
-            elClass "div" "paragraph" $ do
-                el "strong" $ text $ showt c
-                text " / "
-                text $ showt len
+                    elClass "hr" "visibilityHidden" blank
+                    el "strong" $ text $ showt _stCounter
+                    text $ " / " <> showt len
 
-        -- widgetHold_ blank $ evDone <&> \bDone ->
-        --     when bDone $ elClass "div" "small anthrazit" $
-        --         text "Cleared. Press any key to start over."
+            elClass "span" "stopwatch" $ fmap catMaybes $ dyn $ dynStopwatch <&> \case
+                SWInitial -> pure Nothing
+                SWRun _ t -> text (formatTime t) $> Nothing
+                SWStop t  -> do
+                    elClass "span" "blinking" $ text $ formatTime t
+                    pure $ Just t
 
-        pure $ void $ filter id evDone
-
-exercise3 ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      EventWriter t (Endo State) m,
-      MonadFix m,
-      MonadHold t m,
-      MonadReader (Env t key) m,
-      Palantype key,
-      PostBuild t m,
-      Prerender t m,
-      SetRoute t (R FrontendRoute) m
-    ) =>
-    m Navigation
+exercise3
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadIO (Performable m)
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PerformEvent t m
+       , PostBuild t m
+       , Prerender t m
+       , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       )
+    => m Navigation
 exercise3 = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -689,7 +677,7 @@ exercise3 = do
         text
             "To get started, we start with the most simple words. \
             \Every letter can be typed as it is, just make sure to use the \
-            \right finger. The only specialy for now is -sch in the coda, \
+            \right finger. The only specialty for now is -sch in the coda, \
             \for which you will have to use "
         el "code" $ text "ʃ"
         text "."
@@ -702,9 +690,9 @@ exercise3 = do
         Left  str -> elClass "div" "paragraph small red" $
             text $ "Could not load resource: " <> str
 
-    eDone <- taskSingletons $ filterRight eEDict
+    evDone <- taskSingletons $ filterRight eEDict
 
-    elCongraz eDone envNavigation
+    elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
 
 -- Ex 2.4
@@ -768,8 +756,6 @@ exercise4 = do
             "Words that contain more than one syllable can be typed \
             \by typing the syllables separately, one after the other."
 
-    elClass "div" "paragraph" $ text "Type the following words as they appear!"
-
     ePb <- postRender $ delay 0.1 =<< getPostBuild
     evEDict <- request $ getDictDE' PatSimpleMulti 0 ePb
     evEDoc <- request $ getDocDEPattern' PatSimple 0 ePb
@@ -779,6 +765,8 @@ exercise4 = do
             Right (mST, mTSs) -> taskWords mST mTSs
             Left str -> never <$ elClass "div" "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
+
+    el "h3" $ text "Simple substitution rules"
 
     elClass "div" "paragraph" $
         text
@@ -825,5 +813,5 @@ exercise4 = do
         el "code" $ text "K"
         text " exists for your right hand only, anyway."
 
-    elCongraz evDone envNavigation
+    elCongraz (Just <$> evDone) envNavigation
     pure envNavigation

@@ -178,7 +178,7 @@ numberMode = do
                         (text $ "Couldn't load resource: " <> str)
             Right map -> taskDates map
 
-    elCongraz eDone envNavigation
+    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
 
 data StenoDatesState key = StenoDatesState

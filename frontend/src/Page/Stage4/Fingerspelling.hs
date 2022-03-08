@@ -18,26 +18,26 @@ module Page.Stage4.Fingerspelling
 import Shared (whenJust)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
-import Control.Monad (join, when, unless)
+import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Bool (Bool (..))
 import Data.Foldable (for_)
 import Data.Function (($))
-import Data.Functor ((<&>))
+import Data.Functor (($>), (<&>))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import Data.List ((!!), zip)
-import Data.Maybe (fromMaybe, Maybe (..))
+import Data.Maybe (Maybe (..))
 import Data.Semigroup (Endo, (<>))
 import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
 import Page.Common (elCongraz, elNotImplemented)
+import Page.Common.Stopwatch
 import Palantype.Common (kiChordsStart, kiBackUp, Chord, Palantype)
-import Reflex.Dom (EventWriter, holdUniqDyn, updated, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, dynText, dyn_, el, elAttr, elClass, elDynClass, foldDyn, text, widgetHold_)
+import Reflex.Dom (dyn, zipDyn, TriggerEvent, PerformEvent, Performable, EventWriter, holdUniqDyn, updated, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, el, elAttr, elClass, foldDyn, text)
 import State (State, Env (..), Navigation (..), stageUrl)
 import TextShow (TextShow (showt))
 import Text.Read (readMaybe)
-import Text.Show (Show(show))
 import Palantype.Common.TH (readLoc)
 import Control.Category ((<<<) ,(.))
 import Common.Stage (stageMeta)
@@ -51,30 +51,24 @@ import qualified Palantype.Common.RawSteno as Raw
 import qualified Palantype.Common.Indices as KI
 import Data.Foldable (Foldable(length))
 import Data.Ord (Ord((>)))
-import Data.Functor (void)
-import Data.Witherable (Filterable(filter))
-import Control.Category (Category(id))
-import Control.Lens (preview, (?~), (+~), makeLenses, makePrisms, (.~))
+import Control.Lens ((?~), (+~), makeLenses, makePrisms, (.~))
 import Data.Foldable (Foldable(elem))
 import Data.Function ((&))
 import Data.Functor (Functor(fmap))
+import Control.Monad.IO.Class (MonadIO)
+import Data.Witherable (Filterable(catMaybes))
+import Data.Time (NominalDiffTime)
 
-data StateLiterals k = StateLiterals
-    { _stDone :: Bool
-    , _stStep :: Step k
-    }
-
-data Step k
-    = StepPause
-    | StepRun (Run k)
+data StateLiterals k
+    = StatePause
+    | StateRun (Run k)
 
 data Run k = Run
     { _stCounter  :: Int
     , _stMMistake :: Maybe (Int, Chord k)
     }
 
-makeLenses ''StateLiterals
-makePrisms ''Step
+makePrisms ''StateLiterals
 makeLenses ''Run
 
 {-|
@@ -85,11 +79,14 @@ taskLiterals
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
        , Palantype key
+       , PerformEvent t m
        , PostBuild t m
+       , TriggerEvent t m
        )
-    => m (Event t ())
+    => m (Event t NominalDiffTime)
 taskLiterals = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -98,58 +95,56 @@ taskLiterals = do
 
         step :: Chord key -> StateLiterals key -> StateLiterals key
         step c st = case st of
-            StateLiterals _ StepPause ->
+            StatePause ->
                 if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                     then stepStart
                     else st
-            StateLiterals _ (StepRun Run{..}) ->
+            StateRun Run{..} ->
                 let current = KI.toRaw @key $ fst $ dictLiterals !! _stCounter
                 in  case _stMMistake of
 
                         -- mistake mode ...
                         -- ... back up
                         Just _ | Raw.fromChord c == KI.toRaw @key kiBackUp ->
-                            st & stStep . _StepRun . stMMistake .~ Nothing
+                            st & _StateRun . stMMistake .~ Nothing
                         -- ... or do nothing
                         Just _ -> st
 
                         -- correct
                         Nothing | Raw.fromChord c == current ->
                             if _stCounter == len - 1
-                            then st & stDone .~ True
-                                    & stStep .~ StepPause
-                            else st & stStep . _StepRun . stCounter +~ 1
-                                    & stDone .~ (_stCounter == len - 1)
+                            then StatePause
+                            else st & _StateRun . stCounter +~ 1
 
                         -- mistake
-                        Nothing -> st & stStep
-                                      . _StepRun
-                                      . stMMistake
-                                      ?~ (_stCounter, c)
+                        Nothing -> st & _StateRun . stMMistake ?~
+                            (_stCounter, c)
 
-        stepStart = StateLiterals
-            { _stDone = False
-            , _stStep = StepRun Run
-                { _stCounter  = 0
-                , _stMMistake = Nothing
-                }
+        stepStart = StateRun Run
+            { _stCounter  = 0
+            , _stMMistake = Nothing
             }
-        stateInitial = StateLiterals
-            { _stDone = False
-            , _stStep = StepPause
-            }
+        stateInitial = StatePause
 
     dynLiterals <- foldDyn step stateInitial envEChord
-    eDone <- fmap updated $ holdUniqDyn $ _stDone <$> dynLiterals
 
-    elClass "div" "paragraph" $ dyn_ $ dynLiterals <&> \case
-        StateLiterals _ StepPause -> el "div" $ do
+    evStartStop <-
+        fmap updated $ holdUniqDyn $ dynLiterals <&> \case
+            StatePause -> False
+            StateRun _ -> True
+
+    dynStopwatch <- mkStopwatch evStartStop
+
+    elClass "div" "paragraph" $ fmap catMaybes $ dyn $
+      zipDyn dynLiterals dynStopwatch <&> \(st, stopwatch) -> case st of
+        StatePause -> el "div" $ do
             text "Type "
             elClass "span" "btnSteno blinking" $ do
                 text "Start "
                 el "code" $ text "SDAÜD"
             text " to begin the exercise."
-        StateLiterals _ (StepRun Run{..}) -> do
+            pure Nothing
+        StateRun Run{..} -> do
             elClass "div" "exerciseField multiline" $ el "code" $
                 for_ (zip [0 :: Int ..] dictLiterals) $ \(i, (_, lit)) ->
                     let cls = case _stMMistake of
@@ -157,8 +152,15 @@ taskLiterals = do
                             Nothing     -> if _stCounter > i then "bgGreen" else ""
                     in  elClass "span" cls $ text lit
 
-            elClass "div" "paragraph" $
+            mTime <- elClass "div" "paragraph" $ do
                 text $ showt _stCounter <> " / " <> showt len
+
+                elClass "span" "stopwatch" $ case stopwatch of
+                    SWInitial -> pure Nothing
+                    SWRun _ t -> text (formatTime t) $> Nothing
+                    SWStop t  -> do
+                        elClass "span" "blinking" $ text $ formatTime t
+                        pure $ Just t
 
             whenJust _stMMistake $ \(_, w) ->
                 elClass "div" "red small paragraph" $ do
@@ -166,7 +168,7 @@ taskLiterals = do
                     elClass "span" "btnSteno blinking" $
                         text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
-    pure $ void $ filter id eDone
+            pure mTime
 
 fingerspelling
   :: forall key t (m :: * -> *)
@@ -174,12 +176,15 @@ fingerspelling
     , EventWriter t (Endo State) m
     , MonadFix m
     , MonadHold t m
+    , MonadIO (Performable m)
     , MonadReader (Env t key) m
     , Palantype key
+    , PerformEvent t m
     , PostBuild t m
     , Prerender t m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
+    , TriggerEvent t m
     )
   => m Navigation
 fingerspelling = do
@@ -305,7 +310,7 @@ fingerspelling = do
         elClass "br" "clearBoth" blank
 
     evDone <- taskLiterals
-    elCongraz evDone envNavigation
+    elCongraz (Just <$> evDone) envNavigation
 
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "

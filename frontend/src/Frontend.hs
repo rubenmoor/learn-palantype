@@ -81,8 +81,10 @@ import Reflex.Dom (
 import Shared (loadingScreen)
 
 frontend :: Frontend (R FrontendRoute)
-frontend =
-    Frontend{_frontend_head = frontendHead, _frontend_body = frontendBody}
+frontend = Frontend
+    { _frontend_head = frontendHead
+    , _frontend_body = frontendBody
+    }
 
 frontendBody ::
     forall t (m :: * -> *).

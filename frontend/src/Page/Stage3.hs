@@ -72,17 +72,15 @@ exercise iEx elIntro pat elExplication = do
     elExplication navLang
 
     evEDict <- request $ getDictDE' pat 0 ePb
-    eDone <- fmap switchDyn $ widgetHold (loading $> never) $
+    evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
             Right (mSW, mWSs) -> taskWords mSW mWSs
-            Left str ->
-                never
-                    <$ elClass
+            Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    elCongraz eDone envNavigation
+    elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
 
 exercise1 ::
