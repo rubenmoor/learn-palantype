@@ -22,15 +22,13 @@ import           Client                         ( postRender )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Common.Stage                   ( stageMeta )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ((<<<),  Category(id, (.))
+import           Control.Category               ((>>>), (<<<),  Category(id, (.))
                                                 )
-import           Control.Lens                   ( preview
-                                                , (?~)
+import           Control.Lens                   ( (?~)
                                                 , (%~)
                                                 , (.~)
                                                 , (<&>)
                                                 )
-import           Control.Monad                  ( when )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand
@@ -39,7 +37,7 @@ import           Control.Monad.Random           ( evalRand
 import           Control.Monad.Reader           ( MonadReader
                                                 , asks
                                                 )
-import           Data.Bool                      ( Bool(..)
+import           Data.Bool                      ((||),  Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
@@ -47,7 +45,7 @@ import           Data.Foldable                  ( for_
                                                 , traverse_
                                                 )
 import           Data.Foldable                  ( Foldable(null) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  (($) )
 import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
@@ -58,10 +56,9 @@ import           Data.List                      ( (!!) )
 import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     ( Maybe(..) )
+import           Data.Maybe                     (maybe,  Maybe(..) )
 import           Data.Monoid                    ( Monoid(mempty) )
-import           Data.Ord                       ( (<)
-                                                , Ord((>))
+import           Data.Ord                       (Ord((>))
                                                 )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
@@ -76,7 +73,7 @@ import           GHC.Enum                       ( Enum(succ)
                                                 , pred
                                                 )
 import           GHC.Float                      ( Double )
-import           GHC.Num                        ( Num((+))
+import           GHC.Num                        (Num((+))
                                                 )
 import           GHC.Real                       ( (/)
                                                 , fromIntegral
@@ -101,8 +98,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (zipDyn, dyn
-                                                , TriggerEvent
+import           Reflex.Dom                     ( TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -133,7 +129,7 @@ import           Safe                           ( initMay )
 import           Shared                         ( iFa
                                                 , whenJust
                                                 )
-import           State                          ( Env(..)
+import           State                          (Stats (..), stStats,  Env(..)
                                                 , Message(..)
                                                 , Navigation(..)
                                                 , State
@@ -150,9 +146,10 @@ import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Foldable                  ( Foldable(elem) )
-import           Data.Time                      ( NominalDiffTime )
 import           Page.Common.Stopwatch
-import Data.Witherable (Filterable(catMaybes))
+import Control.Monad (when)
+import Data.Foldable (Foldable(minimum))
+import Data.List (take)
 
 elFooter
     :: forall t (m :: * -> *)
@@ -182,7 +179,7 @@ elBackUp =
     elClass "span" "btnSteno" $ text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
 data Congraz
-  = CongrazShow (Maybe NominalDiffTime)
+  = CongrazShow (Maybe Stats)
   | CongrazHide
 
 elCongraz
@@ -193,23 +190,37 @@ elCongraz
        , MonadHold t m
        , MonadReader (Env t key) m
        , Palantype key
+       , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )
-    => Event t (Maybe NominalDiffTime)
+    => Event t (Maybe Stats)
     -> Navigation
     -> m ()
 elCongraz evDone Navigation {..} = mdo
     eChord <- asks envEChord
+    dynStats <- asks $ envDynState >>> fmap (stStats >>> Map.findWithDefault [] (navLang, navCurrent))
+
     let eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) eChord
         eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) eChord
 
         evCongraz = leftmost [CongrazShow <$> evDone, eBack $> CongrazHide]
 
+    updateState $ evDone <&> maybe [] \s ->
+        [ field @"stStats" %~ Map.insertWith (<>) (navLang, navCurrent) [s] ]
+
     eBack <- fmap switchDyn $ widgetHold (pure never) $ evCongraz <&> \case
-        CongrazHide   -> pure never
-        CongrazShow _ -> elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
+        CongrazHide    -> pure never
+        CongrazShow mt -> elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
             el "div" $ text "Task cleared!"
-            el "div" $ iFa "fas fa-check-circle"
+            elClass "div" "check" $ iFa "fas fa-check-circle"
+            whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
+                when (null ls || statsTime stats == minimum (statsTime <$> ls)) $
+                        elClass "div" "paragraph newBest" $ do
+                            iFa "fa-solid fa-star-sharp"
+                            el "strong" $ text $ "New best: " <> formatTime (statsTime stats)
+                            iFa "fa-solid fa-star-sharp"
+                elStatistics $ take 3 ls
+                elClass "hr" "visibilityHidden" blank
             whenJust navMNext $ \nxt -> do
                 elACont <- elClass "div" "anthrazit" $ do
                     text "Type "
@@ -310,7 +321,7 @@ taskWords
        )
     => Map RawSteno Text
     -> Map Text [RawSteno]
-    -> m (Event t NominalDiffTime)
+    -> m (Event t Stats)
 taskWords mapStenoWord mapWordStenos = do
     eChord   <- asks envEChord
 
@@ -388,7 +399,6 @@ taskWords mapStenoWord mapWordStenos = do
                         el "code" $ text "SDAÜD"
                     text " to begin the exercise."
                 StateRun Run {..} -> do
-                    -- elClass "span" "exerciseField"
                     -- TODO: what is span ".word"?
                     elClass "span" "word"
                         $  elClass "span" "exerciseField"
@@ -416,12 +426,7 @@ taskWords mapStenoWord mapWordStenos = do
                     el "strong" $ text $ showt _stCounter
                     text $ " / " <> showt len
 
-            elClass "span" "stopwatch" $ fmap catMaybes $ dyn $ dynStopwatch <&> \case
-                SWInitial -> pure Nothing
-                SWRun _ t -> text (formatTime t) $> Nothing
-                SWStop t  -> do
-                    elClass "span" "blinking" $ text $ formatTime t
-                    pure $ Just t
+            elStopwatch dynStopwatch len
 
 elPatterns
     :: forall (m :: * -> *) t

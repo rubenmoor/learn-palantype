@@ -93,8 +93,8 @@ data PloverSystemCfg = PloverSystemCfg
 instance ToJSON PloverSystemCfg
 instance FromJSON PloverSystemCfg
 
-instance Default PloverSystemCfg where
-  def = keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
+defaultPloverSystemCfg :: PloverSystemCfg
+defaultPloverSystemCfg = keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
 
 lsStenoQwerty :: [(KeyIndex, [Text])]
 lsStenoQwerty =
@@ -209,11 +209,11 @@ instance FromJSON Key
 -- | default configuration for palantype on a qwerty keyboard
 --   from http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html
 --
-instance Default PloverCfg where
-  def = PloverCfg $ Map.fromList
-          [ (EN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
-          , (DE, def)
-          ]
+defaultPloverCfg :: PloverCfg
+defaultPloverCfg = PloverCfg $ Map.fromList
+    [ (EN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
+    , (DE, defaultPloverSystemCfg)
+    ]
 
 {-|
 generate a ploverCfg object from the specified key map

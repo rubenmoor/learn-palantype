@@ -24,7 +24,7 @@ import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Bool (Bool (..))
 import Data.Foldable (for_)
 import Data.Function (($))
-import Data.Functor (($>), (<&>))
+import Data.Functor ((<&>))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import Data.List ((!!), zip)
@@ -34,8 +34,8 @@ import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
 import Page.Common (elCongraz, elNotImplemented)
 import Page.Common.Stopwatch
 import Palantype.Common (kiChordsStart, kiBackUp, Chord, Palantype)
-import Reflex.Dom (dyn, zipDyn, TriggerEvent, PerformEvent, Performable, EventWriter, holdUniqDyn, updated, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, el, elAttr, elClass, foldDyn, text)
-import State (State, Env (..), Navigation (..), stageUrl)
+import Reflex.Dom (dyn_, TriggerEvent, PerformEvent, Performable, EventWriter, holdUniqDyn, updated, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, el, elAttr, elClass, foldDyn, text)
+import State (Stats, State, Env (..), Navigation (..), stageUrl)
 import TextShow (TextShow (showt))
 import Text.Read (readMaybe)
 import Palantype.Common.TH (readLoc)
@@ -56,8 +56,6 @@ import Data.Foldable (Foldable(elem))
 import Data.Function ((&))
 import Data.Functor (Functor(fmap))
 import Control.Monad.IO.Class (MonadIO)
-import Data.Witherable (Filterable(catMaybes))
-import Data.Time (NominalDiffTime)
 
 data StateLiterals k
     = StatePause
@@ -86,7 +84,7 @@ taskLiterals
        , PostBuild t m
        , TriggerEvent t m
        )
-    => m (Event t NominalDiffTime)
+    => m (Event t Stats)
 taskLiterals = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -135,40 +133,31 @@ taskLiterals = do
 
     dynStopwatch <- mkStopwatch evStartStop
 
-    elClass "div" "paragraph" $ fmap catMaybes $ dyn $
-      zipDyn dynLiterals dynStopwatch <&> \(st, stopwatch) -> case st of
-        StatePause -> el "div" $ do
-            text "Type "
-            elClass "span" "btnSteno blinking" $ do
-                text "Start "
-                el "code" $ text "SDAÜD"
-            text " to begin the exercise."
-            pure Nothing
-        StateRun Run{..} -> do
-            elClass "div" "exerciseField multiline" $ el "code" $
-                for_ (zip [0 :: Int ..] dictLiterals) $ \(i, (_, lit)) ->
-                    let cls = case _stMMistake of
-                            Just (j, _) -> if i == j         then "bgRed"   else ""
-                            Nothing     -> if _stCounter > i then "bgGreen" else ""
-                    in  elClass "span" cls $ text lit
+    elClass "div" "paragraph" $ do
+        dyn_ $ dynLiterals <&> \case
+            StatePause -> el "div" $ do
+                text "Type "
+                elClass "span" "btnSteno blinking" $ do
+                    text "Start "
+                    el "code" $ text "SDAÜD"
+                text " to begin the exercise."
+            StateRun Run{..} -> do
+                elClass "div" "exerciseField multiline" $ el "code" $
+                    for_ (zip [0 :: Int ..] dictLiterals) $ \(i, (_, lit)) ->
+                        let cls = case _stMMistake of
+                                Just (j, _) -> if i == j         then "bgRed"   else ""
+                                Nothing     -> if _stCounter > i then "bgGreen" else ""
+                        in  elClass "span" cls $ text lit
 
-            mTime <- elClass "div" "paragraph" $ do
+                whenJust _stMMistake $ \(_, w) ->
+                    elClass "div" "red small paragraph" $ do
+                        text $ "You typed " <> showt w <> " "
+                        elClass "span" "btnSteno blinking" $
+                            text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+
                 text $ showt _stCounter <> " / " <> showt len
 
-                elClass "span" "stopwatch" $ case stopwatch of
-                    SWInitial -> pure Nothing
-                    SWRun _ t -> text (formatTime t) $> Nothing
-                    SWStop t  -> do
-                        elClass "span" "blinking" $ text $ formatTime t
-                        pure $ Just t
-
-            whenJust _stMMistake $ \(_, w) ->
-                elClass "div" "red small paragraph" $ do
-                    text $ "You typed " <> showt w <> " "
-                    elClass "span" "btnSteno blinking" $
-                        text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
-
-            pure mTime
+        elStopwatch dynStopwatch len
 
 fingerspelling
   :: forall key t (m :: * -> *)
@@ -311,6 +300,8 @@ fingerspelling = do
 
     evDone <- taskLiterals
     elCongraz (Just <$> evDone) envNavigation
+
+    el "h3" $ text "Beyond text transcription"
 
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "

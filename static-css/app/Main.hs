@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           ( (#)
+import           Clay                           (firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -210,6 +210,9 @@ import           Data.Semigroup                 ( Semigroup((<>)) )
 import           GHC.IO                         ( IO )
 import           GHC.Num                        ( Num((*), (+), (-), negate) )
 import           System.IO                      ( putStrLn )
+import Clay (borderLeft)
+import Clay (borderRight)
+import Clay (lightyellow)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -333,7 +336,7 @@ main = putCss $ do
         width $ pct 80
         backgroundColor white
         position absolute
-        height $ px 37
+        height $ px 370
         zIndex 1
 
     section # ".toc" ? do
@@ -653,10 +656,16 @@ main = putCss $ do
 
     div # ".congraz" ? do
         textAlign center
-        i ? do
+        div # ".check" ? i ? do
             fontSize $ pt 72
             color green
             padding (px 32) (px 32) (px 32) (px 32)
+        div # ".newBest" ? i ? do
+            color yellow
+            paddingLeft $ em 1
+            paddingRight $ em 1
+            textShadow (px 1) (px 1) (px 5) gray
+        table # ".statistics" ? tr # firstChild ? backgroundColor lightyellow
 
     div # ".paragraph" ? marginBottom (em 0.5)
     div # ".paragraph" |> code ? fontSize (pt 12)
@@ -890,4 +899,35 @@ main = putCss $ do
         fontSize $ pt 14
         color gray
         fontFamily ["DejaVu Sans Mono"] [monospace]
-        paddingLeft $ em 1.5
+        paddingLeft  $ em 1.5
+        paddingRight $ em 1.5
+
+    div # ".stopwatch" ? do
+        hr ? do
+            borderBottom none (px 0) black
+            borderLeft none (px 0) black
+            borderRight none (px 0) black
+            borderTop dotted (px 1) lightgray
+            height $ px 1
+        div ? do
+            marginTop $ em 0.5
+            padding (px 8) (px 8) (px 8) (px 8)
+            borderRadius (px 8) (px 8) (px 8) (px 8)
+            backgroundColor myLightblue
+            width $ other "fit-content"
+    table # ".statistics" ? do
+        borderCollapse collapse
+        fontSize $ pt 14
+        lineHeight $ em 1.5
+        marginLeft auto
+        marginRight auto
+        caption ? do
+            textAlign $ alignSide sideLeft
+            borderBottom solid (px 1) lightgray
+        td # ".date" ? do
+            color gray
+            fontStyle italic
+        td # ".time" ? do
+            paddingLeft $ em 1
+            paddingRight $ em 1
+            fontFamily ["DejaVu Sans Mono"] [monospace]

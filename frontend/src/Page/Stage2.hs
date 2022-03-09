@@ -111,7 +111,7 @@ import Palantype.Common (RawSteno, parseStenoMaybe)
 import qualified Palantype.Common.Indices as KI
 import Palantype.DE (Pattern (..))
 import Reflex.Dom
-    (dyn, TriggerEvent, Performable, holdUniqDyn,  (=:),
+    (TriggerEvent, Performable, holdUniqDyn,  (=:),
       DomBuilder,
       EventName (Click),
       EventWriter,
@@ -141,7 +141,7 @@ import Reflex.Dom
 import Shared
     (whenJust)
 import State
-    ( Env (..),
+    (Stats,  Env (..),
       Navigation (..),
       State (..),
       stageUrl,
@@ -155,7 +155,6 @@ import Palantype.Common.TH (fromJust, readLoc)
 import qualified Palantype.Common.RawSteno as Raw
 import Data.Function ((&))
 import Data.Bifunctor (Bifunctor(second))
-import Data.Time (NominalDiffTime)
 
 -- Ex. 2.1
 
@@ -473,7 +472,7 @@ taskSingletons
       , TriggerEvent t m
       )
     => Event t (Map RawSteno Text, Map Text [RawSteno])
-    -> m (Event t NominalDiffTime)
+    -> m (Event t Stats)
 taskSingletons eMaps = do
     eChord <- asks envEChord
 
@@ -573,12 +572,7 @@ taskSingletons eMaps = do
                     el "strong" $ text $ showt _stCounter
                     text $ " / " <> showt len
 
-            elClass "span" "stopwatch" $ fmap catMaybes $ dyn $ dynStopwatch <&> \case
-                SWInitial -> pure Nothing
-                SWRun _ t -> text (formatTime t) $> Nothing
-                SWStop t  -> do
-                    elClass "span" "blinking" $ text $ formatTime t
-                    pure $ Just t
+            elStopwatch dynStopwatch len
 
 exercise3
     :: forall key t (m :: * -> *)

@@ -9,7 +9,7 @@
 module State where
 
 -- import           Common.Auth      (SessionData)
-import           Common.Api                     ( PloverCfg
+import           Common.Api                     ( PloverCfg, defaultPloverCfg
                                                 )
 import           Common.Route                   ( FrontendRoute(..)
                                                 )
@@ -19,7 +19,6 @@ import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
 import           Data.Bool                      ( Bool(..) )
-import           Data.Default                   ( Default(..) )
 import           Data.Foldable                  ( Foldable(foldMap) )
 import           Data.Function                  ( ($) )
 import           Data.Map                       ( Map )
@@ -38,6 +37,8 @@ import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
 import Text.Read (read)
+import Data.Time (UTCTime, NominalDiffTime)
+import Data.Int (Int)
 
 -- environment for frontend pages
 
@@ -70,6 +71,17 @@ data Navigation = Navigation
 
 -- State
 
+data Stats = Stats
+    { statsDate :: UTCTime
+    , statsTime :: NominalDiffTime
+    , statsLength :: Int
+    }
+    deriving Generic
+
+instance FromJSON Stats
+instance ToJSON Stats
+
+
 data State = State
     { -- stSession :: Session
       stCleared       :: Set Stage
@@ -80,6 +92,7 @@ data State = State
     , stKeyboardShowQwerty :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map Lang Stage
+    , stStats         :: Map (Lang, Stage) [Stats]
     , stTOCShowStage1 :: Bool
     , stTOCShowStage2 :: Bool
     , stTOCShowStage3 :: Bool
@@ -90,23 +103,27 @@ data State = State
 instance FromJSON State
 instance ToJSON State
 
-instance Default State where
-    def = State
-        { stCleared       = Set.empty
-        , stMLang         = Nothing
-        , stMsg           = Nothing
-        , stPloverCfg     = def
-        , stProgress      =
-            let stage_introduction = read "introduction"
-            in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
-        , stShowKeyboard  = True
-        , stKeyboardShowQwerty = True
-        , stShowTOC       = False
-        , stTOCShowStage1 = False
-        , stTOCShowStage2 = False
-        , stTOCShowStage3 = False
-        , stTOCShowStage4 = False
-        }
+defaultProgress :: Map Lang Stage
+defaultProgress =
+    let stage_introduction = read "introduction"
+    in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
+
+defaultState :: State
+defaultState = State
+    { stCleared       = Set.empty
+    , stMLang         = Nothing
+    , stMsg           = Nothing
+    , stPloverCfg     = defaultPloverCfg
+    , stProgress      = defaultProgress
+    , stStats         = Map.empty
+    , stShowKeyboard  = True
+    , stKeyboardShowQwerty = True
+    , stShowTOC       = False
+    , stTOCShowStage1 = False
+    , stTOCShowStage2 = False
+    , stTOCShowStage3 = False
+    , stTOCShowStage4 = False
+    }
 
 updateState
     :: (Reflex t, EventWriter t (Endo State) m, Foldable l)

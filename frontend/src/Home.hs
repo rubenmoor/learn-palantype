@@ -24,7 +24,7 @@ import Client
       reqFailure,
     )
 import Common.Api
-    ( CfgName (..),
+    (defaultPloverSystemCfg, defaultPloverCfg,  CfgName (..),
       PloverSystemCfg (..),
       keyMapToPloverCfg,
       lsStenoQwerty,
@@ -354,7 +354,10 @@ settings lang = do
             elClass "span" "caption" $ text "Progress"
 
             (eRP, _) <- elClass' "span" "entry" $ text "Reset"
-            updateState $ domEvent Click eRP $> [field @"stProgress" .~ def]
+            updateState $ domEvent Click eRP $>
+                [ field @"stProgress" .~ def
+                , field @"stStats" .~ Map.empty
+                ]
 
             pure eFile'
 
@@ -389,7 +392,9 @@ settings lang = do
         eReqFailure <&> \str ->
             let msgCaption = "Error when loading file"
                 msgBody = "Did you upload a proper .cfg file?\n" <> str
-             in [field @"stMsg" .~ Just Message {..}, field @"stPloverCfg" .~ def]
+             in [ field @"stMsg" .~ Just Message {..}
+                , field @"stPloverCfg" .~ defaultPloverCfg
+                ]
 
     updateState $
         eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
@@ -496,9 +501,10 @@ stenoInput lang = do
     dynPloverCfg <- asks (stPloverCfg <$>)
     dynKeyboardShowQwerty <- asks (stKeyboardShowQwerty <$>)
     dynShowKeyboard <- asks (stShowKeyboard <$>)
-    dynSimple $ zipDyn (dynPloverCfg <&> view (_Wrapped' . at lang . non def))
-                       dynKeyboardShowQwerty
-        <&> \(pcfg, showQwerty) -> postRender
+    let dynSystemCfg =
+            view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
+    dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
+        \(pcfg, showQwerty) -> postRender
                      $ elClass "div" "stenoInput"
                      $ stenoInput' pcfg showQwerty dynShowKeyboard
   where

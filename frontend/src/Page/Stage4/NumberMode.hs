@@ -15,70 +15,197 @@ module Page.Stage4.NumberMode
     ( numberMode
     ) where
 
+import           Page.Common.Stopwatch
 import Client (getDictDENumbers, postRender, request)
 import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
 import Control.Monad ((=<<))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
-import Data.Bool (Bool (..))
 import Data.Either (Either (..))
 import Data.Function (($))
 import Data.Functor (($>), (<&>))
 import Data.Functor ((<$>))
 import Data.Int (Int)
 import Data.List ((!!), repeat)
-import Data.Maybe (Maybe (..))
+import Data.Maybe (maybe, Maybe (..))
 import Data.Semigroup (Endo, (<>))
 import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute, routeLink)
 import Page.Common (elNotImplemented, elCongraz, loading)
-import Palantype.Common (Lang (DE), renderPlover, kiBackUp, Chord, Palantype, RawSteno)
-import Reflex.Dom (EventWriter, switchDyn, widgetHold, updated, holdUniqDyn, holdDyn, never, performEvent, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, delay, dyn_, el, elAttr, elClass, foldDyn, getPostBuild, text)
-import Shared (dynSimple)
-import State (State, Env (..), Navigation (..), stageUrl)
+import Palantype.Common (kiChordsStart, Lang (DE), renderPlover, kiBackUp, Chord, Palantype, RawSteno)
+import Reflex.Dom (Performable, PerformEvent, TriggerEvent, holdUniqDyn, updated, EventWriter, switchDyn, widgetHold, holdDyn, never, performEvent, Event, (=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, delay, dyn_, el, elAttr, elClass, foldDyn, getPostBuild, text)
+import State (Stats, State, Env (..), Navigation (..), stageUrl)
 import TextShow (TextShow (showt))
 import Text.Read (readMaybe)
 import Obelisk.Generated.Static (static)
 import Palantype.Common.TH (readLoc)
-import Control.Category ((<<<))
+import Control.Category ((<<<), (.))
 import Common.Stage (stageMeta)
 import Data.Text (Text)
 import Data.Map.Strict (Map)
 import qualified Palantype.Common.Indices as KI
 import Control.Monad.Random (getRandomR, newStdGen, MonadRandom, evalRand)
-import Data.Time (defaultTimeLocale, formatTime, Day(ModifiedJulianDay), Day)
+import Data.Time (defaultTimeLocale, Day(ModifiedJulianDay), Day)
 import Control.Monad.Reader (asks)
 import Control.Monad.IO.Class (MonadIO(liftIO))
-import Safe (initMay, atMay)
+import Safe (initMay)
 import Data.Traversable (Traversable(sequence))
 import Data.Eq (Eq((==)))
-import GHC.Enum (pred, Enum(succ))
 import qualified Data.Text as Text
 import GHC.Num (Num((+)))
-import Control.Monad (when)
-import Data.Ord (Ord((<)))
 import Data.Foldable (Foldable(null))
-import Data.Functor (void)
-import Control.Category (Category(id))
-import Data.Witherable (Filterable(filter))
 import Data.Functor (Functor(fmap))
 import Data.Functor (Functor((<$)))
 import Data.List (take)
 import qualified Palantype.Common.RawSteno as Raw
 import Control.Monad (unless)
+import Control.Lens ((<>~), (.~), (%~), (+~), makePrisms, makeLenses)
+import Data.Function ((&))
+import Data.Foldable (Foldable(elem))
+import Shared (dynSimple)
+import Data.Bool (Bool(..))
+import qualified Data.Time as Time
 
+data StateDates k
+    = StatePause
+    | StateRun (Run k)
+
+data Run key = Run
+    { _stCounter :: Int
+    , _stChords  :: [Chord key]
+    , _stDates   :: [Day]
+    , _stNMistakes :: Int
+    }
+
+makePrisms ''StateDates
+makeLenses ''Run
+
+taskDates
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , MonadIO (Performable m)
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PerformEvent t m
+       , PostBuild t m
+       , Prerender t m
+       , TriggerEvent t m
+       )
+    => Map RawSteno Text
+    -> m (Event t Stats)
+taskDates map = do
+    eChord <- asks envEChord
+
+    eStdGen <- postRender $ do
+        ePb <- getPostBuild
+        performEvent $ ePb $> liftIO newStdGen
+
+    dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
+
+    dynSimple $ dynMStdGen <&> maybe (pure never) \stdGen -> do
+        let
+            step :: Chord key -> StateDates key -> StateDates key
+            step c st = case st of
+                StatePause ->
+                    if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
+                        then stepStart
+                        else st
+                    -- let current = _stDates !! _stCounter
+                StateRun Run {..}
+                    | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                    -- undo last input
+                    case initMay _stChords of
+                        Just cs ->
+                            st & _StateRun %~ ( stChords    .~ cs )
+                                            . ( stNMistakes +~ 1  )
+                        Nothing -> st
+
+                StateRun Run {..} ->
+                    if renderDate (_stDates !! _stCounter) == renderPlover map (_stChords <> [c])
+                        then -- correct? next!
+                            if _stCounter + 1 == numDates
+                                then StatePause
+                                else st & _StateRun %~ ( stCounter +~ 1  )
+                                                     . ( stChords  .~ [] )
+                        else -- incorrect? keep going.
+                            st & _StateRun . stChords <>~ [c]
+
+            stepStart = StateRun Run
+                    { _stCounter = 0
+                    , _stChords = []
+                    , _stDates = evalRand getRandomDates stdGen
+                    , _stNMistakes = 0
+                    }
+
+        dynStenoDates <- foldDyn step StatePause eChord
+
+        evStartStop <-
+            fmap updated $ holdUniqDyn $ dynStenoDates <&> \case
+                StatePause -> False
+                StateRun _ -> True
+
+        dynStopwatch <- mkStopwatch evStartStop
+
+        elClass "div" "taskWords" $ do
+            dyn_ $ dynStenoDates <&> \case
+                StatePause -> el "div" $ do
+                    text "Type "
+                    elClass "span" "btnSteno blinking" $ do
+                        text "Start "
+                        el "code" $ text "SDAÜD"
+                    text " to begin the exercise."
+                StateRun Run {..} -> do
+                    elClass "span" "word"
+                        $ elClass "div" "exerciseField multiline"
+                        $ el "code" $ text $ renderDate $ _stDates !! _stCounter
+
+                    elClass "span" "input"
+                        $ text $ renderPlover map _stChords <> " …"
+
+                    el "span" $ do
+                        elClass "span" "btnSteno" $
+                            text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                        elClass "span" "small" $ text $
+                            if null _stChords
+                                then " to show hint"
+                                else " to back up"
+
+                    elClass "hr" "visibilityHidden" blank
+
+                    el "strong" $ text $ showt _stCounter
+                    text $ " / " <> showt numDates
+
+            elStopwatch dynStopwatch numDates
+
+getRandomDates :: MonadRandom m => m [Day]
+getRandomDates =
+    sequence
+        $ take numDates
+        $ repeat
+        $ ModifiedJulianDay <$> getRandomR (0, 60000)
+
+renderDate :: Day -> Text
+renderDate d = Text.pack $ Time.formatTime defaultTimeLocale "%d.%m.%Y" d
+
+numDates :: Int
+numDates = 100
 numberMode ::
     forall key t (m :: * -> *).
     ( DomBuilder t m
     , EventWriter t (Endo State) m
     , MonadFix m
     , MonadHold t m
+    , MonadIO (Performable m)
     , MonadReader (Env t key) m
     , Palantype key
+    , PerformEvent t m
     , PostBuild t m
     , Prerender t m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
+    , TriggerEvent t m
     ) =>
     m Navigation
 numberMode = do
@@ -178,134 +305,5 @@ numberMode = do
                         (text $ "Couldn't load resource: " <> str)
             Right map -> taskDates map
 
-    elCongraz (eDone $> Nothing) envNavigation
+    elCongraz (Just <$> eDone) envNavigation
     pure envNavigation
-
-data StenoDatesState key = StenoDatesState
-    { sdsCounter :: Int
-    , sdsDone    :: Bool
-    , sdsChords  :: [Chord key]
-    , sdsDates   :: [Day]
-    , sdsNMistakes :: Int
-    }
-
-taskDates ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m
-    , MonadFix m
-    , MonadHold t m
-    , MonadReader (Env t key) m
-    , Palantype key
-    , PostBuild t m
-    , Prerender t m
-    ) =>
-    Map RawSteno Text ->
-    m (Event t ())
-taskDates map = do
-    eChord <- asks envEChord
-
-    eStdGen <- postRender $ do
-        ePb <- getPostBuild
-        performEvent $ ePb $> liftIO newStdGen
-
-    dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
-
-    dynSimple $
-        dynMStdGen <&> \case
-            Nothing -> pure never
-            Just stdGen -> do
-
-                let
-                    step :: Chord key -> StenoDatesState key -> StenoDatesState key
-                    step chord ls@StenoDatesState {..} =
-                        case sdsDates `atMay` sdsCounter of
-
-                            -- reset after done
-                            Nothing ->
-                                let dates' = evalRand getRandomDates stdGen
-                                 in ls { sdsDone = False
-                                       , sdsCounter = 0
-                                       , sdsDates = dates'
-                                       }
-
-                            -- undo last input
-                            _ | Raw.fromChord chord == KI.toRaw @key kiBackUp ->
-                                case initMay sdsChords of
-                                    Just cs ->
-                                        ls { sdsChords = cs
-                                           , sdsNMistakes = succ sdsNMistakes
-                                           }
-                                    Nothing -> ls
-
-                            Just date ->
-                                if renderDate date == renderPlover map (sdsChords <> [chord])
-                                    then -- correct? next!
-                                        ls { sdsDone = sdsCounter == pred numDates
-                                           , sdsCounter = sdsCounter + 1
-                                           , sdsChords = []
-                                           }
-                                    else -- incorrect? keep going.
-                                        ls { sdsChords = sdsChords <> [chord] }
-                    stepInitial =
-                        StenoDatesState
-                            { sdsCounter = 0
-                            , sdsChords = []
-                            , sdsDone = False
-                            , sdsDates = evalRand getRandomDates stdGen
-                            , sdsNMistakes = 0
-                            }
-
-                dynStenoDates <- foldDyn step stepInitial eChord
-
-                dynDone <- holdUniqDyn $ sdsDone <$> dynStenoDates
-                let eDone = updated dynDone
-
-                elClass "div" "taskWords"
-                    $ dyn_
-                    $ dynStenoDates <&> \StenoDatesState {..} -> do
-                        elClass "span" "word"
-                            $ when (sdsCounter < numDates)
-                            $ elClass "div" "exerciseField multiline"
-                            $ el "code"
-                            $ text
-                            $ renderDate
-                            $ sdsDates !! sdsCounter
-
-                        elClass "span" "input"
-                            $ text $ renderPlover map sdsChords <> "…"
-
-                        el "span" $ do
-                            elClass "span" "btnSteno" $ text $
-                                "↤ "
-                                    <> showt
-                                        (KI.toRaw @key kiBackUp) -- U+21A4
-                            elClass "span" "small" $ text $
-                                if null sdsChords
-                                    then " to show hint"
-                                    else " to back up"
-
-                let dynCounter = sdsCounter <$> dynStenoDates
-                dyn_ $ dynCounter <&> \c ->
-                    elClass "div" "paragraph" $ do
-                        el "strong" $ text $ showt c
-                        text " / "
-                        text $ showt numDates
-
-                dyn_ $ dynDone <&> \bDone ->
-                    when bDone $ elClass "div" "small anthrazit" $
-                        text "Cleared. Press any key to start over."
-
-                pure $ void $ filter id eDone
-
-getRandomDates :: MonadRandom m => m [Day]
-getRandomDates =
-    sequence
-        $ take numDates
-        $ repeat
-        $ ModifiedJulianDay <$> getRandomR (0, 60000)
-
-renderDate :: Day -> Text
-renderDate d = Text.pack $ formatTime defaultTimeLocale "%d.%m.%Y" d
-
-numDates :: Int
-numDates = 100

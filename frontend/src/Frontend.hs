@@ -16,7 +16,7 @@
 module Frontend where
 
 import Language.Javascript.JSaddle (liftJSM)
-import State (
+import State (defaultState,
     State (..),
     stageUrl,
  )
@@ -95,17 +95,17 @@ frontendBody = mdo
         getState s = getItem s key
         setState d s = setItem s key d
 
-    dynLoadState <- prerender (pure $ Endo $ const (def :: State)) $ do
+    dynLoadState <- prerender (pure $ Endo $ \_ -> defaultState) $ do
         mStr <-
             liftJSM
                 (currentWindowUnchecked >>= getLocalStorage >>= getState)
         let mState = mStr >>= Aeson.decode . Lazy.encodeUtf8 . Lazy.fromStrict
-        pure $ Endo $ const $ fromMaybe def mState
+        pure $ Endo $ const $ fromMaybe defaultState mState
 
     let eLoaded = updated dynLoadState
     widgetHold_ loadingScreen $ eLoaded $> blank
 
-    dynState <- foldDyn appEndo def $ leftmost [eLoaded, eStateUpdate]
+    dynState <- foldDyn appEndo defaultState $ leftmost [eLoaded, eStateUpdate]
 
     -- TODO: persist application state on visibility change (when hidden)
     eUpdated <- tailE $ updated dynState

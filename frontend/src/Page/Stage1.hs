@@ -14,7 +14,7 @@
 module Page.Stage1 where
 
 import           Client                         ( postRender )
-import           Common.Api                     ( PloverSystemCfg
+import           Common.Api                     (defaultPloverSystemCfg,  PloverSystemCfg
                                                     ( pcfgMapStenoKeys
                                                     )
                                                 )
@@ -22,8 +22,8 @@ import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
-import           Control.Category               ( Category((.), id) )
-import           Control.Lens                   ( (.~)
+import           Control.Category               ((<<<),  Category((.), id) )
+import           Control.Lens                   (ix,  (.~)
                                                 , (<&>)
                                                 , At(at)
                                                 , _Wrapped'
@@ -341,7 +341,7 @@ taskAlphabet showAlphabet = do
                 .   fmap fromIndex
                 .   Map.keys
                 .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non def)
+                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
                 .   stPloverCfg
                 <$> envDynState
 
@@ -571,7 +571,7 @@ exercise5 = do
                 .   fmap fromIndex
                 .   Map.keys
                 .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non def)
+                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
                 .   stPloverCfg
                 <$> envDynState
 
@@ -619,7 +619,7 @@ exercise6 = do
                 .   fmap fromIndex
                 .   Map.keys
                 .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non def)
+                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
                 .   stPloverCfg
                 <$> envDynState
 
@@ -670,7 +670,7 @@ exercise7 = do
             fmap fromIndex
                 .   Map.keys
                 .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non def)
+                .   view (_Wrapped' <<< at navLang <<< non defaultPloverSystemCfg)
                 .   stPloverCfg
                 <$> envDynState
 
