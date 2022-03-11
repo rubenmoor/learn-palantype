@@ -506,7 +506,7 @@ exercise12 =
               text ", as you will learn later. The code "
               el "code" $ text "GFW"
               text
-                  " is there just in case. It is used in fingerspelling for \
+                  " is there just in case. It is used in fingerspelling, for \
                   \example."
         )
 

@@ -137,57 +137,41 @@ frontendBody = mdo
                 FrontendRoute_DE -> stages @DE.Key DE
     blank
 
-frontendHead ::
-    forall t (m :: * -> *).
-    (ObeliskWidget t (R FrontendRoute) m) =>
-    RoutedT t (R FrontendRoute) m ()
+frontendHead
+    :: forall t (m :: * -> *)
+     . (ObeliskWidget t (R FrontendRoute) m)
+    => RoutedT t (R FrontendRoute) m ()
 frontendHead = do
     el "title" $ text "Palantype"
-    elAttr
-        "link"
-        ( "href"
-            =: $(static "main.css")
-            <> "type"
-            =: "text/css"
-            <> "rel"
-            =: "stylesheet"
-        )
-        blank
-    elAttr
-        "link"
+    elAttr "link"
+        (  "href" =: $(static "main.css")
+        <> "type" =: "text/css"
+        <> "rel" =: "stylesheet"
+        ) blank
+    elAttr "link"
         ("rel" =: "preconnect" <> "href" =: "https://fonts.googleapis.com")
         blank
-    elAttr
-        "link"
-        ( "rel"
-            =: "preconnect"
-            <> "href"
-            =: "https://fonts.gstatic.com"
-            <> "crossorigin"
-            =: "crossorigin"
+    elAttr "link"
+        (  "rel" =: "preconnect"
+        <> "href" =: "https://fonts.gstatic.com"
+        <> "crossorigin" =: "crossorigin"
+        ) blank
+    elAttr "link"
+        (  "href" =: "https://fonts.googleapis.com/css2?family=Abel&display=swap"
+        <> "rel" =: "stylesheet"
+        ) blank
+    elAttr "link"
+        (  "href" =: "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap"
+        <> "rel"  =: "stylesheet"
+        ) blank
+    elAttr "link"
+        (  "rel" =: "stylesheet"
+        <> "href" =: $(static "FontAwesome/css/all.min.css")
         )
         blank
-    elAttr
-        "link"
-        ( "href"
-            =: "https://fonts.googleapis.com/css2?family=Abel&display=swap"
-            <> "rel"
-            =: "stylesheet"
-        )
-        blank
-    elAttr
-        "link"
-        ( "rel"
-            =: "stylesheet"
-            <> "href"
-            =: $(static "FontAwesome/css/all.min.css")
-        )
-        blank
-    elAttr
-        "link"
-        ( "rel"
-            =: "stylesheet"
-            <> "href"
-            =: $(static "flag-icons-main/css/flag-icons.min.css")
-        )
-        blank
+    elAttr "link"
+        (  "rel"
+        =: "stylesheet"
+        <> "href"
+        =: $(static "flag-icons-main/css/flag-icons.min.css")
+        ) blank

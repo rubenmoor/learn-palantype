@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (firstChild, caption, textShadow,  (#)
+import           Clay                           (video, h1, cursive, firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -221,13 +221,19 @@ myLightgray :: Color
 myLightgray = rgb 230 230 230
 
 myLightblue :: Color
-myLightblue = rgb 204 238 255
+myLightblue = rgb 185 206 255
+
+myBlue :: Color
+myBlue = rgba 13 83 181 0.41
+
+myGray :: Color
+myGray = rgb 126 133 167
 
 colorLink :: Color
 colorLink = blue
 
 colorLinkVisited :: Color
-colorLinkVisited = rgb 64 103 124
+colorLinkVisited = rgb 0 51 102
 
 main :: IO ()
 main = putCss $ do
@@ -689,6 +695,7 @@ main = putCss $ do
         cursor pointer
 
     ".displayNone" ? display none
+    ".displayFlex" ? display flex
     ".visibilityHidden" ? visibility hidden
     ".block" ? display block
     ".inline" ? display inline
@@ -700,57 +707,68 @@ main = putCss $ do
     keyframes "blink" [(0, opacity 0), (0.5, opacity 1), (1, opacity 0)]
 
     div # ".landing" ? do
-        textAlign center
-        img # ".getstartedhere" ? do
-            position relative
-            top $ px (-20)
-            left $ px (-290)
-        div # ".usp" ? do
-            display flex
-            justifyContent center
-            maxWidth $ px 1280
-            marginLeft auto
-            marginRight auto
-            padding (px 36) (px 24) (px 36) (px 24)
-            div # ".caption" ? do
-                fontWeight bold
-                width $ px 160
-                marginRight $ px 24
-            div # ".description" ? do
-                minWidth $ px 400
-                maxWidth $ pct 40
-                fontSize $ pt 14
+        backgroundColor myGray
+        height $ pct 100
+        div # ".top" ? do
+            width $ pct 100
+            height $ px 160
+            h1 ? do
+                fontFamily ["Special Elite"] [cursive]
+                display inlineBlock
+                marginTop $ em 1
+                marginLeft $ em 1
+                fontWeight normal
+        div # ".middle" ? do
+            width $ pct 100
+            backgroundColor myLightblue
+            textAlign center
+            h1 ? do
+                color white
+                marginBottom $ em 1.5
+            padding (px 24) (px 24) (px 24) (px 24)
 
-        div # ".action" ? do
+        div # ".middle" |> div # ".container" ? do
             display flex
+            alignItems center
             justifyContent center
+            video ? do
+                backgroundColor white
+                margin (px 4) (px 4) (px 4) (px 4)
+                border solid (px 8) white
+
+            div # ".action" ? do
+                button ? do
+                    height (px 180)
+                    width $ px 360
+                    backgroundColor colorLinkVisited
+                    color white
+                marginLeft $ px 36
+                marginRight $ px 36
 
             div # ".button" ? do
                 width $ px 296
                 height $ px 90
                 alignItems center
-                backgroundColor lightgray
                 fontSize $ pt 12
                 borderRadius (px 24) (px 24) (px 24) (px 24)
                 margin (px 4) (px 4) (px 4) (px 4)
-                border none (px 0) lightgray
+                border solid (px 1) black
                 textAlign center
                 display flex
+                color anthrazit
                 div ? padding (px 8) (px 8) (px 8) (px 8)
 
-            button ? do
-                width $ px 296
-                height $ px 90
+            button |> div # ".container" ? do
                 display flex
                 alignItems center
-                backgroundColor lightgray
+
+            button ? do
+                backgroundColor myBlue
                 borderRadius (px 24) (px 24) (px 24) (px 24)
                 margin (px 4) (px 4) (px 4) (px 4)
                 border none (px 0) lightgray
-                -- border none (px 0) transparent
                 cursor pointer
                 fontFamily ["Abel"] [sansSerif]
-                ":hover" & backgroundColor colorLinkVisited
 
                 div ? margin (px 4) (px 4) (px 4) (px 4)
 
@@ -766,22 +784,58 @@ main = putCss $ do
                     flexBasis auto
                     fontSize $ pt 18
                     fontWeight bold
-                    color anthrazit
 
                 div # ".description" ? do
                     flexGrow 0
                     flexShrink 1
                     flexBasis auto
                     fontSize $ pt 12
-                    color black
                     padding (px 8) (px 8) (px 8) (px 8)
+                    color white
+
+                div # ".cta" ? do
+                    fontSize $ pt 42
+                    fontWeight bold
+
+            div # ".other" ? do
+                button ? do
+                    height (px 90)
+                    width $ px 296
+
+
+        div # ".bottom" ? do
+            display flex
+            justifyContent center
+            padding (em 2) (em 2) (em 2) (em 2)
+
+            div # ".usp" ? do
+                maxWidth $ px 300
+                paddingLeft $ px 40
+                paddingRight $ px 40
+                div # ".icon" ? do
+                    textAlign center
+                    height $ px 120
+                    i ? do
+                        fontSize $ pt 72
+                        color anthrazit
+                div # ".caption" ? do
+                    fontWeight bold
+                    fontStyle italic
+                    borderBottom solid (px 1) black
+                    marginBottom $ em 1
+                div # ".description" ? do
+                    fontSize $ pt 14
 
         footer ? do
-            borderTop solid (px 1) gray
             padding (px 12) (px 12) (px 12) (px 12)
-            fontSize $ pt 12
+            paddingTop $ em 1
             color anthrazit
-            width $ pct 90
+            width $ pct 100
+            position absolute
+            bottom $ px 0
+            textAlign center
+            height $ em 12
+            backgroundColor white
 
     div # ".taskSingletons" ? do
         padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)

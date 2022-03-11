@@ -172,6 +172,8 @@ import Palantype.Common
       fromIndex,
       kiDown,
       kiUp,
+      kiPageUp,
+      kiPageDown,
       mkChord,
     )
 import qualified Palantype.Common.Indices as KI
@@ -247,6 +249,8 @@ import TextShow (TextShow (showt))
 import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO)
+import Data.Int (Int)
+import GHC.Num (Num((-)))
 
 default (Text)
 
@@ -465,6 +469,8 @@ data FanChord
     = FanToggle
     | FanDown
     | FanUp
+    | FanPageUp
+    | FanPageDown
     | FanOther
     deriving (Eq, Ord)
 
@@ -485,18 +491,18 @@ data StateInput key = StateInput
   , stiMChord      :: Maybe (Chord key)
   }
 
-stenoInput ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      EventWriter t (Endo State) (Client m),
-      MonadHold t m,
-      MonadReader (Dynamic t State) m,
-      Palantype key,
-      PostBuild t m,
-      Prerender t m
-    ) =>
-    Lang ->
-    m (Event t (Chord key))
+stenoInput
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) (Client m)
+       , MonadHold t m
+       , MonadReader (Dynamic t State) m
+       , Palantype key
+       , PostBuild t m
+       , Prerender t m
+       )
+    => Lang
+    -> m (Event t (Chord key))
 stenoInput lang = do
     dynPloverCfg <- asks (stPloverCfg <$>)
     dynKeyboardShowQwerty <- asks (stKeyboardShowQwerty <$>)
@@ -573,14 +579,8 @@ stenoInput lang = do
         kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
 
         -- TODO: doesn't seem to have the desired effect
-        let eLostFocus =
-                filter not $ updated $
-                    _inputElement_hasFocus
-                        kbInput
-        performEvent_ $
-            eLostFocus
-                $> focus
-                    (_inputElement_raw kbInput)
+        let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
+        performEvent_ $ eLostFocus $> focus (_inputElement_raw kbInput)
 
         -- post build auto focus: the post build event happens before the element
         -- is mounted. postmount event waits for pull request to be accepted
@@ -589,16 +589,19 @@ stenoInput lang = do
         performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
 
         let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
-            selector = fanMap $
-                eChordAll <&> \c -> if
-                    | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
-                    | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
-                    | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
-                    | otherwise                             -> Map.singleton FanOther c
-            eChordToggle = select selector (Const2 FanToggle)
-            eChordDown   = select selector (Const2 FanDown  )
-            eChordUp     = select selector (Const2 FanUp    )
-            eChordOther  = select selector (Const2 FanOther )
+            selector = fanMap $ eChordAll <&> \c -> if
+                | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
+                | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
+                | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+                | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
+                | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
+                | otherwise                             -> Map.singleton FanOther c
+            eChordToggle   = select selector (Const2 FanToggle)
+            eChordDown     = select selector (Const2 FanDown  )
+            eChordUp       = select selector (Const2 FanUp    )
+            eChordOther    = select selector (Const2 FanOther )
+            eChordPageDown = select selector (Const2 FanPageDown  )
+            eChordPageUp   = select selector (Const2 FanPageUp    )
 
         updateState $
             eChordToggle $> [field @"stShowKeyboard" %~ not]
@@ -607,19 +610,14 @@ stenoInput lang = do
         -- scroll, like focus, is not available in reflex dom
         -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
         -- GhcjsDomSpace requires the elements to be build post render
-        let jsDown =
+        let jsScroll :: Int -> Text
+            jsScroll x =
                 "let el = document.getElementById(\"content\"); \
-                \el.scrollBy(0,100)" ::
-                    Text
-        performEvent_ $
-            eChordDown
-                $> void
-                    (liftJSM $ eval jsDown)
-        let jsUp =
-                "let el = document.getElementById(\"content\"); \
-                \el.scrollBy(0,-100)" ::
-                    Text
-        performEvent_ $ eChordUp $> void (liftJSM $ eval jsUp)
+                \el.scrollBy(0," <> showt x <> ")"
+        performEvent_ $ eChordDown     $> void (liftJSM $ eval $ jsScroll 100)
+        performEvent_ $ eChordUp       $> void (liftJSM $ eval $ jsScroll (-100))
+        performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
+        performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
 
         pure eChordOther
 
@@ -1032,94 +1030,127 @@ landingPage ::
     (DomBuilder t m, EventWriter t (Endo State) m) =>
     m ()
 landingPage = elClass "div" "landing" $ do
-    el "h1" $ text "Type as fast as you speak"
-    elClass "div" "action" $ do
-        (elDE, _) <- el' "button" $ do
-            elClass "div" "icon" $ do
-                elFlag "de"
-                el "br" blank
-                elFlag "at"
-                elFlag "ch"
-            elClass "div" "countrycode" $ text "DE"
+    elClass "div" "top" $ el "h1" $ text "Palantype DE"
+    elClass "div" "middle" $ do
+        elClass "div" "container" $ do
+            elAttr "video"
+                (  "width"    =: "480"
+                <> "height"   =: "405"
+                <> "autoplay" =: "autoplay"
+                <> "muted"    =: "muted"
+                <> "loop"     =: "loop"
+                <> "preload"  =: "auto"
+                <> "controls"  =: "controls"
+                ) $ do
+                elAttr "source" ("src" =: $(static "palantype-short.mp4") <> "type" =: "video/mp4") blank
+                text "Your missing out on a great video here ¯\\_(ツ)_/¯"
+            el "div" $ do
+                el "h1" $ text "Type as fast as you speak"
+                elClass "div" "displayFlex" $ do
+                    (elDE, _) <- elClass "div" "action" $ do
+                        el' "button" $ do
+                            elClass "div" "container" $ do
+                                elClass "div" "icon" $ do
+                                    elFlag "de"
+                                    el "br" blank
+                                    elFlag "at"
+                                    elFlag "ch"
+                                elClass "div" "countrycode" $ text "DE"
+                                elClass "div" "description" $
+                                    text
+                                        "35 interactive tutorials. 2 Million words and growing. A steno system designed for \
+                                        \the German language."
+                            elClass "div" "cta" $ text "Start"
+
+                    elEN <- elClass "div" "other" $ do
+                        (elEN, _) <- el' "button" $
+                            elClass "div" "container" $ do
+                                elClass "div" "icon" $
+                                    elAttr "img" ("src" =: $(static "palantype.png")) blank
+                                elClass "div" "countrycode" $ text "EN"
+                                elClass "div" "description" $
+                                    text
+                                        "The original palantype steno system for English, \
+                                        \brought to your keyboard."
+
+                        elClass "div" "button" $ el "div" $ do
+                            text "Missing a language? Checkout the "
+                            elAttr
+                                "a"
+                                ("href" =: "https://github.com/rubenmoor/palantype-tools")
+                                $ text "source on Github"
+                            text " to create your own Palantype-style steno system."
+                        pure elEN
+
+                    let eClickEN = domEvent Click elEN $> EN
+                        eClickDE = domEvent Click elDE $> DE
+                    updateState $
+                        leftmost [eClickEN, eClickDE] <&> \lang ->
+                            [ field @"stMLang" .~ Just lang,
+                              -- if no progress in map, insert "Introduction"
+                              field @"stProgress"
+                                  %~ Map.insertWith (\_ o -> o) lang ($readLoc "introduction")
+                            ]
+    elClass "div" "bottom" $ do
+
+        elClass "div" "usp" $ do
+            elClass "div" "icon" $ iFa "fas fa-rocket"
+            elClass "div" "caption" $ text "Maximum typing speed"
             elClass "div" "description" $
                 text
-                    "2 Million words and growing. A steno system designed for \
-                    \the German language."
+                    "Reach a typing speed of up to 300 \
+                    \words per minute, fast enough to type along as people talk."
 
-        (elEN, _) <- el' "button" $ do
-            elClass "div" "icon" $
-                elAttr "img" ("src" =: $(static "palantype.png")) blank
-            elClass "div" "countrycode" $ text "EN"
+        elClass "div" "usp" $ do
+            elClass "div" "icon" $ elAttr "img"
+                 (  "src" =: $(static "chords.gif")
+                 <> "width" =: "181"
+                 <> "height" =: "52"
+                 ) blank
+            elClass "div" "caption" $ text "Type chords, not letters"
             elClass "div" "description" $
                 text
-                    "The original palantype steno system for English, \
-                    \brought to your keyboard."
+                    "Input whole words or word parts with a single stroke \
+                    \using multiple fingers at once. This is why it's so fast \
+                    \and why it requires a lot of practice."
 
-        elClass "div" "button" $ el "div" $ do
-            text "Missing a language? Checkout the "
-            elAttr
-                "a"
-                ("href" =: "https://github.com/rubenmoor/palantype-tools")
-                $ text "source on Github"
-            text " to create your own Palantype-style steno system."
+        elClass "div" "usp" $ do
+            elClass "div" "icon" $ elAttr "img"
+                 (  "src" =: $(static "keyboard-icon.png")
+                 <> "width" =: "128"
+                 <> "height" =: "128"
+                 ) blank
+            elClass "div" "caption" $ text "No special hardware"
+            elClass "div" "description" $ do
+                text "You will need a keyboard that supports "
+                elAttr
+                    "a"
+                    ( "href"
+                          =: "https://en.wikipedia.org/wiki/Rollover_(keyboard)"
+                    )
+                    $ text "N-key roll-over"
+                text
+                    ", to register all the keys that you press simultaneously, and \
+                    \optionally an ortho-linear key layout."
 
-        let eClickEN = domEvent Click elEN $> EN
-            eClickDE = domEvent Click elDE $> DE
-        updateState $
-            leftmost [eClickEN, eClickDE] <&> \lang ->
-                [ field @"stMLang" .~ Just lang,
-                  -- if no progress in map, insert "Introduction"
-                  field @"stProgress"
-                      %~ Map.insertWith (\_ o -> o) lang ($readLoc "introduction")
-                ]
-
-    elAttr
-        "img"
-        ("src" =: $(static "getstartedhere.png") <> "class" =: "getstartedhere")
-        blank
-
-    elClass "div" "usp" $ do
-        elClass "div" "caption" $ text "Maximum typing speed"
-        elClass "div" "description" $
-            text
-                "Reach a typing speed of up to 300 \
-                \words per minute, fast enough to type along as people talk."
-
-    elClass "div" "usp" $ do
-        elClass "div" "caption" $ text "Type chords, not letters"
-        elClass "div" "description" $
-            text
-                "Input whole words or word parts with a single stroke \
-                \using multiple fingers at once. This is why it's so fast \
-                \and why it requires a lot of practice."
-
-    elClass "div" "usp" $ do
-        elClass "div" "caption" $ text "No special hardware"
-        elClass "div" "description" $ do
-            text "You will need a keyboard that supports "
-            elAttr
-                "a"
-                ( "href"
-                      =: "https://en.wikipedia.org/wiki/Rollover_(keyboard)"
-                )
-                $ text "N-key roll-over"
-            text
-                ", to register all the keys that you press simultaneously, and \
-                \optionally an ortho-linear key layout."
-
-    elClass "div" "usp" $ do
-        elClass "div" "caption" $ text "Free and open-source"
-        elClass "div" "description" $ do
-            text
-                "Find the code on Github and contribute by reporting bugs \
-                \and requesting features in the "
-            elAttr
-                "a"
-                ( "href"
-                      =: "https://github.com/rubenmoor/learn-palantype/issues"
-                )
-                $ text "issue tracker"
-            text "."
+        elClass "div" "usp" $ do
+            elClass "div" "icon" $ elAttr "img"
+                 (  "src" =: $(static "opensource-icon.png")
+                 <> "width" =: "100"
+                 <> "height" =: "100"
+                 ) blank
+            elClass "div" "caption" $ text "Free and open-source"
+            elClass "div" "description" $ do
+                text
+                    "Find the code on Github and contribute by reporting bugs \
+                    \and requesting features in the "
+                elAttr
+                    "a"
+                    ( "href"
+                          =: "https://github.com/rubenmoor/learn-palantype/issues"
+                    )
+                    $ text "issue tracker"
+                text "."
 
     el "footer" $ do
         text "Want to reach out? Join the "
@@ -1176,7 +1207,9 @@ stages navLang = do
                             )
             navigation <- elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text
-                    $ "Up ▲ " <> showt (KI.toRaw @key kiUp)
+                    $  "▲ "
+                    <> showt (KI.toRaw @key kiUp)
+                    <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
                 nav <- elClass "div" "content" $ setEnv $
                     if
                         | $readLoc "introduction" == current -> introduction
@@ -1222,7 +1255,10 @@ stages navLang = do
 
                 elClass "div" "scrollBottom"
                     $ text
-                    $ "Down ▼ " <> showt (KI.toRaw @key kiDown)
+                    $ "▼ "
+                    <> showt (KI.toRaw @key kiDown)
+                    <> "  ↡ "
+                    <> showt (KI.toRaw @key kiPageDown)
                 pure nav
             pure navigation
         elFooter navLang navigation
