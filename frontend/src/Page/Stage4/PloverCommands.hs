@@ -197,6 +197,11 @@ ploverCommands = do
             el "td" $ el "code" $ text "~Ü"
             el "td" $ text "em dash"
             elClass "td" "plover" $ el "code" $ text "—"
+        el "tr" $ do
+            el "td" $ text "s"
+            el "td" $ el "code" $ text "s"
+            el "td" $ text "attach s and attach the next word"
+            elClass "td" "plover" $ el "code" $ text "{^s^}"
 
     -- parentheses
     el "h3" $ text "Opening and closing"

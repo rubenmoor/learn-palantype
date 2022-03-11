@@ -101,7 +101,6 @@ import           Clay                           (video, h1, cursive, firstChild,
                                                 , keyframes
                                                 , left
                                                 , li
-                                                , lightblue
                                                 , lightgray
                                                 , lightgreen
                                                 , lineHeight
@@ -224,6 +223,7 @@ myLightgray = rgb 230 230 230
 
 myLightblue :: Color
 myLightblue = rgb 185 206 255
+
 
 myBlue :: Color
 myBlue = rgba 13 83 181 0.41
@@ -593,6 +593,7 @@ main = putCss $ do
             padding (px 8) (px 8) (px 8) (px 8)
             cursor pointer
             hover & color darkblue
+            fontFamily ["Special Elite"] [cursive]
 
         div # ".dropdown-content" ? do
             display none
@@ -636,13 +637,13 @@ main = putCss $ do
         overflow hidden
 
     blockquote # ".warning" ? do
-        backgroundColor lightblue
+        backgroundColor myLightblue
         padding (px 36) (px 36) (px 36) (px 36)
 
     ".bgWhite" ? backgroundColor white
     ".bgGreen" ? backgroundColor lightgreen
     ".bgRed" ? backgroundColor red
-    ".bgLightblue" ? backgroundColor lightblue
+    ".bgLightblue" ? backgroundColor myLightblue
     ".bgLightgray" ? backgroundColor myLightgray
     ".fgTransparent" ? color transparent
     ".red" ? color red
@@ -723,10 +724,13 @@ main = putCss $ do
             width $ pct 100
             backgroundColor myLightblue
             textAlign center
+            paddingTop $ em 4
+            paddingBottom $ em 4
+            paddingLeft $ em 2
+            paddingRight $ em 2
             h1 ? do
                 color white
                 marginBottom $ em 1.5
-            padding (px 24) (px 24) (px 24) (px 24)
 
         div # ".middle" |> div # ".container" ? do
             display flex
@@ -817,10 +821,11 @@ main = putCss $ do
 
             div # ".usp" ? do
                 maxWidth $ px 300
-                paddingLeft $ px 40
-                paddingRight $ px 40
-                marginTop $ em 2
-                marginBottom $ em 2
+                paddingLeft $ px 30
+                paddingRight $ px 30
+                marginTop $ em 4
+                marginBottom $ em 4
+                color white
                 div # ".icon" ? do
                     textAlign center
                     height $ px 120
@@ -830,8 +835,9 @@ main = putCss $ do
                 div # ".caption" ? do
                     fontWeight bold
                     fontStyle italic
-                    borderBottom solid (px 1) black
+                    borderBottom solid (px 1) white
                     marginBottom $ em 1
+                    textAlign center
                 div # ".description" ? do
                     fontSize $ pt 14
 
@@ -890,7 +896,7 @@ main = putCss $ do
             marginBottom $ px $ -20
         hr # ".onset" ? backgroundColor pink
         hr # ".nucleus" ? backgroundColor lightgreen
-        hr # ".coda" ? backgroundColor lightblue
+        hr # ".coda" ? backgroundColor myLightblue
         hr # ".multiple" ? backgroundColor violet
         span # ".patternPosition" ? do
             float floatRight
@@ -900,11 +906,11 @@ main = putCss $ do
             top $ px 20
         span # ".onset" ? color pink
         span # ".nucleus" ? color lightgreen
-        span # ".coda" ? color lightblue
+        span # ".coda" ? color myLightblue
         span # ".multiple" ? color violet
 
     div # ".patternExamples" ? do
-        backgroundColor lightblue
+        backgroundColor myLightblue
         fontSize $ pt 12
         padding (px 8) (px 8) (px 8) (px 8)
         borderRadius (px 8) (px 8) (px 8) (px 8)
