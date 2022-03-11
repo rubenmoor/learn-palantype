@@ -213,6 +213,8 @@ import           System.IO                      ( putStrLn )
 import Clay (borderLeft)
 import Clay (borderRight)
 import Clay (lightyellow)
+import Clay (flexWrap)
+import Clay (wrap)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -708,7 +710,6 @@ main = putCss $ do
 
     div # ".landing" ? do
         backgroundColor myGray
-        height $ pct 100
         div # ".top" ? do
             width $ pct 100
             height $ px 160
@@ -729,12 +730,18 @@ main = putCss $ do
 
         div # ".middle" |> div # ".container" ? do
             display flex
+            flexWrap Flex.wrap
             alignItems center
             justifyContent center
             video ? do
                 backgroundColor white
                 margin (px 4) (px 4) (px 4) (px 4)
                 border solid (px 8) white
+
+            div # ".right" ? do
+                display flex
+                flexWrap Flex.wrap
+                justifyContent center
 
             div # ".action" ? do
                 button ? do
@@ -805,13 +812,15 @@ main = putCss $ do
 
         div # ".bottom" ? do
             display flex
+            flexWrap Flex.wrap
             justifyContent center
-            padding (em 2) (em 2) (em 2) (em 2)
 
             div # ".usp" ? do
                 maxWidth $ px 300
                 paddingLeft $ px 40
                 paddingRight $ px 40
+                marginTop $ em 2
+                marginBottom $ em 2
                 div # ".icon" ? do
                     textAlign center
                     height $ px 120
@@ -827,14 +836,11 @@ main = putCss $ do
                     fontSize $ pt 14
 
         footer ? do
-            padding (px 12) (px 12) (px 12) (px 12)
             paddingTop $ em 1
+            paddingBottom $ em 1
             color anthrazit
             width $ pct 100
-            position absolute
-            bottom $ px 0
             textAlign center
-            height $ em 12
             backgroundColor white
 
     div # ".taskSingletons" ? do

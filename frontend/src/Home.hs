@@ -1046,7 +1046,7 @@ landingPage = elClass "div" "landing" $ do
                 text "Your missing out on a great video here ¯\\_(ツ)_/¯"
             el "div" $ do
                 el "h1" $ text "Type as fast as you speak"
-                elClass "div" "displayFlex" $ do
+                elClass "div" "right" $ do
                     (elDE, _) <- elClass "div" "action" $ do
                         el' "button" $ do
                             elClass "div" "container" $ do
