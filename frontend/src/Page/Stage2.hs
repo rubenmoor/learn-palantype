@@ -401,7 +401,7 @@ exercise2 = do
                     \output."
 
             -- TODO: punctuation
-            let raw = "MID DEM WISn WÄ+GSD DEÜ SWEI/FEL N-"
+            let raw = "MID DEM F+ISn F+Ä+Gʃs DEÜ ʃG+EI/FEL +-"
                 txt = "Mit dem Wissen wächst der Zwei fel ."
 
             evDone <- walkWords (Text.words txt) raw
@@ -410,13 +410,13 @@ exercise2 = do
                 text
                     "Each word is one chord, except the word «Zweifel». You will \
                     \have to strike "
-                el "code" $ text "SWEI"
+                el "code" $ text "ʃG+EI"
                 text " and "
                 el "code" $ text "FEL"
                 text
                     " separately. For this reason, the steno code for «Zweifel» \
                     \is typically denoted "
-                el "code" $ text "SWEI/FEL"
+                el "code" $ text "ʃG+EI/FEL"
                 text ", with a /."
 
             elClass "div" "paragraph" $ do
@@ -549,7 +549,7 @@ taskSingletons eMaps = do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
-                        el "code" $ text "SDAÜD"
+                        el "code" $ text "DSAÜD"
                     text " to begin the exercise."
                 StateRun Run{..} -> do
                     elClass "span" "exerciseField" $ el "code" $

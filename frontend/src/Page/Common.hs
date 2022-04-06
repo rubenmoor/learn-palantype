@@ -283,7 +283,7 @@ elNotImplemented = elClass "blockquote" "warning" $ do
 
 rawToggleKeyboard :: Lang -> RawSteno
 rawToggleKeyboard = \case
-    DE -> "ULNSD"
+    DE -> "U+NSD"
     EN -> "ALFTS"
 
 loading :: forall (m :: * -> *) t . (DomBuilder t m) => m ()

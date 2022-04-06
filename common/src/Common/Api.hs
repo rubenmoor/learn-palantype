@@ -17,7 +17,6 @@ module Common.Api where
 import           Common.PloverAdapter      (fromPlover)
 import           Control.Lens.Wrapped      (Wrapped)
 import           Data.Aeson                (FromJSON, ToJSON)
-import           Data.Default              (Default (..))
 import           Data.Either               (lefts, rights)
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
@@ -69,7 +68,7 @@ data CfgName
 
 instance TextShow CfgName where
   showb = fromText <<< \case
-    CNFile -> "custom layout"
+    CNFile     -> "custom layout"
     CNQwertyEN -> "qwerty EN"
     CNQwertzDE -> "qwerty DE"
 

@@ -23,7 +23,7 @@ import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ((<<<),  Category((.), id) )
-import           Control.Lens                   (ix,  (.~)
+import           Control.Lens                   ((.~)
                                                 , (<&>)
                                                 , At(at)
                                                 , _Wrapped'
@@ -42,7 +42,6 @@ import           Control.Monad.Reader           ( MonadReader(ask)
                                                 , asks
                                                 )
 import           Data.Bool                      ( Bool(..) )
-import           Data.Default                   ( Default(def) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(elem, length)
                                                 , for_
@@ -275,11 +274,13 @@ exercise3 = do
                 "Missing the letter T? It's not there and you don't need it. \
                    \You will learn to type "
             el "em" $ text "t"
-            text " as BD and "
+            text " as "
+            el "code" $ text "D+"
+            text " and "
             el "em" $ text "st"
-            text
-                " as SD, when it occurs in the onset of a syllable. \
-                   \At the end of a syllable, you will type +D or just D."
+            text " as "
+            el "code" $ text "DS"
+            text ", when it occurs in the onset of a syllable."
         EN -> pure () -- TODO
     pure envNavigation
 
