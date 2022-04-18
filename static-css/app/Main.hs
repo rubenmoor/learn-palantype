@@ -643,6 +643,8 @@ main = putCss $ do
     ".bgWhite" ? backgroundColor white
     ".bgGreen" ? backgroundColor lightgreen
     ".bgRed" ? backgroundColor red
+    ".bgPink" ? backgroundColor pink
+    ".bgLightgreen" ? backgroundColor lightgreen
     ".bgLightblue" ? backgroundColor myLightblue
     ".bgLightgray" ? backgroundColor myLightgray
     ".fgTransparent" ? color transparent
@@ -894,20 +896,22 @@ main = putCss $ do
             border none (px 0) black
             height $ px 1
             marginBottom $ px $ -20
-        hr # ".onset" ? backgroundColor pink
-        hr # ".nucleus" ? backgroundColor lightgreen
-        hr # ".coda" ? backgroundColor myLightblue
-        hr # ".multiple" ? backgroundColor violet
+        hr # ".Onset" ? backgroundColor pink
+        hr # ".Nucleus" ? backgroundColor lightgreen
+        hr # ".Coda" ? backgroundColor myLightblue
+        hr # ".Multiple" ? backgroundColor violet
+        hr # ".OnsetAndCoda" ? backgroundColor orange
         span # ".patternPosition" ? do
             float floatRight
             fontSize $ px 14
             fontWeight bold
             position relative
             top $ px 20
-        span # ".onset" ? color pink
-        span # ".nucleus" ? color lightgreen
-        span # ".coda" ? color myLightblue
-        span # ".multiple" ? color violet
+        span # ".Onset" ? color pink
+        span # ".Nucleus" ? color lightgreen
+        span # ".Coda" ? color myLightblue
+        span # ".Multiple" ? color violet
+        span # ".OnsetAndCoda" ? color orange
 
     div # ".patternExamples" ? do
         backgroundColor myLightblue

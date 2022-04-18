@@ -65,7 +65,6 @@ import           Data.Semigroup                 ( Endo(..)
                                                 )
 import qualified Data.Set                      as Set
 import           Data.Text                      ( Text
-                                                , toLower
                                                 )
 import           Data.Text                      ( length )
 import           Data.Witherable                ( Filterable(filter) )
@@ -90,6 +89,7 @@ import           Palantype.Common               ( kiChordsStart
                                                 , Palantype
                                                 , PatternPos
                                                 , unparts
+                                                , showPretty
                                                 )
 import           Palantype.Common               ( RawSteno
                                                 , parseSteno
@@ -436,9 +436,8 @@ elPatterns
 elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
   where
     elPatterns' (pPos, pairs) = do
-        let strPPos = toLower $ showt pPos
-        elClass "hr" strPPos blank
-        elClass "span" ("patternPosition " <> strPPos) $ text strPPos
+        elClass "hr" (showt pPos) blank
+        elClass "span" ("patternPosition " <> showt pPos) $ text $ showPretty pPos
         elClass "br" "clearBoth" blank
         for_ pairs $ \(orig, steno) -> elClass "div" "floatLeft" $ do
             let lOrig :: Double = fromIntegral $ length orig

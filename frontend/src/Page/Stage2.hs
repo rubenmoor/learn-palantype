@@ -790,22 +790,13 @@ exercise4 = do
         text
             "Each lowercase letter in the table is a letter of natural \
             \language. Next to it you find a steno code, denoted as \
-            \uppercase letter. The entries are sorted alphabetically. \
-            \Remember, though, letters generally have different steno codes \
-            \depending where we are: The onset is the beginning of a word \
-            \part (think of a syllable), the nucleus is one or more vowels \
-            \thereafter and the coda is what comes at the end of a word part."
+            \uppercase letter. The entries are sorted alphabetically."
 
     elClass "div" "paragraph" $ do
-        text "E.g. the letter "
-        el "em" $ text "k"
-        text " is only simply "
-        el "code" $ text "K"
-        text
-            " when it appears in the coda. In practice, this won't be a \
-            \problem as the steno key "
-        el "code" $ text "K"
-        text " exists for your right hand only, anyway."
+        let styleHuge = "style" =: "font-size: 48pt"
+        elAttr "span" ("class" =: "bgPink"       <> styleHuge) $ text "st"
+        elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
+        elAttr "span" ("class" =: "bgLightblue"  <> styleHuge) $ text "rk"
 
     elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
