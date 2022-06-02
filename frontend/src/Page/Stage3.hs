@@ -172,9 +172,51 @@ exercise2 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise2 =
+exercise2 = exercise
+   2
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: introductory text"
+   )
+   PatCodaComboT
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: follow-up text"
+   )
+
+exercise3 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise3 = exercise
+   3
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: introductory text"
+   )
+   PatOnsetR
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: follow-up text"
+   )
+
+exercise4 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise4 = exercise
+   4
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: introductory text"
+   )
+   PatOnsetL
+   ( \_ -> elClass "div" "paragraph" $ do
+       text "TODO: follow-up text"
+   )
+
+exercise5 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise5 =
     exercise
-        2
+        5
         ( \_ -> elClass "div" "paragraph" $ do
               text "For the "
               el "code" $ text "F"
@@ -199,13 +241,13 @@ exercise2 =
               text "."
         )
 
-exercise3 ::
+exercise6 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise3 =
+exercise6 =
     exercise
-        3
+        6
         ( \_ ->
               elClass "div" "paragraph" $
                   text
@@ -225,13 +267,13 @@ exercise3 =
                       \ever ends on dd: None of them. This entry is there only for anglicisms."
         )
 
-exercise4 ::
+exercise7 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise4 =
+exercise7 =
     exercise
-        4
+        7
         ( \_ -> elClass "div" "paragraph" $ do
               text
                   "You might have wondered why there is no key for h for your right hand. \
@@ -260,13 +302,13 @@ exercise4 =
               text " isn't typed any differently."
         )
 
-exercise5 ::
+exercise8 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise5 =
+exercise8 =
     exercise
-        5
+        8
         ( \_ -> elClass "div" "paragraph" $ do
               text "This might come as a little surprise but, just like with "
               el "em" $ text "h"
@@ -287,13 +329,13 @@ exercise5 =
               text "."
         )
 
-exercise6 ::
+exercise9 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise6 =
+exercise9 =
     exercise
-        6
+        9
         ( \_ -> elClass "div" "paragraph" $ do
               text "Following the idea of stretching vowels, a "
               el "em" $ text "rr"
@@ -336,13 +378,13 @@ exercise6 =
               text ", which luckily does not exist in the German language."
         )
 
-exercise7 ::
+exercise10 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise7 =
+exercise10 =
     exercise
-        7
+        10
         ( \_ ->
               elClass "div" "paragraph" $
                   text
@@ -360,13 +402,13 @@ exercise7 =
               text "."
         )
 
-exercise8 ::
+exercise11 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise8 =
+exercise11 =
     exercise
-        8
+        11
         ( \_ -> do
               elClass "div" "paragraph" $ do
                   text
@@ -399,13 +441,13 @@ exercise8 =
               text "."
         )
 
-exercise9 ::
+exercise12 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise9 =
+exercise12 =
     exercise
-        5
+        12
         ( \_ -> elClass "div" "paragraph" $ do
               text
                   "Here you find combinations of vowels in the nucleus that \
@@ -419,13 +461,13 @@ exercise9 =
                   \Fortunately, the weird rules usually affect rare words."
         )
 
-exercise10 ::
+exercise13 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise10 =
+exercise13 =
     exercise
-        5
+        13
         ( \_ -> elClass "div" "paragraph" $ do
               text "You will learn an alternative to type "
               el "em" $ text "c"
@@ -446,13 +488,13 @@ exercise10 =
               text "."
         )
 
-exercise11 ::
+exercise14 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise11 =
+exercise14 =
     exercise
-        5
+        14
         ( \_ -> do
               elClass "div" "paragraph" $ text "TODO"
               elClass "div" "paragraph" $ do
@@ -473,13 +515,13 @@ exercise11 =
                   \vowels that are actually long."
         )
 
-exercise12 ::
+exercise15 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise12 =
+exercise15 =
     exercise
-        5
+        15
         ( \_ -> elClass "div" "paragraph" $ do
               text "The main takeaway regarding the German letter "
               el "em" $ text "ß"
@@ -510,13 +552,13 @@ exercise12 =
                   \example."
         )
 
-exercise13 ::
+exercise16 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise13 =
+exercise16 =
     exercise
-        5
+        16
         ( \_ -> elClass "div" "paragraph" $ do
               text
                   "This rule increase efficiency for vowel-heavy words. \
@@ -544,62 +586,17 @@ exercise13 =
                   \\"Steno Order\" earlier."
         )
 
-exercise14 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise14 =
-    exercise
-        5
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "intro"
-        )
-        PatSwapS
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "explication"
-        )
-
-exercise15 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise15 =
-    exercise
-        5
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "intro"
-        )
-        PatSwapSch
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "explication"
-        )
-
-exercise16 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise16 =
-    exercise
-        5
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "intro"
-        )
-        PatSwapZ
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "explication"
-        )
-
 exercise17 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
 exercise17 =
     exercise
-        5
+        17
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )
-        PatDiVowel
+        PatSwapS
         ( \_ -> elClass "div" "paragraph" $ do
               text "explication"
         )
@@ -610,7 +607,52 @@ exercise18 ::
     m Navigation
 exercise18 =
     exercise
-        5
+        18
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "intro"
+        )
+        PatSwapSch
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "explication"
+        )
+
+exercise19 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise19 =
+    exercise
+        19
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "intro"
+        )
+        PatSwapZ
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "explication"
+        )
+
+exercise20 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise20 =
+    exercise
+        20
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "intro"
+        )
+        PatDiVowel
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "explication"
+        )
+
+exercise21 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise21 =
+    exercise
+        21
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )

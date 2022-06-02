@@ -987,6 +987,9 @@ toc lang current = elClass "section" "toc" $ do
 
                     elDynClass "ul" dynClassUl3 $ do
                         elLi $ $readLoc "stage_PatReplCommon_0"
+                        elLi $ $readLoc "stage_PatCodaComboT_0"
+                        elLi $ $readLoc "stage_PatOnsetR_0"
+                        elLi $ $readLoc "stage_PatOnsetL_0"
                         elLi $ $readLoc "stage_PatSmallS_0"
                         elLi $ $readLoc "stage_PatDiConsonant_0"
                         elLi $ $readLoc "stage_PatCodaH_0"
@@ -1104,8 +1107,8 @@ landingPage = elClass "div" "landing" $ do
         elClass "div" "usp" $ do
             elClass "div" "icon" $ elAttr "img"
                  (  "src" =: $(static "chords.gif")
-                 <> "width" =: "181"
-                 <> "height" =: "52"
+                 <> "width" =: "128"
+                 <> "height" =: "128"
                  ) blank
             elClass "div" "caption" $ text "Type chords, not letters"
             elClass "div" "description" $
@@ -1225,23 +1228,26 @@ stages navLang = do
                         | $readLoc "stage_2-3" == current -> Stage2.exercise3
                         | $readLoc "stage_PatSimple_0"      == current -> Stage2.exercise4
                         | $readLoc "stage_PatReplCommon_0"  == current -> Stage3.exercise1
-                        | $readLoc "stage_PatSmallS_0"      == current -> Stage3.exercise2
-                        | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise3
-                        | $readLoc "stage_PatCodaH_0"       == current -> Stage3.exercise4
-                        | $readLoc "stage_PatCodaR_0"       == current -> Stage3.exercise5
-                        | $readLoc "stage_PatCodaRR_0"      == current -> Stage3.exercise6
-                        | $readLoc "stage_PatCodaHR_0"      == current -> Stage3.exercise7
-                        | $readLoc "stage_PatDt_0"          == current -> Stage3.exercise8
-                        | $readLoc "stage_PatDiphtong_0"    == current -> Stage3.exercise9
-                        | $readLoc "stage_PatReplC_0"       == current -> Stage3.exercise10
-                        | $readLoc "stage_PatCodaGK_0"      == current -> Stage3.exercise11
-                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise12
-                        | $readLoc "stage_PatIJ_0"          == current -> Stage3.exercise13
-                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise14
-                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise15
-                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise16
-                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise17
-                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise18
+                        | $readLoc "stage_PatCodaComboT_0"  == current -> Stage3.exercise2
+                        | $readLoc "stage_PatOnsetR_0"      == current -> Stage3.exercise3
+                        | $readLoc "stage_PatOnsetL_0"      == current -> Stage3.exercise4
+                        | $readLoc "stage_PatSmallS_0"      == current -> Stage3.exercise5
+                        | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise6
+                        | $readLoc "stage_PatCodaH_0"       == current -> Stage3.exercise7
+                        | $readLoc "stage_PatCodaR_0"       == current -> Stage3.exercise8
+                        | $readLoc "stage_PatCodaRR_0"      == current -> Stage3.exercise9
+                        | $readLoc "stage_PatCodaHR_0"      == current -> Stage3.exercise10
+                        | $readLoc "stage_PatDt_0"          == current -> Stage3.exercise11
+                        | $readLoc "stage_PatDiphtong_0"    == current -> Stage3.exercise12
+                        | $readLoc "stage_PatReplC_0"       == current -> Stage3.exercise13
+                        | $readLoc "stage_PatCodaGK_0"      == current -> Stage3.exercise14
+                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise15
+                        | $readLoc "stage_PatIJ_0"          == current -> Stage3.exercise16
+                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise17
+                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise18
+                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise19
+                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise20
+                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise21
                         | $readLoc "stage_ploverCommands"   == current -> ploverCommands
                         | $readLoc "stage_fingerspelling"   == current -> fingerspelling
                         | $readLoc "stage_numbermode"       == current -> numberMode

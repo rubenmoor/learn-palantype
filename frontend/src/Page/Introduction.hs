@@ -165,7 +165,7 @@ introduction = do
 
     let (rsStart, desc) = case navLang of
             EN -> ("START", "S-, T-, A, -R, and -T")
-            DE -> ("SDAÜD", "D-, S-, A-, -Ü, -D")
+            DE -> ("DSAÜD", "D-, S-, A-, -Ü, -D")
         eChordSTART = void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
 
     elClass "div" "start" $ do
