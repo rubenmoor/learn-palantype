@@ -58,12 +58,13 @@ import Data.Functor (Functor(fmap))
 import Control.Monad.IO.Class (MonadIO)
 
 data StateLiterals k
-    = StatePause
+    = StatePause Int
     | StateRun (Run k)
 
 data Run k = Run
     { _stCounter  :: Int
     , _stMMistake :: Maybe (Int, Chord k)
+    , _stNMistakes :: Int
     }
 
 makePrisms ''StateLiterals
@@ -93,7 +94,7 @@ taskLiterals = do
 
         step :: Chord key -> StateLiterals key -> StateLiterals key
         step c st = case st of
-            StatePause ->
+            StatePause _ ->
                 if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                     then stepStart
                     else st
@@ -111,31 +112,32 @@ taskLiterals = do
                         -- correct
                         Nothing | Raw.fromChord c == current ->
                             if _stCounter == len - 1
-                            then StatePause
+                            then StatePause _stNMistakes
                             else st & _StateRun . stCounter +~ 1
 
                         -- mistake
-                        Nothing -> st & _StateRun . stMMistake ?~
-                            (_stCounter, c)
+                        Nothing -> st & _StateRun . stMMistake ?~ (_stCounter, c)
+                                      & _StateRun . stNMistakes +~ 1
 
         stepStart = StateRun Run
             { _stCounter  = 0
             , _stMMistake = Nothing
+            , _stNMistakes = 0
             }
-        stateInitial = StatePause
+        stateInitial = StatePause 0
 
     dynLiterals <- foldDyn step stateInitial envEChord
 
     evStartStop <-
         fmap updated $ holdUniqDyn $ dynLiterals <&> \case
-            StatePause -> False
-            StateRun _ -> True
+            StatePause nMistakes -> nMistakes
+            StateRun   _         -> -1
 
     dynStopwatch <- mkStopwatch evStartStop
 
     elClass "div" "paragraph" $ do
         dyn_ $ dynLiterals <&> \case
-            StatePause -> el "div" $ do
+            StatePause _ -> el "div" $ do
                 text "Type "
                 elClass "span" "btnSteno blinking" $ do
                     text "Start "

@@ -60,8 +60,8 @@ in
       my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "my-palantype";
-        rev = "6c8e0bf62e3e7bfed01c5dc47b0e7e3e28c524c9";
-        sha256 = "12d4df6j1wra3xbx8jwjg91i6c9kyfmj1lqnyiixzcp5mgsx994h";
+        rev = "971166ceac7753b9e2aa7dbb8d8ec14b9cc8ce11";
+        sha256 = "1r9v5a0wrp5nq4yw4br989na844d87j47ka7hg5hs1pj01x2amp8";
       }) {});
     };
   })

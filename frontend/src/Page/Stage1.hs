@@ -22,7 +22,7 @@ import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
-import           Control.Category               ((<<<),  Category((.), id) )
+import           Control.Category               (Category((.), id) )
 import           Control.Lens                   ((.~)
                                                 , (<&>)
                                                 , At(at)
@@ -78,6 +78,7 @@ import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex
+                                                , allKeys
                                                 )
 import           Reflex.Dom                     (never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
@@ -85,8 +86,7 @@ import           Reflex.Dom                     (never, switchDyn, widgetHold,  
                                                 , PostBuild(getPostBuild)
                                                 , Prerender
                                                 , Reflex
-                                                    ( Dynamic
-                                                    , Event
+                                                    ( Event
                                                     , updated
                                                     )
                                                 , blank
@@ -160,13 +160,28 @@ exercise1 = do
     eDone <- taskAlphabet True
     elCongraz (eDone $> Nothing) envNavigation
 
-    when (navLang == DE)
-        $ elClass "div" "paragraph"
-        $ text
-              "In case you wonder: The letter ʃ is a phonetic symbol \
-        \related to the German \"sch\". \
-        \We don't care about exact phonetics and thus simply treat ʃ \
-        \as \"sch\"."
+    when (navLang == DE) $ do
+      elClass "div" "paragraph" $ text
+            "In case you wonder: The letter ʃ is a phonetic symbol \
+            \related to the German \"sch\". \
+            \We don't care about exact phonetics and thus simply treat ʃ \
+            \as \"sch\"."
+      elClass "div" "paragraph" $ do
+        text "Also, the keys with small letters are special. "
+        el "code" $ text "v"
+        text ", "
+        el "code" $ text "b"
+        text ", and "
+        el "code" $ text "n"
+        text " stand for \"ver-\", \"be-\", and \"-en\", respectively. \
+             \These keys aren't necessary and you won't use them in the \
+             \upcoming exercises. E.g. \"be\" can be typed simply by typing "
+        el "code" $ text "BE"
+        text ". But given the high frequency of these word parts, these \
+            \ special keys will help a lot with typing efficiency. The "
+        el "code" $ text "s"
+        text " key (small s) is a specical key among the special keys and has \
+            \ whole exercises dedicated to its use."
 
     pure envNavigation
 
@@ -434,9 +449,9 @@ taskLetters
        , PostBuild t m
        , Prerender t m
        )
-    => Dynamic t [key]
+    => [key]
     -> m (Event t ())
-taskLetters dynLetters = do
+taskLetters letters = do
 
     eChord  <- asks envEChord
 
@@ -444,8 +459,7 @@ taskLetters dynLetters = do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-    fmap switchDyn $ widgetHold (pure never) $ eStdGen <&> \stdGen ->
-        dynSimple $ dynLetters <&> \letters -> mdo
+    fmap switchDyn $ widgetHold (pure never) $ eStdGen <&> \stdGen -> mdo
             let len = length letters
 
                 step
@@ -567,16 +581,10 @@ exercise5 = do
     updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
     let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
-        dynLeftHand =
-            filter (\k -> toFinger k `elem` fingersLeft)
-                .   fmap fromIndex
-                .   Map.keys
-                .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
-                .   stPloverCfg
-                <$> envDynState
+        leftHand =
+            filter (\k -> toFinger k `elem` fingersLeft) allKeys
 
-    eDone <- taskLetters dynLeftHand
+    eDone <- taskLetters leftHand
 
     elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
@@ -615,16 +623,10 @@ exercise6 = do
 
     let fingersRight =
             [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
-        dynRightHand =
-            filter (\k -> toFinger k `elem` fingersRight)
-                .   fmap fromIndex
-                .   Map.keys
-                .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
-                .   stPloverCfg
-                <$> envDynState
+        rightHand =
+            filter (\k -> toFinger k `elem` fingersRight) allKeys
 
-    eDone <- taskLetters dynRightHand
+    eDone <- taskLetters rightHand
 
     elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
@@ -653,6 +655,51 @@ exercise7 = do
     el "h3" $ text "Exercise 7"
     elClass "div" "paragraph" $ do
         text
+            "This one will be fun. You won't have to move your hands at all. \
+            \All the keys you practice in this exercise lie on home row. \
+            \If you find your hands moving, still, maybe adjust your keyboard. \
+            \Home row should be reachable with as little movement as possible."
+
+    ePb <- getPostBuild
+    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+
+    let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
+
+    eDone <- taskLetters homeRow
+
+    elClass "div" "paragraph"
+        $ text
+              "Be sure to practice this one to perfection. It will only get more \
+              \difficult from here."
+
+
+    elCongraz (eDone $> Nothing) envNavigation
+    pure envNavigation
+
+exercise8
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , Prerender t m
+       , PostBuild t m
+       , SetRoute t (R FrontendRoute) m
+       )
+    => m Navigation
+exercise8 = do
+
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+    unless (navLang `elem` [DE, EN]) elNotImplemented
+
+    el "h1" $ text "Stage 1"
+    el "h2" $ text "The Palantype Alphabet"
+    el "h3" $ text "Exercise 7"
+    elClass "div" "paragraph" $ do
+        text
             "Before your continue with this last exercise of Stage 1: There is a \
          \table of contents on the left. Use it to jump back to any of the \
          \previous exercises to practice some more."
@@ -667,15 +714,7 @@ exercise7 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stShowKeyboard" .~ True]
 
-    let dynAlphabet =
-            fmap fromIndex
-                .   Map.keys
-                .   pcfgMapStenoKeys
-                .   view (_Wrapped' <<< at navLang <<< non defaultPloverSystemCfg)
-                .   stPloverCfg
-                <$> envDynState
-
-    eDone <- taskLetters dynAlphabet
+    eDone <- taskLetters allKeys
 
     elClass "div" "paragraph"
         $ text

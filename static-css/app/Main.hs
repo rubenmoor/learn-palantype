@@ -652,6 +652,7 @@ main = putCss $ do
     ".small" ? fontSize (pt 12)
     ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
+    ".darkgray" ? color darkgray
 
     ".exerciseField" ? do
         backgroundColor myLightgray

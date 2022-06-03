@@ -63,11 +63,10 @@ import Control.Lens ((<>~), (.~), (%~), (+~), makePrisms, makeLenses)
 import Data.Function ((&))
 import Data.Foldable (Foldable(elem))
 import Shared (dynSimple)
-import Data.Bool (Bool(..))
 import qualified Data.Time as Time
 
 data StateDates k
-    = StatePause
+    = StatePause Int
     | StateRun (Run k)
 
 data Run key = Run
@@ -108,7 +107,7 @@ taskDates map = do
         let
             step :: Chord key -> StateDates key -> StateDates key
             step c st = case st of
-                StatePause ->
+                StatePause _ ->
                     if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                         then stepStart
                         else st
@@ -126,7 +125,7 @@ taskDates map = do
                     if renderDate (_stDates !! _stCounter) == renderPlover map (_stChords <> [c])
                         then -- correct? next!
                             if _stCounter + 1 == numDates
-                                then StatePause
+                                then StatePause _stNMistakes
                                 else st & _StateRun %~ ( stCounter +~ 1  )
                                                      . ( stChords  .~ [] )
                         else -- incorrect? keep going.
@@ -139,18 +138,18 @@ taskDates map = do
                     , _stNMistakes = 0
                     }
 
-        dynStenoDates <- foldDyn step StatePause eChord
+        dynStenoDates <- foldDyn step (StatePause 0) eChord
 
         evStartStop <-
             fmap updated $ holdUniqDyn $ dynStenoDates <&> \case
-                StatePause -> False
-                StateRun _ -> True
+                StatePause nMistakes -> nMistakes
+                StateRun   _         -> -1
 
         dynStopwatch <- mkStopwatch evStartStop
 
         elClass "div" "taskWords" $ do
             dyn_ $ dynStenoDates <&> \case
-                StatePause -> el "div" $ do
+                StatePause _ -> el "div" $ do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "

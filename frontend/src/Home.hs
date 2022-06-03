@@ -762,7 +762,7 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell True stenoKeys dynPressedKeys 18 "1" "homerow"
             elCell True stenoKeys dynPressedKeys 19 "1" ""
             elCell True stenoKeys dynPressedKeys 32 "3" ""
-    elClass "span" "system" $ do
+    elClass "div" "configuration" $ do
         el "div" $ text $ showt EN
         el "div" $ text $ showt cfgName
 
@@ -954,6 +954,7 @@ toc lang current = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_1-5"
                         elLi $ $readLoc "stage_1-6"
                         elLi $ $readLoc "stage_1-7"
+                        elLi $ $readLoc "stage_1-8"
 
                     (s2, _) <- elClass' "li" "stage" $ do
                         let dynClass =
@@ -999,14 +1000,14 @@ toc lang current = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatDt_0"
                         elLi $ $readLoc "stage_PatDiphtong_0"
                         elLi $ $readLoc "stage_PatReplC_0"
-                        elLi $ $readLoc "stage_PatCodaGK_0"
                         elLi $ $readLoc "stage_PatSZ_0"
-                        elLi $ $readLoc "stage_PatIJ_0"
+                        elLi $ $readLoc "stage_PatBreakUpI_0"
                         elLi $ $readLoc "stage_PatSwapS_0"
                         elLi $ $readLoc "stage_PatSwapSch_0"
                         elLi $ $readLoc "stage_PatSwapZ_0"
                         elLi $ $readLoc "stage_PatDiVowel_0"
                         elLi $ $readLoc "stage_PatReplH_0"
+                        elLi $ $readLoc "stage_PatCodaGK_3"
 
                     (s4, _) <- elClass' "li" "stage" $ do
                         let dynClass =
@@ -1223,6 +1224,7 @@ stages navLang = do
                         | $readLoc "stage_1-5" == current -> Stage1.exercise5
                         | $readLoc "stage_1-6" == current -> Stage1.exercise6
                         | $readLoc "stage_1-7" == current -> Stage1.exercise7
+                        | $readLoc "stage_1-8" == current -> Stage1.exercise8
                         | $readLoc "stage_2-1" == current -> Stage2.exercise1
                         | $readLoc "stage_2-2" == current -> Stage2.exercise2
                         | $readLoc "stage_2-3" == current -> Stage2.exercise3
@@ -1240,14 +1242,14 @@ stages navLang = do
                         | $readLoc "stage_PatDt_0"          == current -> Stage3.exercise11
                         | $readLoc "stage_PatDiphtong_0"    == current -> Stage3.exercise12
                         | $readLoc "stage_PatReplC_0"       == current -> Stage3.exercise13
-                        | $readLoc "stage_PatCodaGK_0"      == current -> Stage3.exercise14
-                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise15
-                        | $readLoc "stage_PatIJ_0"          == current -> Stage3.exercise16
-                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise17
-                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise18
-                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise19
-                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise20
-                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise21
+                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise14
+                        | $readLoc "stage_PatBreakUpI_0"    == current -> Stage3.exercise15
+                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise16
+                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise17
+                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise18
+                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise19
+                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise20
+                        | $readLoc "stage_PatCodaGK_3"      == current -> Stage3.exercise21
                         | $readLoc "stage_ploverCommands"   == current -> ploverCommands
                         | $readLoc "stage_fingerspelling"   == current -> fingerspelling
                         | $readLoc "stage_numbermode"       == current -> numberMode

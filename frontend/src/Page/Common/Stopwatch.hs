@@ -48,11 +48,11 @@ import Control.Monad (Monad((>>=)))
 data StateStopwatch
     = SWInitial
     | SWRun  UTCTime NominalDiffTime
-    | SWStop UTCTime NominalDiffTime
+    | SWStop UTCTime NominalDiffTime Int
     deriving stock Eq
 
 data EventStopwatch
-    = ESWToggle UTCTime
+    = ESWToggle Int UTCTime
     | ESWTick UTCTime
 
 elStopwatch
@@ -68,13 +68,14 @@ elStopwatch
   -> m (Event t Stats)
 elStopwatch dynStopwatch n = do
     evStats <- elClass "span" "stopwatch" $ fmap catMaybes $ dyn $ dynStopwatch <&> \case
-        SWInitial      -> pure Nothing
-        SWRun  _     t -> text (formatTime t) $> Nothing
-        SWStop start t -> do
+        SWInitial              -> pure Nothing
+        SWRun  _     t         -> text (formatTime t) $> Nothing
+        SWStop start t nErrors -> do
             pure $ Just $ Stats
                 { statsDate = start
                 , statsTime = t
                 , statsLength = n
+                , statsNErrors = nErrors
                 }
 
     Env {..} <- ask
@@ -97,7 +98,7 @@ elStopwatch dynStopwatch n = do
     pure evStats
 
 mkStopwatch
-  :: forall t (m :: * -> *) a
+  :: forall t (m :: * -> *)
   . ( DomBuilder t m
     , MonadHold t m
     , MonadIO (Performable m)
@@ -106,19 +107,19 @@ mkStopwatch
     , PostBuild t m
     , TriggerEvent t m
     )
-  => Event t a
+  => Event t Int
   -> m (Dynamic t StateStopwatch)
 mkStopwatch ev = do
-    evToggle <- performEvent $ ev $> (ESWToggle <$> liftIO getCurrentTime)
+    evToggle <- performEvent $ ev <&> \nErrors -> (ESWToggle nErrors <$> liftIO getCurrentTime)
     evTick <- fmap (ESWTick <<< _tickInfo_lastUTC) <$> tickLossyFromPostBuildTime 0.1
 
     let startStop :: EventStopwatch -> StateStopwatch -> StateStopwatch
         startStop (ESWTick timeTick  ) (SWRun timeStart _) =
             SWRun timeStart $ diffUTCTime timeTick timeStart
         startStop (ESWTick _) sw = sw
-        startStop (ESWToggle timeStop) (SWRun timeStart _) =
-            SWStop timeStart $ diffUTCTime timeStop timeStart
-        startStop (ESWToggle timeStart) _ = SWRun timeStart 0
+        startStop (ESWToggle nErrors timeStop) (SWRun timeStart _) =
+            SWStop timeStart (diffUTCTime timeStop timeStart) nErrors
+        startStop (ESWToggle _ timeStart) _ = SWRun timeStart 0
 
     foldDyn startStop SWInitial (leftmost [evToggle, evTick]) >>= holdUniqDyn
 

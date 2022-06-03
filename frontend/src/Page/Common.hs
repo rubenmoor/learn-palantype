@@ -52,7 +52,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Functor                   ( (<$>) )
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
-import           Data.List                      ( (!!) )
+import           Data.List                      ( (!!), head )
 import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
@@ -292,7 +292,7 @@ loading = elClass "div" "paragraph" $ do
     text " Loading ..."
 
 data StateWords
-    = StatePause
+    = StatePause Int
     | StateRun Run
 
 data Run = Run
@@ -323,18 +323,20 @@ taskWords
     -> Map Text [RawSteno]
     -> m (Event t Stats)
 taskWords mapStenoWord mapWordStenos = do
+
     eChord   <- asks envEChord
 
     evStdGen <- postRender $ do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-    fmap switchDyn $ widgetHold (loading $> never) $ evStdGen <&> \stdGen -> do
-        let len = Map.size mapWordStenos
 
+    fmap switchDyn $ widgetHold (loading $> never) $ evStdGen <&> \stdGen -> do
+
+        let len = Map.size mapWordStenos
             step :: Chord key -> StateWords -> StateWords
             step c st = case st of
-                StatePause ->
+                StatePause _ ->
                     if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
                         then stepStart
                         else st
@@ -360,7 +362,7 @@ taskWords mapStenoWord mapWordStenos = do
 
                             -- correct
                             then if _stCounter == pred len
-                                then StatePause
+                                then StatePause _stNMistakes
                                 else
                                     st & _StateRun %~
                                       (stCounter %~ succ)
@@ -380,23 +382,23 @@ taskWords mapStenoWord mapWordStenos = do
                 , _stMHint     = Nothing
                 }
 
-            stateInitial = StatePause
+            stateInitial = StatePause 0
 
         dynStateWords <- foldDyn step stateInitial eChord
 
         evStartStop <-
             fmap updated $ holdUniqDyn $ dynStateWords <&> \case
-                StatePause -> False
-                StateRun _ -> True
+                StatePause nMistakes -> nMistakes
+                StateRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
         elClass "div" "taskWords" $ do
             dyn_ $ dynStateWords <&> \case
-                StatePause -> el "div" $ do
+                StatePause _ -> el "div" $ do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
-                        el "code" $ text "SDAÜD"
+                        el "code" $ text $ showt $ KI.toRaw @key $ head kiChordsStart
                     text " to begin the exercise."
                 StateRun Run {..} -> do
                     -- TODO: what is span ".word"?

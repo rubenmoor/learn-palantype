@@ -74,7 +74,13 @@ exercise iEx elIntro pat elExplication = do
     evEDict <- request $ getDictDE' pat 0 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
-            Right (mSW, mWSs) -> taskWords mSW mWSs
+            Right (mSW, mWSs) -> if null mSW
+              then do elClass "div" "paragraph" $
+                        text "There are no words in this exercise. \
+                          \This is probably an error. \
+                          \Skip this for now."
+                      pure never
+              else taskWords mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
@@ -495,33 +501,6 @@ exercise14 ::
 exercise14 =
     exercise
         14
-        ( \_ -> do
-              elClass "div" "paragraph" $ text "TODO"
-              elClass "div" "paragraph" $ do
-                  text
-                      "You learned the stretch key to type -h, -r, and -hr. \
-                      \Now you learn to use the stretch key to use "
-                  el "code" $ text "-K"
-                  text " to type "
-                  el "em" $ text "g"
-                  text "."
-        )
-        PatCodaGK
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "... with the exception of "
-              el "em" $ text "-ig"
-              text
-                  ", the idea being that the stretch key is used for \
-                  \vowels that are actually long."
-        )
-
-exercise15 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise15 =
-    exercise
-        15
         ( \_ -> elClass "div" "paragraph" $ do
               text "The main takeaway regarding the German letter "
               el "em" $ text "ß"
@@ -552,13 +531,13 @@ exercise15 =
                   \example."
         )
 
-exercise16 ::
+exercise15 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise16 =
+exercise15 =
     exercise
-        16
+        15
         ( \_ -> elClass "div" "paragraph" $ do
               text
                   "This rule increase efficiency for vowel-heavy words. \
@@ -570,7 +549,7 @@ exercise16 =
                   " saves you from breaking up a word and adding an extra chord \
                   \just for one vowel."
         )
-        PatIJ
+        PatBreakUpI
         ( \_ -> elClass "div" "paragraph" $ do
               text "In order to reach "
               el "em" $ text "lio"
@@ -586,6 +565,21 @@ exercise16 =
                   \\"Steno Order\" earlier."
         )
 
+exercise16 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise16 =
+    exercise
+        16
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "intro"
+        )
+        PatSwapS
+        ( \_ -> elClass "div" "paragraph" $ do
+              text "explication"
+        )
+
 exercise17 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
@@ -596,7 +590,7 @@ exercise17 =
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )
-        PatSwapS
+        PatSwapSch
         ( \_ -> elClass "div" "paragraph" $ do
               text "explication"
         )
@@ -611,7 +605,7 @@ exercise18 =
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )
-        PatSwapSch
+        PatSwapZ
         ( \_ -> elClass "div" "paragraph" $ do
               text "explication"
         )
@@ -626,7 +620,7 @@ exercise19 =
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )
-        PatSwapZ
+        PatDiVowel
         ( \_ -> elClass "div" "paragraph" $ do
               text "explication"
         )
@@ -641,22 +635,53 @@ exercise20 =
         ( \_ -> elClass "div" "paragraph" $ do
               text "intro"
         )
-        PatDiVowel
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "explication"
-        )
-
-exercise21 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise21 =
-    exercise
-        21
-        ( \_ -> elClass "div" "paragraph" $ do
-              text "intro"
-        )
         PatReplH
         ( \_ -> elClass "div" "paragraph" $ do
               text "explication"
         )
+
+exercise21
+  :: forall key t (m :: * -> *)
+  .  Constraints key t m
+  => m Navigation
+exercise21 = do
+    Env {..} <- ask
+    let Navigation {..} = envNavigation
+    unless (navLang == DE) elNotImplemented
+
+    el "h1" $ text "Stage 3"
+    el "h2" $ text $ toDescription PatCodaGK
+    el "h3" $ text $ "Exercise 21"
+
+    elClass "div" "paragraph" $ text "intro"
+
+    ePb <- postRender $ delay 0.1 =<< getPostBuild
+    evEDoc <- request $ getDocDEPattern' PatCodaGK 3 ePb
+
+    widgetHold_ loading $
+        evEDoc <&> \case
+            Right doc -> elPatterns doc
+            Left str ->
+                elClass "div" "paragraph small red"
+                    $ text
+                    $ "Could not load resource: docs: " <> str
+
+    elClass "div" "paragraph" $ text "explication"
+
+    evEDict <- request $ getDictDE' PatCodaGK 3 ePb
+    evDone <- fmap switchDyn $ widgetHold (loading $> never) $
+        evEDict <&> \case
+            Right (mSW, mWSs) -> if null mSW
+              then do elClass "div" "paragraph" $
+                        text "There are no words in this exercise. \
+                          \This is probably an error. \
+                          \Skip this for now."
+                      pure never
+              else taskWords mSW mWSs
+            Left str -> never <$ elClass
+                        "div"
+                        "paragraph small red"
+                        (text $ "Could not load resource: dict: " <> str)
+
+    elCongraz (Just <$> evDone) envNavigation
+    pure envNavigation

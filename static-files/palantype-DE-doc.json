@@ -823,7 +823,7 @@
         "PatReplCommon",
         {
             "0": [
-                110481,
+                110488,
                 [
                     [
                         "mit",
@@ -1633,7 +1633,7 @@
                 ]
             ],
             "3": [
-                2288,
+                2290,
                 [
                     [
                         "gut",
@@ -2858,7 +2858,7 @@
         "PatOnsetR",
         {
             "0": [
-                109801,
+                110197,
                 [
                     [
                         "Euro",
@@ -3030,7 +3030,7 @@
                     ],
                     [
                         "schreibt",
-                        "ʃMEI+BD"
+                        "DʃMEI+BD"
                     ],
                     [
                         "Gericht",
@@ -3268,7 +3268,7 @@
         "PatOnsetL",
         {
             "0": [
-                10278,
+                10282,
                 [
                     [
                         "geplant",
@@ -3584,7 +3584,7 @@
                     ],
                     [
                         "Anklageschrift",
-                        "AN/DGLA/GE/ʃMI+FD"
+                        "AN/DGLA/GE/DʃMI+FD"
                     ],
                     [
                         "kleinem",
@@ -3678,7 +3678,7 @@
         "PatSmallS",
         {
             "0": [
-                2221,
+                2219,
                 [
                     [
                         "Test",
@@ -4119,7 +4119,7 @@
                     ],
                     [
                         "schreie",
-                        "ʃMEIs"
+                        "DʃMEIs"
                     ],
                     [
                         "Dreiecke",
@@ -4215,7 +4215,7 @@
                     ],
                     [
                         "Schreierei",
-                        "ʃMEIs/SMEI"
+                        "DʃMEIs/SMEI"
                     ],
                     [
                         "virusfreie",
@@ -4259,7 +4259,7 @@
                     ],
                     [
                         "anschreie",
-                        "AN/ʃMEIs"
+                        "AN/DʃMEIs"
                     ],
                     [
                         "dreieckig",
@@ -4271,7 +4271,7 @@
                     ],
                     [
                         "Geschreie",
-                        "GE/ʃMEIs"
+                        "GE/DʃMEIs"
                     ],
                     [
                         "pestizidfreie",
@@ -4351,7 +4351,7 @@
                     ],
                     [
                         "Todesschreie",
-                        "D+O/DES/ʃMEIs"
+                        "D+O/DES/DʃMEIs"
                     ],
                     [
                         "dreieckigem",
@@ -4403,7 +4403,7 @@
                     ],
                     [
                         "Schreckensschreie",
-                        "ʃME/G+ENS/ʃMEIs"
+                        "DʃME/G+ENS/DʃMEIs"
                     ],
                     [
                         "ruckfreie",
@@ -4493,7 +4493,7 @@
         "PatDiConsonant",
         {
             "0": [
-                36534,
+                36568,
                 [
                     [
                         "kann",
@@ -5426,10 +5426,6 @@
                         "D+IBD"
                     ],
                     [
-                        "schmiss",
-                        "ʃMIS"
-                    ],
-                    [
                         "Kongresszentrum",
                         "G+ON/GMES/ʃGEND/SMUM"
                     ],
@@ -5704,6 +5700,10 @@
                     [
                         "abgetippt",
                         "AB/GE/D+IBD"
+                    ],
+                    [
+                        "aufgepoppt",
+                        "AUF/GE/B+OBD"
                     ]
                 ]
             ]
@@ -5713,7 +5713,7 @@
         "PatCodaH",
         {
             "0": [
-                60170,
+                60203,
                 [
                     [
                         "geht",
@@ -5857,7 +5857,7 @@
                     ],
                     [
                         "schrieb",
-                        "ʃM~IB"
+                        "DʃM~IB"
                     ],
                     [
                         "entschieden",
@@ -6118,7 +6118,7 @@
                 ]
             ],
             "3": [
-                610,
+                608,
                 [
                     [
                         "die",
@@ -6175,10 +6175,6 @@
                     [
                         "Industriegebiet",
                         "IN/DUSD/SMI/GE/BID"
-                    ],
-                    [
-                        "schrie",
-                        "ʃMI"
                     ],
                     [
                         "Elektrifizierung",
@@ -6519,6 +6515,10 @@
                     [
                         "Produktpiraterie",
                         "DBMO/DU+GD/B+I/SMA/D+E/SMI"
+                    ],
+                    [
+                        "Produktvielfalt",
+                        "DBMO/DU+GD/FIL/FALD"
                     ]
                 ]
             ]
@@ -6528,7 +6528,7 @@
         "PatCodaR",
         {
             "0": [
-                345785,
+                346155,
                 [
                     [
                         "der",
@@ -6964,7 +6964,7 @@
         "PatCodaRR",
         {
             "0": [
-                1673,
+                1672,
                 [
                     [
                         "gesperrt",
@@ -7005,10 +7005,6 @@
                     [
                         "Sperrmüll",
                         "SB+EÜ+/MÜL"
-                    ],
-                    [
-                        "irrt",
-                        "I+D"
                     ],
                     [
                         "Irrsinn",
@@ -7365,6 +7361,10 @@
                     [
                         "Kochgeschirr",
                         "G+O+ʃ/GE/ʃI+"
+                    ],
+                    [
+                        "Staubsaugerroboter",
+                        "DSAUB/SAU/GEÜ+/O/BO/D+EÜ"
                     ]
                 ]
             ]
@@ -7374,7 +7374,7 @@
         "PatCodaHR",
         {
             "0": [
-                16941,
+                16952,
                 [
                     [
                         "mehr",
@@ -7833,7 +7833,7 @@
                 ]
             ],
             "1": [
-                2789,
+                2790,
                 [
                     [
                         "Stadt",
@@ -8243,7 +8243,7 @@
         "PatDiphtong",
         {
             "0": [
-                2074,
+                2075,
                 [
                     [
                         "Weihnachten",
@@ -9868,7 +9868,7 @@
         "PatReplC",
         {
             "0": [
-                7527,
+                7526,
                 [
                     [
                         "Corona",
@@ -10275,144 +10275,10 @@
         }
     ],
     [
-        "PatCodaGK",
-        {
-            "3": [
-                31,
-                [
-                    [
-                        "Lake",
-                        "LAÜ/G+E"
-                    ],
-                    [
-                        "Brakel",
-                        "BMAÜ/G+EL"
-                    ],
-                    [
-                        "Laken",
-                        "LAÜ/G+EN"
-                    ],
-                    [
-                        "Baken",
-                        "BAÜ/G+EN"
-                    ],
-                    [
-                        "Isaak",
-                        "I/SA/AÜ+G"
-                    ],
-                    [
-                        "Laktose",
-                        "LAÜ+G/D+O/SE"
-                    ],
-                    [
-                        "Flak",
-                        "FLAÜ+G"
-                    ],
-                    [
-                        "Trakte",
-                        "DLAÜ+G/D+E"
-                    ],
-                    [
-                        "laktosefrei",
-                        "LAÜ+G/D+O/SE/FMEI"
-                    ],
-                    [
-                        "Salzlake",
-                        "SALGʃ/LAÜ/G+E"
-                    ],
-                    [
-                        "Kaki",
-                        "G+AÜ/G+I"
-                    ],
-                    [
-                        "Trakten",
-                        "DLAÜ+G/D+EN"
-                    ],
-                    [
-                        "laktosefreie",
-                        "LAÜ+G/D+O/SE/FMEI/E"
-                    ],
-                    [
-                        "Schnaken",
-                        "ʃNAÜ/G+EN"
-                    ],
-                    [
-                        "laktosefreien",
-                        "LAÜ+G/D+O/SE/FMEI/EN"
-                    ],
-                    [
-                        "Kakis",
-                        "G+AÜ/G+IS"
-                    ],
-                    [
-                        "Tetrapak",
-                        "D+E/DLA/B+AÜ+G"
-                    ],
-                    [
-                        "Tetrapaks",
-                        "D+E/DLA/B+AÜ+GS"
-                    ],
-                    [
-                        "Brakels",
-                        "BMAÜ/G+ELS"
-                    ],
-                    [
-                        "laktosefreier",
-                        "LAÜ+G/D+O/SE/FMEI/EÜ"
-                    ],
-                    [
-                        "laktosefreies",
-                        "LAÜ+G/D+O/SE/FMEI/ES"
-                    ],
-                    [
-                        "Galaktose",
-                        "GA/LAÜ+G/D+O/SE"
-                    ],
-                    [
-                        "Aktinium",
-                        "AÜ+G/D+I/NI/UM"
-                    ],
-                    [
-                        "Wundlaken",
-                        "F+UND/LAÜ/G+EN"
-                    ],
-                    [
-                        "laktosearm",
-                        "LAÜ+G/D+O/SE/AÜM"
-                    ],
-                    [
-                        "laktosearme",
-                        "LAÜ+G/D+O/SE/AÜ/ME"
-                    ],
-                    [
-                        "laktosearmem",
-                        "LAÜ+G/D+O/SE/AÜ/MEM"
-                    ],
-                    [
-                        "laktosearmen",
-                        "LAÜ+G/D+O/SE/AÜ/MEN"
-                    ],
-                    [
-                        "laktosearmer",
-                        "LAÜ+G/D+O/SE/AÜ/MEÜ"
-                    ],
-                    [
-                        "laktosearmes",
-                        "LAÜ+G/D+O/SE/AÜ/MES"
-                    ],
-                    [
-                        "laktosefreiem",
-                        "LAÜ+G/D+O/SE/FMEI/EM"
-                    ]
-                ]
-            ]
-        }
-    ],
-    [
         "PatSZ",
         {
             "0": [
-                14580,
+                14582,
                 [
                     [
                         "große",
@@ -11224,7 +11090,7 @@
         }
     ],
     [
-        "PatIJ",
+        "PatBreakUpI",
         {
             "0": [
                 45,
@@ -11412,7 +11278,7 @@
                 ]
             ],
             "4": [
-                12169,
+                12171,
                 [
                     [
                         "Borussia",
@@ -11822,7 +11688,7 @@
         "PatSwapS",
         {
             "0": [
-                26154,
+                26191,
                 [
                     [
                         "Tests",
@@ -12227,7 +12093,7 @@
                 ]
             ],
             "2": [
-                51927,
+                51974,
                 [
                     [
                         "ist",
@@ -12632,7 +12498,7 @@
                 ]
             ],
             "3": [
-                1387,
+                1388,
                 [
                     [
                         "Arbeitsmarkt",
@@ -12821,10 +12687,6 @@
                     [
                         "Arbeitsmarktlage",
                         "AÜ/BEISD/MAÜ+GD/LA/GE"
-                    ],
-                    [
-                        "Schmitts",
-                        "ʃMISD"
                     ],
                     [
                         "realitätsferne",
@@ -13033,6 +12895,10 @@
                     [
                         "Tätigkeitsschwerpunkt",
                         "D+Ä/D+IG/G+EISD/ʃ+EÜ/B+UMND"
+                    ],
+                    [
+                        "Abfahrtsrampe",
+                        "AB/FAÜ+SD/SMAM/B+E"
                     ]
                 ]
             ]
@@ -13447,7 +13313,7 @@
                 ]
             ],
             "2": [
-                7185,
+                7192,
                 [
                     [
                         "nichts",
@@ -13857,7 +13723,7 @@
         "PatSwapZ",
         {
             "0": [
-                23240,
+                23252,
                 [
                     [
                         "jetzt",
@@ -14267,7 +14133,7 @@
         "PatDiVowel",
         {
             "0": [
-                4622,
+                4623,
                 [
                     [
                         "Staaten",
@@ -14672,7 +14538,7 @@
                 ]
             ],
             "3": [
-                11178,
+                11181,
                 [
                     [
                         "paar",
@@ -15082,7 +14948,7 @@
         "PatReplH",
         {
             "0": [
-                164111,
+                164087,
                 [
                     [
                         "hat",
@@ -15894,10 +15760,420 @@
         }
     ],
     [
+        "PatCodaGK",
+        {
+            "3": [
+                105,
+                [
+                    [
+                        "Lake",
+                        "LAÜ/G+E"
+                    ],
+                    [
+                        "hakte",
+                        "N+AÜ+G/D+E"
+                    ],
+                    [
+                        "abhaken",
+                        "AB/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Brakel",
+                        "BMAÜ/G+EL"
+                    ],
+                    [
+                        "Laken",
+                        "LAÜ/G+EN"
+                    ],
+                    [
+                        "haken",
+                        "N+AÜ/G+EN"
+                    ],
+                    [
+                        "abzuhaken",
+                        "AB/ʃGU/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Baken",
+                        "BAÜ/G+EN"
+                    ],
+                    [
+                        "hake",
+                        "N+AÜ/G+E"
+                    ],
+                    [
+                        "Isaak",
+                        "I/SA/AÜ+G"
+                    ],
+                    [
+                        "hakten",
+                        "N+AÜ+G/D+EN"
+                    ],
+                    [
+                        "Laktose",
+                        "LAÜ+G/D+O/SE"
+                    ],
+                    [
+                        "Hakens",
+                        "N+AÜ/G+ENS"
+                    ],
+                    [
+                        "einhaken",
+                        "EIN/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Flak",
+                        "FLAÜ+G"
+                    ],
+                    [
+                        "Trakte",
+                        "DLAÜ+G/D+E"
+                    ],
+                    [
+                        "laktosefrei",
+                        "LAÜ+G/D+O/SE/FMEI"
+                    ],
+                    [
+                        "Salzlake",
+                        "SALGʃ/LAÜ/G+E"
+                    ],
+                    [
+                        "Kaki",
+                        "G+AÜ/G+I"
+                    ],
+                    [
+                        "Trakten",
+                        "DLAÜ+G/D+EN"
+                    ],
+                    [
+                        "laktosefreie",
+                        "LAÜ+G/D+O/SE/FMEI/E"
+                    ],
+                    [
+                        "Schnaken",
+                        "ʃNAÜ/G+EN"
+                    ],
+                    [
+                        "laktosefreien",
+                        "LAÜ+G/D+O/SE/FMEI/EN"
+                    ],
+                    [
+                        "Kakis",
+                        "G+AÜ/G+IS"
+                    ],
+                    [
+                        "Tetrapak",
+                        "D+E/DLA/B+AÜ+G"
+                    ],
+                    [
+                        "einzuhaken",
+                        "EIN/ʃGU/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Tetrapaks",
+                        "D+E/DLA/B+AÜ+GS"
+                    ],
+                    [
+                        "abgehakten",
+                        "AB/GE/N+AÜ+G/D+EN"
+                    ],
+                    [
+                        "abhakte",
+                        "AB/N+AÜ+G/D+E"
+                    ],
+                    [
+                        "Brakels",
+                        "BMAÜ/G+ELS"
+                    ],
+                    [
+                        "Holzhaken",
+                        "N+OLGʃ/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Makohai",
+                        "MAÜ/G+O/N+AI"
+                    ],
+                    [
+                        "abhakten",
+                        "AB/N+AÜ+G/D+EN"
+                    ],
+                    [
+                        "hak",
+                        "N+AÜ+G"
+                    ],
+                    [
+                        "laktosefreier",
+                        "LAÜ+G/D+O/SE/FMEI/EÜ"
+                    ],
+                    [
+                        "laktosefreies",
+                        "LAÜ+G/D+O/SE/FMEI/ES"
+                    ],
+                    [
+                        "abgehakte",
+                        "AB/GE/N+AÜ+G/D+E"
+                    ],
+                    [
+                        "hakende",
+                        "N+AÜ/G+EN/DE"
+                    ],
+                    [
+                        "hakenschlagenden",
+                        "N+AÜ/G+EN/ʃLA/GEN/DEN"
+                    ],
+                    [
+                        "abgehakter",
+                        "AB/GE/N+AÜ+G/D+EÜ"
+                    ],
+                    [
+                        "hakenschlagende",
+                        "N+AÜ/G+EN/ʃLA/GEN/DE"
+                    ],
+                    [
+                        "Abhakens",
+                        "AB/N+AÜ/G+ENS"
+                    ],
+                    [
+                        "Galaktose",
+                        "GA/LAÜ+G/D+O/SE"
+                    ],
+                    [
+                        "hakenden",
+                        "N+AÜ/G+EN/DEN"
+                    ],
+                    [
+                        "hakender",
+                        "N+AÜ/G+EN/DEÜ"
+                    ],
+                    [
+                        "hakst",
+                        "N+AÜ+Gs"
+                    ],
+                    [
+                        "laktosehaltige",
+                        "LAÜ+G/D+O/SE/N+AL/D+I/GE"
+                    ],
+                    [
+                        "laktosehaltiger",
+                        "LAÜ+G/D+O/SE/N+AL/D+I/GEÜ"
+                    ],
+                    [
+                        "Aktinium",
+                        "AÜ+G/D+I/NI/UM"
+                    ],
+                    [
+                        "Hakenzahnhai",
+                        "N+AÜ/G+EN/ʃGAÜN/N+AI"
+                    ],
+                    [
+                        "Keilhaken",
+                        "G+EIL/N+AÜ/G+EN"
+                    ],
+                    [
+                        "Wundlaken",
+                        "F+UND/LAÜ/G+EN"
+                    ],
+                    [
+                        "abgehaktem",
+                        "AB/GE/N+AÜ+G/D+EM"
+                    ],
+                    [
+                        "abgehaktes",
+                        "AB/GE/N+AÜ+G/D+ES"
+                    ],
+                    [
+                        "abhake",
+                        "AB/N+AÜ/G+E"
+                    ],
+                    [
+                        "abhakend",
+                        "AB/N+AÜ/G+END"
+                    ],
+                    [
+                        "abhakende",
+                        "AB/N+AÜ/G+EN/DE"
+                    ],
+                    [
+                        "abhakendem",
+                        "AB/N+AÜ/G+EN/DEM"
+                    ],
+                    [
+                        "abhakenden",
+                        "AB/N+AÜ/G+EN/DEN"
+                    ],
+                    [
+                        "abhakender",
+                        "AB/N+AÜ/G+EN/DEÜ"
+                    ],
+                    [
+                        "abhakendes",
+                        "AB/N+AÜ/G+EN/DES"
+                    ],
+                    [
+                        "abhakst",
+                        "AB/N+AÜ+Gs"
+                    ],
+                    [
+                        "abhaktest",
+                        "AB/N+AÜ+G/D+Es"
+                    ],
+                    [
+                        "aufgehakte",
+                        "AUF/GE/N+AÜ+G/D+E"
+                    ],
+                    [
+                        "aufgehaktem",
+                        "AUF/GE/N+AÜ+G/D+EM"
+                    ],
+                    [
+                        "aufgehakten",
+                        "AUF/GE/N+AÜ+G/D+EN"
+                    ],
+                    [
+                        "aufgehakter",
+                        "AUF/GE/N+AÜ+G/D+EÜ"
+                    ],
+                    [
+                        "aufgehaktes",
+                        "AUF/GE/N+AÜ+G/D+ES"
+                    ],
+                    [
+                        "aufhake",
+                        "AUF/N+AÜ/G+E"
+                    ],
+                    [
+                        "aufhaken",
+                        "AUF/N+AÜ/G+EN"
+                    ],
+                    [
+                        "aufhakend",
+                        "AUF/N+AÜ/G+END"
+                    ],
+                    [
+                        "aufhakende",
+                        "AUF/N+AÜ/G+EN/DE"
+                    ],
+                    [
+                        "aufhakendem",
+                        "AUF/N+AÜ/G+EN/DEM"
+                    ],
+                    [
+                        "aufhakenden",
+                        "AUF/N+AÜ/G+EN/DEN"
+                    ],
+                    [
+                        "aufhakender",
+                        "AUF/N+AÜ/G+EN/DEÜ"
+                    ],
+                    [
+                        "aufhakendes",
+                        "AUF/N+AÜ/G+EN/DES"
+                    ],
+                    [
+                        "aufhakst",
+                        "AUF/N+AÜ+Gs"
+                    ],
+                    [
+                        "aufhakte",
+                        "AUF/N+AÜ+G/D+E"
+                    ],
+                    [
+                        "aufhakten",
+                        "AUF/N+AÜ+G/D+EN"
+                    ],
+                    [
+                        "aufhaktest",
+                        "AUF/N+AÜ+G/D+Es"
+                    ],
+                    [
+                        "aufzuhaken",
+                        "AUF/ʃGU/N+AÜ/G+EN"
+                    ],
+                    [
+                        "einzuhakende",
+                        "EIN/ʃGU/N+AÜ/G+EN/DE"
+                    ],
+                    [
+                        "einzuhakendem",
+                        "EIN/ʃGU/N+AÜ/G+EN/DEM"
+                    ],
+                    [
+                        "einzuhakenden",
+                        "EIN/ʃGU/N+AÜ/G+EN/DEN"
+                    ],
+                    [
+                        "einzuhakender",
+                        "EIN/ʃGU/N+AÜ/G+EN/DEÜ"
+                    ],
+                    [
+                        "einzuhakendes",
+                        "EIN/ʃGU/N+AÜ/G+EN/DES"
+                    ],
+                    [
+                        "hakend",
+                        "N+AÜ/G+END"
+                    ],
+                    [
+                        "hakendem",
+                        "N+AÜ/G+EN/DEM"
+                    ],
+                    [
+                        "hakendes",
+                        "N+AÜ/G+EN/DES"
+                    ],
+                    [
+                        "hakenschlagend",
+                        "N+AÜ/G+EN/ʃLA/GEND"
+                    ],
+                    [
+                        "hakenschlagendem",
+                        "N+AÜ/G+EN/ʃLA/GEN/DEM"
+                    ],
+                    [
+                        "hakenschlagender",
+                        "N+AÜ/G+EN/ʃLA/GEN/DEÜ"
+                    ],
+                    [
+                        "hakenschlagendes",
+                        "N+AÜ/G+EN/ʃLA/GEN/DES"
+                    ],
+                    [
+                        "haktest",
+                        "N+AÜ+G/D+Es"
+                    ],
+                    [
+                        "laktosearm",
+                        "LAÜ+G/D+O/SE/AÜM"
+                    ],
+                    [
+                        "laktosearme",
+                        "LAÜ+G/D+O/SE/AÜ/ME"
+                    ],
+                    [
+                        "laktosearmem",
+                        "LAÜ+G/D+O/SE/AÜ/MEM"
+                    ],
+                    [
+                        "laktosearmen",
+                        "LAÜ+G/D+O/SE/AÜ/MEN"
+                    ],
+                    [
+                        "laktosearmer",
+                        "LAÜ+G/D+O/SE/AÜ/MEÜ"
+                    ],
+                    [
+                        "laktosearmes",
+                        "LAÜ+G/D+O/SE/AÜ/MES"
+                    ]
+                ]
+            ]
+        }
+    ],
+    [
         "PatReplRare",
         {
             "0": [
-                44935,
+                44954,
                 [
                     [
                         "knapp",
@@ -16774,7 +17050,7 @@
         "PatSCPlus",
         {
             "0": [
-                594,
+                597,
                 [
                     [
                         "Modell",
@@ -16819,6 +17095,10 @@
                     [
                         "irreführend",
                         "I+/ME/F~Ü/SMEND"
+                    ],
+                    [
+                        "irrt",
+                        "+I+D"
                     ],
                     [
                         "irrelevant",
@@ -17125,6 +17405,10 @@
                         "FLI+/MEND"
                     ],
                     [
+                        "irrst",
+                        "+I+SD"
+                    ],
+                    [
                         "Abflugrouten",
                         "AB/FLUG/SM~U+/D+EN"
                     ],
@@ -17167,14 +17451,6 @@
                     [
                         "Frachtrouten",
                         "FMA+ʃD/SM~U+/D+EN"
-                    ],
-                    [
-                        "Busroute",
-                        "BUS/SM~U+/D+E"
-                    ],
-                    [
-                        "Schifffahrtsroute",
-                        "ʃIF/FAÜ+SD/SM~U+/D+E"
                     ]
                 ]
             ],
@@ -17733,7 +18009,7 @@
         "PatShortSyllable",
         {
             "5": [
-                105719,
+                105732,
                 [
                     [
                         "anderen",
@@ -18138,7 +18414,7 @@
                 ]
             ],
             "6": [
-                592002,
+                591293,
                 [
                     [
                         "den",
@@ -18646,7 +18922,7 @@
         "PatCommonPrefix",
         {
             "7": [
-                102037,
+                101721,
                 [
                     [
                         "vergangenen",
@@ -18986,7 +19262,7 @@
                     ],
                     [
                         "überschritten",
-                        "BEÜ/ʃMID/D+-n"
+                        "BEÜ/DʃMID/D+-n"
                     ],
                     [
                         "überlegen",
@@ -21111,7 +21387,7 @@
         "PatAnglEI",
         {
             "0": [
-                1297,
+                1299,
                 [
                     [
                         "online",
@@ -21156,6 +21432,10 @@
                     [
                         "Hotline",
                         "N+O+D/LAIN"
+                    ],
+                    [
+                        "iPad",
+                        "AI/B+ÄD"
                     ],
                     [
                         "Pipeline",
@@ -21224,6 +21504,10 @@
                     [
                         "Eurofighter",
                         "EU/SMO/FAI/D+EÜ"
+                    ],
+                    [
+                        "iPads",
+                        "AI/B+ÄSD"
                     ],
                     [
                         "Livestreams",
@@ -21504,14 +21788,6 @@
                     [
                         "Onlinekurs",
                         "ON/LAIN/G+~US"
-                    ],
-                    [
-                        "Onlineangebot",
-                        "ON/LAIN/AN/GE/BO+D"
-                    ],
-                    [
-                        "Onlinenetzwerken",
-                        "ON/LAIN/NEGʃD/F+EÜ+Gn"
                     ]
                 ]
             ],
@@ -23966,7 +24242,7 @@
                 ]
             ],
             "6": [
-                387,
+                386,
                 [
                     [
                         "Outfit",

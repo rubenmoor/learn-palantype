@@ -75,6 +75,7 @@ data Stats = Stats
     { statsDate :: UTCTime
     , statsTime :: NominalDiffTime
     , statsLength :: Int
+    , statsNErrors :: Int
     }
     deriving Generic
 
