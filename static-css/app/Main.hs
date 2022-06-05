@@ -1002,3 +1002,5 @@ main = putCss $ do
             paddingLeft $ em 1
             paddingRight $ em 1
             fontFamily ["DejaVu Sans Mono"] [monospace]
+        td # ".nMistakes" ? do
+            paddingRight $ em 1

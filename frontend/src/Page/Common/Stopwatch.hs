@@ -35,7 +35,7 @@ import State (stStats, Env (..), Stats (..), Navigation (..))
 import qualified Data.Map.Strict as Map
 import Control.Monad.Reader (ask, MonadReader)
 import Control.Monad (when)
-import Data.Eq (Eq)
+import Data.Eq (Eq, (==))
 import Data.Maybe (Maybe(..))
 import Control.Applicative (Applicative(pure))
 import Data.Foldable (for_, Foldable(minimum))
@@ -149,4 +149,8 @@ elStatistics ls = elClass "table" "statistics" $ do
     for_ ls \Stats{..} -> el "tr" $ do
         elClass "td" "date" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" statsDate
         elClass "td" "time" $ text $ formatTime statsTime
+        elClass "td" "nMistakes" $ do
+          if statsNErrors == 0
+            then elAttr "strong" ("title" =: "0 mistakes") $ text "flawless"
+            else text $ showt statsNErrors <> " mistakes"
         elClass "td" "wpm"  $ text $ showt @Int (round $ fromIntegral statsLength / toMinutes statsTime) <> " wpm"

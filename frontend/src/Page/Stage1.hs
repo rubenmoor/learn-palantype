@@ -325,7 +325,9 @@ exercise4 = do
     elClass "div" "paragraph"
         $ text
               "And for maximum difficulty, type the letters in their proper \
-      \order without seeing neither the letters nor the keyboard!"
+      \order without seeing neither the letters nor the keyboard! To makes this \
+      \a bit of a challenge: First, don't look at your fingers. Second, \
+      \try to speak out loud every letter, before you are going to type it."
 
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stShowKeyboard" .~ False]

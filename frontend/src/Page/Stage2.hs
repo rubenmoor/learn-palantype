@@ -218,30 +218,21 @@ taskLetters = do
                         if isCorrect
                             then if _stlCounter == len - 1
                                 then StateLettersPause _stlNMistakes
-                                else
-                                    st
-                                    &  _StateLettersRun
+                                else st &  _StateLettersRun
                                     %~ (stlCounter +~ 1)
                                     .  (stlMMistake .~ Nothing)
                             else case _stlMMistake of
                                     -- first mistake
                                 Nothing ->
-                                    st
-                                        &  _StateLettersRun
-                                        .  stlMMistake
-                                        ?~ SLMistakeOne c
+                                    st &  _StateLettersRun
+                                        %~ ( stlMMistake ?~ SLMistakeOne c )
+                                        .  ( stlNMistakes +~ 1)
                                 -- second mistake
                                 Just (SLMistakeOne _) ->
-                                    st
-                                        &  _StateLettersRun
-                                        .  stlMMistake
-                                        ?~ SLMistakeTwo c
+                                    st &  _StateLettersRun . stlMMistake ?~ SLMistakeTwo c
                                 -- third mistake and so forth
                                 Just (SLMistakeTwo _) ->
-                                    st
-                                        &  _StateLettersRun
-                                        .  stlMMistake
-                                        ?~ SLMistakeTwo c
+                                    st &  _StateLettersRun .  stlMMistake ?~ SLMistakeTwo c
             stepStart = StateLettersRun SLRun
                 { _stlCounter   = 0
                 , _stlMMistake  = Nothing
@@ -414,24 +405,6 @@ exercise1 = do
     elClass "div" "paragraph" $ do
         text "You can surely come up with a better one, yourself!"
 
-    -- whenJust navMNext $ \nxt -> do
-    --     (elACont, _) <- elClass "div" "anthrazit" $ do
-    --         text "Type "
-    --         elClass "span" "btnSteno" $ do
-    --             el "em" $ text "Enter "
-    --             text $ showt (KI.toRaw @key kiEnter)
-    --         text " to continue to "
-    --         elClass' "a" "normalLink" $ text $ showt nxt
-    --     let eContinue = leftmost [eChordEnter, domEvent Click elACont]
-    --     updateState $
-    --         eContinue
-    --             $> [ field @"stProgress"
-    --                      %~ Map.update
-    --                          (\s -> if nxt > s then Just nxt else Just s)
-    --                          navLang,
-    --                  field @"stCleared" %~ Set.insert navCurrent
-    --                ]
-    --     setRoute $ eContinue $> FrontendRoute_Main :/ ()
     evDone <- taskLetters
     elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
