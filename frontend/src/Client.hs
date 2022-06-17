@@ -11,6 +11,7 @@
 module Client where
 
 import           Common.Api          (PloverSystemCfg, RoutesApi)
+import Common.Auth (CompactJWT, SessionData (..), LoginData (..), UserNew (..))
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
 import           Data.Either         (Either(..))
@@ -32,6 +33,9 @@ import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, RawSteno)
 import Palantype.Common (Greediness, Lang)
 import Data.Map.Strict (Map)
 import qualified Palantype.DE as DE
+import Data.Functor (Functor)
+import State (stSession, State, Session (..))
+import Data.Bool (Bool)
 
 postRender
   :: (Prerender t m, Monad m)
@@ -111,7 +115,77 @@ getDictDENumbers
   => Event t ()
   -> m (Event t (ReqResult () (Map RawSteno Text)))
 
-postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers =
+-- auth
+
+getAuthData
+  :: Functor (Dynamic t)
+  => Dynamic t State
+  -> Dynamic t (Either Text (CompactJWT, Text))
+getAuthData dynState =
+  dynState <&> \st -> case stSession st of
+    SessionAnon                 -> Left "not logged in"
+    SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
+
+postAuthenticate
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text LoginData)
+  -> Event t ()
+  -> m (Event t (ReqResult () (Maybe SessionData)))
+
+postAuthNew
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text UserNew)
+  -> Event t ()
+  -> m (Event t (ReqResult () SessionData))
+
+postDoesUserExist
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text Text)
+  -> Event t ()
+  -> m (Event t (ReqResult () Bool))
+
+-- user
+
+postAliasRename
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text (CompactJWT, Text))
+  -> Dynamic t (Either Text Text)
+  -> Event t ()
+  -> m (Event t (ReqResult () ()))
+
+getAliasAll
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text (CompactJWT, Text))
+  -> Event t ()
+  -> m (Event t (ReqResult () [Text]))
+
+postAliasSetDefault
+  :: SupportsServantReflex t m
+  => Dynamic t (Either Text (CompactJWT, Text))
+  -> Dynamic t (Either Text Text)
+  -> Event t ()
+  -> m (Event t (ReqResult () ()))
+
+(
+       (
+              postConfigNew
+         :<|> getDocDEPatternAll
+         :<|> getDocDEPattern
+         :<|> getDictDE
+         :<|> getDictDENumbers
+       )
+  :<|> (
+              postAuthenticate
+         :<|> postAuthNew
+         :<|> postDoesUserExist
+       )
+  :<|> (
+              postAliasRename
+         :<|> getAliasAll
+         :<|> postAliasSetDefault
+       )
+  )
+  =
   client (Proxy :: Proxy RoutesApi)
          (Proxy :: Proxy (m :: * -> *))
          (Proxy :: Proxy ())

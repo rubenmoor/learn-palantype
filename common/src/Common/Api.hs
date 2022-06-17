@@ -15,6 +15,7 @@
 module Common.Api where
 
 import           Common.PloverAdapter      (fromPlover)
+import           Common.Auth (LoginData, SessionData, UserNew, AuthProtect)
 import           Control.Lens.Wrapped      (Wrapped)
 import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Either               (lefts, rights)
@@ -31,8 +32,20 @@ import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, Greediness
 import qualified Palantype.DE as DE
 import Palantype.Common (KeyIndex, RawSteno)
 
-type RoutesApi = "api" :>
-     (    "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+type RoutesAuth =
+           "login"  :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe SessionData)
+      :<|> "new"    :> ReqBody '[JSON] UserNew   :> Post '[JSON] SessionData
+      :<|> "exists" :> ReqBody '[JSON] Text      :> Post '[JSON] Bool
+
+type RoutesUser = "alias" :>
+    (
+           AuthProtect "jwt" :> "rename"       :> ReqBody '[JSON] Text :> Post '[JSON] ()
+      :<|> AuthProtect "jwt" :> "get" :> "all" :> Get '[JSON] [Text]
+      :<|> AuthProtect "jwt" :> "setDefault"   :> ReqBody '[JSON] Text :> Post '[JSON] ()
+    )
+
+type RoutesPalantype =
+          "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
      :<|> "doc"    :> "DE" :> "pattern" :> "all" :> Get '[JSON] (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
      :<|> "doc"    :> "DE" :> "pattern" :> Capture "pattern-group" DE.Pattern
                                         :> Capture "greediness" Greediness
@@ -42,9 +55,13 @@ type RoutesApi = "api" :>
                            :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
      :<|> "dict"   :> "DE" :> "Numbers"
                            :> Get '[JSON] (Map RawSteno Text)
-     )
 
-type Routes = RoutesApi
+type RoutesApi = "api" :>
+    (      RoutesPalantype
+      :<|> "auth" :> RoutesAuth
+      :<|> "user" :> RoutesUser
+    )
+
 
 --
 

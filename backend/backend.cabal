@@ -17,19 +17,24 @@ library
     , frontend
     , gerippe
     , generic-lens
+    , jose
     , lens
+    , lifted-base
+    , megaparsec
     , monad-logger
+    , monad-time
     , mtl
     , mysql
     , my-palantype
     , network
     , obelisk-backend
     , obelisk-generated-static
+    , obelisk-executable-config-lookup
     , obelisk-route
-    , megaparsec
-    , persistent
+    , password
+    , password-instances
+    , persistent >= 2.13
     , persistent-mysql
-    , persistent-template
     , resource-pool
     , resourcet
     , servant
@@ -37,12 +42,23 @@ library
     , snap-core
     , text
     , text-show
+    , transformers
     , unordered-containers
+    , utf8-string
   exposed-modules:
       Backend
   other-modules:
-      Handler
-      DbAdapter
+      Appdata
+    , Auth
+    , Config
+    , Database
+    , DbAdapter
+    , DbAdapter.Instances
+    , Handler
+    , Handler.Auth
+    , Handler.Palantype
+    , Handler.User
+      
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 
 executable backend

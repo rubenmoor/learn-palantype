@@ -36,6 +36,14 @@ in
 
     overrides = self: super: {
 
+      # for persistent
+      lift-type = self.callHackage "lift-type" "0.1.0.1" {};
+      # esqueleto's test suite introduces dependencies to persistent-... packages
+      esqueleto = dontCheck (self.callHackage "esqueleto" "3.5.3.0" {});
+      persistent = dontCheck (self.callHackage "persistent" "2.13.2.1" {});
+      persistent-mysql = dontCheck (self.callHackage "persistent-mysql" "2.13.0.2" {});
+      password-instances = dontCheck super.password-instances;
+
       gerippe = dontHaddock (self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "gerippe";
@@ -56,12 +64,12 @@ in
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
       }) {});
-      #my-palantype = dontCheck (self.callCabal2nix "my-palantype" ../my-palantype { });
-      my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-        owner = "rubenmoor";
-        repo = "my-palantype";
-        rev = "971166ceac7753b9e2aa7dbb8d8ec14b9cc8ce11";
-        sha256 = "1r9v5a0wrp5nq4yw4br989na844d87j47ka7hg5hs1pj01x2amp8";
-      }) {});
+      my-palantype = dontCheck (self.callCabal2nix "my-palantype" ../my-palantype { });
+      #my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+      #  owner = "rubenmoor";
+      #  repo = "my-palantype";
+      #  rev = "971166ceac7753b9e2aa7dbb8d8ec14b9cc8ce11";
+      #  sha256 = "1r9v5a0wrp5nq4yw4br989na844d87j47ka7hg5hs1pj01x2amp8";
+      #}) {});
     };
   })

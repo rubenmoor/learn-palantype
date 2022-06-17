@@ -14,6 +14,7 @@ import           Common.Api                     ( PloverCfg, defaultPloverCfg
 import           Common.Route                   ( FrontendRoute(..)
                                                 )
 import           Common.Stage                   (Stage ())
+import Common.Auth (SessionData)
 import           Control.Applicative            ( (<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
@@ -84,8 +85,8 @@ instance ToJSON Stats
 
 
 data State = State
-    { -- stSession :: Session
-      stCleared       :: Set Stage
+    { stSession :: Session
+    , stCleared       :: Set Stage
     , stMLang         :: Maybe Lang
     , stMsg           :: Maybe Message
     , stPloverCfg     :: PloverCfg
@@ -111,7 +112,8 @@ defaultProgress =
 
 defaultState :: State
 defaultState = State
-    { stCleared       = Set.empty
+    { stSession       = SessionAnon
+    , stCleared       = Set.empty
     , stMLang         = Nothing
     , stMsg           = Nothing
     , stPloverCfg     = defaultPloverCfg
@@ -141,15 +143,15 @@ data Message = Message
 instance FromJSON Message
 instance ToJSON Message
 
--- -- Session
---
--- data Session
---   = SessionUser SessionData
---   | SessionAnon
---   deriving (Generic)
---
--- instance FromJSON Session
--- instance ToJSON Session
+-- Session
+
+data Session
+  = SessionUser SessionData
+  | SessionAnon
+  deriving (Generic)
+
+instance FromJSON Session
+instance ToJSON Session
 
 stageUrl :: Lang -> Stage -> R FrontendRoute
 stageUrl lang stage =
