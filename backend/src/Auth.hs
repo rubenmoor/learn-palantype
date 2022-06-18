@@ -31,7 +31,7 @@ import           Control.Lens                   ( (?~)
                                                 , (^?)
                                                 , _Just
                                                 )
-import Control.Monad ((>>=))
+import           Control.Monad                  ( (>>=) )
 import           Control.Monad.Except           ( MonadError
                                                 , runExceptT
                                                 , throwError
@@ -106,7 +106,7 @@ import           Servant.Server                 ( HasContextEntry
                                                 , ServantErr(..)
                                                 , err500
                                                 )
-import qualified Servant.Server as Servant
+import qualified Servant.Server                as Servant
 import           Snap.Core                      ( Request
                                                 , Snap
                                                 , getHeader
@@ -131,7 +131,7 @@ import           Common.Auth                    ( AuthProtect
                                                 , CompactJWT(CompactJWT)
                                                 , SessionData(..)
                                                 )
-import           Common.Model                   ( Rank (RankOwner) )
+import           Common.Model                   ( Rank(RankOwner) )
 import           Database                       ( runDb
                                                 , runDb'
                                                 )
@@ -218,7 +218,8 @@ getClearances :: Key Alias -> Handler Rank
 getClearances keyAlias = do
     Clearance {..} <- runDb (getWhere ClearanceFkAlias keyAlias) >>= \case
         [Entity _ v] -> pure v
-        _            -> Servant.throwError $ err500 { errBody = "getClearances: expected unique entry" }
+        _            -> Servant.throwError
+            $ err500 { errBody = "getClearances: expected unique entry" }
     -- TODO
     pure clearanceRank
 
@@ -252,14 +253,18 @@ mkContext jwk pool =
                 pure
                 eSub
             ls <- runDb' pool $ select . from $ \(a `InnerJoin` u) -> do
-                on $ a Database.Gerippe.^. AliasFkUser ==. u Database.Gerippe.^. UserId
+                on
+                    $                   a
+                    Database.Gerippe.^. AliasFkUser
+                    ==.                 u
+                    Database.Gerippe.^. UserId
                 where_
-                    $   u
-                    Database.Gerippe.^.  UserName
-                    ==. val uiUserName
-                    &&. a
-                    Database.Gerippe.^.  AliasName
-                    ==. val uiAliasName
+                    $                   u
+                    Database.Gerippe.^. UserName
+                    ==.                 val uiUserName
+                    &&.                 a
+                    Database.Gerippe.^. AliasName
+                    ==.                 val uiAliasName
                 pure (u, a)
             (Entity _ User {..}, Entity uiKeyAlias uiAlias) <- case ls of
                 [entry] -> pure entry

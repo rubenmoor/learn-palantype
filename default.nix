@@ -39,17 +39,24 @@ in
       # for persistent
       lift-type = self.callHackage "lift-type" "0.1.0.1" {};
       # esqueleto's test suite introduces dependencies to persistent-... packages
-      esqueleto = dontCheck (self.callHackage "esqueleto" "3.5.3.0" {});
+      esqueleto = dontHaddock (dontCheck (self.callHackage "esqueleto" "3.5.3.0" {}));
       persistent = dontCheck (self.callHackage "persistent" "2.13.2.1" {});
-      persistent-mysql = dontCheck (self.callHackage "persistent-mysql" "2.13.0.2" {});
+      # this version still got a bug with mariadb
+      persistent-mysql = dontCheck (self.callHackageDirect {
+        pkg = "persistent-mysql";
+        ver = "2.13.0.3";
+        sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
+      } {});
+
       password-instances = dontCheck super.password-instances;
 
-      gerippe = dontHaddock (self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
-        owner = "rubenmoor";
-        repo = "gerippe";
-        rev = "5dedac304b5378eea912f7ce1055793ee108d713";
-        sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
-      }) {});
+      #gerippe = self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
+      #  owner = "rubenmoor";
+      #  repo = "gerippe";
+      #  rev = "da62c0a8e39dca55294bb6ce28c19dece26aec3a";
+      #  sha256 = "0gziv9ic9ahwms80q7rg38q92smsckznjjgsnpk2q014gzi7b2j0";
+      #}) {};
+      gerippe = dontCheck (dontHaddock (self.callCabal2nix "gerippe" ../../gerippe {}));
 
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "imalsogreg";

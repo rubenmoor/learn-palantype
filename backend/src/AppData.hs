@@ -14,7 +14,6 @@ import           System.IO              (FilePath, IO)
 
 data EnvApplication = EnvApplication
   { envPool     :: Pool SqlBackend
-  , envMediaDir :: FilePath
   , envUrl      :: Text
   , envJwk      :: JWK
   }
