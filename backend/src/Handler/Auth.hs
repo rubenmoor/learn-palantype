@@ -57,12 +57,9 @@ import           Common.Api                    (RoutesAuth)
 import           Common.Auth               (LoginData (..), SessionData (..),
                                             UserNew (..))
 import Database (runDb)
-import           Common.Model                     (Event (..),
+import           Common.Model                     (Rank (RankMember), Event (..),
                                             Journal (..),
                                             Subject (..))
-import           DbAdapter                 (Alias (..), AuthPwd (..), EntityField (..),
-                                            EventSource (..), Unique (..),
-                                            User (..))
 import qualified DbAdapter                 as Db
 
 default(Text)
@@ -76,19 +73,19 @@ handlers =
 
 handleGrantAuthPwd :: LoginData -> Handler (Maybe SessionData)
 handleGrantAuthPwd LoginData{..} = do
-  mUser <- runDb (getBy $ UUserName ldUserName)
-  Entity keyUser User{..} <- maybe
+  mUser <- runDb (getBy $ Db.UUserName ldUserName)
+  Entity keyUser Db.User{..} <- maybe
     (throwError $ err400 { errBody = "user does not exist" })
     pure mUser
-  mAuth <- runDb (getBy $ UAuthPwdFkUser keyUser)
-  Entity _ AuthPwd{..} <- maybe
+  mAuth <- runDb (getBy $ Db.UAuthPwdFkUser keyUser)
+  Entity _ Db.AuthPwd{..} <- maybe
     (throwError $ err400 { errBody = "not registered with password"})
     pure mAuth
   Entity keyAlias alias <- case userFkDefaultAlias of
     Just key -> runDb (get key) >>= \case
       Just alias -> pure $ Entity key alias
       Nothing    -> throwError $ err500 { errBody = "alias not found" }
-    Nothing  -> runDb (getWhere AliasFkUser keyUser) >>= \case
+    Nothing  -> runDb (getWhere Db.AliasFkUser keyUser) >>= \case
       [alias] -> pure alias
       _       -> throwError $ err500 { errBody = "alias not found" }
   case checkPassword (mkPassword ldPassword) authPwdPassword of
@@ -108,7 +105,7 @@ handleGrantAuthPwd LoginData{..} = do
       sdClearances <- getClearances keyAlias
       let sdIsSiteAdmin = userIsSiteAdmin
           sdUserName = userName
-          sdAliasName = aliasName alias
+          sdAliasName = Db.aliasName alias
       pure $ Just SessionData{..}
     PasswordCheckFail    -> pure Nothing
 
@@ -121,15 +118,15 @@ handleUserNew UserNew{..} = do
   when (Text.length unPassword > 64) $
     throwError $ err400 { errBody = "Password max length: 64 characters" }
   unless (Text.all isAlphaNum unUserName) $
-    throwError $ err400 { errBody = "user name may only contain alpha-numeric characaters" }
-  sdIsSiteAdmin <- runDb $ (null :: [Entity User] -> Bool) <$> getAll
-  eventSourceId <- runDb $ insert EventSource
-  user <- runDb $ insert $ User unUserName sdIsSiteAdmin eventSourceId Nothing
+    throwError $ err400 { errBody = "user name may only contain alpha-numeric characters" }
+  sdIsSiteAdmin <- runDb $ (null :: [Entity Db.User] -> Bool) <$> getAll
+  eventSourceId <- runDb $ insert Db.EventSource
+  user <- runDb $ insert $ Db.User unUserName sdIsSiteAdmin eventSourceId Nothing
   password <- hashPassword (mkPassword unPassword)
-  runDb $ insert_ $ AuthPwd user password
+  runDb $ insert_ $ Db.AuthPwd user password
   let sdAliasName = fromMaybe (Text.take 16 unUserName) unMAlias
-  keyAlias <- runDb $ insert $ Alias sdAliasName user unVisible
-  runDb $ update user [ UserFkDefaultAlias =. Just keyAlias ]
+  keyAlias <- runDb $ insert $ Db.Alias sdAliasName user unVisible
+  runDb $ update user [ Db.UserFkDefaultAlias =. Just keyAlias ]
   now <- liftIO getCurrentTime
   let blobJournalUser =
         let journalCreated = now
@@ -150,12 +147,13 @@ handleUserNew UserNew{..} = do
       toServerError e = throwError $ err500 { errBody = BSU.fromString $ show e}
   sdJwt <- liftIO (runExceptT $ mkCompactJWT jwk claims)
     >>= either toServerError pure
-  sdClearances <- getClearances keyAlias
+  let sdClearances = RankMember
+  runDb $ insert_ $ Db.Clearance keyAlias sdClearances
   let sdUserName = unUserName
   pure SessionData{..}
 
 handleDoesUserExist :: Text -> Handler Bool
-handleDoesUserExist str = runDb $ isJust <$> getBy (UUserName str)
+handleDoesUserExist str = runDb $ isJust <$> getBy (Db.UUserName str)
 
 -- checkClearance :: UserInfo -> Text -> Rank -> Handler ()
 -- checkClearance UserInfo{..} theShow minRank =

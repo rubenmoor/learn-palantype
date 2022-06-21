@@ -11,7 +11,8 @@ import           Data.Time               (UTCTime)
 import           GHC.Generics            (Generic)
 
 data Rank
-  = RankModerator
+  = RankMember
+  | RankModerator
   | RankAdmin
   | RankOwner
   deriving (Generic, Eq, Ord)

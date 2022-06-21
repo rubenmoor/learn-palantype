@@ -450,12 +450,12 @@ settings lang = elClass "div" "topmenu" do
             (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
             let evLogin = domEvent Click domLogin
             setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
-            updateState $ evLogin $> [ field @"stRedirectUrl" ?~ currentStage ]
+            updateState $ evLogin $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
             el "span" $ text " or "
             (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
             let evSignup = domEvent Click domSignup
             setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
-            updateState $ evSignup $> [ field @"stRedirectUrl" ?~ currentStage ]
+            updateState $ evSignup $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
 
     elClass "br" "clearBoth" blank
 

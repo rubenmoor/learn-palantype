@@ -16,92 +16,87 @@
 
 module Frontend where
 
-import Control.Lens.Getter ( (^.) )
-import Data.Generics.Product (field)
-import Language.Javascript.JSaddle (liftJSM)
-import State (defaultState,
-    stageUrl,
- )
+import           Control.Lens.Getter            ( (^.) )
+import           Data.Generics.Product          ( field )
+import           Language.Javascript.JSaddle    ( liftJSM )
+import           State                          ( defaultState
+                                                , stageUrl
+                                                )
 
-import Common.Route (FrontendRoute (..), FrontendRoute_AuthPages (..))
-import Control.Monad.Reader (ReaderT (runReaderT))
-import qualified Data.Aeson as Aeson
-import Data.Functor (
-    ($>),
-    (<&>),
- )
-import qualified Data.Map as Map
-import Data.Maybe (fromMaybe)
-import Data.Semigroup (Endo (..))
-import Data.Text (Text)
-import qualified Data.Text.Lazy as Lazy
-import qualified Data.Text.Lazy.Encoding as Lazy
-import GHCJS.DOM (currentWindowUnchecked)
-import GHCJS.DOM.Storage (
-    getItem,
-    setItem,
- )
-import GHCJS.DOM.Window (getLocalStorage)
-import Home (message, settings,
-    landingPage,
-    stages,
- )
-import Obelisk.Frontend (
-    Frontend (..),
-    ObeliskWidget,
- )
-import Obelisk.Generated.Static (static)
-import Obelisk.Route (R)
-import Obelisk.Route.Frontend (
-    RoutedT,
-    SetRoute (setRoute),
-    mapRoutedT,
-    subRoute_,
- )
-import Palantype.Common (Lang (..))
-import qualified Palantype.DE.Keys as DE
-import qualified Palantype.EN.Keys as EN
-import Reflex.Dom (
-    PerformEvent (performEvent_),
-    PostBuild (getPostBuild),
-    Prerender (prerender),
-    Reflex (updated),
-    blank,
-    dyn_,
-    el,
-    elAttr,
-    foldDyn,
-    leftmost,
-    prerender_,
-    runEventWriterT,
-    tailE,
-    text,
-    widgetHold_,
-    (=:),
- )
+import           Common.Route                   ( FrontendRoute(..)
+                                                , FrontendRoute_AuthPages(..)
+                                                )
+import           Control.Monad.Reader           ( ReaderT(runReaderT) )
+import qualified Data.Aeson                    as Aeson
+import           Data.Functor                   ( ($>)
+                                                , (<&>)
+                                                )
+import qualified Data.Map                      as Map
+import           Data.Maybe                     ( fromMaybe )
+import           Data.Semigroup                 ( Endo(..) )
+import           Data.Text                      ( Text )
+import qualified Data.Text.Lazy                as Lazy
+import qualified Data.Text.Lazy.Encoding       as Lazy
+import           GHCJS.DOM                      ( currentWindowUnchecked )
+import           GHCJS.DOM.Storage              ( getItem
+                                                , setItem
+                                                )
+import           GHCJS.DOM.Window               ( getLocalStorage )
+import           Home                           ( message
+                                                , settings
+                                                , landingPage
+                                                , stages
+                                                )
+import           Obelisk.Frontend               ( Frontend(..)
+                                                , ObeliskWidget
+                                                )
+import           Obelisk.Generated.Static       ( static )
+import           Obelisk.Route                  ( R )
+import           Obelisk.Route.Frontend         ( RoutedT
+                                                , SetRoute(setRoute)
+                                                , mapRoutedT
+                                                , subRoute_
+                                                )
+import           Palantype.Common               ( Lang(..) )
+import qualified Palantype.DE.Keys             as DE
+import qualified Palantype.EN.Keys             as EN
+import           Reflex.Dom                     (PerformEvent(performEvent_)
+                                                , PostBuild(getPostBuild)
+                                                , Prerender(prerender)
+                                                , Reflex(updated)
+                                                , blank
+                                                , dyn_
+                                                , el
+                                                , elAttr
+                                                , foldDyn
+                                                , leftmost
+                                                , prerender_
+                                                , runEventWriterT
+                                                , tailE
+                                                , text
+                                                , widgetHold_
+                                                , (=:)
+                                                )
 
-import Shared (loadingScreen)
+import           Shared                         (loadingScreen )
 import qualified AuthPages
 
 frontend :: Frontend (R FrontendRoute)
-frontend = Frontend
-    { _frontend_head = frontendHead
-    , _frontend_body = frontendBody
-    }
+frontend =
+    Frontend { _frontend_head = frontendHead, _frontend_body = frontendBody }
 
-frontendBody ::
-    forall t (m :: * -> *).
-    (ObeliskWidget t (R FrontendRoute) m) =>
-    RoutedT t (R FrontendRoute) m ()
+frontendBody
+    :: forall t (m :: * -> *)
+     . (ObeliskWidget t (R FrontendRoute) m)
+    => RoutedT t (R FrontendRoute) m ()
 frontendBody = mdo
     let key = "state" :: Text
         getState s = getItem s key
         setState d s = setItem s key d
 
     dynLoadState <- prerender (pure $ Endo $ \_ -> defaultState) $ do
-        mStr <-
-            liftJSM
-                (currentWindowUnchecked >>= getLocalStorage >>= getState)
+        mStr <- liftJSM
+            (currentWindowUnchecked >>= getLocalStorage >>= getState)
         let mState = mStr >>= Aeson.decode . Lazy.encodeUtf8 . Lazy.fromStrict
         pure $ Endo $ const $ fromMaybe defaultState mState
 
@@ -112,11 +107,9 @@ frontendBody = mdo
 
     -- TODO: persist application state on visibility change (when hidden)
     eUpdated <- tailE $ updated dynState
-    prerender_ blank $
-        performEvent_ $
-            eUpdated <&> \st -> do
-                let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
-                liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
+    prerender_ blank $ performEvent_ $ eUpdated <&> \st -> do
+        let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
+        liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
 
     (_, eStateUpdate) <-
         mapRoutedT (runEventWriterT . flip runReaderT dynState) $ do
@@ -124,20 +117,24 @@ frontendBody = mdo
 
             subRoute_ $ \case
                 FrontendRoute_Main -> do
-                    dyn_ $
-                        dynState <&> \st -> do
+                    dyn_ $ dynState <&> \st -> do
                             -- go to url where the user left the last time
-                            let mUrl = do
-                                    lang <- st ^. field @"stApp" . field @"stMLang"
-                                    stage <- Map.lookup lang $ st ^. field @"stApp" . field @"stProgress"
-                                    pure $ stageUrl lang stage
-                            case mUrl of
-                                Just url -> do
-                                    ePb <- getPostBuild
-                                    setRoute $ ePb $> url
+                        let
+                            mUrl = do
+                                lang  <- st ^. field @"stApp" . field @"stMLang"
+                                stage <-
+                                    Map.lookup lang
+                                    $  st
+                                    ^. field @"stApp"
+                                    .  field @"stProgress"
+                                pure $ stageUrl lang stage
+                        case mUrl of
+                            Just url -> do
+                                ePb <- getPostBuild
+                                setRoute $ ePb $> url
 
-                                -- or show the landing page
-                                Nothing -> landingPage
+                            -- or show the landing page
+                            Nothing -> landingPage
                 FrontendRoute_EN -> do
                     el "header" $ settings EN
                     stages @EN.Key EN
@@ -145,8 +142,8 @@ frontendBody = mdo
                     el "header" $ settings DE
                     stages @DE.Key DE
                 FrontendRoute_Auth -> subRoute_ \case
-                  AuthPage_SignUp -> AuthPages.signup
-                  AuthPage_Login  -> AuthPages.login
+                    AuthPage_SignUp -> AuthPages.signup
+                    AuthPage_Login  -> AuthPages.login
     blank
 
 frontendHead
@@ -155,35 +152,59 @@ frontendHead
     => RoutedT t (R FrontendRoute) m ()
 frontendHead = do
     el "title" $ text "Palantype"
-    elAttr "link"
-        (  "href" =: $(static "main.css")
-        <> "type" =: "text/css"
-        <> "rel" =: "stylesheet"
-        ) blank
-    elAttr "link"
-        ("rel" =: "preconnect" <> "href" =: "https://fonts.googleapis.com")
-        blank
-    elAttr "link"
-        (  "rel" =: "preconnect"
-        <> "href" =: "https://fonts.gstatic.com"
-        <> "crossorigin" =: "crossorigin"
-        ) blank
-    elAttr "link"
-        (  "href" =: "https://fonts.googleapis.com/css2?family=Abel&display=swap"
-        <> "rel" =: "stylesheet"
-        ) blank
-    elAttr "link"
-        (  "href" =: "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap"
-        <> "rel"  =: "stylesheet"
-        ) blank
-    elAttr "link"
-        (  "rel" =: "stylesheet"
-        <> "href" =: $(static "FontAwesome/css/all.min.css")
+    elAttr
+        "link"
+        (  "href"
+        =: $(static "main.css")
+        <> "type"
+        =: "text/css"
+        <> "rel"
+        =: "stylesheet"
         )
         blank
-    elAttr "link"
+    elAttr
+        "link"
+        ("rel" =: "preconnect" <> "href" =: "https://fonts.googleapis.com")
+        blank
+    elAttr
+        "link"
+        (  "rel"
+        =: "preconnect"
+        <> "href"
+        =: "https://fonts.gstatic.com"
+        <> "crossorigin"
+        =: "crossorigin"
+        )
+        blank
+    elAttr
+        "link"
+        (  "href"
+        =: "https://fonts.googleapis.com/css2?family=Abel&display=swap"
+        <> "rel"
+        =: "stylesheet"
+        )
+        blank
+    elAttr
+        "link"
+        (  "href"
+        =: "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap"
+        <> "rel"
+        =: "stylesheet"
+        )
+        blank
+    elAttr
+        "link"
+        (  "rel"
+        =: "stylesheet"
+        <> "href"
+        =: $(static "FontAwesome/css/all.min.css")
+        )
+        blank
+    elAttr
+        "link"
         (  "rel"
         =: "stylesheet"
         <> "href"
         =: $(static "flag-icons-main/css/flag-icons.min.css")
-        ) blank
+        )
+        blank

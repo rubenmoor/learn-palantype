@@ -14,19 +14,19 @@ import           Common.Api          (PloverSystemCfg, RoutesApi)
 import Common.Auth (CompactJWT, SessionData (..), LoginData (..), UserNew (..))
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad       (Monad)
-import           Data.Either         (Either(..))
+import           Data.Either         (either, Either(..))
 import           Data.Functor        ((<&>), (<$>))
 import           Data.Proxy          (Proxy (Proxy))
 import           Data.String         (String)
 import           Data.Text           (Text)
-import           Reflex.Dom          (Prerender (Client, prerender),
+import           Reflex.Dom          (XhrResponseBody (..), xhrResponse_response, Prerender (Client, prerender),
                                       Reflex (Dynamic, Event, never), constDyn,
                                       switchDyn, XhrResponse (..), )
 import           Servant.Common.Req  (ReqResult(..))
 import           Servant.Reflex      (BaseUrl (BasePath), SupportsServantReflex,
                                       client)
 import Data.Maybe (fromMaybe, Maybe (..))
-import Data.Function (($))
+import Data.Function (const, ($))
 import Data.Semigroup (Semigroup((<>)))
 import Servant.API ((:<|>)(..))
 import Palantype.Common (MapStenoWordTake100, PatternDoc, PatternPos, RawSteno)
@@ -36,6 +36,8 @@ import qualified Palantype.DE as DE
 import Data.Functor (Functor)
 import State (stSession, State, Session (..))
 import Data.Bool (Bool)
+import Control.Lens.Getter ((^.))
+import Data.Text.Encoding (decodeUtf8')
 
 postRender
   :: (Prerender t m, Monad m)
@@ -59,7 +61,14 @@ request req = do
   eResult <- switchDyn <$> prerender (pure never) req
   pure $ eResult <&> \case
     ResponseSuccess _ x   _ -> Right x
-    ResponseFailure _ str _ -> Left str
+    ResponseFailure _ _ resp -> Left $
+      let mErrBody = do
+            responseBody <- resp ^. xhrResponse_response
+            bs <- case responseBody of
+              XhrResponseBody_ArrayBuffer bs -> pure bs
+              _                              -> Nothing
+            either (const Nothing) pure $ decodeUtf8' bs
+      in  fromMaybe "Couldn't decode error body" mErrBody
     RequestFailure  _ str   -> Left str
 
   -- let rrESuccess = mapMaybe reqSuccess eResult

@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleContexts  #-}
@@ -15,8 +16,8 @@ import           Common.Route                   ( FrontendRoute(..)
                                                 )
 import           Common.Stage                   (Stage ())
 import Common.Auth (SessionData)
-import           Control.Applicative            ((<$>) )
-import           Data.Aeson                     ( FromJSON(..)
+import           Control.Applicative            (pure, (<*>), (<$>) )
+import           Data.Aeson                     (object, (.=), withObject, (.:),  FromJSON(..)
                                                 , ToJSON(..)
                                                 )
 import           Data.Bool                      ( Bool(..) )
@@ -40,6 +41,9 @@ import           Reflex.Dom                     ( EventWriter(..)
 import Text.Read (read)
 import Data.Time (UTCTime, NominalDiffTime)
 import Data.Int (Int)
+import TextShow (TextShow(showt))
+import Text.Show (Show(show))
+import Data.String (String)
 
 -- environment for frontend pages
 
@@ -87,12 +91,22 @@ instance ToJSON Stats
 data State = State
     { stSession :: Session
     , stApp     :: AppState
-    , stRedirectUrl :: Maybe Stage
+    , stRedirectUrl :: R FrontendRoute
     }
     deriving Generic
 
-instance FromJSON State
-instance ToJSON State
+instance FromJSON State where
+  parseJSON = withObject "State" \s -> do
+    stSession <- s .: "stSession"
+    stApp     <- s .: "stApp"
+    let stRedirectUrl = FrontendRoute_Main :/ ()
+    pure State{..}
+
+instance ToJSON State where
+  toJSON State{..} = object
+    [ "stSession" .= stSession
+    , "stApp"     .= stApp
+    ]
 
 data AppState = AppState
     { stCleared       :: Set Stage
@@ -123,7 +137,7 @@ defaultState :: State
 defaultState = State
     { stSession       = SessionAnon
     , stApp = defaultAppState
-    , stRedirectUrl = Nothing
+    , stRedirectUrl = FrontendRoute_Main :/ ()
     }
 
 defaultAppState :: AppState

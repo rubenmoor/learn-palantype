@@ -268,10 +268,9 @@ mkContext jwk pool =
                 _ ->
                     toServerError $ "user not found: " <> Text.unpack uiUserName
             let uiIsSiteAdmin = userIsSiteAdmin
-            -- clearances <- runDb' pool $ getWhere ClearanceFkAlias uiKeyAlias
-
-            -- TODO
-            let uiClearances = RankOwner
+            uiClearances <- runDb' pool (getWhere ClearanceFkAlias uiKeyAlias) >>= \case
+                [Entity _ Clearance{..}] -> pure clearanceRank
+                _                        -> toServerError $ "mkContext: clearance: expect unique entry"
                 -- for clearances $ \(Entity _ Clearance{..}, Entity _ Db.Podcast{..}) -> (podcastIdentifier, clearanceRank)
             pure $ UserInfo { .. }
     in
