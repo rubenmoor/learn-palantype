@@ -36,27 +36,31 @@ in
 
     overrides = self: super: {
 
+      mkDerivation = args: super.mkDerivation (args // {
+          doCheck = false;
+          doHaddock = false;
+          enableLibraryProfiling = false;
+        });
       # for persistent
       lift-type = self.callHackage "lift-type" "0.1.0.1" {};
       # esqueleto's test suite introduces dependencies to persistent-... packages
-      esqueleto = dontHaddock (dontCheck (self.callHackage "esqueleto" "3.5.3.0" {}));
-      persistent = dontCheck (self.callHackage "persistent" "2.13.2.1" {});
-      # this version still got a bug with mariadb
-      persistent-mysql = dontCheck (self.callHackageDirect {
+      esqueleto = self.callHackage "esqueleto" "3.5.3.0" {};
+      persistent = self.callHackage "persistent" "2.13.2.1" {};
+      # the version 2.13.0.2 still got a bug with mariadb
+      #persistent-mysql = self.callHackage "persistent-mysql" "2.13.0.2" {};
+      persistent-mysql = self.callHackageDirect {
         pkg = "persistent-mysql";
         ver = "2.13.0.3";
-        sha256 = "0jcd3bfm6kcy47iy0z1zbbl8asmy4kvbv1n01g52g550ksgssq5x";
-      } {});
+        sha256 = "0mnrgq05nk7ghfavfr2rhcz2yc0lciw88idri0ljsk2nymsnrbb8";
+      } {};
 
-      password-instances = dontCheck super.password-instances;
-
-      #gerippe = self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
-      #  owner = "rubenmoor";
-      #  repo = "gerippe";
-      #  rev = "da62c0a8e39dca55294bb6ce28c19dece26aec3a";
-      #  sha256 = "0gziv9ic9ahwms80q7rg38q92smsckznjjgsnpk2q014gzi7b2j0";
-      #}) {};
-      gerippe = dontCheck (dontHaddock (self.callCabal2nix "gerippe" ../../gerippe {}));
+      gerippe = self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "gerippe";
+        rev = "041f32de5094589ebc7dfe2bfd6e8078470ef2b6";
+        sha256 = "1mfxxn0q09wa81bdw4ngisklaaib4lz1ibxayrpk7g7l44hy92sm";
+      }) {};
+      #gerippe = self.callCabal2nix "gerippe" ../../gerippe {};
 
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "imalsogreg";
@@ -65,13 +69,13 @@ in
         sha256 = "0j36sl7l553iy1vpwy6263xdpj3m2n2rkkkdcsxpkr48p328lac4";
       }) {};
       #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
-      servant-snap = dontCheck (self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
+      servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
-      }) {});
-      my-palantype = dontCheck (self.callCabal2nix "my-palantype" ../my-palantype { });
+      }) {};
+      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
       #my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
       #  owner = "rubenmoor";
       #  repo = "my-palantype";

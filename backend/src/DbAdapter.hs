@@ -36,6 +36,7 @@ User                             -- some real person
 Alias                            -- one of several identities
   name             Text
   fkUser           UserId
+  isVisible        Bool
   UAliasName name
 Clearance
   fkAlias          AliasId

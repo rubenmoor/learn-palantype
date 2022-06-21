@@ -10,7 +10,7 @@ import           Data.Pool              (Pool)
 import           Data.Text              (Text)
 import           Database.Persist.MySQL (SqlBackend)
 import           Snap.Core              (Snap)
-import           System.IO              (FilePath, IO)
+import           System.IO              (IO)
 
 data EnvApplication = EnvApplication
   { envPool     :: Pool SqlBackend

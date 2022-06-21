@@ -15,6 +15,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Home where
 
@@ -34,6 +35,7 @@ import Common.Api
     )
 import Common.Route
     ( FrontendRoute (..),
+      FrontendRoute_AuthPages (..)
     )
 import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
 import Palantype.Common.TH (readLoc)
@@ -250,7 +252,6 @@ import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
-import GHC.Num (Num((-)))
 
 default (Text)
 
@@ -295,145 +296,158 @@ settings ::
       Prerender t m,
       EventWriter t (Endo State) m,
       MonadReader (Dynamic t State) m,
+      RouteToUrl (R FrontendRoute) m,
       SetRoute t (R FrontendRoute) m
     ) =>
     Lang ->
     m ()
-settings lang = do
+settings lang = elClass "div" "topmenu" do
     dynState <- ask
 
-    -- button to show configuration dropdown
-    eFile <- elClass "div" "dropdown" $ do
-        elClass "span" "dropdown-button" $ iFa "fas fa-cog"
-        elClass "div" "dropdown-content" $ mdo
-            let dynMCfgName =
-                    fmap pcfgName
-                        . view (at lang >>> _Wrapped')
-                        . stPloverCfg
-                        <$> dynState
-                elCheckmark co =
-                    dyn_ $
-                        dynMCfgName
-                            <&> \cfgName ->
-                                elClass "span" "checkmark" $
-                                    if cfgName == Just co
-                                        then text "✓ "
-                                        else blank
+    elClass "div" "floatLeft" $ do
+        -- button to show configuration dropdown
+        eFile <- elClass "div" "topmenu-entry dropdown" $ do
+            elClass "span" "dropdown-button" $ iFa "fontSizeSmaller fas fa-cog"
+            elClass "div" "dropdown-content" $ mdo
+                let dynMCfgName =
+                        fmap pcfgName
+                            . view (at lang >>> _Wrapped')
+                            . stPloverCfg
+                            <$> dynState
+                    elCheckmark co =
+                        dyn_ $
+                            dynMCfgName
+                                <&> \cfgName ->
+                                    elClass "span" "checkmark" $
+                                        if cfgName == Just co
+                                            then text "✓ "
+                                            else blank
 
-            elClass "span" "caption" $ text "Keyboard layout"
+                elClass "span" "caption" $ text "Keyboard layout"
 
-            (elQwertz, _) <- elClass' "span" "entry" $ do
-                elCheckmark CNQwertzDE
-                text "qwertz DE"
+                (elQwertz, _) <- elClass' "span" "entry" $ do
+                    elCheckmark CNQwertzDE
+                    text "qwertz DE"
 
-            let eQwertz = domEvent Click elQwertz
-            updateState $
-                eQwertz
-                    $> [ field @"stPloverCfg"
-                             . _Wrapped'
-                             . ix lang
-                             .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
-                       ]
+                let eQwertz = domEvent Click elQwertz
+                updateState $
+                    eQwertz
+                        $> [ field @"stPloverCfg"
+                                 . _Wrapped'
+                                 . ix lang
+                                 .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
+                           ]
 
-            (elQwerty, _) <- elClass' "span" "entry" $ do
-                elCheckmark CNQwertyEN
-                text "qwerty EN"
-            let eQwerty = domEvent Click elQwerty
-                lsStenoQwertyEN = case lang of
-                    EN -> lsStenoQwertyOrig
-                    _ -> lsStenoQwerty
-            updateState $
-                eQwerty
-                    $> [ field @"stPloverCfg"
-                             . _Wrapped'
-                             . ix lang
-                             .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
-                       ]
+                (elQwerty, _) <- elClass' "span" "entry" $ do
+                    elCheckmark CNQwertyEN
+                    text "qwerty EN"
+                let eQwerty = domEvent Click elQwerty
+                    lsStenoQwertyEN = case lang of
+                        EN -> lsStenoQwertyOrig
+                        _ -> lsStenoQwerty
+                updateState $
+                    eQwerty
+                        $> [ field @"stPloverCfg"
+                                 . _Wrapped'
+                                 . ix lang
+                                 .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
+                           ]
 
-            eFile' <- elClass "span" "hiddenFileInput entry" $ do
-                elCheckmark CNFile
-                text "Upload plover.cfg"
-                elFileInput $ leftmost [eQwerty, eQwertz] $> ""
+                eFile' <- elClass "span" "hiddenFileInput entry" $ do
+                    elCheckmark CNFile
+                    text "Upload plover.cfg"
+                    elFileInput $ leftmost [eQwerty, eQwertz] $> ""
 
-            elClass "span" "caption" $ text "Progress"
+                elClass "span" "caption" $ text "Progress"
 
-            (eRP, _) <- elClass' "span" "entry" $ text "Reset"
-            updateState $ domEvent Click eRP $>
-                [ field @"stProgress" .~ def
-                , field @"stStats" .~ Map.empty
+                (eRP, _) <- elClass' "span" "entry" $ text "Reset"
+                updateState $ domEvent Click eRP $>
+                    [ field @"stProgress" .~ def
+                    , field @"stStats" .~ Map.empty
+                    ]
+
+                pure eFile'
+
+        elClass "span" "vertical-line" blank
+
+        -- button to switch between palantype systems, i.e. DE and EN
+
+        elClass "div" "topmenu-entry dropdown" $ do
+            elClass "span" "dropdown-button" $ text $ showSymbol lang
+            elClass "div" "dropdown-content" $ do
+                (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
+                let eClickRL = domEvent Click eRL
+                updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
+                setRoute $ eClickRL $> FrontendRoute_Main :/ ()
+
+        eReqResult <- postRender $ do
+            fileReader <- liftJSM newFileReader
+            let encoding = Just ("utf8" :: String)
+            performEvent_ $ eFile <&> \f -> readAsText fileReader (Just f) encoding
+            eText <-
+                fmap catMaybes $ wrapDomEvent fileReader (`on` load) $ liftJSM $ do
+                    v <- getResult fileReader
+                    (fromJSVal <=< toJSVal) v
+            dynEitherText <-
+                holdDyn
+                    (Left "no file")
+                    (Right . Text.unpack <$> eText)
+            postConfigNew dynEitherText (void eText)
+
+        let eReqSuccess = mapMaybe reqSuccess eReqResult
+            eReqFailure = mapMaybe reqFailure eReqResult
+
+        updateState $
+            eReqFailure <&> \str ->
+                let msgCaption = "Error when loading file"
+                    msgBody = "Did you upload a proper .cfg file?\n" <> str
+                 in [ field @"stMsg" .~ Just Message {..}
+                    , field @"stPloverCfg" .~ defaultPloverCfg
+                    ]
+
+        updateState $
+            eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
+                [ field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
+                  if null pcfgUnrecognizedQwertys
+                      then id
+                      else
+                          let msgCaption = "Unrecognized qwerty keys"
+                              msgBody =
+                                  "Your key map contains unrecognized entries:\n"
+                                      <> Text.intercalate "\n" pcfgUnrecognizedQwertys
+                           in field @"stMsg" .~ Just Message {..},
+                  if null pcfgUnrecognizedStenos
+                      then id
+                      else
+                          let msgCaption = "Unrecognized steno keys"
+                              msgBody =
+                                  "Your key map contains unrecognized entries:\n"
+                                      <> Text.intercalate
+                                          "\n"
+                                          (showt <$> pcfgUnrecognizedStenos)
+                           in field @"stMsg" .~ Just Message {..}
                 ]
 
-            pure eFile'
+        elClass "span" "vertical-line" blank
 
-    -- button to switch between palantype systems, i.e. DE and EN
+        -- button to toggle keyboard
+        let dynClass = dynState <&> \st ->
+                "topmenu-entry btnToggleKeyboard "
+                    <> if stShowKeyboard st
+                        then "keyboardVisible"
+                        else "keyboardHidden"
+        (s, _) <- elDynClass' "div" dynClass $ do
+            iFa "fas fa-keyboard"
+            el "code" $ text $ showt $ rawToggleKeyboard lang
 
-    elClass "div" "dropdown" $ do
-        elClass "span" "dropdown-button" $ text $ showSymbol lang
-        elClass "div" "dropdown-content" $ do
-            (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
-            let eClickRL = domEvent Click eRL
-            updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
-            setRoute $ eClickRL $> FrontendRoute_Main :/ ()
+        updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
 
-    eReqResult <- postRender $ do
-        fileReader <- liftJSM newFileReader
-        let encoding = Just ("utf8" :: String)
-        performEvent_ $ eFile <&> \f -> readAsText fileReader (Just f) encoding
-        eText <-
-            fmap catMaybes $ wrapDomEvent fileReader (`on` load) $ liftJSM $ do
-                v <- getResult fileReader
-                (fromJSVal <=< toJSVal) v
-        dynEitherText <-
-            holdDyn
-                (Left "no file")
-                (Right . Text.unpack <$> eText)
-        postConfigNew dynEitherText (void eText)
+    elClass "div" "login-signup" $ do
+        routeLink (FrontendRoute_Auth :/ AuthPage_Login :/ ()) $ text "Log in"
+        el "span" $ text " or "
+        routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ()) $ text "sign up"
 
-    let eReqSuccess = mapMaybe reqSuccess eReqResult
-        eReqFailure = mapMaybe reqFailure eReqResult
-
-    updateState $
-        eReqFailure <&> \str ->
-            let msgCaption = "Error when loading file"
-                msgBody = "Did you upload a proper .cfg file?\n" <> str
-             in [ field @"stMsg" .~ Just Message {..}
-                , field @"stPloverCfg" .~ defaultPloverCfg
-                ]
-
-    updateState $
-        eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
-            [ field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
-              if null pcfgUnrecognizedQwertys
-                  then id
-                  else
-                      let msgCaption = "Unrecognized qwerty keys"
-                          msgBody =
-                              "Your key map contains unrecognized entries:\n"
-                                  <> Text.intercalate "\n" pcfgUnrecognizedQwertys
-                       in field @"stMsg" .~ Just Message {..},
-              if null pcfgUnrecognizedStenos
-                  then id
-                  else
-                      let msgCaption = "Unrecognized steno keys"
-                          msgBody =
-                              "Your key map contains unrecognized entries:\n"
-                                  <> Text.intercalate
-                                      "\n"
-                                      (showt <$> pcfgUnrecognizedStenos)
-                       in field @"stMsg" .~ Just Message {..}
-            ]
-
-    -- button to toggle keyboard
-    let dynClass = dynState <&> \st ->
-            "btnToggleKeyboard "
-                <> if stShowKeyboard st
-                    then "keyboardVisible"
-                    else "keyboardHidden"
-    (s, _) <- elDynClass' "span" dynClass $ do
-        iFa "fas fa-keyboard"
-        el "code" $ text $ showt $ rawToggleKeyboard lang
-
-    updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
+    elClass "br" "clearBoth" blank
 
 data KeyState key
     = KeyStateDown key

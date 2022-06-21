@@ -27,7 +27,6 @@ library
     , obelisk-route
     , patch
     , proxied
-    , lens
     , random
     , random-shuffle
     , reflex-dom
@@ -41,7 +40,8 @@ library
   exposed-modules:
     Frontend
   other-modules:
-      Client
+      AuthPages
+    , Client
     , Home
     , Shared
     , Page.Common

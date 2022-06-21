@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (video, h1, cursive, firstChild, caption, textShadow,  (#)
+import           Clay                           (type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -551,14 +551,29 @@ main = putCss $ do
                         display none
                         height $ rem 2
 
-    -- span # ".btnHeader" ? do
-    --     color gray
-    --     fontSize $ pt 24
-    --     padding (px 8) (px 8) (px 8) (px 8)
-    --     cursor pointer
-    --     hover & color darkblue
+    div # ".topmenu" ? do
+        boxShadow
+          [ bsColor (rgba 0 0 0 0.2)
+            $ shadowWithSpread (px 0) (px 2) (px 8) (px 0)
+          ]
+        marginBottom $ em 0.5
+        padding (em 0.2) (em 0.2) (em 0.2) (em 0.2)
 
-    span # ".btnToggleKeyboard" ? do
+        div # ".topmenu-entry" ? do
+          paddingLeft $ em 0.5
+          paddingRight $ em 0.5
+
+        span # ".vertical-line" ? do
+          -- display inlineBlock
+          borderLeft solid (px 1) lightgray
+
+        div # ".login-signup" ? do
+          float floatRight
+          fontSize $ pt 14
+          paddingTop $ em 0.3
+          paddingRight $ em 0.5
+
+    div # ".btnToggleKeyboard" ? do
         cursor pointer
         color gray
         display inlineFlex
@@ -567,8 +582,6 @@ main = putCss $ do
             padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
         i ? fontSize (pt 22)
         padding (px 0) (px 2) (px 0) (px 2)
-        borderRadius (px 8) (px 8) (px 8) (px 8)
-        border solid (px 2) gray
         ".keyboardVisible" & color darkblue
         hover & do
             color darkblue
@@ -590,7 +603,6 @@ main = putCss $ do
         span # ".dropdown-button" ? do
             color gray
             fontSize $ pt 24
-            padding (px 8) (px 8) (px 8) (px 8)
             cursor pointer
             hover & color darkblue
             fontFamily ["Special Elite"] [cursive]
@@ -690,7 +702,12 @@ main = putCss $ do
         textAlign center
         margin (px 24) (px 24) (px 24) (px 24)
 
-    button # ".start" ? do
+    hr ? do
+        border none (px 0) black
+        height $ px 1
+        backgroundColor myBlue
+
+    button ? do
         backgroundColor anthrazit
         color white
         fontSize $ pt 24
@@ -706,6 +723,7 @@ main = putCss $ do
     ".block" ? display block
     ".inline" ? display inline
     ".inlineBlock" ? display inlineBlock
+    ".fontSizeSmaller" ? fontSizeCustom smaller
 
     ".blinking" ? animation "blink" (sec 1) ease (sec 0) infinite normal none
     ".lightgray" ? color myLightgray
@@ -867,7 +885,7 @@ main = putCss $ do
 
     div # ".taskWords" |> span # ".word" ? minWidth (px 120)
 
-    span # ".btnSteno" ? do
+    span # ".button-submit" ? do
         fontSize $ pt 12
         fontWeight bold
         backgroundColor $ rgb 102 141 60
@@ -893,15 +911,21 @@ main = putCss $ do
             textAlign $ alignSide sideLeft
             display inlineBlock
             fontSize $ pt 14
-        hr ? do
-            border none (px 0) black
-            height $ px 1
-            marginBottom $ px $ -20
-        hr # ".Onset" ? backgroundColor pink
-        hr # ".Nucleus" ? backgroundColor lightgreen
-        hr # ".Coda" ? backgroundColor myLightblue
-        hr # ".Multiple" ? backgroundColor violet
-        hr # ".OnsetAndCoda" ? backgroundColor orange
+        hr # ".Onset" ? do
+          backgroundColor pink
+          marginBottom $ px $ -20
+        hr # ".Nucleus" ? do
+          backgroundColor lightgreen
+          marginBottom $ px $ -20
+        hr # ".Coda" ? do
+          backgroundColor myLightblue
+          marginBottom $ px $ -20
+        hr # ".Multiple" ? do
+          backgroundColor violet
+          marginBottom $ px $ -20
+        hr # ".OnsetAndCoda" ? do
+          backgroundColor orange
+          marginBottom $ px $ -20
         span # ".patternPosition" ? do
             float floatRight
             fontSize $ px 14
@@ -1004,3 +1028,27 @@ main = putCss $ do
             fontFamily ["DejaVu Sans Mono"] [monospace]
         td # ".nMistakes" ? do
             paddingRight $ em 1
+
+    div # ".auth" ? do
+        paddingTop $ em 2
+        paddingBottom $ em 2
+        maxWidth $ px 1024
+        marginLeft auto
+        marginRight auto
+
+        input ? do
+          fontSize $ pt 18
+          borderRadius (px 12) (px 12) (px 12) (px 12)
+          padding (px 8) (px 8) (px 8) (px 8)
+          outline none (px 0) transparent
+          border solid (px 1) myBlue
+
+          -- really only meant for checkboxes:
+          -- input[type=checkbox] { ... }
+          -- `type_ :: Refinement` exists, but no plan
+          marginRight $ em 0.5
+        input # focus ? do
+          boxShadow
+              [ bsColor myBlue
+                    $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
+              ]

@@ -64,19 +64,16 @@ import           Data.Either                    ( either )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Function                  ( ($)
                                                 , (&)
-                                                , flip
+
                                                 )
-import           Data.Functor                   ( fmap
-                                                , (<$>)
+import           Data.Functor                   ( (<$>)
                                                 )
-import           Data.Map                       ( Map )
 import           Data.Maybe                     ( Maybe(..)
                                                 , maybe
                                                 )
 import           Data.String                    ( fromString )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
-import qualified Data.Map.Strict               as Map
 import           Data.Semigroup                 ( (<>) )
 import qualified Data.Text.Encoding            as Text
 import           Data.Time                      ( UTCTime
@@ -271,7 +268,7 @@ mkContext jwk pool =
                 _ ->
                     toServerError $ "user not found: " <> Text.unpack uiUserName
             let uiIsSiteAdmin = userIsSiteAdmin
-            clearances <- runDb' pool $ getWhere ClearanceFkAlias uiKeyAlias
+            -- clearances <- runDb' pool $ getWhere ClearanceFkAlias uiKeyAlias
 
             -- TODO
             let uiClearances = RankOwner

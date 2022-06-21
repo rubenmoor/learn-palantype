@@ -16,10 +16,8 @@ module Page.Stage4.CommandKeys
     ) where
 
 import           Client (getDictDENumbers, postRender, request)
-import           Common.Route (FrontendRoute)
 import           Control.Applicative (Applicative (pure))
 import           Control.Monad (unless, (=<<))
-import           Control.Monad.Fix (MonadFix)
 import           Control.Monad.Reader.Class (MonadReader, ask)
 import           Data.Either (Either (..))
 import           Data.Eq (Eq((==)))
@@ -27,22 +25,17 @@ import           Data.Function (($))
 import           Data.Functor ((<&>))
 import           Data.Semigroup ((<>))
 import           Obelisk.Generated.Static (static)
-import           Obelisk.Route.Frontend (R, RouteToUrl, SetRoute)
 import           Page.Common (elNotImplemented, loading)
 import           Palantype.Common (Lang (DE))
-import           Reflex.Dom ((=:), DomBuilder, MonadHold, PostBuild, Prerender, blank, delay, el, elAttr, elClass, getPostBuild, text, widgetHold_)
+import           Reflex.Dom ((=:), DomBuilder, MonadHold, Prerender, blank, delay, el, elAttr, elClass, getPostBuild, text, widgetHold_)
 import           State (Env (..), Navigation (..))
 
 commandKeys ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
-      MonadFix m,
       MonadHold t m,
       MonadReader (Env t key) m,
-      PostBuild t m,
-      Prerender t m,
-      RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
+      Prerender t m
     ) =>
     m Navigation
 commandKeys = do
@@ -114,6 +107,6 @@ commandKeys = do
 
     widgetHold_ loading $ evEDict <&> \case
         Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-        Right map -> blank
+        Right _ -> blank
 
     pure envNavigation

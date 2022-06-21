@@ -40,7 +40,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 )
 import           Palantype.Common               (Lang(..),  Palantype )
 import           Palantype.Common.RawSteno      ( parseChordMaybe )
-import           Reflex.Dom                     ( (=:)
+import           Reflex.Dom                     (el',  (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
@@ -169,7 +169,7 @@ introduction = do
         eChordSTART = void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
 
     elClass "div" "start" $ do
-        (btn, _) <- elClass' "button" "start" $ text "Get Started!"
+        (btn, _) <- el' "button" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart

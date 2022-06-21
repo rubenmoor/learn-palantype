@@ -26,7 +26,9 @@ library
     , unordered-containers
   exposed-modules:
     Common.Api
-    Common.Stage
+    Common.Auth
+    Common.Model
     Common.PloverAdapter
     Common.Route
+    Common.Stage
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits

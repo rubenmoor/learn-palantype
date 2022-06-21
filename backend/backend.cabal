@@ -37,18 +37,20 @@ library
     , persistent-mysql
     , resource-pool
     , resourcet
+    , safe
     , servant
     , servant-snap
     , snap-core
     , text
     , text-show
+    , time
     , transformers
     , unordered-containers
     , utf8-string
   exposed-modules:
       Backend
   other-modules:
-      Appdata
+      AppData
     , Auth
     , Config
     , Database

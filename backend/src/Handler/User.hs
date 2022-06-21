@@ -15,80 +15,43 @@ module Handler.User
   ( handlers
   ) where
 
-import           Control.Applicative       (Applicative (pure))
-import           Control.Category          (Category ((.)))
-import           Control.Exception.Lifted  (catch, evaluate)
-import           Control.Monad             (Monad ((>>=)), unless, when)
-import           Control.Monad.Except      (runExceptT)
-import           Control.Monad.IO.Class    (MonadIO (liftIO))
-import           Control.Monad.Reader      (asks)
-import           Control.Monad.Trans       (MonadTrans (lift))
-import           Crypto.JWT                (JWK)
-import           Data.Aeson                (decodeStrict, encode)
-import           Data.Bool                 (Bool (..))
-import qualified Data.ByteString.Lazy      as Lazy
-import qualified Data.ByteString.Lazy.UTF8 as BSU
-import           Data.Char                 (isAlphaNum)
-import           Data.Either               (either)
-import           Data.Eq                   (Eq ((==)))
-import           Data.Foldable             (Foldable (foldl'))
-import           Data.Function             (flip, ($))
-import           Data.Functor              (Functor (fmap), (<$>))
-import           Data.Int                  (Int)
-import           Data.List                 (null, sortOn, (++))
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe                (Maybe (Just, Nothing), isJust,
+import           Control.Applicative (Applicative (pure))
+import           Control.Category (Category ((.)))
+import           Control.Monad (Monad ((>>=)), when)
+import           Control.Monad.IO.Class (MonadIO (liftIO))
+import           Data.Aeson (encode)
+import qualified Data.ByteString.Lazy as Lazy
+import           Data.Function (($))
+import           Data.Functor ((<$>))
+import           Data.Maybe                (Maybe (Just),
                                             maybe)
-import           Data.Monoid               ((<>))
-import           Data.Ord                  (Down (Down), Ord ((<), (>)))
-import           Data.Password             (mkPassword)
-import           Data.Password.Argon2      (PasswordCheck (..), checkPassword,
-                                            hashPassword)
-import           Data.Pool                 (Pool)
-import           Data.Text                 (Text, breakOn, drop, replace,
-                                            toUpper)
-import qualified Data.Text                 as Text
-import           Data.Time                 (defaultTimeLocale, formatTime,
-                                            getCurrentTime, parseTimeM)
-import           Data.Traversable          (traverse)
-import           Data.Tuple                (snd)
-import           Database.Gerippe          (Entity (..), InnerJoin (..), Key,
-                                            PersistStoreWrite (insert, insert_),
+import           Data.Monoid ((<>))
+import           Data.Ord (Ord ((>)))
+import           Data.Text (Text)
+import qualified Data.Text as Text
+import           Data.Time (getCurrentTime)
+import           Database.Gerippe          (Entity (..),
+                                            PersistStoreWrite (insert_),
                                             PersistUniqueRead (getBy),
-                                            PersistentSqlException, from, get,
-                                            getAll, getWhere, joinMTo1Where',
-                                            on, select, val, where_, (&&.),
-                                            (==.), (^.))
-import           Database.Persist.MySQL    (PersistStoreWrite (update),
-                                            SqlBackend, runSqlPool, (=.))
-import           Safe                      (headMay)
-import           Servant.API               ((:<|>) (..),
-                                            FromHttpApiData (parseHeader))
-import           Servant.Server            (Context ((:.), EmptyContext),
-                                            HasServer (ServerT),
+                                            getWhere
+                                            )
+import           Database.Persist.MySQL    (PersistStoreWrite (update), (=.))
+import           Servant.API               ((:<|>) (..))
+import           Servant.Server            (HasServer (ServerT),
                                             ServantErr (errBody), err400,
-                                            err403, err404, err500, throwError)
-import           Snap.Core                 (Snap, getHeader, getRequest)
-import           Text.Show                 (Show (show))
+                                            err500, throwError)
+import           Snap.Core (Snap)
 
-import           AppData                   (DbAction, EnvApplication (..),
-                                            Handler)
-import           Auth                      (UserInfo (..), mkClaims,
-                                            mkCompactJWT, verifyCompactJWT)
-import           Common.Api                    (RoutesUser)
-import           Common.Auth               (LoginData (..), SessionData (..),
-                                            UserNew (..))
-import           DbAdapter                 (Alias (..), AuthPwd (..),
-                                            Clearance (..), EntityField (..),
-                                            EventSource (..), Unique (..),
+import           AppData                   (Handler)
+import           Auth                      (UserInfo (..))
+import           Common.Api (RoutesUser)
+import           DbAdapter                 (Alias (..), EntityField (..), Unique (..),
                                             User (..))
-import qualified DbAdapter                 as Db
+import qualified DbAdapter as Db
 import           Common.Model                     (Event (..),
                                             Journal (..),
-                                            Rank (RankModerator),
                                             Subject (..) )
-import Database (runDb)
+import           Database (runDb)
 
 default(Text)
 

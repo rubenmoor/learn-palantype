@@ -12,6 +12,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Frontend where
 
@@ -21,7 +22,7 @@ import State (defaultState,
     stageUrl,
  )
 
-import Common.Route (FrontendRoute (..))
+import Common.Route (FrontendRoute (..), FrontendRoute_AuthPages (..))
 import Control.Monad.Reader (ReaderT (runReaderT))
 import qualified Data.Aeson as Aeson
 import Data.Functor (
@@ -65,7 +66,6 @@ import Reflex.Dom (
     Prerender (prerender),
     Reflex (updated),
     blank,
-    def,
     dyn_,
     el,
     elAttr,
@@ -78,7 +78,9 @@ import Reflex.Dom (
     widgetHold_,
     (=:),
  )
+
 import Shared (loadingScreen)
+import qualified AuthPages
 
 frontend :: Frontend (R FrontendRoute)
 frontend = Frontend
@@ -135,6 +137,9 @@ frontendBody = mdo
                                 Nothing -> landingPage
                 FrontendRoute_EN -> stages @EN.Key EN
                 FrontendRoute_DE -> stages @DE.Key DE
+                FrontendRoute_Auth -> subRoute_ \case
+                  AuthPage_SignUp -> AuthPages.signup
+                  AuthPage_Login  -> AuthPages.login
     blank
 
 frontendHead

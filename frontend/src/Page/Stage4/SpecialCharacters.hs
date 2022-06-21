@@ -107,6 +107,6 @@ specialCharacters = do
 
     widgetHold_ loading $ evEDict <&> \case
         Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-        Right map -> blank
+        Right _ -> blank
 
     pure envNavigation

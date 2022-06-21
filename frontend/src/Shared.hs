@@ -16,23 +16,22 @@ import           Data.Function         (($))
 import           Data.Functor          (void)
 import           Data.Maybe            (Maybe (..))
 import           Data.Monoid           ((<>))
-import           Data.Text             (Text, unwords)
+import           Data.Text             (Text)
 import qualified Data.Text             as Text
 import           Data.Tuple            (fst)
-import           Reflex.Dom            (Adjustable, DomBuilder (DomBuilderSpace, inputElement),
+import           Reflex.Dom            (MonadHold, Adjustable, DomBuilder (DomBuilderSpace, inputElement),
                                         Element, EventName (Click), EventResult, HasDomEvent (domEvent),
                                         InputElement (_inputElement_checked, _inputElement_value),
-                                        InputElementConfig, MonadHold (holdDyn),
+                                        InputElementConfig,
                                         NotReady, PostBuild,
-                                        Reflex (Dynamic, Event, current, never, updated),
-                                        attachWith, blank, def, dyn,
-                                        el, el', elAttr, elAttr', elClass,
+                                        Reflex (Dynamic, Event, never), blank, def, dyn,
+                                        el, elAttr, elAttr', elClass,
                                         elClass',
                                         elementConfig_initialAttributes, ffor,
                                         inputElementConfig_elementConfig,
-                                        inputElementConfig_initialChecked,
-                                        inputElementConfig_setChecked, leftmost, switchHold, text,
+                                        inputElementConfig_initialChecked, switchHold, text,
                                         (&), (=:))
+import Data.Bool (Bool)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -72,17 +71,12 @@ elLabelPasswordInput conf label id = do
       dynMStr = ffor dynStr $ \s -> if Text.null s then Nothing else Just s
   pure (dynMStr, i)
 
-btnSend
+btnSubmit
   :: DomBuilder t m
   => m ()
   -> m (Event t ())
-btnSend inner = do
-  let cls = "class" =: unwords
-        [ "onDesktopMaxWidth370px"
-        , "onMobileFontBig"
-        , "btnSend"
-        ]
-  (e, _) <- elAttr' "button" cls inner
+btnSubmit inner = do
+  (e, _) <- elAttr' "button" ("class" =: "button-submit" <> "type" =: "submit") inner
   pure $ domEvent Click e
 
 whenJust ::
@@ -121,3 +115,19 @@ loadingScreen =
   elClass "div" "mkOverlay" $ do
     iFa "fas fa-spinner fa-spin"
     text " Loading ..."
+
+elLabelCheckbox
+  :: ( DomBuilder t m
+     )
+  => Bool
+  -> Text
+  -> Text
+  -> m (Dynamic t Bool)
+elLabelCheckbox initial label id = do
+    cb <- inputElement $
+      def & inputElementConfig_elementConfig
+          . elementConfig_initialAttributes
+              .~ ("type" =: "checkbox" <> "id" =: id)
+          & inputElementConfig_initialChecked .~ initial
+    elAttr "label" ("for" =: id) $ el "span" $ text label
+    pure $ _inputElement_checked cb

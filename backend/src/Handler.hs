@@ -16,11 +16,9 @@ where
 
 import Servant.API ((:<|>) (..))
 import Servant.Server
-    (HasServer (ServerT, hoistServerWithContext),
-     Context
+    (HasServer (ServerT)
     )
 import Snap.Core (Snap)
-import Data.Proxy (Proxy (Proxy))
 
 import Common.Api
     ( RoutesApi,

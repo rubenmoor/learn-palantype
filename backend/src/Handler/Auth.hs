@@ -16,76 +16,51 @@ module Handler.Auth
   ) where
 
 import           Control.Applicative       (Applicative (pure))
-import           Control.Category          (Category ((.)))
-import           Control.Exception.Lifted  (catch, evaluate)
 import           Control.Monad             (Monad ((>>=)), unless, when)
 import           Control.Monad.Except      (runExceptT)
 import           Control.Monad.IO.Class    (MonadIO (liftIO))
 import           Control.Monad.Reader      (asks)
-import           Control.Monad.Trans       (MonadTrans (lift))
-import           Crypto.JWT                (JWK)
-import           Data.Aeson                (decodeStrict, encode)
+import           Data.Aeson                (encode)
 import           Data.Bool                 (Bool (..))
 import qualified Data.ByteString.Lazy      as Lazy
 import qualified Data.ByteString.Lazy.UTF8 as BSU
 import           Data.Char                 (isAlphaNum)
 import           Data.Either               (either)
-import           Data.Eq                   (Eq ((==)))
-import           Data.Foldable             (Foldable (foldl'))
-import           Data.Function             (flip, ($))
-import           Data.Functor              (Functor (fmap), (<$>))
-import           Data.Int                  (Int)
-import           Data.List                 (null, sortOn, (++))
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
-import           Data.Maybe                (Maybe (Just, Nothing), isJust,
+import           Data.Function             (($))
+import           Data.Functor              ((<$>))
+import           Data.List                 (null)
+import           Data.Maybe                (fromMaybe, Maybe (Just, Nothing), isJust,
                                             maybe)
-import           Data.Monoid               ((<>))
-import           Data.Ord                  (Down (Down), Ord ((<), (>)))
+import           Data.Ord                  (Ord ((>)))
+import Text.Show (show)
 import           Data.Password             (mkPassword)
 import           Data.Password.Argon2      (PasswordCheck (..), checkPassword,
                                             hashPassword)
-import           Data.Pool                 (Pool)
-import           Data.Text                 (Text, breakOn, drop, replace,
-                                            toUpper)
+import           Data.Text                 (Text)
 import qualified Data.Text                 as Text
-import           Data.Time                 (defaultTimeLocale, formatTime,
-                                            getCurrentTime, parseTimeM)
-import           Data.Traversable          (traverse)
-import           Data.Tuple                (snd)
-import           Database.Gerippe          (Entity (..), InnerJoin (..), Key,
+import           Data.Time                 (getCurrentTime)
+import           Database.Gerippe          (Entity (..),
                                             PersistStoreWrite (insert, insert_),
                                             PersistUniqueRead (getBy),
-                                            PersistentSqlException, from, get,
-                                            getAll, getWhere, joinMTo1Where',
-                                            on, select, val, where_, (&&.),
-                                            (==.), (^.))
-import           Database.Persist.MySQL    (PersistStoreWrite (update),
-                                            SqlBackend, runSqlPool, (=.))
-
-import           Safe                      (headMay)
-import           Servant.API               ((:<|>) (..),
-                                            FromHttpApiData (parseHeader))
-import           Servant.Server            (Context ((:.), EmptyContext),
-                                            HasServer (ServerT),
+                                            get, getAll, getWhere)
+import           Database.Persist.MySQL    (PersistStoreWrite (update), (=.))
+import           Servant.API               ((:<|>) (..))
+import           Servant.Server            (HasServer (ServerT),
                                             ServantErr (errBody), err400,
-                                            err403, err404, err500, throwError)
-import           Snap.Core                 (Snap, getHeader, getRequest)
-import           Text.Show                 (Show (show))
+                                            err500, throwError)
 
-import           AppData                   (DbAction, EnvApplication (..),
+import           AppData                   (EnvApplication (..),
                                             Handler)
-import           Auth                      (UserInfo (..), mkClaims,
-                                            mkCompactJWT, verifyCompactJWT, getClearances)
+import           Auth                      (mkClaims,
+                                            mkCompactJWT, getClearances)
 import           Common.Api                    (RoutesAuth)
 import           Common.Auth               (LoginData (..), SessionData (..),
                                             UserNew (..))
 import Database (runDb)
 import           Common.Model                     (Event (..),
-                                            Journal (..), Rank (RankModerator),
+                                            Journal (..),
                                             Subject (..))
-import           DbAdapter                 (Alias (..), AuthPwd (..),
-                                            Clearance (..), EntityField (..),
+import           DbAdapter                 (Alias (..), AuthPwd (..), EntityField (..),
                                             EventSource (..), Unique (..),
                                             User (..))
 import qualified DbAdapter                 as Db
@@ -152,8 +127,8 @@ handleUserNew UserNew{..} = do
   user <- runDb $ insert $ User unUserName sdIsSiteAdmin eventSourceId Nothing
   password <- hashPassword (mkPassword unPassword)
   runDb $ insert_ $ AuthPwd user password
-  let sdAliasName = Text.take 16 unUserName
-  keyAlias <- runDb $ insert $ Alias sdAliasName user
+  let sdAliasName = fromMaybe (Text.take 16 unUserName) unMAlias
+  keyAlias <- runDb $ insert $ Alias sdAliasName user unVisible
   runDb $ update user [ UserFkDefaultAlias =. Just keyAlias ]
   now <- liftIO getCurrentTime
   let blobJournalUser =

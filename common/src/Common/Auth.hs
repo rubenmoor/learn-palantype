@@ -23,7 +23,6 @@ module Common.Auth
 
 import           Control.Arrow           (ArrowChoice ((+++)))
 import           Data.Aeson              (FromJSON, ToJSON)
-import           Data.Map                (Map)
 import           Data.Maybe              (fromMaybe)
 import           Data.Proxy              (Proxy (Proxy))
 import           Data.Text               (Text)
@@ -64,6 +63,8 @@ instance ToJSON LoginData
 data UserNew = UserNew
   { unUserName :: Text
   , unPassword :: Text
+  , unMAlias   :: Maybe Text
+  , unVisible  :: Bool
   } deriving (Eq, Show, Generic)
 
 instance FromJSON UserNew
