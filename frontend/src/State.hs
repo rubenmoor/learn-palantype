@@ -15,7 +15,7 @@ import           Common.Route                   ( FrontendRoute(..)
                                                 )
 import           Common.Stage                   (Stage ())
 import Common.Auth (SessionData)
-import           Control.Applicative            ( (<$>) )
+import           Control.Applicative            ((<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
@@ -86,7 +86,16 @@ instance ToJSON Stats
 
 data State = State
     { stSession :: Session
-    , stCleared       :: Set Stage
+    , stApp     :: AppState
+    , stRedirectUrl :: Maybe Stage
+    }
+    deriving Generic
+
+instance FromJSON State
+instance ToJSON State
+
+data AppState = AppState
+    { stCleared       :: Set Stage
     , stMLang         :: Maybe Lang
     , stMsg           :: Maybe Message
     , stPloverCfg     :: PloverCfg
@@ -102,8 +111,8 @@ data State = State
     }
     deriving Generic
 
-instance FromJSON State
-instance ToJSON State
+instance FromJSON AppState
+instance ToJSON AppState
 
 defaultProgress :: Map Lang Stage
 defaultProgress =
@@ -113,7 +122,13 @@ defaultProgress =
 defaultState :: State
 defaultState = State
     { stSession       = SessionAnon
-    , stCleared       = Set.empty
+    , stApp = defaultAppState
+    , stRedirectUrl = Nothing
+    }
+
+defaultAppState :: AppState
+defaultAppState = AppState
+    { stCleared       = Set.empty
     , stMLang         = Nothing
     , stMsg           = Nothing
     , stPloverCfg     = defaultPloverCfg

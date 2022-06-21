@@ -15,7 +15,7 @@ module Page.Introduction where
 
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
-import Control.Category ((<<<))
+import Control.Category ((<<<), (.))
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
@@ -49,7 +49,6 @@ import           Reflex.Dom                     (el',  (=:)
                                                 , el
                                                 , elAttr
                                                 , elClass
-                                                , elClass'
                                                 , leftmost
                                                 , text
                                                 )
@@ -173,9 +172,9 @@ introduction = do
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stProgress" %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
-               , field @"stCleared" %~ Set.insert navCurrent
-               , field @"stTOCShowStage1" .~ True
+            $> [ field @"stApp" . field @"stProgress" %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
+               , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
+               , field @"stApp" . field @"stTOCShowStage1" .~ True
                ]
         setRoute $ eStart $> FrontendRoute_Main :/ ()
 

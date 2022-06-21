@@ -20,7 +20,7 @@ import           Reflex.Dom                     (elClass, gate, blank, current, 
                                                 , elementConfig_modifyAttributes
                                                 , (=:)
                                                 )
-import Obelisk.Route.Frontend (setRoute, pattern (:/), SetRoute, R, RouteToUrl, routeLink)
+import Obelisk.Route.Frontend (pattern (:/), SetRoute, R, RouteToUrl, routeLink)
 import Common.Route (FrontendRoute(FrontendRoute_Auth), FrontendRoute_AuthPages(AuthPage_SignUp), FrontendRoute)
 import Control.Monad.Writer.Strict (MonadFix)
 import Data.Semigroup (Endo)
@@ -39,8 +39,9 @@ import Control.Lens.Setter ((?~), (.~))
 import qualified Data.Text as Text
 
 import Shared (elLabelInput, btnSubmit, elLabelCheckbox)
-import State (Session(SessionUser), State, updateState, Message (..))
+import State (Env (..), Session(SessionUser), State, updateState, Message (..))
 import Common.Auth (UserNew(UserNew))
+import Control.Monad.Reader (MonadReader(ask))
 
 signup
   :: forall t (m :: * -> *).
@@ -66,7 +67,7 @@ signup = elClass "div" "auth" $ mdo
     let evFocusLost = void $ filter not $ updated $ _inputElement_hasFocus inputUserName
         eUserName = maybe (Left "user empty") Right <$> dynMUserName
     evUserExists <- void . filter (== Right True) <$> request (postDoesUserExist eUserName evFocusLost)
-    updateState $ evUserExists $> [field @"stMsg" ?~ Message "Error" "username already exists"]
+    updateState $ evUserExists $> [field @"stApp" . field @"stMsg" ?~ Message "Error" "username already exists"]
 
     dynDefaultAlias <- holdDyn True $ _inputElement_input inputAlias $> False
     let evSetDefaultAlias =
@@ -105,8 +106,8 @@ signup = elClass "div" "auth" $ mdo
           _                                               -> Left "User name and password required."
     evRespNew <- request $ postAuthNew dynEUserNew eSend
     updateState $ evRespNew <&> \case
-        Left  errMsg -> [field @"stMsg"     ?~ Message     "Error" errMsg ]
-        Right user   -> [field @"stSession" .~ SessionUser user           ]
+        Left  errMsg -> [field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg ]
+        Right user   -> [field @"stSession" .~ SessionUser user ]
 
     el "h2" $ text "Why register?"
 
@@ -129,6 +130,7 @@ signup = elClass "div" "auth" $ mdo
          \In order to delete all data related to your account, there is a \
          \delete option right on this website."
 
+    blank
     -- setRoute $ evRespNew $>134
 
 login

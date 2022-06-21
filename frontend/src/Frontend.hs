@@ -16,9 +16,10 @@
 
 module Frontend where
 
+import Control.Lens.Getter ( (^.) )
+import Data.Generics.Product (field)
 import Language.Javascript.JSaddle (liftJSM)
 import State (defaultState,
-    State (..),
     stageUrl,
  )
 
@@ -41,7 +42,7 @@ import GHCJS.DOM.Storage (
     setItem,
  )
 import GHCJS.DOM.Window (getLocalStorage)
-import Home (
+import Home (message, settings,
     landingPage,
     stages,
  )
@@ -119,14 +120,16 @@ frontendBody = mdo
 
     (_, eStateUpdate) <-
         mapRoutedT (runEventWriterT . flip runReaderT dynState) $ do
+            message
+
             subRoute_ $ \case
                 FrontendRoute_Main -> do
                     dyn_ $
-                        dynState <&> \State{..} -> do
+                        dynState <&> \st -> do
                             -- go to url where the user left the last time
                             let mUrl = do
-                                    lang <- stMLang
-                                    stage <- Map.lookup lang stProgress
+                                    lang <- st ^. field @"stApp" . field @"stMLang"
+                                    stage <- Map.lookup lang $ st ^. field @"stApp" . field @"stProgress"
                                     pure $ stageUrl lang stage
                             case mUrl of
                                 Just url -> do
@@ -135,8 +138,12 @@ frontendBody = mdo
 
                                 -- or show the landing page
                                 Nothing -> landingPage
-                FrontendRoute_EN -> stages @EN.Key EN
-                FrontendRoute_DE -> stages @DE.Key DE
+                FrontendRoute_EN -> do
+                    el "header" $ settings EN
+                    stages @EN.Key EN
+                FrontendRoute_DE -> do
+                    el "header" $ settings DE
+                    stages @DE.Key DE
                 FrontendRoute_Auth -> subRoute_ \case
                   AuthPage_SignUp -> AuthPages.signup
                   AuthPage_Login  -> AuthPages.login

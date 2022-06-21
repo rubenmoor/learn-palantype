@@ -129,7 +129,7 @@ import           Safe                           ( initMay )
 import           Shared                         ( iFa
                                                 , whenJust
                                                 )
-import           State                          (Stats (..), stStats,  Env(..)
+import           State                          (Stats (..), stApp, stStats,  Env(..)
                                                 , Message(..)
                                                 , Navigation(..)
                                                 , State
@@ -198,7 +198,7 @@ elCongraz
     -> m ()
 elCongraz evDone Navigation {..} = mdo
     eChord <- asks envEChord
-    dynStats <- asks $ envDynState >>> fmap (stStats >>> Map.findWithDefault [] (navLang, navCurrent))
+    dynStats <- asks $ envDynState >>> fmap (stApp >>> stStats >>> Map.findWithDefault [] (navLang, navCurrent))
 
     let eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) eChord
         eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) eChord
@@ -206,7 +206,7 @@ elCongraz evDone Navigation {..} = mdo
         evCongraz = leftmost [CongrazShow <$> evDone, eBack $> CongrazHide]
 
     updateState $ evDone <&> maybe [] \s ->
-        [ field @"stStats" %~ Map.insertWith (<>) (navLang, navCurrent) [s] ]
+        [ field @"stApp" . field @"stStats" %~ Map.insertWith (<>) (navLang, navCurrent) [s] ]
 
     eBack <- fmap switchDyn $ widgetHold (pure never) $ evCongraz <&> \case
         CongrazHide    -> pure never
@@ -237,13 +237,13 @@ elCongraz evDone Navigation {..} = mdo
                 let eContinue = leftmost [eChordEnter, domEvent Click elACont]
                 updateState
                     $  eContinue
-                    $> [ field @"stProgress"
+                    $> [ field @"stApp" . field @"stProgress"
                            %~ Map.update
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
-                       , field @"stCleared" %~ Set.insert navCurrent
+                       , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
                        , if nxt == read "stage_2-1"
-                           then field @"stTOCShowStage2" .~ True
+                           then field @"stApp" . field @"stTOCShowStage2" .~ True
                            else id
                        ]
                 setRoute $ eContinue $> FrontendRoute_Main :/ ()
@@ -269,7 +269,7 @@ parseStenoOrError _ raw = case parseSteno raw of
         let msgCaption = "Internal error"
             msgBody =
                 "Could not parse steno code: " <> showt raw <> "\n" <> err
-        updateState $ ePb $> [field @"stMsg" .~ Just Message { .. }]
+        updateState $ ePb $> [field @"stApp" . field @"stMsg" .~ Just Message { .. }]
         pure Nothing
 
 elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()

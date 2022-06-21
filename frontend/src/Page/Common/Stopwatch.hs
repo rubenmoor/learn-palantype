@@ -24,6 +24,29 @@ import Data.Text (Text)
 import GHC.Float (Double)
 import GHC.Real (div, mod, realToFrac, (/), fromIntegral, round, floor)
 import Reflex.Dom
+    ( DomBuilder,
+      MonadHold,
+      PostBuild,
+      Reflex(Dynamic, Event),
+      leftmost,
+      foldDyn,
+      holdUniqDyn,
+      toggle,
+      tickLossyFromPostBuildTime,
+      (=:),
+      blank,
+      dyn,
+      dyn_,
+      el,
+      elAttr,
+      elClass,
+      elClass',
+      text,
+      PerformEvent(performEvent, Performable),
+      TickInfo(_tickInfo_lastUTC),
+      TriggerEvent,
+      HasDomEvent(domEvent),
+      EventName(Click) )
 import TextShow (showt)
 import Data.Functor (Functor(fmap))
 import Data.Time (defaultTimeLocale, diffUTCTime, UTCTime, NominalDiffTime, getCurrentTime)
@@ -31,7 +54,7 @@ import qualified Data.Text as Text
 import Text.Printf (printf)
 import Control.Category ((<<<), (.))
 import Data.Witherable (Filterable(catMaybes))
-import State (stStats, Env (..), Stats (..), Navigation (..))
+import State (stStats, stApp, Env (..), Stats (..), Navigation (..))
 import qualified Data.Map.Strict as Map
 import Control.Monad.Reader (ask, MonadReader)
 import Control.Monad (when)
@@ -80,7 +103,7 @@ elStopwatch dynStopwatch n = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    let dynMStats =  Map.lookup (navLang, navCurrent) . stStats <$> envDynState
+    let dynMStats =  Map.lookup (navLang, navCurrent) . stStats . stApp <$> envDynState
     dyn_ $ dynMStats <&> \case
         Nothing -> blank
         Just ls -> elClass "div" "paragraph stopwatch" $ do

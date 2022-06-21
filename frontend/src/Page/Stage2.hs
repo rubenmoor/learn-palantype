@@ -339,7 +339,7 @@ exercise1 = do
     setRoute $ eBack $> stageUrl navLang ($readLoc "stage_1-1")
     updateState
         $  eBack
-        $> [ field @"stProgress"
+        $> [ field @"stApp" . field @"stProgress"
                  %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
            ]
 

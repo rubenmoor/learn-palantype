@@ -53,6 +53,7 @@ import Control.Lens
 import Control.Lens.Setter
     ( (%~),
       (.~),
+      (?~)
     )
 import Control.Lens.Wrapped (_Wrapped')
 import Control.Monad
@@ -62,7 +63,7 @@ import Control.Monad
     )
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader
-    ( MonadReader (ask),
+    ( MonadReader,
       ReaderT,
       asks,
       withReaderT,
@@ -142,7 +143,7 @@ import Language.Javascript.JSaddle
     )
 import Obelisk.Generated.Static (static)
 import Obelisk.Route.Frontend
-    ( R,
+    (Routed,  R,
       RouteToUrl,
       RoutedT,
       SetRoute (setRoute),
@@ -243,6 +244,7 @@ import State
       Message (..),
       Navigation (..),
       State (..),
+      AppState (..),
       stageUrl,
       updateState,
     )
@@ -278,14 +280,14 @@ message ::
     ) =>
     m ()
 message = do
-    dynMsg <- asks (stMsg <$>)
+    dynMsg <- asks (fmap $ stApp >>> stMsg)
     dyn_ $
         dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
             let spanClose = elClass' "span" "close" $ iFa "fas fa-times"
              in elClass "div" "msgOverlay" $ do
                     (elClose, _) <- spanClose
                     let eClose = domEvent Click elClose
-                    updateState $ eClose $> [field @"stMsg" .~ Nothing]
+                    updateState $ eClose $> [field @"stApp" . field @"stMsg" .~ Nothing]
                     el "div" $ text msgCaption
                     el "span" $ text msgBody
 
@@ -296,13 +298,13 @@ settings ::
       Prerender t m,
       EventWriter t (Endo State) m,
       MonadReader (Dynamic t State) m,
-      RouteToUrl (R FrontendRoute) m,
+      Routed t Stage m,
       SetRoute t (R FrontendRoute) m
     ) =>
     Lang ->
     m ()
 settings lang = elClass "div" "topmenu" do
-    dynState <- ask
+    dynState <- asks $ fmap stApp
 
     elClass "div" "floatLeft" $ do
         -- button to show configuration dropdown
@@ -332,7 +334,7 @@ settings lang = elClass "div" "topmenu" do
                 let eQwertz = domEvent Click elQwertz
                 updateState $
                     eQwertz
-                        $> [ field @"stPloverCfg"
+                        $> [ field @"stApp" . field @"stPloverCfg"
                                  . _Wrapped'
                                  . ix lang
                                  .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
@@ -347,7 +349,7 @@ settings lang = elClass "div" "topmenu" do
                         _ -> lsStenoQwerty
                 updateState $
                     eQwerty
-                        $> [ field @"stPloverCfg"
+                        $> [ field @"stApp" . field @"stPloverCfg"
                                  . _Wrapped'
                                  . ix lang
                                  .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
@@ -362,8 +364,8 @@ settings lang = elClass "div" "topmenu" do
 
                 (eRP, _) <- elClass' "span" "entry" $ text "Reset"
                 updateState $ domEvent Click eRP $>
-                    [ field @"stProgress" .~ def
-                    , field @"stStats" .~ Map.empty
+                    [ field @"stApp" . field @"stProgress" .~ def
+                    , field @"stApp" . field @"stStats" .~ Map.empty
                     ]
 
                 pure eFile'
@@ -377,7 +379,7 @@ settings lang = elClass "div" "topmenu" do
             elClass "div" "dropdown-content" $ do
                 (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
                 let eClickRL = domEvent Click eRL
-                updateState $ eClickRL $> [field @"stMLang" .~ Nothing]
+                updateState $ eClickRL $> [ field @"stApp" . field @"stMLang" .~ Nothing]
                 setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
         eReqResult <- postRender $ do
@@ -401,13 +403,13 @@ settings lang = elClass "div" "topmenu" do
             eReqFailure <&> \str ->
                 let msgCaption = "Error when loading file"
                     msgBody = "Did you upload a proper .cfg file?\n" <> str
-                 in [ field @"stMsg" .~ Just Message {..}
-                    , field @"stPloverCfg" .~ defaultPloverCfg
+                 in [ field @"stApp" . field @"stMsg" ?~ Message {..}
+                    , field @"stApp" . field @"stPloverCfg" .~ defaultPloverCfg
                     ]
 
         updateState $
             eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
-                [ field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
+                [ field @"stApp" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
                   if null pcfgUnrecognizedQwertys
                       then id
                       else
@@ -415,7 +417,7 @@ settings lang = elClass "div" "topmenu" do
                               msgBody =
                                   "Your key map contains unrecognized entries:\n"
                                       <> Text.intercalate "\n" pcfgUnrecognizedQwertys
-                           in field @"stMsg" .~ Just Message {..},
+                           in field @"stApp" . field @"stMsg" .~ Just Message {..},
                   if null pcfgUnrecognizedStenos
                       then id
                       else
@@ -425,7 +427,7 @@ settings lang = elClass "div" "topmenu" do
                                       <> Text.intercalate
                                           "\n"
                                           (showt <$> pcfgUnrecognizedStenos)
-                           in field @"stMsg" .~ Just Message {..}
+                           in field @"stApp" . field @"stMsg" .~ Just Message {..}
                 ]
 
         elClass "span" "vertical-line" blank
@@ -440,12 +442,20 @@ settings lang = elClass "div" "topmenu" do
             iFa "fas fa-keyboard"
             el "code" $ text $ showt $ rawToggleKeyboard lang
 
-        updateState $ domEvent Click s $> [field @"stShowKeyboard" %~ not]
+        updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
     elClass "div" "login-signup" $ do
-        routeLink (FrontendRoute_Auth :/ AuthPage_Login :/ ()) $ text "Log in"
-        el "span" $ text " or "
-        routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ()) $ text "sign up"
+        dynCurrentStage <- askRoute
+        dyn_ $ dynCurrentStage <&> \currentStage -> do
+            (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
+            let evLogin = domEvent Click domLogin
+            setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+            updateState $ evLogin $> [ field @"stRedirectUrl" ?~ currentStage ]
+            el "span" $ text " or "
+            (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
+            let evSignup = domEvent Click domSignup
+            setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+            updateState $ evSignup $> [ field @"stRedirectUrl" ?~ currentStage ]
 
     elClass "br" "clearBoth" blank
 
@@ -518,9 +528,9 @@ stenoInput
     => Lang
     -> m (Event t (Chord key))
 stenoInput lang = do
-    dynPloverCfg <- asks (stPloverCfg <$>)
-    dynKeyboardShowQwerty <- asks (stKeyboardShowQwerty <$>)
-    dynShowKeyboard <- asks (stShowKeyboard <$>)
+    dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
+    dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
+    dynShowKeyboard <- asks $ fmap $ stApp >>> stShowKeyboard
     let dynSystemCfg =
             view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
     dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
@@ -618,7 +628,7 @@ stenoInput lang = do
             eChordPageUp   = select selector (Const2 FanPageUp    )
 
         updateState $
-            eChordToggle $> [field @"stShowKeyboard" %~ not]
+            eChordToggle $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
         -- this is a workaround
         -- scroll, like focus, is not available in reflex dom
@@ -718,7 +728,7 @@ elKeyboard cfgName stenoKeys dynPressedKeys lang showQwerty =
                                  <> "type" =: "checkbox"
                                  )
                 )
-            updateState $ ev $> [field @"stKeyboardShowQwerty" %~ not]
+            updateState $ ev $> [field @"stApp" . field @"stKeyboardShowQwerty" %~ not]
             elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
 
 -- | original Palantype keyboard layout
@@ -902,7 +912,7 @@ toc ::
     Stage ->
     m ()
 toc lang current = elClass "section" "toc" $ do
-    dynState <- ask
+    dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
         dynShowStage1 = stTOCShowStage1 <$> dynState
         dynShowStage2 = stTOCShowStage2 <$> dynState
@@ -923,7 +933,7 @@ toc lang current = elClass "section" "toc" $ do
                     <> "title" =: "Show Table of Contents"
                     ) $ iFa "fas fa-bars"
 
-        updateState $ domEvent Click s $> [field @"stShowTOC" %~ not]
+        updateState $ domEvent Click s $> [field @"stApp" . field @"stShowTOC" %~ not]
 
     let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
     elDynClass "div" dynClassDisplay $ do
@@ -956,7 +966,7 @@ toc lang current = elClass "section" "toc" $ do
                         text "Stage 1: The Palantype Alphabet"
 
                     let eClickS1 = domEvent Click s1
-                    updateState $ eClickS1 $> [field @"stTOCShowStage1" %~ not]
+                    updateState $ eClickS1 $> [field @"stApp" . field @"stTOCShowStage1" %~ not]
 
                     let dynClassUl1 = bool "displayNone" "" <$> dynShowStage1
 
@@ -978,7 +988,7 @@ toc lang current = elClass "section" "toc" $ do
                         text "Stage 2: Syllables and chords"
 
                     let eClickS2 = domEvent Click s2
-                    updateState $ eClickS2 $> [field @"stTOCShowStage2" %~ not]
+                    updateState $ eClickS2 $> [field @"stApp" . field @"stTOCShowStage2" %~ not]
 
                     let dynClassUl2 = bool "displayNone" "" <$> dynShowStage2
 
@@ -996,7 +1006,7 @@ toc lang current = elClass "section" "toc" $ do
                         text "Stage 3: Common replacement rules"
 
                     updateState $ domEvent Click s3 $>
-                        [field @"stTOCShowStage3" %~ not]
+                        [field @"stApp" . field @"stTOCShowStage3" %~ not]
 
                     let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
 
@@ -1031,7 +1041,7 @@ toc lang current = elClass "section" "toc" $ do
                         text "Stage 4: Real-life text input"
 
                     updateState $ domEvent Click s4 $>
-                        [field @"stTOCShowStage4" %~ not]
+                        [field @"stApp" . field @"stTOCShowStage4" %~ not]
 
                     let dynClassUl4 = bool "displayNone" "" <$> dynShowStage4
                     elDynClass "ul" dynClassUl4 $ do
@@ -1104,9 +1114,9 @@ landingPage = elClass "div" "landing" $ do
                         eClickDE = domEvent Click elDE $> DE
                     updateState $
                         leftmost [eClickEN, eClickDE] <&> \lang ->
-                            [ field @"stMLang" .~ Just lang,
+                            [ field @"stApp" . field @"stMLang" .~ Just lang,
                               -- if no progress in map, insert "Introduction"
-                              field @"stProgress"
+                              field @"stApp" . field @"stProgress"
                                   %~ Map.insertWith (\_ o -> o) lang ($readLoc "introduction")
                             ]
     elClass "div" "bottom" $ do
@@ -1203,10 +1213,7 @@ stages navLang = do
         Stage ->
         RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
     stages' current = elClass "div" "box" $ do
-        eChord <- el "header" $ do
-            settings navLang
-            message
-            stenoInput @key navLang
+        eChord <- stenoInput @key navLang
 
         navigation <- elClass "div" "row" $ mdo
             toc navLang current

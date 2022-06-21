@@ -105,6 +105,7 @@ import           Shared                         ( dynSimple
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
+                                                , AppState (..)
                                                 , updateState
                                                 )
 import           System.Random.Shuffle          ( shuffleM )
@@ -155,7 +156,7 @@ exercise1 = do
       \and the second time for your right hand."
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     eDone <- taskAlphabet True
     elCongraz (eDone $> Nothing) envNavigation
@@ -216,7 +217,7 @@ exercise2 = do
       \pronouncing each letter while you type it!"
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     eDone <- taskAlphabet False
     elCongraz (eDone $> Nothing) envNavigation
@@ -278,7 +279,7 @@ exercise3 = do
       \Again, get used to remembering them!"
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ False]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     eDone <- taskAlphabet True
     elCongraz (eDone $> Nothing) envNavigation
@@ -330,7 +331,7 @@ exercise4 = do
       \try to speak out loud every letter, before you are going to type it."
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ False]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     eDone <- taskAlphabet False
     elCongraz (eDone $> Nothing) envNavigation
@@ -361,6 +362,7 @@ taskAlphabet showAlphabet = do
                 .   pcfgMapStenoKeys
                 .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
                 .   stPloverCfg
+                .   stApp
                 <$> envDynState
 
     dynSimple $ dynAlphabet <&> \ptAlphabet -> do
@@ -580,7 +582,7 @@ exercise5 = do
          \the letters have a trailing -."
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
         leftHand =
@@ -621,7 +623,7 @@ exercise6 = do
         text "Type every steno letter as it appears!"
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let fingersRight =
             [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
@@ -663,7 +665,7 @@ exercise7 = do
             \Home row should be reachable with as little movement as possible."
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
@@ -714,7 +716,7 @@ exercise8 = do
         text "Type every steno letter as it appears!"
 
     ePb <- getPostBuild
-    updateState $ ePb $> [field @"stShowKeyboard" .~ True]
+    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     eDone <- taskLetters allKeys
 
