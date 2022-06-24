@@ -54,7 +54,7 @@ import qualified Data.Text as Text
 import Text.Printf (printf)
 import Control.Category ((<<<), (.))
 import Data.Witherable (Filterable(catMaybes))
-import State (stStats, stApp, Env (..), Stats (..), Navigation (..))
+import State (stApp, Env (..), Navigation (..))
 import qualified Data.Map.Strict as Map
 import Control.Monad.Reader (ask, MonadReader)
 import Control.Monad (when)
@@ -67,6 +67,7 @@ import qualified Data.Time as Time
 import Data.Ord (Ord((>)))
 import GHC.Num ((-), Num((*)))
 import Control.Monad (Monad((>>=)))
+import Common.Model (AppState (..), Stats(..))
 
 data StateStopwatch
     = SWInitial

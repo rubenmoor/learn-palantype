@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
@@ -14,7 +15,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Common.Auth
-  ( CompactJWT (..)
+  ( AuthError (..)
+  , CompactJWT (..)
   , LoginData (..)
   , UserNew (..)
   , AuthProtect
@@ -30,7 +32,7 @@ import qualified Data.Text               as Text
 import qualified Data.Text.Encoding      as Text
 import           Data.Typeable           (Typeable)
 import           GHC.Generics            (Generic)
-import           Common.Model            (Rank)
+import           Common.Model            (AppState, Rank)
 import           Reflex.Dom              (splitDynPure, Reflex (Dynamic))
 import           Servant.API             ((:>))
 import           Servant.Common.Req      (addHeader)
@@ -65,6 +67,7 @@ data UserNew = UserNew
   , unPassword :: Text
   , unMAlias   :: Maybe Text
   , unVisible  :: Bool
+  , unAppState :: AppState
   } deriving (Eq, Show, Generic)
 
 instance FromJSON UserNew
@@ -98,3 +101,12 @@ data SessionData = SessionData
 
 instance ToJSON SessionData
 instance FromJSON SessionData
+
+data AuthError
+  = AuthErrorExpired
+  | AuthErrorOther Text
+
+instance Show AuthError where
+  show = \case
+    AuthErrorExpired   -> "Session Expired"
+    AuthErrorOther str -> Text.unpack str

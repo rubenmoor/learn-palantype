@@ -24,15 +24,14 @@ import Client
       postRender,
       reqFailure,
     )
-import Common.Api
+import Common.PloverConfig
     (defaultPloverSystemCfg, defaultPloverCfg,  CfgName (..),
       PloverSystemCfg (..),
       keyMapToPloverCfg,
       lsStenoQwerty,
       lsStenoQwertyOrig,
-      lsStenoQwertz,
-      showSymbol,
-    )
+      lsStenoQwertz)
+import Common.Api (showSymbol)
 import Common.Route
     ( FrontendRoute (..),
       FrontendRoute_AuthPages (..)
@@ -63,7 +62,7 @@ import Control.Monad
     )
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader
-    ( MonadReader,
+    (ask,  MonadReader,
       ReaderT,
       asks,
       withReaderT,
@@ -240,11 +239,9 @@ import Shared
       whenJust,
     )
 import State
-    ( Env (..),
-      Message (..),
+    (Session (..),  Env (..),
       Navigation (..),
       State (..),
-      AppState (..),
       stageUrl,
       updateState,
     )
@@ -254,6 +251,8 @@ import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
+import Common.Model (AppState(..), Message(..))
+import Common.Auth (SessionData(..))
 
 default (Text)
 
@@ -304,7 +303,9 @@ settings ::
     Lang ->
     m ()
 settings lang = elClass "div" "topmenu" do
-    dynState <- asks $ fmap stApp
+    dynState <- ask
+    let dynAppState = stApp <$> dynState
+        dynSession  = stSession <$> dynState
 
     elClass "div" "floatLeft" $ do
         -- button to show configuration dropdown
@@ -315,7 +316,7 @@ settings lang = elClass "div" "topmenu" do
                         fmap pcfgName
                             . view (at lang >>> _Wrapped')
                             . stPloverCfg
-                            <$> dynState
+                            <$> dynAppState
                     elCheckmark co =
                         dyn_ $
                             dynMCfgName
@@ -433,7 +434,7 @@ settings lang = elClass "div" "topmenu" do
         elClass "span" "vertical-line" blank
 
         -- button to toggle keyboard
-        let dynClass = dynState <&> \st ->
+        let dynClass = dynAppState <&> \st ->
                 "topmenu-entry btnToggleKeyboard "
                     <> if stShowKeyboard st
                         then "keyboardVisible"
@@ -445,17 +446,27 @@ settings lang = elClass "div" "topmenu" do
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
     elClass "div" "login-signup" $ do
-        dynCurrentStage <- askRoute
-        dyn_ $ dynCurrentStage <&> \currentStage -> do
-            (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
-            let evLogin = domEvent Click domLogin
-            setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
-            updateState $ evLogin $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
-            el "span" $ text " or "
-            (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
-            let evSignup = domEvent Click domSignup
-            setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
-            updateState $ evSignup $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
+        dyn_ $ dynSession <&> \case
+            SessionAnon -> do
+                dynCurrentStage <- askRoute
+                dyn_ $ dynCurrentStage <&> \currentStage -> do
+                    (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
+                    let evLogin = domEvent Click domLogin
+                    setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                    updateState $ evLogin $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
+                    el "span" $ text " or "
+                    (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
+                    let evSignup = domEvent Click domSignup
+                    setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+                    updateState $ evSignup $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
+            SessionUser SessionData{..} -> do
+              el "span" $ text "Logged in as "
+              el "span" $ text sdAliasName
+              el "span" $ text ". ("
+              (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
+              el "span" $ text ")"
+              let evLogout = domEvent Click domLogout
+              updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
 
     elClass "br" "clearBoth" blank
 

@@ -48,18 +48,26 @@ import           Common.Api (RoutesUser)
 import           DbAdapter                 (Alias (..), EntityField (..), Unique (..),
                                             User (..))
 import qualified DbAdapter as Db
-import           Common.Model                     (Event (..),
+import           Common.Model                     (AppState (..), Event (..),
                                             Journal (..),
                                             Subject (..) )
-import           Database (runDb)
+import           Database (blobEncode, blobDecode, runDb)
+import Data.Text.IO (putStrLn)
 
 default(Text)
 
 handlers :: ServerT RoutesUser '[Snap UserInfo] Handler
 handlers =
+  (
          handleAliasRename
     :<|> handleAliasGetAll
     :<|> handleAliasSetDefault
+  )
+  :<|>
+  (
+         handleGetAppState
+    :<|> handlePutAppState
+  )
 
 handleAliasRename :: UserInfo -> Text -> Handler ()
 handleAliasRename UserInfo{..} new = do
@@ -95,3 +103,17 @@ handleAliasSetDefault UserInfo{..} aliasName = do
     >>= maybe (throwError $ err500 { errBody = "user not found" })
               (pure . entityKey)
   runDb $ update keyUser [ UserFkDefaultAlias =. Just keyAlias ]
+
+handleGetAppState :: UserInfo -> Handler AppState
+handleGetAppState UserInfo{..} = do
+  User{..} <- runDb (getBy $ UUserName uiUserName) >>=
+      maybe (throwError $ err500 { errBody = "user not found"})
+            (pure . entityVal)
+  blobDecode userBlobAppState
+
+handlePutAppState :: UserInfo -> AppState -> Handler ()
+handlePutAppState UserInfo{..} appState = do
+  keyUser <- runDb (getBy $ UUserName uiUserName)
+    >>= maybe (throwError $ err500 { errBody = "user not found" })
+              (pure . entityKey)
+  runDb $ update keyUser [Db.UserBlobAppState =. blobEncode appState]

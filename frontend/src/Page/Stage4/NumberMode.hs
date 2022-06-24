@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
@@ -16,7 +18,11 @@ module Page.Stage4.NumberMode
     )
 where
 
-import           Page.Common.Stopwatch
+import           Data.Generics.Sum              ( _As )
+import           Data.Generics.Product          ( field )
+import           Page.Common.Stopwatch          ( elStopwatch
+                                                , mkStopwatch
+                                                )
 import           Client                         ( getDictDENumbers
                                                 , postRender
                                                 , request
@@ -88,8 +94,7 @@ import           Reflex.Dom                     ( Performable
                                                 , getPostBuild
                                                 , text
                                                 )
-import           State                          ( Stats
-                                                , State
+import           State                          ( State
                                                 , Env(..)
                                                 , Navigation(..)
                                                 , stageUrl
@@ -131,27 +136,25 @@ import           Control.Lens                   ( (<>~)
                                                 , (.~)
                                                 , (%~)
                                                 , (+~)
-                                                , makePrisms
-                                                , makeLenses
                                                 )
 import           Data.Function                  ( (&) )
 import           Data.Foldable                  ( Foldable(elem) )
 import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
+import           Common.Model                   ( Stats )
+import           GHC.Generics                   ( Generic )
 
 data StateDates k
     = StatePause Int
     | StateRun (Run k)
+    deriving (Generic)
 
 data Run key = Run
-    { _stCounter :: Int
-    , _stChords  :: [Chord key]
-    , _stDates   :: [Day]
-    , _stNMistakes :: Int
-    }
-
-makePrisms ''StateDates
-makeLenses ''Run
+    { stCounter :: Int
+    , stChords  :: [Chord key]
+    , stDates   :: [Day]
+    , stNMistakes :: Int
+    } deriving (Generic)
 
 taskDates
     :: forall key t (m :: * -> *)
@@ -192,34 +195,34 @@ taskDates map = do
                         | Raw.fromChord c == KI.toRaw @key kiBackUp ->
                         -- undo last input
                                                                        case
-                                initMay _stChords
+                                initMay stChords
                             of
                                 Just cs ->
                                     st
-                                        &  _StateRun
-                                        %~ (stChords .~ cs)
-                                        .  (stNMistakes +~ 1)
+                                        &  _As @"StateRun"
+                                        %~ (field @"stChords" .~ cs)
+                                        .  (field @"stNMistakes" +~ 1)
                                 Nothing -> st
 
                     StateRun Run {..} ->
-                        if renderDate (_stDates !! _stCounter)
-                            == renderPlover map (_stChords <> [c])
+                        if renderDate (stDates !! stCounter)
+                            == renderPlover map (stChords <> [c])
                         then -- correct? next!
-                            if _stCounter + 1 == numDates
-                                then StatePause _stNMistakes
+                            if stCounter + 1 == numDates
+                                then StatePause stNMistakes
                                 else
                                     st
-                                    &  _StateRun
-                                    %~ (stCounter +~ 1)
-                                    .  (stChords .~ [])
+                                    &  _As @"StateRun"
+                                    %~ (field @"stCounter" +~ 1)
+                                    .  (field @"stChords" .~ [])
                         else -- incorrect? keep going.
-                            st & _StateRun . stChords <>~ [c]
+                            st & _As @"StateRun" . field @"stChords" <>~ [c]
 
                 stepStart = StateRun Run
-                    { _stCounter   = 0
-                    , _stChords    = []
-                    , _stDates     = evalRand getRandomDates stdGen
-                    , _stNMistakes = 0
+                    { stCounter   = 0
+                    , stChords    = []
+                    , stDates     = evalRand getRandomDates stdGen
+                    , stNMistakes = 0
                     }
 
             dynStenoDates <- foldDyn step (StatePause 0) eChord
@@ -244,24 +247,24 @@ taskDates map = do
                             $  el "code"
                             $  text
                             $  renderDate
-                            $  _stDates
-                            !! _stCounter
+                            $  stDates
+                            !! stCounter
 
                         elClass "span" "input"
                             $  text
-                            $  renderPlover map _stChords
+                            $  renderPlover map stChords
                             <> " …"
 
                         el "span" $ do
                             elClass "span" "btnSteno" $ text $ "↤ " <> showt
                                 (KI.toRaw @key kiBackUp) -- U+21A4
-                            elClass "span" "small" $ text $ if null _stChords
+                            elClass "span" "small" $ text $ if null stChords
                                 then " to show hint"
                                 else " to back up"
 
                         elClass "hr" "visibilityHidden" blank
 
-                        el "strong" $ text $ showt _stCounter
+                        el "strong" $ text $ showt stCounter
                         text $ " / " <> showt numDates
 
                 elStopwatch dynStopwatch numDates

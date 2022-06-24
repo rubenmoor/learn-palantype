@@ -13,13 +13,19 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Frontend where
 
 import           Control.Lens.Getter            ( (^.) )
+import           Control.Lens.Setter            ( (?~) )
 import           Data.Generics.Product          ( field )
 import           Language.Javascript.JSaddle    ( liftJSM )
-import           State                          ( defaultState
+import           State                          ( updateState
+                                                , Session(..)
+                                                , State(..)
+                                                , defaultState
                                                 , stageUrl
                                                 )
 
@@ -31,9 +37,14 @@ import qualified Data.Aeson                    as Aeson
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 )
+import           Data.Function                  ( (.) )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( fromMaybe )
-import           Data.Semigroup                 ( Endo(..) )
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
+                                                )
+import           Data.Semigroup                 ( (<>)
+                                                , Endo(..)
+                                                )
 import           Data.Text                      ( Text )
 import qualified Data.Text.Lazy                as Lazy
 import qualified Data.Text.Lazy.Encoding       as Lazy
@@ -51,7 +62,9 @@ import           Obelisk.Frontend               ( Frontend(..)
                                                 , ObeliskWidget
                                                 )
 import           Obelisk.Generated.Static       ( static )
-import           Obelisk.Route                  ( R )
+import           Obelisk.Route                  ( pattern (:/)
+                                                , R
+                                                )
 import           Obelisk.Route.Frontend         ( RoutedT
                                                 , SetRoute(setRoute)
                                                 , mapRoutedT
@@ -60,9 +73,14 @@ import           Obelisk.Route.Frontend         ( RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (PerformEvent(performEvent_)
+import           Reflex.Dom                     ( zipDyn
+                                                , holdDyn
+                                                , tag
+                                                , prerender
+                                                , current
+                                                , attach
+                                                , PerformEvent(performEvent_)
                                                 , PostBuild(getPostBuild)
-                                                , Prerender(prerender)
                                                 , Reflex(updated)
                                                 , blank
                                                 , dyn_
@@ -74,12 +92,42 @@ import           Reflex.Dom                     (PerformEvent(performEvent_)
                                                 , runEventWriterT
                                                 , tailE
                                                 , text
-                                                , widgetHold_
                                                 , (=:)
                                                 )
 
-import           Shared                         (loadingScreen )
+import           Shared                         ( loadingScreen )
 import qualified AuthPages
+import           Control.Category               ( (<<<) )
+import           Common.Model                   ( Message(..)
+                                                , defaultAppState
+                                                )
+import           Data.Aeson                     ( ToJSON
+                                                , FromJSON
+                                                )
+import           Common.Auth                    ( SessionData(..) )
+import           Client                         ( postAppState
+                                                , request
+                                                , getAppState
+                                                )
+import           Data.Either                    ( fromRight
+                                                , either
+                                                , Either(..)
+                                                )
+import           Control.Monad                  ( Monad((>>=))
+                                                , (=<<)
+                                                )
+import           Data.Function                  ( flip
+                                                , const
+                                                , ($)
+                                                )
+import           Control.Applicative            ( Applicative(pure) )
+import           Data.Functor                   ( void )
+import           Data.Bool                      ( Bool(..)
+                                                , not
+                                                )
+import           Data.Witherable                ( Filterable(mapMaybe, filter) )
+import           Control.Monad                  ( join )
+import           Data.Functor                   ( (<$>) )
 
 frontend :: Frontend (R FrontendRoute)
 frontend =
@@ -90,29 +138,86 @@ frontendBody
      . (ObeliskWidget t (R FrontendRoute) m)
     => RoutedT t (R FrontendRoute) m ()
 frontendBody = mdo
-    let key = "state" :: Text
-        getState s = getItem s key
-        setState d s = setItem s key d
+    let lsAppState = "appState" :: Text
+        lsSession = "session" :: Text
+        lsRetrieve key = currentWindowUnchecked >>= getLocalStorage >>= \s -> getItem s key
+        lsPut key d = currentWindowUnchecked >>= getLocalStorage >>= \s -> setItem s key d
 
-    dynLoadState <- prerender (pure $ Endo $ \_ -> defaultState) $ do
-        mStr <- liftJSM
-            (currentWindowUnchecked >>= getLocalStorage >>= getState)
-        let mState = mStr >>= Aeson.decode . Lazy.encodeUtf8 . Lazy.fromStrict
-        pure $ Endo $ const $ fromMaybe defaultState mState
+        lsDecode :: forall a. FromJSON a => Text -> Maybe a
+        lsDecode = Aeson.decode <<< Lazy.encodeUtf8 <<< Lazy.fromStrict
 
-    let eLoaded = updated dynLoadState
-    widgetHold_ loadingScreen $ eLoaded $> blank
+        lsEncode :: forall a. ToJSON a => a -> Text
+        lsEncode = Lazy.toStrict <<< Lazy.decodeUtf8 <<< Aeson.encode
 
-    dynState <- foldDyn appEndo defaultState $ leftmost [eLoaded, eStateUpdate]
+    dynMSession <- prerender (pure Nothing) do
+        mStrSession <- liftJSM $ lsRetrieve lsSession
+        pure $ Just $ lsDecode =<< mStrSession
+
+    let evMSession = updated dynMSession
+
+        dynEAuthInitial = dynMSession <&> \case
+          Just (Just (SessionUser SessionData{..})) -> Right (sdJwt, sdAliasName)
+          Just _                                    -> Left "not logged in"
+          Nothing                                   -> Left "not yet loaded"
+
+        isLoadedAndLoggedIn = \case
+          Just (Just (SessionUser _)) -> True
+          _                           -> False
+
+    evRespAppState <- request $ getAppState dynEAuthInitial $ void $ filter isLoadedAndLoggedIn evMSession
+    dynLSAppState <- prerender (pure defaultAppState) do
+        mStrState <- liftJSM $ lsRetrieve lsAppState
+        pure $ fromMaybe defaultAppState $ lsDecode =<< mStrState
+
+    let evLSAppState = tag (current dynLSAppState) $ filter (not <<< isLoadedAndLoggedIn) evMSession
+
+        evLoaded = attach (current dynMSession) (leftmost
+          [ fromRight defaultAppState <$> evRespAppState
+          , evLSAppState
+          ]) <&> \(mSession, stApp) ->
+              let stSession = fromMaybe SessionAnon $ join mSession
+                  stRedirectUrl = FrontendRoute_Main :/ ()
+              in  Endo $ const State{..}
+
+    let evSessionInvalid = mapMaybe (either Just (const Nothing)) evRespAppState
+
+    -- in case there is a problem: delete session
+    prerender_ blank $ performEvent_ $
+      evSessionInvalid $> liftJSM (lsPut lsSession $ lsEncode SessionAnon)
+
+    dynHasLoaded <- holdDyn False $ evLoaded $> True
+    dyn_ $ zipDyn dynHasLoaded dynMSession <&> \case
+            (True, _) -> blank
+            (False, mSession) -> loadingScreen $ case mSession of
+                Nothing                                   -> ""
+                Just Nothing                              -> "You seem to be new here. Welome!"
+                Just (Just SessionAnon)                   -> "Welcome back!"
+                Just (Just (SessionUser SessionData{..})) -> "Hi, " <> sdAliasName <> "!"
+
+    dynState <- foldDyn appEndo defaultState $ leftmost [evLoaded, eStateUpdate]
 
     -- TODO: persist application state on visibility change (when hidden)
     eUpdated <- tailE $ updated dynState
-    prerender_ blank $ performEvent_ $ eUpdated <&> \st -> do
-        let str = Lazy.toStrict $ Lazy.decodeUtf8 $ Aeson.encode st
-        liftJSM (currentWindowUnchecked >>= getLocalStorage >>= setState str)
+
+    let isLoggedIn = \State{..} -> case stSession of
+          SessionUser _ -> True
+          SessionAnon   -> False
+        dynEAuth = dynState <&> \State{..} -> case stSession of
+          SessionAnon -> Left "not logged in"
+          SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
+
+    _ <- request $ postAppState dynEAuth (Right . stApp <$> dynState) $
+      void $ filter isLoggedIn eUpdated
+
+    prerender_ blank $ performEvent_ $
+      filter (not <<< isLoggedIn) eUpdated <&> \State{..} ->
+        liftJSM $ lsPut lsAppState $ lsEncode stApp
+
+    prerender_ blank $ performEvent_ $ eUpdated <&> \State{..} -> do
+        liftJSM $ lsPut lsSession  $ lsEncode stSession
 
     (_, eStateUpdate) <-
-        mapRoutedT (runEventWriterT . flip runReaderT dynState) $ do
+        mapRoutedT (runEventWriterT <<< flip runReaderT dynState) $ do
             message
 
             subRoute_ $ \case
@@ -144,6 +249,10 @@ frontendBody = mdo
                 FrontendRoute_Auth -> subRoute_ \case
                     AuthPage_SignUp -> AuthPages.signup
                     AuthPage_Login  -> AuthPages.login
+            updateState $ evSessionInvalid <&> \str ->
+              [ field @"stApp" . field @"stMsg" ?~
+                  Message "Session invalid" ("Please log in again. " <> str)
+              ]
     blank
 
 frontendHead

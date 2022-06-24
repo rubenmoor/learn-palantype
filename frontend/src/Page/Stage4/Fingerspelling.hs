@@ -1,8 +1,10 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -13,8 +15,7 @@
 
 module Page.Stage4.Fingerspelling
     ( fingerspelling
-    )
-where
+    ) where
 
 import           Shared                         ( whenJust )
 import           Common.Route                   ( FrontendRoute )
@@ -28,6 +29,8 @@ import           Data.Foldable                  ( for_ )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<&>) )
 import           Data.Functor                   ( (<$>) )
+import Data.Generics.Product (field)
+import Data.Generics.Sum (_As)
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , zip
@@ -44,7 +47,9 @@ import           Obelisk.Route.Frontend         ( R
 import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
                                                 )
-import           Page.Common.Stopwatch
+import           Page.Common.Stopwatch          ( elStopwatch
+                                                , mkStopwatch
+                                                )
 import           Palantype.Common               ( kiChordsStart
                                                 , kiBackUp
                                                 , Chord
@@ -70,8 +75,7 @@ import           Reflex.Dom                     ( dyn_
                                                 , foldDyn
                                                 , text
                                                 )
-import           State                          ( Stats
-                                                , State
+import           State                          ( State
                                                 , Env(..)
                                                 , Navigation(..)
                                                 , stageUrl
@@ -98,30 +102,30 @@ import           Data.Foldable                  ( Foldable(length) )
 import           Data.Ord                       ( Ord((>)) )
 import           Control.Lens                   ( (?~)
                                                 , (+~)
-                                                , makeLenses
-                                                , makePrisms
+
+
                                                 , (.~)
                                                 )
 import           Data.Foldable                  ( Foldable(elem) )
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Control.Monad.IO.Class         ( MonadIO )
+import           Common.Model                   ( Stats )
+import GHC.Generics (Generic)
 
 data StateLiterals k
     = StatePause Int
     | StateRun (Run k)
+    deriving (Generic)
 
 data Run k = Run
-    { _stCounter  :: Int
-    , _stMMistake :: Maybe (Int, Chord k)
-    , _stNMistakes :: Int
-    }
-
-makePrisms ''StateLiterals
-makeLenses ''Run
+    { stCounter  :: Int
+    , stMMistake :: Maybe (Int, Chord k)
+    , stNMistakes :: Int
+    } deriving (Generic)
 
 {-|
-Pass through all the letters of the steno alphabet one by one
+pass through all the letters of the steno alphabet one by one
 -}
 taskLiterals
     :: forall key t (m :: * -> *)
@@ -149,36 +153,36 @@ taskLiterals = do
                     then stepStart
                     else st
             StateRun Run {..} ->
-                let current = KI.toRaw @key $ fst $ dictLiterals !! _stCounter
+                let current = KI.toRaw @key $ fst $ dictLiterals !! stCounter
                 in
-                    case _stMMistake of
+                    case stMMistake of
 
                         -- mistake mode ...
                         -- ... back up
                         Just _ | Raw.fromChord c == KI.toRaw @key kiBackUp ->
-                            st & _StateRun . stMMistake .~ Nothing
+                            st & _As @"StateRun" . field @"stMMistake" .~ Nothing
                         -- ... or do nothing
                         Just _ -> st
 
                         -- correct
                         Nothing | Raw.fromChord c == current ->
-                            if _stCounter == len - 1
-                                then StatePause _stNMistakes
-                                else st & _StateRun . stCounter +~ 1
+                            if stCounter == len - 1
+                                then StatePause stNMistakes
+                                else st & _As @"StateRun" . field @"stCounter" +~ 1
 
                         -- mistake
                         Nothing ->
                             st
-                                &  _StateRun
-                                .  stMMistake
-                                ?~ (_stCounter, c)
-                                &  _StateRun
-                                .  stNMistakes
+                                &  _As @"StateRun"
+                                .  field @"stMMistake"
+                                ?~ (stCounter, c)
+                                &  _As @"StateRun"
+                                .  field @"stNMistakes"
                                 +~ 1
 
-        stepStart = StateRun Run { _stCounter   = 0
-                                 , _stMMistake  = Nothing
-                                 , _stNMistakes = 0
+        stepStart = StateRun Run { stCounter   = 0
+                                 , stMMistake  = Nothing
+                                 , stNMistakes = 0
                                  }
         stateInitial = StatePause 0
 
@@ -204,13 +208,13 @@ taskLiterals = do
                     $ for_ (zip [0 :: Int ..] dictLiterals)
                     $ \(i, (_, lit)) ->
                           let
-                              cls = case _stMMistake of
+                              cls = case stMMistake of
                                   Just (j, _) -> if i == j then "bgRed" else ""
                                   Nothing ->
-                                      if _stCounter > i then "bgGreen" else ""
+                                      if stCounter > i then "bgGreen" else ""
                           in  elClass "span" cls $ text lit
 
-                whenJust _stMMistake $ \(_, w) ->
+                whenJust stMMistake $ \(_, w) ->
                     elClass "div" "red small paragraph" $ do
                         text $ "You typed " <> showt w <> " "
                         elClass "span" "btnSteno blinking"
@@ -218,7 +222,7 @@ taskLiterals = do
                             $  "↤ "
                             <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
-                text $ showt _stCounter <> " / " <> showt len
+                text $ showt stCounter <> " / " <> showt len
 
         elStopwatch dynStopwatch len
 

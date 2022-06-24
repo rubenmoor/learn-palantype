@@ -34,7 +34,7 @@ import           Obelisk.Configs                ( ConfigsT
                                                 )
 import           Obelisk.ExecutableConfig.Lookup
                                                 ( getConfigs )
-import           Servant.Server                 ( Context(EmptyContext)
+import           Servant.Server                 ( Context
                                                 , serveSnapWithContext
                                                 )
 import           Snap.Core                      ( Snap )
@@ -54,14 +54,14 @@ import           System.Exit                    ( exitWith
 
 import           Config                         ( Params(..) )
 import           Common.Api                     ( RoutesApi )
-import           Auth                           ( UserInfo
+import           Auth                           (AuthError,  UserInfo
                                                 , mkContext
                                                 )
 import           AppData                        ( EnvApplication(..) )
 import           DbAdapter                      ( entities )
 
 
-serveApi :: Context '[Snap UserInfo] -> EnvApplication -> Snap ()
+serveApi :: Context '[Snap (Either AuthError UserInfo)] -> EnvApplication -> Snap ()
 serveApi ctx =
     runReaderT $ serveSnapWithContext (Proxy :: Proxy RoutesApi) ctx handlers
 

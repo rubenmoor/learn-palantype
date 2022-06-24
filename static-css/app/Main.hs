@@ -394,6 +394,7 @@ main = putCss $ do
         left $ pct 50
         transform (translate (pct $ -50) $ pct $ -50)
         maxWidth $ px 518
+        textAlign center
         backgroundColor white
         boxShadow
             [ bsColor (rgba 0 0 0 0.2)
@@ -404,7 +405,7 @@ main = putCss $ do
         zIndex 2
 
     div # ".msgOverlay" ? do
-        bottom $ px 0
+        bottom $ em 1
         left $ pct 50
         transform (translate (pct $ -50) $ pct 0)
         maxWidth $ px 418
@@ -707,16 +708,6 @@ main = putCss $ do
         height $ px 1
         backgroundColor myBlue
 
-    button ? do
-        backgroundColor anthrazit
-        color white
-        fontSize $ pt 24
-        fontWeight bold
-        borderRadius (px 12) (px 12) (px 12) (px 12)
-        padding (px 12) (px 12) (px 12) (px 12)
-        border none (px 0) transparent
-        cursor pointer
-
     ".displayNone" ? display none
     ".displayFlex" ? display flex
     ".visibilityHidden" ? visibility hidden
@@ -770,7 +761,7 @@ main = putCss $ do
 
             div # ".action" ? do
                 button ? do
-                    height (px 180)
+                    height (px 198)
                     width $ px 360
                     backgroundColor colorLinkVisited
                     color white
@@ -831,7 +822,7 @@ main = putCss $ do
 
             div # ".other" ? do
                 button ? do
-                    height (px 90)
+                    height (px 100)
                     width $ px 296
 
 
@@ -1052,3 +1043,12 @@ main = putCss $ do
               [ bsColor myBlue
                     $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
               ]
+
+        button ? do
+            backgroundColor anthrazit
+            color white
+            fontSize $ pt 24
+            borderRadius (px 12) (px 12) (px 12) (px 12)
+            padding (px 12) (px 12) (px 12) (px 12)
+            border none (px 0) transparent
+            cursor pointer

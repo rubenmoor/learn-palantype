@@ -33,6 +33,7 @@ User                             -- some real person
   isSiteAdmin      Bool
   fkEventSource    EventSourceId
   fkDefaultAlias   AliasId Maybe
+  blobAppState     ByteString
 Alias                            -- one of several identities
   name             Text
   fkUser           UserId

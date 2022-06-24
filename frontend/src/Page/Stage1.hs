@@ -14,9 +14,7 @@
 module Page.Stage1 where
 
 import           Client                         ( postRender )
-import           Common.Api                     (defaultPloverSystemCfg,  PloverSystemCfg
-                                                    ( pcfgMapStenoKeys
-                                                    )
+import           Common.PloverConfig            (defaultPloverSystemCfg,  PloverSystemCfg ( pcfgMapStenoKeys)
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
@@ -105,12 +103,12 @@ import           Shared                         ( dynSimple
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
-                                                , AppState (..)
                                                 , updateState
                                                 )
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
+import Common.Model (AppState(..))
 
 -- exercise 1
 

@@ -62,6 +62,12 @@ in
       }) {};
       #gerippe = self.callCabal2nix "gerippe" ../../gerippe {};
 
+      # trying to switch to jose 0.8.5.1, but didn't make a difference
+      #websockets = doJailbreak super.websockets;
+      #jsaddle = doJailbreak super.jsaddle;
+      #base64-bytestring = self.callHackage "base64-bytestring" "1.2.1.0" {};
+      #jose = self.callHackage "jose" "0.8.5.1" {};
+
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "imalsogreg";
         repo = "servant-reflex";
@@ -75,12 +81,12 @@ in
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
       }) {};
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      #my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-      #  owner = "rubenmoor";
-      #  repo = "my-palantype";
-      #  rev = "971166ceac7753b9e2aa7dbb8d8ec14b9cc8ce11";
-      #  sha256 = "1r9v5a0wrp5nq4yw4br989na844d87j47ka7hg5hs1pj01x2amp8";
-      #}) {});
+      #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "my-palantype";
+        rev = "aa72cdf5c04aa8818863254524870c2225ed6f62";
+        sha256 = "1scp62rvdwpa20lxfdbdazkbjfdbpfijy37l4v807lvd1l4z8k6f";
+      }) {});
     };
   })

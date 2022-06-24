@@ -82,7 +82,6 @@ import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
-                                                , pattern (:/)
                                                 )
 import           Page.Common                    ( elBackUp
                                                 , elCongraz
@@ -138,8 +137,7 @@ import           Reflex.Dom                     ( TriggerEvent
                                                 , zipDyn
                                                 )
 import           Shared                         ( whenJust )
-import           State                          ( Stats
-                                                , Env(..)
+import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
                                                 , stageUrl
@@ -155,6 +153,7 @@ import           Palantype.Common.TH            ( fromJust
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Bifunctor                 ( Bifunctor(second) )
+import Common.Model (Stats)
 
 -- Ex. 2.1
 

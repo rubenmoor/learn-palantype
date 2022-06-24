@@ -10,86 +10,81 @@
 
 module Handler.Palantype
     ( handlers
-    ) where
+    )
+where
 
-import Common.Api
-    ( CfgName (CNFile),
-      PloverSystemCfg,
-      keyMapToPloverCfg,
-      RoutesPalantype
-    )
-import Control.Applicative (Applicative ((<*>), pure))
-import Control.Category (Category ((.)))
-import Control.Monad
-    ( foldM,
-      unless,
-    )
-import Control.Monad.Except
-    ( MonadError (throwError),
-      runExcept,
-    )
-import Control.Monad.IO.Class (MonadIO (liftIO))
-import Data.Aeson
-    ( FromJSON (..),
-      Value (Array),
-    )
-import qualified Data.Aeson as Json
-import Data.Aeson.Types
-    ( Parser,
-      typeMismatch,
-    )
-import qualified Data.ByteString.Char8 as Char8
-import qualified Data.ByteString.Lazy as LazyBS
-import qualified Data.ConfigFile as CfgParser
-import Data.Either
-    ( Either (..),
-      either,
-    )
-import Data.Eq ((==))
-import Data.Foldable
-    ( Foldable (elem, toList),
-      foldl',
-    )
-import Data.Function
-    ( ($),
-      const,
-    )
-import Data.Functor ((<$>))
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Data.Maybe (maybe, Maybe (..))
-import Data.Monoid ((<>))
-import Data.String (String)
-import Data.Text (Text)
-import qualified Data.Text as Text
-import GHC.Show (Show (show))
-import Obelisk.Generated.Static (staticFilePath)
-import Palantype.Common
-    (MapStenoWordTake100, PatternDoc,  KeyIndex, keyIndex,
-      Lang (..),
-      Greediness
-    )
-import Palantype.Common
-    ( RawSteno,
-      parseStenoKey,
-      patternDoc,
-      PatternPos
-    )
-import qualified Palantype.DE.Keys as DE
-import qualified Palantype.EN.Keys as EN
-import Servant.API ((:<|>)(..))
-import Servant.Server
-    (err500,
-      ServantErr (errBody),
-      err400,
-      HasServer (ServerT),
-    )
-import qualified Servant.Server as Snap
-    ( throwError,
-    )
-import Snap.Core (MonadSnap)
-import Data.Tuple (snd)
-import AppData (Handler)
+import           Common.Api                     ( RoutesPalantype
+                                                )
+import           Common.PloverConfig            ( CfgName(CNFile)
+                                                , PloverSystemCfg
+                                                , keyMapToPloverCfg
+                                                )
+import           Control.Applicative            ( Applicative((<*>), pure) )
+import           Control.Category               ( Category((.)) )
+import           Control.Monad                  ( foldM
+                                                , unless
+                                                )
+import           Control.Monad.Except           ( MonadError(throwError)
+                                                , runExcept
+                                                )
+import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Data.Aeson                     ( FromJSON(..)
+                                                , Value(Array)
+                                                )
+import qualified Data.Aeson                    as Json
+import           Data.Aeson.Types               ( Parser
+                                                , typeMismatch
+                                                )
+import qualified Data.ByteString.Char8         as Char8
+import qualified Data.ByteString.Lazy          as LazyBS
+import qualified Data.ConfigFile               as CfgParser
+import           Data.Either                    ( Either(..)
+                                                , either
+                                                )
+import           Data.Eq                        ( (==) )
+import           Data.Foldable                  ( Foldable(elem, toList)
+                                                , foldl'
+                                                )
+import           Data.Function                  ( ($)
+                                                , const
+                                                )
+import           Data.Functor                   ( (<$>) )
+import           Data.Map                       ( Map )
+import qualified Data.Map                      as Map
+import           Data.Maybe                     ( maybe
+                                                , Maybe(..)
+                                                )
+import           Data.Monoid                    ( (<>) )
+import           Data.String                    ( String )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
+import           GHC.Show                       ( Show(show) )
+import           Obelisk.Generated.Static       ( staticFilePath )
+import           Palantype.Common               ( MapStenoWordTake100
+                                                , PatternDoc
+                                                , KeyIndex
+                                                , keyIndex
+                                                , Lang(..)
+                                                , Greediness
+                                                )
+import           Palantype.Common               ( RawSteno
+                                                , parseStenoKey
+                                                , patternDoc
+                                                , PatternPos
+                                                )
+import qualified Palantype.DE.Keys             as DE
+import qualified Palantype.EN.Keys             as EN
+import           Servant.API                    ( (:<|>)(..) )
+import           Servant.Server                 ( err500
+                                                , ServantErr(errBody)
+                                                , err400
+                                                , HasServer(ServerT)
+                                                )
+import qualified Servant.Server                as Snap
+                                                ( throwError )
+import           Snap.Core                      ( MonadSnap )
+import           Data.Tuple                     ( snd )
+import           AppData                        ( Handler )
 
 handlers :: ServerT RoutesPalantype '[] Handler
 handlers =

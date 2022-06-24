@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
@@ -65,6 +66,7 @@ import           State                          ( State )
 import           Data.Functor                   ( (<&>) )
 import Data.Int (Int)
 import TextShow (TextShow(showt))
+import Control.Monad (unless)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -142,10 +144,24 @@ dynSimple a = switchHold never =<< dyn a
 --   -> m (Event t a)
 -- prerenderSimple a = switchDyn <$> prerender (pure never) a
 
-loadingScreen :: DomBuilder t m => m ()
-loadingScreen = elClass "div" "mkOverlay" $ do
-    iFa "fas fa-spinner fa-spin"
-    text " Loading ..."
+elFatalError :: DomBuilder t m => Text -> m ()
+elFatalError strMessage = elClass "div" "mkOverlay" do
+    el "div" $ do
+      iFa "fas fa-bomb"
+      iFa "fas fa-bomb"
+      iFa "fas fa-bomb"
+      text " Fatal Error "
+      iFa "fas fa-bomb"
+      iFa "fas fa-bomb"
+      iFa "fas fa-bomb"
+    unless (Text.null strMessage) $ el "p" $ text strMessage
+
+loadingScreen :: DomBuilder t m => Text -> m ()
+loadingScreen strMessage = elClass "div" "mkOverlay" do
+    el "div" $ do
+      iFa "fas fa-spinner fa-spin"
+      text " Loading ..."
+    unless (Text.null strMessage) $ el "p" $ text strMessage
 
 elLabelCheckbox
     :: (DomBuilder t m) => Bool -> Text -> Text -> m (Dynamic t Bool)

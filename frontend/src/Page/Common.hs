@@ -22,7 +22,9 @@ import           Client                         ( postRender )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Common.Stage                   ( stageMeta )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ((>>>), (<<<),  Category(id, (.))
+import           Control.Category               ( (>>>)
+                                                , (<<<)
+                                                , Category(id, (.))
                                                 )
 import           Control.Lens                   ( (?~)
                                                 , (%~)
@@ -37,7 +39,8 @@ import           Control.Monad.Random           ( evalRand
 import           Control.Monad.Reader           ( MonadReader
                                                 , asks
                                                 )
-import           Data.Bool                      ((||),  Bool(..)
+import           Data.Bool                      ( (||)
+                                                , Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
@@ -45,35 +48,36 @@ import           Data.Foldable                  ( for_
                                                 , traverse_
                                                 )
 import           Data.Foldable                  ( Foldable(null) )
-import           Data.Function                  (($) )
+import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
 import           Data.Functor                   ( (<$>) )
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
-import           Data.List                      ( (!!), head )
+import           Data.List                      ( (!!)
+                                                , head
+                                                )
 import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     (maybe,  Maybe(..) )
-import           Data.Monoid                    ( Monoid(mempty) )
-import           Data.Ord                       (Ord((>))
+import           Data.Maybe                     ( maybe
+                                                , Maybe(..)
                                                 )
+import           Data.Monoid                    ( Monoid(mempty) )
+import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Set                      as Set
-import           Data.Text                      ( Text
-                                                )
+import           Data.Text                      ( Text )
 import           Data.Text                      ( length )
 import           Data.Witherable                ( Filterable(filter) )
 import           GHC.Enum                       ( Enum(succ)
                                                 , pred
                                                 )
 import           GHC.Float                      ( Double )
-import           GHC.Num                        (Num((+))
-                                                )
+import           GHC.Num                        ( Num((+)) )
 import           GHC.Real                       ( (/)
                                                 , fromIntegral
                                                 )
@@ -129,8 +133,8 @@ import           Safe                           ( initMay )
 import           Shared                         ( iFa
                                                 , whenJust
                                                 )
-import           State                          (Stats (..), stApp, stStats,  Env(..)
-                                                , Message(..)
+import           State                          ( State(..)
+                                                , Env(..)
                                                 , Navigation(..)
                                                 , State
                                                 , stageUrl
@@ -146,10 +150,18 @@ import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Foldable                  ( Foldable(elem) )
-import           Page.Common.Stopwatch
-import Control.Monad (when)
-import Data.Foldable (Foldable(minimum))
-import Data.List (take)
+import           Page.Common.Stopwatch          ( elStopwatch
+                                                , mkStopwatch
+                                                , formatTime
+                                                , elStatistics
+                                                )
+import           Control.Monad                  ( when )
+import           Data.Foldable                  ( Foldable(minimum) )
+import           Data.List                      ( take )
+import           Common.Model                   ( Message(..)
+                                                , Stats (..)
+                                                , AppState(..)
+                                                )
 
 elFooter
     :: forall t (m :: * -> *)
@@ -197,63 +209,85 @@ elCongraz
     -> Navigation
     -> m ()
 elCongraz evDone Navigation {..} = mdo
-    eChord <- asks envEChord
-    dynStats <- asks $ envDynState >>> fmap (stApp >>> stStats >>> Map.findWithDefault [] (navLang, navCurrent))
+    eChord   <- asks envEChord
+    dynStats <- asks $ envDynState >>> fmap
+        (stApp >>> stStats >>> Map.findWithDefault [] (navLang, navCurrent))
 
     let eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) eChord
         eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) eChord
 
-        evCongraz = leftmost [CongrazShow <$> evDone, eBack $> CongrazHide]
+        evCongraz    = leftmost [CongrazShow <$> evDone, eBack $> CongrazHide]
 
-    updateState $ evDone <&> maybe [] \s ->
-        [ field @"stApp" . field @"stStats" %~ Map.insertWith (<>) (navLang, navCurrent) [s] ]
+    updateState $ evDone <&> maybe
+        []
+        \s ->
+            [ field @"stApp" . field @"stStats" %~ Map.insertWith
+                  (<>)
+                  (navLang, navCurrent)
+                  [s]
+            ]
 
     eBack <- fmap switchDyn $ widgetHold (pure never) $ evCongraz <&> \case
-        CongrazHide    -> pure never
-        CongrazShow mt -> elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
-            el "div" $ text "Task cleared!"
-            elClass "div" "check" $ iFa "fas fa-check-circle"
-            whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
-                when (null ls || statsTime stats == minimum (statsTime <$> ls)) $
-                        elClass "div" "paragraph newBest" $ do
-                            iFa "fa-solid fa-star-sharp"
-                            el "strong" $ text $ "New best: " <> formatTime (statsTime stats)
-                            iFa "fa-solid fa-star-sharp"
-                elStatistics $ take 3 ls
-                elClass "hr" "visibilityHidden" blank
-            whenJust navMNext $ \nxt -> do
-                elACont <- elClass "div" "anthrazit" $ do
-                    text "Type "
-                    elClass "span" "btnSteno" $ do
-                        el "em" $ text "Enter "
-                        el "code" $ text $ showt $ KI.toRaw @key kiEnter
-                    text " to continue to "
-                    elClass "div" "paragraph" $ do
-                        (e, _) <-
-                            elClass' "a" "normalLink" $ text $ showt $ stageMeta
-                                nxt
-                        text "."
-                        pure e
-                let eContinue = leftmost [eChordEnter, domEvent Click elACont]
-                updateState
-                    $  eContinue
-                    $> [ field @"stApp" . field @"stProgress"
+        CongrazHide -> pure never
+        CongrazShow mt ->
+            elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
+                el "div" $ text "Task cleared!"
+                elClass "div" "check" $ iFa "fas fa-check-circle"
+                whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
+                    when
+                            (null ls || statsTime stats == minimum
+                                (statsTime <$> ls)
+                            )
+                        $ elClass "div" "paragraph newBest"
+                        $ do
+                              iFa "fa-solid fa-star-sharp"
+                              el "strong" $ text $ "New best: " <> formatTime
+                                  (statsTime stats)
+                              iFa "fa-solid fa-star-sharp"
+                    elStatistics $ take 3 ls
+                    elClass "hr" "visibilityHidden" blank
+                whenJust navMNext $ \nxt -> do
+                    elACont <- elClass "div" "anthrazit" $ do
+                        text "Type "
+                        elClass "span" "btnSteno" $ do
+                            el "em" $ text "Enter "
+                            el "code" $ text $ showt $ KI.toRaw @key kiEnter
+                        text " to continue to "
+                        elClass "div" "paragraph" $ do
+                            (e, _) <-
+                                elClass' "a" "normalLink"
+                                $ text
+                                $ showt
+                                $ stageMeta nxt
+                            text "."
+                            pure e
+                    let eContinue =
+                            leftmost [eChordEnter, domEvent Click elACont]
+                    updateState
+                        $  eContinue
+                        $> [ field @"stApp"
+                           .  field @"stProgress"
                            %~ Map.update
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
-                       , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-                       , if nxt == read "stage_2-1"
-                           then field @"stApp" . field @"stTOCShowStage2" .~ True
-                           else id
-                       ]
-                setRoute $ eContinue $> FrontendRoute_Main :/ ()
-            el "div" $ do
-                el "span" $ text "("
-                (elABack, _) <- elClass' "a" "normalLink" $ text "back"
-                text " "
-                elBackUp @key
-                el "span" $ text ")"
-                pure $ leftmost [eChordBackUp, domEvent Click elABack]
+                           , field @"stApp"
+                           .  field @"stCleared"
+                           %~ Set.insert navCurrent
+                           , if nxt == read "stage_2-1"
+                               then
+                                   field @"stApp"
+                                   .  field @"stTOCShowStage2"
+                                   .~ True
+                               else id
+                           ]
+                    setRoute $ eContinue $> FrontendRoute_Main :/ ()
+                el "div" $ do
+                    el "span" $ text "("
+                    (elABack, _) <- elClass' "a" "normalLink" $ text "back"
+                    text " "
+                    elBackUp @key
+                    el "span" $ text ")"
+                    pure $ leftmost [eChordBackUp, domEvent Click elABack]
     blank
 
 parseStenoOrError
@@ -269,7 +303,9 @@ parseStenoOrError _ raw = case parseSteno raw of
         let msgCaption = "Internal error"
             msgBody =
                 "Could not parse steno code: " <> showt raw <> "\n" <> err
-        updateState $ ePb $> [field @"stApp" . field @"stMsg" .~ Just Message { .. }]
+        updateState
+            $  ePb
+            $> [field @"stApp" . field @"stMsg" .~ Just Message { .. }]
         pure Nothing
 
 elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()
@@ -341,20 +377,23 @@ taskWords mapStenoWord mapWordStenos = do
                         then stepStart
                         else st
                 -- undo last input
-                StateRun Run {..}
-                    | Raw.fromChord c == KI.toRaw @key kiBackUp ->
-                      case initMay _stChords of
-                          Just cs ->
-                              st &  _StateRun %~
-                                   (stChords .~ cs)
-                                 . (stNMistakes %~ succ)
-                                 . (stMHint .~ Nothing)
-                          Nothing -> st & _StateRun . stMHint ?~
-                              ( Map.findWithDefault
-                                  []
-                                  (_stWords !! _stCounter)
-                                  mapWordStenos
-                              )
+                StateRun Run {..} | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                    case initMay _stChords of
+                        Just cs ->
+                            st
+                                &  _StateRun
+                                %~ (stChords .~ cs)
+                                .  (stNMistakes %~ succ)
+                                .  (stMHint .~ Nothing)
+                        Nothing ->
+                            st
+                                &  _StateRun
+                                .  stMHint
+                                ?~ (Map.findWithDefault
+                                       []
+                                       (_stWords !! _stCounter)
+                                       mapWordStenos
+                                   )
                 StateRun Run {..} ->
                     let rawSteno = unparts $ _stChords <> [Raw.fromChord c]
                         word     = Map.findWithDefault "" rawSteno mapStenoWord
@@ -364,20 +403,22 @@ taskWords mapStenoWord mapWordStenos = do
                             then if _stCounter == pred len
                                 then StatePause _stNMistakes
                                 else
-                                    st & _StateRun %~
-                                      (stCounter %~ succ)
-                                    . (stMHint .~ Nothing)
-                                    . (stChords .~ [])
+                                    st
+                                    &  _StateRun
+                                    %~ (stCounter %~ succ)
+                                    .  (stMHint .~ Nothing)
+                                    .  (stChords .~ [])
 
                             -- not correct
-                            else st & _StateRun . stChords .~
-                                    (_stChords <> [Raw.fromChord c])
+                            else
+                                st
+                                &  _StateRun
+                                .  stChords
+                                .~ (_stChords <> [Raw.fromChord c])
             stepStart = StateRun Run
                 { _stCounter   = 0
                 , _stChords    = []
-                , _stWords     = evalRand
-                                     (shuffleM $ Map.keys mapWordStenos)
-                                     stdGen
+                , _stWords = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
                 , _stNMistakes = 0
                 , _stMHint     = Nothing
                 }
@@ -386,10 +427,9 @@ taskWords mapStenoWord mapWordStenos = do
 
         dynStateWords <- foldDyn step stateInitial eChord
 
-        evStartStop <-
-            fmap updated $ holdUniqDyn $ dynStateWords <&> \case
-                StatePause nMistakes -> nMistakes
-                StateRun   _         -> -1
+        evStartStop   <- fmap updated $ holdUniqDyn $ dynStateWords <&> \case
+            StatePause nMistakes -> nMistakes
+            StateRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
         elClass "div" "taskWords" $ do
@@ -398,7 +438,8 @@ taskWords mapStenoWord mapWordStenos = do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
-                        el "code" $ text $ showt $ KI.toRaw @key $ head kiChordsStart
+                        el "code" $ text $ showt $ KI.toRaw @key $ head
+                            kiChordsStart
                     text " to begin the exercise."
                 StateRun Run {..} -> do
                     -- TODO: what is span ".word"?
@@ -409,8 +450,11 @@ taskWords mapStenoWord mapWordStenos = do
                         $  _stWords
                         !! _stCounter
 
-                    elClass "span" "input" $ traverse_ (el "code" <<< text) $
-                        intersperse "/" $ (showt <$> _stChords) <> [" …"]
+                    elClass "span" "input"
+                        $  traverse_ (el "code" <<< text)
+                        $  intersperse "/"
+                        $  (showt <$> _stChords)
+                        <> [" …"]
 
                     el "span" $ do
                         elClass "span" "btnSteno" $ text $ "↤ " <> showt
@@ -439,7 +483,8 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
   where
     elPatterns' (pPos, pairs) = do
         elClass "hr" (showt pPos) blank
-        elClass "span" ("patternPosition " <> showt pPos) $ text $ showPretty pPos
+        elClass "span" ("patternPosition " <> showt pPos) $ text $ showPretty
+            pPos
         elClass "br" "clearBoth" blank
         for_ pairs $ \(orig, steno) -> elClass "div" "floatLeft" $ do
             let lOrig :: Double = fromIntegral $ length orig

@@ -29,6 +29,7 @@ library
     Common.Auth
     Common.Model
     Common.PloverAdapter
+    Common.PloverConfig
     Common.Route
     Common.Stage
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits

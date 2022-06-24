@@ -11,7 +11,10 @@ module AuthPages
     )
 where
 
-import           Reflex.Dom                     (attachWith, dyn_, widgetHold_,  PostBuild
+import           Reflex.Dom                     (leftmost, keypress,  EventName (Keypress),  Key (Enter), domEvent,  attachWith
+                                                , dyn_
+                                                , widgetHold_
+                                                , PostBuild
                                                 , Dynamic
                                                 , elClass
                                                 , gate
@@ -52,8 +55,11 @@ import           Control.Monad.Writer.Strict    ( MonadFix )
 import           Data.Semigroup                 ( Endo )
 import           Data.Generics.Product          ( field )
 import           Data.Witherable                ( filter )
-import           Control.Category               ((<<<),  Category((.)) )
-import           Data.Function                  (const,  ($)
+import           Control.Category               ( (<<<)
+                                                , Category((.))
+                                                )
+import           Data.Function                  ( const
+                                                , ($)
                                                 , (&)
                                                 )
 import           Data.Functor                   ( (<&>)
@@ -65,14 +71,19 @@ import           Data.Bool                      ( not
                                                 , Bool(..)
                                                 , bool
                                                 )
-import           Data.Eq                        ((/=),  (==) )
-import           Data.Either                    (either, isRight,  Either(..) )
+import           Data.Eq                        ( (/=) )
+import           Data.Either                    ( either
+                                                , isRight
+                                                , Either(..)
+                                                )
 import           Data.Default                   ( Default(def) )
-import           Client                         (postAuthenticate,  postAuthNew
+import           Client                         (postAuthenticate
+                                                , postAuthNew
                                                 , request
                                                 , postDoesUserExist
                                                 )
-import           Data.Maybe                     ( fromMaybe
+import           Data.Maybe                     ( isNothing
+                                                , fromMaybe
                                                 , maybe
                                                 , Maybe(..)
                                                 )
@@ -85,15 +96,23 @@ import           Shared                         ( elLabelInput
                                                 , btnSubmit
                                                 , elLabelCheckbox
                                                 )
-import           State                          ( State(..)
-                                                , Session(SessionUser)
+import           State                          (State(..)
+                                                , Session(..)
                                                 , updateState
-                                                , Message(..)
                                                 )
-import           Common.Auth                    (LoginData (..),  UserNew(UserNew) )
-import           Control.Monad.Reader           (ask,  MonadReader )
-import Data.Char (isAlphaNum)
-import Data.Witherable (Filterable(mapMaybe, catMaybes))
+import           Common.Auth                    ( LoginData(..)
+                                                , UserNew(UserNew)
+                                                )
+import           Control.Monad.Reader           ( ask
+                                                , MonadReader
+                                                )
+import           Data.Char                      ( isAlphaNum )
+import           Data.Witherable                ( Filterable
+                                                    ( mapMaybe
+                                                    , catMaybes
+                                                    )
+                                                )
+import           Common.Model                   (Message(..) )
 
 signup
     :: forall t (m :: * -> *)
@@ -108,24 +127,28 @@ signup
        )
     => m ()
 signup = elClass "div" "auth" $ mdo
+
+    dynState <- ask
+
     el "h1" $ text "Sign up"
 
     (dynMUserName, inputUserName) <- elLabelInput def "User name" 64 "username"
 
-    dynUserExists <- holdDyn False evUserExists
-    dyn_ $ dynUserExists <&> \userExists ->
-      if userExists
-      then elClass "p" "red small" (text "This user name already exists.")
-      else blank
+    let evPressEnter = keypress Enter inputUserName
+    dynUserExists                 <- holdDyn False evUserExists
+    dyn_ $ dynUserExists <&> \userExists -> if userExists
+        then elClass "p" "red small" (text "This user name already exists.")
+        else blank
 
     let behNotAlphanumeric = current $ dynMUserName <&> \case
-          Just str -> Text.filter (not <<< isAlphaNum) str /= ""
-          Nothing  -> False
-    dynNotAlphaNumeric <- holdDyn False $ attachWith (\na _ -> na) behNotAlphanumeric evFocusLost
-    dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric ->
-      if notAlphaNumeric
-      then elClass "p" "red small" $ text "The user name can only contain A-Z, a-z, 0-9."
-      else blank
+            Just str -> Text.filter (not <<< isAlphaNum) str /= ""
+            Nothing  -> False
+    dynNotAlphaNumeric <- holdDyn False
+        $ attachWith (\na _ -> na) behNotAlphanumeric evFocusLost
+    dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric -> if notAlphaNumeric
+        then elClass "p" "red small"
+            $ text "The user name can only contain A-Z, a-z, 0-9."
+        else blank
 
     el "p"
         $ text
@@ -136,8 +159,8 @@ signup = elClass "div" "auth" $ mdo
             void $ filter not $ updated $ _inputElement_hasFocus inputUserName
         eUserName = maybe (Left "user empty") Right <$> dynMUserName
 
-    evUserExists <- mapMaybe (either (const Nothing) Just) <$> request
-        (postDoesUserExist eUserName evFocusLost)
+    evUserExists <- mapMaybe (either (const Nothing) Just)
+        <$> request (postDoesUserExist eUserName evFocusLost)
 
     dynDefaultAlias <- holdDyn True $ _inputElement_input inputAlias $> False
     let evSetDefaultAlias =
@@ -175,29 +198,29 @@ signup = elClass "div" "auth" $ mdo
 
     el "hr" blank
 
-    eSend         <- btnSubmit $ text "Submit"
+    evSubmit <- btnSubmit $ text "Submit"
 
     let dynEUserNew =
-            zipDyn
-                    dynUserExists
-                    (zipDyn dynMUserName $ zipDyn dynMPassword $ zipDyn
-                        dynMAlias
-                        dynCheckedVisible
-                    )
-                <&> \case
-                        (True, _) -> Left "User name already exists."
-                        (_, (Just u, (Just p, (mAlias, isVisible)))) ->
-                            Right $ UserNew u p mAlias isVisible
-                        _ -> Left "User name and password required."
-    evRespNew <- request $ postAuthNew dynEUserNew eSend
+          zipDyn dynState (
+            zipDyn dynUserExists $
+              zipDyn dynMUserName $
+                zipDyn dynMPassword $
+                  zipDyn dynMAlias dynCheckedVisible
+            ) <&> \case
+                (_, (True, _)) -> Left "User name already exists."
+                (State{..}, (_, (Just u, (Just p, (mAlias, isVisible))))) ->
+                    Right $ UserNew u p mAlias isVisible stApp
+                _ -> Left "User name and password required."
+    evRespNew <- request $ postAuthNew dynEUserNew $ leftmost [evSubmit, evPressEnter]
     updateState $ evRespNew <&> \case
         Left errMsg ->
             [field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg]
         Right user ->
-          [ field @"stSession" .~ SessionUser user
-          , field @"stApp" . field @"stMsg"
-              ?~ Message "Success" "Your account was registered successfully."
-          ]
+            [ field @"stSession" .~ SessionUser user
+            , field @"stApp" . field @"stMsg" ?~ Message
+                "Success"
+                "Your account was registered successfully."
+            ]
 
     el "h2" $ text "Why register?"
 
@@ -220,14 +243,15 @@ signup = elClass "div" "auth" $ mdo
          \In order to delete all data related to your account, there is a \
          \delete option right on this website."
 
-    dynState <- ask
-    dyn_ $ dynState <&> \State{..} -> setRoute $ filter isRight evRespNew $> stRedirectUrl
+    dyn_ $ dynState <&> \State {..} ->
+        setRoute $ filter isRight evRespNew $> stRedirectUrl
 
 login
     :: forall t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadFix m
+       , MonadHold t m
        , MonadReader (Dynamic t State) m
        , PostBuild t m
        , Prerender t m
@@ -235,7 +259,9 @@ login
        , SetRoute t (R FrontendRoute) m
        )
     => m ()
-login = mdo
+login = elClass "div" "auth" $ mdo
+
+    dynState <- ask
 
     el "h1" $ text "Log in"
 
@@ -248,24 +274,37 @@ login = mdo
                 .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
                    <$> evCheckedHidePassword
                    )
-    (dynMPassword, _) <- elLabelInput conf "Password" 64 "password"
+    (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
     el "br" blank
     evCheckedHidePassword <- updated
         <$> elLabelCheckbox False "Hide password input" "hide-password"
 
+    let evPressEnter = keypress Enter inputPassword
+        evWrongInput =
+            filter isNothing $ mapMaybe (either (const Nothing) Just) evRespAuth
+
+    widgetHold_ blank $ evWrongInput $> elClass
+        "p"
+        "red small"
+        (text "Wrong user name or password.")
+
     el "hr" blank
-    eSend <- btnSubmit $ text "Submit"
+    evSubmit <- btnSubmit $ text "Submit"
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
-          (Just ldUserName, Just ldPassword) -> Right LoginData{..}
-          _                                  -> Left "User name and password required."
-    evResp <- request $ postAuthenticate dynELoginData eSend
-    updateState $ mapMaybe (either Just (const Nothing)) evResp <&> \errMsg ->
-      [ field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg ]
-    updateState $ catMaybes (mapMaybe (either (const Nothing) Just) evResp) <&> \sessionData -> [ field @"stSession" .~ SessionUser sessionData ]
+            (Just ldUserName, Just ldPassword) -> Right LoginData { .. }
+            _ -> Left "User name and password required."
+    evRespAuth <- request $ postAuthenticate dynELoginData $ leftmost [evSubmit, evPressEnter]
+    updateState $ mapMaybe (either Just (const Nothing)) evRespAuth <&> \errMsg ->
+        [field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg]
+    let evLogin = catMaybes $ mapMaybe (either (const Nothing) Just) evRespAuth
+    updateState $ evLogin <&> \(sd, appState) ->
+      [ field @"stSession" .~ SessionUser sd
+      , field @"stApp" .~ appState
+      ]
 
-    dynState <- ask
-    dyn_ $ dynState <&> \State{..} -> setRoute $ filter isRight evResp $> stRedirectUrl
+    dyn_ $ dynState <&> \State {..} ->
+        setRoute $ evLogin $> stRedirectUrl
 
     el
         "p"
