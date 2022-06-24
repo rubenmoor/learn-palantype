@@ -17,6 +17,7 @@
 
 module DbAdapter where
 
+import Data.Time (UTCTime)
 import           Data.ByteString         (ByteString)
 import           Data.Password.Argon2    (Argon2, PasswordHash)
 import           Data.Password.Instances ()
@@ -31,12 +32,12 @@ User                             -- some real person
   name             Text
   UUserName name
   isSiteAdmin      Bool
-  fkEventSource    EventSourceId
   fkDefaultAlias   AliasId Maybe
   blobAppState     ByteString
-Anon
-  fkEventSource    EventSourceId
-  ipAdress         Text
+Visitor
+  fkAlias          AliasId Maybe
+  ipAddress        Text
+  UIpAddress ipAddress
 Alias                            -- one of several identities
   name             Text
   fkUser           UserId
@@ -50,10 +51,9 @@ AuthPwd
   password         (PasswordHash Argon2)
   UAuthPwdFkUser fkUser
 Journal
+  created          UTCTime default=CURRENT_TIME
   blob             ByteString
-  fkEventSource    EventSourceId
-  fkAlias          AliasId Maybe
-EventSource
+  fkVisitor        VisitorId
 Stats
   fkAlias          AliasId
   blob             ByteString

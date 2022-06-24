@@ -197,6 +197,12 @@ postDoesUserExist
     -> Event t ()
     -> m (Event t (ReqResult () Bool))
 
+postLogout
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
 -- user
 
 postAliasRename
@@ -232,7 +238,7 @@ postAppState
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)))
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

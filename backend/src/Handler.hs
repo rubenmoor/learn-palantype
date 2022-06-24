@@ -29,7 +29,7 @@ import qualified Handler.User as User
 import Auth (UserInfo)
 import AppData (Handler)
 
-handlers :: ServerT RoutesApi '[Snap UserInfo] Handler
+handlers :: ServerT RoutesApi '[] Handler
 handlers =
        Palantype.handlers
   :<|> Auth.handlers

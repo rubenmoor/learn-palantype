@@ -45,12 +45,16 @@ import           Common.Auth                    ( LoginData
                                                 , AuthRequired
                                                 , AuthOptional
                                                 )
-import           Common.Model (AppState)
+import           Common.Model (Stats, AppState)
+import Common.Stage (Stage)
 
 type RoutesAuth =
            "login"  :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
       :<|> "new"    :> ReqBody '[JSON] UserNew   :> Post '[JSON] SessionData
       :<|> "exists" :> ReqBody '[JSON] Text      :> Post '[JSON] Bool
+
+      -- logout doesn't do anything server-side apart from journaling
+      :<|> AuthRequired "jwt" :> "logout" :> Post '[JSON] ()
 
 type RoutesUser =
        "alias" :>
@@ -76,6 +80,10 @@ type RoutesPalantype =
                            :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
      :<|> "dict"   :> "DE" :> "Numbers"
                            :> Get '[JSON] (Map RawSteno Text)
+
+type RoutesEvent =
+       AuthOptional "jwt" :> "view"            :> ReqBody '[JSON] Text           :> Post '[JSON] ()
+  :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Stage, Stats) :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype

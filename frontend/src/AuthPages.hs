@@ -11,7 +11,7 @@ module AuthPages
     )
 where
 
-import           Reflex.Dom                     (leftmost, keypress,  EventName (Keypress),  Key (Enter), domEvent,  attachWith
+import           Reflex.Dom                     (leftmost, keypress,  Key (Enter),  attachWith
                                                 , dyn_
                                                 , widgetHold_
                                                 , PostBuild

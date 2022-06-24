@@ -70,7 +70,7 @@ import           Servant.Server                 ( HasServer(ServerT)
 import           AppData                        ( EnvApplication(..)
                                                 , Handler
                                                 )
-import           Auth                           ( mkClaims
+import           Auth                           (UserInfo (..),  mkClaims
                                                 , mkCompactJWT
                                                 , getClearances
                                                 )
@@ -80,11 +80,10 @@ import           Common.Auth                    ( LoginData(..)
                                                 , UserNew(..)
                                                 )
 import           Database                       (blobDecode, blobEncode,  runDb )
-import           Common.Model                   (AppState,  Rank(RankMember)
-                                                , Event(..)
+import           Common.Model                   ( EventUser(..), AppState,  Rank(RankMember)
                                                 , Journal(..)
-                                                , Subject(..)
                                                 )
+import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Data.Functor (Functor(fmap))
 import Control.Category ((<<<))
@@ -92,7 +91,11 @@ import Control.Category ((<<<))
 default(Text)
 
 handlers :: ServerT RoutesAuth '[] Handler
-handlers = handleGrantAuthPwd :<|> handleUserNew :<|> handleDoesUserExist
+handlers =
+       handleGrantAuthPwd
+  :<|> handleUserNew
+  :<|> handleDoesUserExist
+  :<|> handleLogout
 
 handleGrantAuthPwd :: LoginData -> Handler (Maybe (SessionData, AppState))
 handleGrantAuthPwd LoginData {..} = do
@@ -116,12 +119,6 @@ handleGrantAuthPwd LoginData {..} = do
     case checkPassword (mkPassword ldPassword) authPwdPassword of
         PasswordCheckSuccess -> do
             now <- liftIO getCurrentTime
-            let journalCreated     = now
-                journalEvent       = EventLogin
-                journalDescription = ""
-                journalSubject     = SubjectUser
-                blob               = blobEncode Journal { .. }
-            runDb $ insert_ $ Db.Journal blob userFkEventSource $ Just keyAlias
             let claims = mkClaims now ldUserName
             jwk <- asks envJwk
             let toServerError e = throwError
@@ -134,6 +131,8 @@ handleGrantAuthPwd LoginData {..} = do
                 sdUserName    = userName
                 sdAliasName   = Db.aliasName alias
             appState <- blobDecode userBlobAppState
+
+            DbJournal.insert (Just keyAlias) $ JournalUser EventLogin
             pure $ Just $ (SessionData { .. }, appState)
         PasswordCheckFail -> pure Nothing
 
@@ -152,10 +151,8 @@ handleUserNew UserNew {..} = do
         { errBody = "user name may only contain alpha-numeric characters"
         }
     sdIsSiteAdmin <- runDb $ (null :: [Entity Db.User] -> Bool) <$> getAll
-    eventSourceId <- runDb $ insert Db.EventSource
     user          <- runDb $ insert $ Db.User unUserName
                                               sdIsSiteAdmin
-                                              eventSourceId
                                               Nothing
                                               (blobEncode unAppState)
     password <- hashPassword (mkPassword unPassword)
@@ -163,22 +160,11 @@ handleUserNew UserNew {..} = do
     let sdAliasName = fromMaybe (Text.take 16 unUserName) unMAlias
     keyAlias <- runDb $ insert $ Db.Alias sdAliasName user unVisible
     runDb $ update user [Db.UserFkDefaultAlias =. Just keyAlias]
-    now <- liftIO getCurrentTime
-    let blobJournalUser =
-            let journalCreated     = now
-                journalEvent       = EventCreation
-                journalDescription = ""
-                journalSubject     = SubjectUser
-            in  blobEncode Journal { .. }
-    runDb $ insert_ $ Db.Journal blobJournalUser eventSourceId Nothing
-    let blobJournalAlias =
-            let journalCreated     = now
-                journalEvent       = EventCreation
-                journalDescription = ""
-                journalSubject     = SubjectAlias
-            in  blobEncode Journal { .. }
-    runDb $ insert_ $ Db.Journal blobJournalAlias eventSourceId Nothing
+
+    DbJournal.insert (Just keyAlias) $ JournalUser EventSignup
+
     jwk <- asks envJwk
+    now <- liftIO getCurrentTime
     let claims = mkClaims now unUserName
         toServerError e =
             throwError $ err500 { errBody = BSU.fromString $ show e }
@@ -193,44 +179,5 @@ handleUserNew UserNew {..} = do
 handleDoesUserExist :: Text -> Handler Bool
 handleDoesUserExist = runDb <<< fmap isJust <<< getBy <<< Db.UUserName
 
--- checkClearance :: UserInfo -> Text -> Rank -> Handler ()
--- checkClearance UserInfo{..} theShow minRank =
---   unless uiIsSiteAdmin $ do
---     case Map.lookup theShow uiClearances of
---       Just rank -> when (rank < minRank) $ throwError err403
---       Nothing   -> throwError err403
---
--- handleAliasRename :: UserInfo -> Text -> Handler ()
--- handleAliasRename UserInfo{..} new = do
---   when (Text.length new > 16) $
---     throwError $ err400 { errBody = "alias max length is 16 characters" }
---   now <- liftIO getCurrentTime
---   runDb $ update uiKeyAlias [ AliasName =. new ]
---   eventSourceId <- runDb (getBy $ UUserName uiUserName) >>=
---     maybe (throwError $ err400 { errBody = "user not found"})
---           (pure . userFkEventSource . entityVal)
---   let journalCreated = now
---       journalEvent = EventEdit
---       journalDescription = "Old alias: " <> aliasName uiAlias
---       journalSubject = SubjectAlias
---       journalBlob = Lazy.toStrict $ encode Journal{..}
---   runDb $ insert_ $ Db.Journal journalBlob eventSourceId $ Just uiKeyAlias
---
--- handleAliasGetAll :: UserInfo -> Handler [Text]
--- handleAliasGetAll UserInfo{..} = do
---   mUser <- runDb $ getBy $ UUserName uiUserName
---   keyUser <- maybe (throwError $ err500 { errBody = "user not found" })
---                    (pure . entityKey)
---                    mUser
---   ls <- runDb $ getWhere AliasFkUser keyUser
---   pure $ aliasName . entityVal <$> ls
---
--- handleAliasSetDefault :: UserInfo -> Text -> Handler ()
--- handleAliasSetDefault UserInfo{..} aliasName = do
---   keyAlias <- runDb (getBy $ UAliasName aliasName)
---     >>= maybe (throwError $ err500 { errBody = "alias name not found" })
---               (pure . entityKey)
---   keyUser <- runDb (getBy $ UUserName uiUserName)
---     >>= maybe (throwError $ err500 { errBody = "user not found" })
---               (pure . entityKey)
---   runDb $ update keyUser [ UserFkDefaultAlias =. Just keyAlias ]
+handleLogout :: UserInfo -> Handler ()
+handleLogout UserInfo{..} = DbJournal.insert (Just uiKeyAlias) $ JournalUser EventLogout

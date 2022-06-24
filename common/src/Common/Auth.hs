@@ -104,17 +104,19 @@ instance (HasClient t m api tag, Reflex t)
       => HasClient t m (AuthOptional realm :> api) tag where
 
   type Client t m (AuthOptional realm :> api) tag =
-       Dynamic t (Either Text (CompactJWT, Text))
+       Maybe (Dynamic t (Either Text (CompactJWT, Text)))
     -> Client t m api tag
 
-  clientWithRouteAndResultHandler Proxy q t req baseurl opts wrap authData =
+  clientWithRouteAndResultHandler Proxy q t req baseurl opts wrap mAuthData =
     clientWithRouteAndResultHandler (Proxy :: Proxy api) q t req' baseurl opts wrap
       where
         switchEither (Left str) = (Left str, Left str)
         switchEither (Right (x, y)) = (Right x, Right y)
-        (token, alias) = splitDynPure $ switchEither <$> authData
-        req' = addHeader "Authorization" token $
-               addHeader "X-Alias" alias req
+        req' = case mAuthData of
+          Nothing -> req
+          Just authData ->
+            let (token, alias) = splitDynPure $ switchEither <$> authData
+            in  addHeader "Authorization" token $ addHeader "X-Alias" alias req
 
 
 

@@ -104,8 +104,7 @@ import           Servant.Server                 ( HasContextEntry
                                                 , err500
                                                 )
 import qualified Servant.Server                as Servant
-import           Snap.Core                      ( Request
-                                                , Snap
+import           Snap.Core                      ( Snap
                                                 , getHeader
                                                 , getRequest
                                                 )
@@ -132,11 +131,7 @@ import           Common.Model                   ( Rank )
 import           Database                       ( runDb
                                                 , runDb'
                                                 )
-import           DbAdapter                      ( Alias(..)
-                                                , Clearance(..)
-                                                , User(..)
-                                                , EntityField(..)
-                                                )
+import qualified          DbAdapter                      as Db
 import Snap.Core (MonadSnap)
 import GHC.Num (Num((*)))
 import Data.Either.Combinators (mapLeft)
@@ -180,8 +175,8 @@ verifyCompactJWT jwk (CompactJWT str) now = do
 data UserInfo = UserInfo
   { uiIsSiteAdmin :: Bool
   , uiUserName    :: Text
-  , uiAlias       :: Alias
-  , uiKeyAlias    :: Key Alias
+  , uiAlias       :: Db.Alias
+  , uiKeyAlias    :: Key Db.Alias
   , uiClearances  :: Rank
   } deriving (Generic)
 
@@ -190,7 +185,7 @@ mkSessionData jwt UserInfo {..} =
     let sdJwt         = jwt
         sdIsSiteAdmin = uiIsSiteAdmin
         sdUserName    = uiUserName
-        sdAliasName   = aliasName uiAlias
+        sdAliasName   = Db.aliasName uiAlias
         sdClearances  = uiClearances
     in  SessionData { .. }
 
@@ -245,9 +240,9 @@ instance ( KnownSymbol tag
          authOptional = either (const Nothing) Just
 
 
-getClearances :: Key Alias -> Handler Rank
+getClearances :: Key Db.Alias -> Handler Rank
 getClearances keyAlias = do
-    Clearance {..} <- runDb (getWhere ClearanceFkAlias keyAlias) >>= \case
+    Db.Clearance {..} <- runDb (getWhere Db.ClearanceFkAlias keyAlias) >>= \case
         [Entity _ v] -> pure v
         []           -> Servant.throwError $
             err500 { errBody = "getClearances: empty list" }
@@ -285,16 +280,16 @@ mkContext jwk pool =
                 pure
                 eSub
             ls <- lift $ runDb' pool $ select $ from $ \(a `InnerJoin` u) -> do
-                on $ a Database.Gerippe.^. AliasFkUser ==. u Database.Gerippe.^. UserId
-                where_ $ u Database.Gerippe.^. UserName ==. val uiUserName
-                  &&. a Database.Gerippe.^. AliasName   ==. val uiAliasName
+                on $ a Database.Gerippe.^. Db.AliasFkUser ==. u Database.Gerippe.^. Db.UserId
+                where_ $ u Database.Gerippe.^. Db.UserName ==. val uiUserName
+                  &&. a Database.Gerippe.^. Db.AliasName   ==. val uiAliasName
                 pure (u, a)
-            (Entity _ User {..}, Entity uiKeyAlias uiAlias) <- case ls of
+            (Entity _ Db.User {..}, Entity uiKeyAlias uiAlias) <- case ls of
                 [entry] -> pure entry
                 _       -> throwError $ AuthErrorOther $ "user not found: " <> uiUserName
             let uiIsSiteAdmin = userIsSiteAdmin
-            uiClearances <- lift (runDb' pool $ getWhere ClearanceFkAlias uiKeyAlias) >>= \case
-                [Entity _ Clearance{..}] -> pure clearanceRank
+            uiClearances <- lift (runDb' pool $ getWhere Db.ClearanceFkAlias uiKeyAlias) >>= \case
+                [Entity _ Db.Clearance{..}] -> pure clearanceRank
                 _                        -> throwError $ AuthErrorOther $ "mkContext: clearance: expect unique entry"
                 -- for clearances $ \(Entity _ Clearance{..}, Entity _ Db.Podcast{..}) -> (podcastIdentifier, clearanceRank)
             pure $ UserInfo { .. }
