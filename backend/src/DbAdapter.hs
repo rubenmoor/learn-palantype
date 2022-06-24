@@ -34,6 +34,9 @@ User                             -- some real person
   fkEventSource    EventSourceId
   fkDefaultAlias   AliasId Maybe
   blobAppState     ByteString
+Anon
+  fkEventSource    EventSourceId
+  ipAdress         Text
 Alias                            -- one of several identities
   name             Text
   fkUser           UserId
@@ -51,4 +54,7 @@ Journal
   fkEventSource    EventSourceId
   fkAlias          AliasId Maybe
 EventSource
+Stats
+  fkAlias          AliasId
+  blob             ByteString
 |]

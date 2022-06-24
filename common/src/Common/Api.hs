@@ -42,7 +42,8 @@ import           Common.PloverConfig            ( PloverSystemCfg )
 import           Common.Auth                    ( LoginData
                                                 , SessionData
                                                 , UserNew
-                                                , AuthProtect
+                                                , AuthRequired
+                                                , AuthOptional
                                                 )
 import           Common.Model (AppState)
 
@@ -54,14 +55,14 @@ type RoutesAuth =
 type RoutesUser =
        "alias" :>
     (
-           AuthProtect "jwt" :> "rename"       :> ReqBody '[JSON] Text :> Post '[JSON] ()
-      :<|> AuthProtect "jwt" :> "get" :> "all" :> Get '[JSON] [Text]
-      :<|> AuthProtect "jwt" :> "setDefault"   :> ReqBody '[JSON] Text :> Post '[JSON] ()
+           AuthRequired "jwt" :> "rename"       :> ReqBody '[JSON] Text :> Post '[JSON] ()
+      :<|> AuthRequired "jwt" :> "get" :> "all" :> Get '[JSON] [Text]
+      :<|> AuthRequired "jwt" :> "setDefault"   :> ReqBody '[JSON] Text :> Post '[JSON] ()
     )
   :<|> "app" :>
     (
-           AuthProtect "jwt" :> "get" :> Get '[JSON] AppState
-      :<|> AuthProtect "jwt" :> "put" :> ReqBody '[JSON] AppState :> Post '[JSON] ()
+           AuthRequired "jwt" :> "get" :> Get '[JSON] AppState
+      :<|> AuthRequired "jwt" :> "put" :> ReqBody '[JSON] AppState :> Post '[JSON] ()
     )
 
 type RoutesPalantype =

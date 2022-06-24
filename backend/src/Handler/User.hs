@@ -52,7 +52,6 @@ import           Common.Model                     (AppState (..), Event (..),
                                             Journal (..),
                                             Subject (..) )
 import           Database (blobEncode, blobDecode, runDb)
-import Data.Text.IO (putStrLn)
 
 default(Text)
 

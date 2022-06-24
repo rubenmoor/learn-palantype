@@ -124,7 +124,7 @@ import           GHC.Exts                       ( seq )
 import           GHC.TypeLits                   ( KnownSymbol )
 
 import           AppData                        ( Handler )
-import           Common.Auth                    (AuthError (..),  AuthProtect
+import           Common.Auth                    (AuthOptional, AuthError (..),  AuthRequired
                                                 , CompactJWT(CompactJWT)
                                                 , SessionData(..)
                                                 )
@@ -142,6 +142,8 @@ import GHC.Num (Num((*)))
 import Data.Either.Combinators (mapLeft)
 import Control.Monad.Trans.Except (except)
 import Servant.Server (err401)
+import Control.Monad ((=<<))
+import Data.Function (const)
 
 audience :: StringOrURI
 audience = "https://palantype.com"
@@ -192,34 +194,56 @@ mkSessionData jwt UserInfo {..} =
         sdClearances  = uiClearances
     in  SessionData { .. }
 
+type ContextAuth = Snap (Either AuthError UserInfo)
+
 instance ( KnownSymbol tag
          , HasServer api context m
          , HasContextEntry context (Snap (Either AuthError UserInfo))
          )
-  => HasServer (AuthProtect tag :> api) context m where
-    type ServerT (AuthProtect tag :> api) context m
+  => HasServer (AuthRequired tag :> api) context m where
+    type ServerT (AuthRequired tag :> api) context m
         = UserInfo -> ServerT api context m
 
     hoistServerWithContext _ pc nt s =
         hoistServerWithContext (Proxy :: Proxy api) pc nt . s
 
-    route (Proxy :: Proxy (AuthProtect tag :> api)) context subserver = route
+    route (Proxy :: Proxy (AuthRequired tag :> api)) context subserver = route
         (Proxy :: Proxy api)
         context
-        (subserver `addAuthCheck` withRequest authCheck)
+        (addAuthCheck subserver $ authRequire =<< authCheck (getContextEntry context))
       where
-        authCheck :: Request -> DelayedM m UserInfo
-        authCheck req = do
-          eUserInfo <- liftIO $ evalSnap
-            (getContextEntry context)
-            (\x -> pure $! (x `seq` ()))
-            (\f -> let !_ = f 0 in pure ())
-            req
-          case (eUserInfo :: Either AuthError UserInfo) of
-            Left err -> delayedFailFatal $ err401
-              { errBody = LBSU.fromString $ show err
-              }
-            Right ui -> pure ui
+        authRequire = either
+          (\err -> delayedFailFatal $ err401
+            { errHeaders = [("WWW-Authenticate", "Bearer")]
+            , errBody = LBSU.fromString $ show err
+            }
+          )
+          pure
+
+authCheck :: MonadIO m => ContextAuth -> DelayedM m (Either AuthError UserInfo)
+authCheck a = withRequest $ liftIO <<< evalSnap
+    a
+    (\x -> pure $! (x `seq` ()))
+    (\f -> let !_ = f 0 in pure ())
+
+instance ( KnownSymbol tag
+         , HasServer api context m
+         , HasContextEntry context (Snap (Either AuthError UserInfo))
+         )
+  => HasServer (AuthOptional tag :> api) context m where
+    type ServerT (AuthOptional tag :> api) context m
+        = Maybe UserInfo -> ServerT api context m
+
+    hoistServerWithContext _ pc nt s =
+        hoistServerWithContext (Proxy :: Proxy api) pc nt . s
+
+    route (Proxy :: Proxy (AuthOptional tag :> api)) context subserver = route
+        (Proxy :: Proxy api)
+        context
+        (addAuthCheck subserver $ authOptional <$> authCheck (getContextEntry context))
+       where
+         authOptional = either (const Nothing) Just
+
 
 getClearances :: Key Alias -> Handler Rank
 getClearances keyAlias = do

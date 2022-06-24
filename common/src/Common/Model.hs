@@ -1,6 +1,8 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Common.Model
@@ -24,8 +26,10 @@ import           Palantype.Common               (Lang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
 import           Common.Stage                   ( Stage )
+import Data.Int (Int64)
+import TextShow (fromText, TextShow (showb))
 
--- frontend
+-- frontend/Localstorage
 
 data AppState = AppState
     { stCleared       :: Set Stage
@@ -72,6 +76,13 @@ data Message = Message
 instance FromJSON Message
 instance ToJSON Message
 
+defaultProgress :: Map Lang Stage
+defaultProgress =
+    let stage_introduction = read "introduction"
+    in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
+
+-- frontend and backend
+
 data Stats = Stats
     { statsDate :: UTCTime
     , statsTime :: NominalDiffTime
@@ -83,12 +94,18 @@ data Stats = Stats
 instance FromJSON Stats
 instance ToJSON Stats
 
-defaultProgress :: Map Lang Stage
-defaultProgress =
-    let stage_introduction = read "introduction"
-    in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
-
 -- backend
+
+data Anon = Anon
+  { anonId :: Int64
+  }
+  deriving (Generic, Eq, Ord)
+
+instance ToJSON Anon
+instance FromJSON Anon
+
+instance TextShow Anon where
+  showb Anon{..} = fromText "anon" <> showb anonId
 
 data Rank
   = RankMember
