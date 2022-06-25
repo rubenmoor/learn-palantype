@@ -20,9 +20,8 @@
 module Home where
 
 import Client
-    ( postConfigNew,
+    (request,  postConfigNew,
       postRender,
-      reqFailure,
     )
 import Common.PloverConfig
     (defaultPloverSystemCfg, defaultPloverCfg,  CfgName (..),
@@ -74,7 +73,7 @@ import Data.Bool
       otherwise,
     )
 import Data.Default (Default (def))
-import Data.Either (Either (..))
+import Data.Either (either, Either (..))
 import Data.Eq (Eq ((==)))
 import Data.Foldable
     (Foldable (foldl, null),
@@ -232,7 +231,6 @@ import Reflex.Dom
       text,
       wrapDomEvent,
     )
-import Servant.Common.Req (reqSuccess)
 import Shared
     ( dynSimple,
       iFa,
@@ -293,6 +291,7 @@ message = do
 settings ::
     forall t (m :: * -> *).
     ( DomBuilder t m,
+      MonadHold t m,
       PostBuild t m,
       Prerender t m,
       EventWriter t (Endo State) m,
@@ -383,33 +382,28 @@ settings lang = elClass "div" "topmenu" do
                 updateState $ eClickRL $> [ field @"stApp" . field @"stMLang" .~ Nothing]
                 setRoute $ eClickRL $> FrontendRoute_Main :/ ()
 
-        eReqResult <- postRender $ do
+        evText <- postRender $ do
             fileReader <- liftJSM newFileReader
             let encoding = Just ("utf8" :: String)
             performEvent_ $ eFile <&> \f -> readAsText fileReader (Just f) encoding
-            eText <-
-                fmap catMaybes $ wrapDomEvent fileReader (`on` load) $ liftJSM $ do
-                    v <- getResult fileReader
-                    (fromJSVal <=< toJSVal) v
-            dynEitherText <-
-                holdDyn
-                    (Left "no file")
-                    (Right . Text.unpack <$> eText)
-            postConfigNew dynEitherText (void eText)
+            fmap catMaybes $ wrapDomEvent fileReader (`on` load) $ liftJSM $ do
+                v <- getResult fileReader
+                (fromJSVal <=< toJSVal) v
 
-        let eReqSuccess = mapMaybe reqSuccess eReqResult
-            eReqFailure = mapMaybe reqFailure eReqResult
+        dynEitherText <- holdDyn (Left "no file") $ Right . Text.unpack <$> evText
 
-        updateState $
-            eReqFailure <&> \str ->
+        evRespConfigNew <- request $ postConfigNew dynEitherText $ void evText
+
+        updateState $ mapMaybe (either Just (const Nothing)) evRespConfigNew <&>
+            \str ->
                 let msgCaption = "Error when loading file"
                     msgBody = "Did you upload a proper .cfg file?\n" <> str
                  in [ field @"stApp" . field @"stMsg" ?~ Message {..}
                     , field @"stApp" . field @"stPloverCfg" .~ defaultPloverCfg
                     ]
 
-        updateState $
-            eReqSuccess <&> \(ln, systemCfg@PloverSystemCfg {..}) ->
+        updateState $ mapMaybe (either (const Nothing) Just) evRespConfigNew <&>
+            \(ln, systemCfg@PloverSystemCfg {..}) ->
                 [ field @"stApp" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
                   if null pcfgUnrecognizedQwertys
                       then id

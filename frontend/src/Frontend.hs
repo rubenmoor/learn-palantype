@@ -73,7 +73,7 @@ import           Obelisk.Route.Frontend         ( RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     ( zipDyn
+import           Reflex.Dom                     (constDyn,  zipDyn
                                                 , holdDyn
                                                 , tag
                                                 , prerender
@@ -105,7 +105,7 @@ import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
                                                 )
 import           Common.Auth                    ( SessionData(..) )
-import           Client                         ( postAppState
+import           Client                         (getAuthData, getMaybeAuthData, postEventViewPage,  postAppState
                                                 , request
                                                 , getAppState
                                                 )
@@ -128,6 +128,8 @@ import           Data.Bool                      ( Bool(..)
 import           Data.Witherable                ( Filterable(mapMaybe, filter) )
 import           Control.Monad                  ( join )
 import           Data.Functor                   ( (<$>) )
+import qualified Data.Text as Text
+import Text.Show (Show(show))
 
 frontend :: Frontend (R FrontendRoute)
 frontend =
@@ -170,7 +172,6 @@ frontendBody = mdo
         pure $ fromMaybe defaultAppState $ lsDecode =<< mStrState
 
     let evLSAppState = tag (current dynLSAppState) $ filter (not <<< isLoadedAndLoggedIn) evMSession
-
         evLoaded = attach (current dynMSession) (leftmost
           [ fromRight defaultAppState <$> evRespAppState
           , evLSAppState
@@ -179,7 +180,7 @@ frontendBody = mdo
                   stRedirectUrl = FrontendRoute_Main :/ ()
               in  Endo $ const State{..}
 
-    let evSessionInvalid = mapMaybe (either Just (const Nothing)) evRespAppState
+        evSessionInvalid = mapMaybe (either Just (const Nothing)) evRespAppState
 
     -- in case there is a problem: delete session
     prerender_ blank $ performEvent_ $
@@ -216,43 +217,42 @@ frontendBody = mdo
     prerender_ blank $ performEvent_ $ eUpdated <&> \State{..} -> do
         liftJSM $ lsPut lsSession  $ lsEncode stSession
 
-    (_, eStateUpdate) <-
-        mapRoutedT (runEventWriterT <<< flip runReaderT dynState) $ do
-            message
+    (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
+        message
+        ePb <- getPostBuild
+        subRoute_ $ \case
+            FrontendRoute_Main -> dyn_ $ dynState <&> \st -> do
+               -- go to url where the user left the last time
+               let mUrl = do
+                       lang  <- st ^. field @"stApp" . field @"stMLang"
+                       stage <- Map.lookup lang $  st ^. field @"stApp" .  field @"stProgress"
+                       pure $ stageUrl lang stage
+               case mUrl of
+                   Just url -> do setRoute $ ePb $> url
 
-            subRoute_ $ \case
-                FrontendRoute_Main -> do
-                    dyn_ $ dynState <&> \st -> do
-                            -- go to url where the user left the last time
-                        let
-                            mUrl = do
-                                lang  <- st ^. field @"stApp" . field @"stMLang"
-                                stage <-
-                                    Map.lookup lang
-                                    $  st
-                                    ^. field @"stApp"
-                                    .  field @"stProgress"
-                                pure $ stageUrl lang stage
-                        case mUrl of
-                            Just url -> do
-                                ePb <- getPostBuild
-                                setRoute $ ePb $> url
-
-                            -- or show the landing page
-                            Nothing -> landingPage
-                FrontendRoute_EN -> do
-                    el "header" $ settings EN
-                    stages @EN.Key EN
-                FrontendRoute_DE -> do
-                    el "header" $ settings DE
-                    stages @DE.Key DE
-                FrontendRoute_Auth -> subRoute_ \case
-                    AuthPage_SignUp -> AuthPages.signup
-                    AuthPage_Login  -> AuthPages.login
-            updateState $ evSessionInvalid <&> \str ->
-              [ field @"stApp" . field @"stMsg" ?~
-                  Message "Session invalid" ("Please log in again. " <> str)
-              ]
+                   -- or show the landing page
+                   Nothing -> do
+                     request $ postEventViewPage (constDyn $ getMaybeAuthData st)
+                                                 (constDyn $ Right $ Text.pack $ show $ FrontendRoute_Main :/ ())
+                                                 ePb
+                     landingPage
+            FrontendRoute_EN -> do
+                el "header" $ settings EN
+                stages @EN.Key EN
+            FrontendRoute_DE -> do
+                el "header" $ settings DE
+                stages @DE.Key DE
+            FrontendRoute_Auth -> subRoute_ \case
+                AuthPage_SignUp -> do
+                  request $ postEventViewPage (getMaybeAuthData <$> dynState)
+                                              (constDyn $ Right $ Text.pack $ show $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+                                              ePb
+                  AuthPages.signup
+                AuthPage_Login  -> AuthPages.login
+        updateState $ evSessionInvalid <&> \str ->
+          [ field @"stApp" . field @"stMsg" ?~
+              Message "Session invalid" ("Please log in again. " <> str)
+          ]
     blank
 
 frontendHead

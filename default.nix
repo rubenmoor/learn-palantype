@@ -68,13 +68,13 @@ in
       #base64-bytestring = self.callHackage "base64-bytestring" "1.2.1.0" {};
       #jose = self.callHackage "jose" "0.8.5.1" {};
 
-      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-        owner = "imalsogreg";
-        repo = "servant-reflex";
-        rev = "a6f859e52857e0eda753cf113fabfff61f06da6a";
-        sha256 = "0j36sl7l553iy1vpwy6263xdpj3m2n2rkkkdcsxpkr48p328lac4";
-      }) {};
-      #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
+      #servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+      #  owner = "imalsogreg";
+      #  repo = "servant-reflex";
+      #  rev = "a6f859e52857e0eda753cf113fabfff61f06da6a";
+      #  sha256 = "0j36sl7l553iy1vpwy6263xdpj3m2n2rkkkdcsxpkr48p328lac4";
+      #}) {};
+      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";

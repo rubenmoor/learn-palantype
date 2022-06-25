@@ -82,13 +82,14 @@ type RoutesPalantype =
                            :> Get '[JSON] (Map RawSteno Text)
 
 type RoutesEvent =
-       AuthOptional "jwt" :> "view"            :> ReqBody '[JSON] Text           :> Post '[JSON] ()
+       AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text           :> Post '[JSON] ()
   :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Stage, Stats) :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype
-      :<|> "auth" :> RoutesAuth
-      :<|> "user" :> RoutesUser
+      :<|> "auth"  :> RoutesAuth
+      :<|> "user"  :> RoutesUser
+      :<|> "event" :> RoutesEvent
     )
 
 --

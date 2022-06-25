@@ -36,7 +36,7 @@ import           GHC.Generics            (Generic)
 import           Common.Model            (AppState, Rank)
 import           Reflex.Dom              (splitDynPure, Reflex (Dynamic))
 import           Servant.API             ((:>))
-import           Servant.Common.Req      (addHeader)
+import           Servant.Common.Req      (addHeaderOptional, addHeader)
 import           Servant.Reflex          (HasClient (..))
 import           Web.HttpApiData         (FromHttpApiData (..),
                                           ToHttpApiData (..))
@@ -84,14 +84,14 @@ instance (HasClient t m api tag, Reflex t)
       => HasClient t m (AuthRequired realm :> api) tag where
 
   type Client t m (AuthRequired realm :> api) tag =
-       Dynamic t (Either Text (CompactJWT, Text))
-    -> Client t m api tag
+       Dynamic t (Either Text (CompactJWT, Text)) -> Client t m api tag
 
   clientWithRouteAndResultHandler Proxy q t req baseurl opts wrap authData =
     clientWithRouteAndResultHandler (Proxy :: Proxy api) q t req' baseurl opts wrap
       where
-        switchEither (Left str) = (Left str, Left str)
-        switchEither (Right (x, y)) = (Right x, Right y)
+        switchEither = \case
+            Left  str    -> (Left str, Left str)
+            Right (x, y) -> (Right x, Right y)
         (token, alias) = splitDynPure $ switchEither <$> authData
         req' = addHeader "Authorization" token $
                addHeader "X-Alias" alias req
@@ -104,19 +104,21 @@ instance (HasClient t m api tag, Reflex t)
       => HasClient t m (AuthOptional realm :> api) tag where
 
   type Client t m (AuthOptional realm :> api) tag =
-       Maybe (Dynamic t (Either Text (CompactJWT, Text)))
+       Dynamic t (Either Text (Maybe (CompactJWT, Text)))
     -> Client t m api tag
 
-  clientWithRouteAndResultHandler Proxy q t req baseurl opts wrap mAuthData =
+  clientWithRouteAndResultHandler Proxy q t req baseurl opts wrap authDataOptional =
     clientWithRouteAndResultHandler (Proxy :: Proxy api) q t req' baseurl opts wrap
       where
-        switchEither (Left str) = (Left str, Left str)
-        switchEither (Right (x, y)) = (Right x, Right y)
-        req' = case mAuthData of
-          Nothing -> req
-          Just authData ->
-            let (token, alias) = splitDynPure $ switchEither <$> authData
-            in  addHeader "Authorization" token $ addHeader "X-Alias" alias req
+        switchEither = \case
+            Left  str -> (Left str, Left str)
+            Right mp  -> case mp of
+                Just (jwt, a) -> (Right $ Just jwt, Right $ Just a)
+                Nothing -> (Right Nothing, Right Nothing)
+        req' =
+            let (token, alias) = splitDynPure $ switchEither <$> authDataOptional
+            in  addHeaderOptional "Authorization" token $
+                    addHeaderOptional "X-Alias" alias req
 
 
 

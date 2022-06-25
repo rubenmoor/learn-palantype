@@ -47,7 +47,7 @@ import Database.Gerippe (PersistStoreRead(get))
 
 default(Text)
 
-handlers :: ServerT RoutesUser '[] Handler
+handlers :: ServerT RoutesUser a Handler
 handlers =
   (
          handleAliasRename

@@ -26,11 +26,13 @@ import Common.Api
 import qualified Handler.Palantype as Palantype
 import qualified Handler.Auth as Auth
 import qualified Handler.User as User
+import qualified Handler.Event as Event
 import Auth (UserInfo)
 import AppData (Handler)
 
-handlers :: ServerT RoutesApi '[] Handler
+handlers :: ServerT RoutesApi a Handler
 handlers =
        Palantype.handlers
   :<|> Auth.handlers
   :<|> User.handlers
+  :<|> Event.handlers

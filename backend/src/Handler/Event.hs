@@ -12,7 +12,7 @@ import qualified DbJournal
 import Common.Model (Stats, EventApp (..), Journal(JournalApp))
 import Common.Stage (Stage)
 
-handlers :: ServerT RoutesEvent '[Snap UserInfo] Handler
+handlers :: ServerT RoutesEvent a Handler
 handlers =
   (
          handleViewPage

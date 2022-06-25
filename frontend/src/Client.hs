@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE KindSignatures            #-}
@@ -19,6 +21,7 @@ import           Common.Auth                    ( CompactJWT
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Monad                  ( Monad )
+import Data.Generics.Product (field)
 import           Data.Either                    ( either
                                                 , Either(..)
                                                 )
@@ -34,7 +37,6 @@ import           Reflex.Dom                     ( XhrResponseBody(..)
                                                 , Reflex(Dynamic, Event, never)
                                                 , constDyn
                                                 , switchDyn
-                                                , XhrResponse(..)
                                                 )
 import           Servant.Common.Req             ( ReqResult(..) )
 import           Servant.Reflex                 ( BaseUrl(BasePath)
@@ -59,7 +61,6 @@ import           Palantype.Common               ( Greediness
                                                 )
 import           Data.Map.Strict                ( Map )
 import qualified Palantype.DE                  as DE
-import           Data.Functor                   ( Functor )
 import           State                          ( stSession
                                                 , State
                                                 , Session(..)
@@ -67,15 +68,11 @@ import           State                          ( stSession
 import           Data.Bool                      ( Bool )
 import           Control.Lens.Getter            ( (^.) )
 import           Data.Text.Encoding             ( decodeUtf8' )
-import Common.Model (AppState)
+import Common.Model (Stats, AppState)
+import Common.Stage (Stage)
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
-
--- data RequestResult t a = RequestResult
---   { rrESuccess :: Event t a
---   , rrEFailure :: Event t Text
---   }
 
 request
     :: forall t (m :: * -> *) a
@@ -96,10 +93,6 @@ request req = do
           in  Left $ fromMaybe "Couldn't decode error body" mErrBody
         RequestFailure _ str -> Left $ "RequestFailure: " <> str
 
-  -- let rrESuccess = mapMaybe reqSuccess eResult
-  --     rrEFailure = mapMaybe reqFailure eResult
-  -- pure RequestResult{..}
-
 postConfigNew
     :: SupportsServantReflex t m
     => Dynamic t (Either Text String)
@@ -109,14 +102,7 @@ postConfigNew
 getDocDEPatternAll
     :: SupportsServantReflex t m
     => Event t ()
-    -> m
-           ( Event
-                 t
-                 ( ReqResult
-                       ()
-                       (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
-                 )
-           )
+    -> m ( Event t ( ReqResult () (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)))
 
 getDocDEPattern
     :: SupportsServantReflex t m
@@ -140,28 +126,14 @@ getDictDE
     => Dynamic t (Either Text DE.Pattern)
     -> Dynamic t (Either Text Greediness)
     -> Event t ()
-    -> m
-           ( Event
-                 t
-                 ( ReqResult
-                       ()
-                       (Map RawSteno Text, Map Text [RawSteno])
-                 )
-           )
+    -> m ( Event t ( ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
 
 getDictDE'
     :: SupportsServantReflex t m
     => DE.Pattern
     -> Greediness
     -> Event t ()
-    -> m
-           ( Event
-                 t
-                 ( ReqResult
-                       ()
-                       (Map RawSteno Text, Map Text [RawSteno])
-                 )
-           )
+    -> m ( Event t ( ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
 getDictDE' p g = getDictDE (constDyn $ Right p) (constDyn $ Right g)
 
 getDictDENumbers
@@ -172,12 +144,18 @@ getDictDENumbers
 -- auth
 
 getAuthData
-    :: Functor (Dynamic t)
-    => Dynamic t State
-    -> Dynamic t (Either Text (CompactJWT, Text))
-getAuthData dynState = dynState <&> \st -> case stSession st of
+    :: State
+    -> (Either Text (CompactJWT, Text))
+getAuthData st = case stSession st of
     SessionAnon                  -> Left "not logged in"
     SessionUser SessionData {..} -> Right (sdJwt, sdAliasName)
+
+getMaybeAuthData
+    :: State -> (Either Text (Maybe (CompactJWT, Text)))
+getMaybeAuthData st =
+  Right $ case st ^. field @"stSession" of
+    SessionAnon -> Nothing
+    SessionUser SessionData{..} -> Just (sdJwt, sdAliasName)
 
 postAuthenticate
     :: SupportsServantReflex t m
@@ -238,23 +216,22 @@ postAppState
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)))
+postEventViewPage
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
+    -> Dynamic t (Either Text Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+postEventStageCompleted
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
+    -> Dynamic t (Either Text (Stage, Stats))
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())
              (constDyn (BasePath "/"))
-
-reqFailure :: ReqResult tag a -> Maybe Text
-reqFailure = \case
-    ResponseSuccess{} -> Nothing
-    ResponseFailure _ str xhr ->
-        Just $ str <> fromMaybe "" (_xhrResponse_responseText xhr)
-    RequestFailure _ str -> Just str
-
---     :<|> "dict"   :> Capture "n" Int :>
---         (  "singlesimple" :> Get '[JSON] BDict
---       :<|> "multiplesimple" :> Get '[JSON] BDict
---       :<|> "singleletterreplacements" :> Get '[JSON] BDict
---       :<|> "multipleletterreplacements" :> Get '[JSON] BDict
---       :<|> "codahr" :> Get '[JSON] BDict
---         )

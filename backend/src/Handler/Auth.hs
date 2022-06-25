@@ -90,7 +90,7 @@ import Control.Category ((<<<))
 
 default(Text)
 
-handlers :: ServerT RoutesAuth '[] Handler
+handlers :: ServerT RoutesAuth a Handler
 handlers =
        handleGrantAuthPwd
   :<|> handleUserNew

@@ -85,7 +85,7 @@ import qualified Servant.Server                as Snap
 import           Snap.Core                      ( MonadSnap )
 import           Data.Tuple                     ( snd )
 
-handlers :: MonadSnap m => ServerT RoutesPalantype '[] m
+handlers :: MonadSnap m => ServerT RoutesPalantype a m
 handlers =
          handleConfigNew
     :<|> handleDocDEPatternAll
