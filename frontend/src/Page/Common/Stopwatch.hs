@@ -7,7 +7,6 @@ module Page.Common.Stopwatch
     ( mkStopwatch
     , elStopwatch
     , elStatistics
-    , formatTime
     , StateStopwatch (..)
     , toMinutes
     ) where
@@ -20,9 +19,8 @@ import Data.Int (Int)
 import Data.Semigroup
     ( Semigroup ((<>)),
     )
-import Data.Text (Text)
 import GHC.Float (Double)
-import GHC.Real (div, mod, realToFrac, (/), fromIntegral, round, floor)
+import GHC.Real (realToFrac, (/), fromIntegral, round)
 import Reflex.Dom
     ( DomBuilder,
       MonadHold,
@@ -51,7 +49,6 @@ import TextShow (showt)
 import Data.Functor (Functor(fmap))
 import Data.Time (defaultTimeLocale, diffUTCTime, UTCTime, NominalDiffTime, getCurrentTime)
 import qualified Data.Text as Text
-import Text.Printf (printf)
 import Control.Category ((<<<), (.))
 import Data.Witherable (Filterable(catMaybes))
 import State (stApp, Env (..), Navigation (..))
@@ -64,10 +61,9 @@ import Control.Applicative (Applicative(pure))
 import Data.Foldable (for_, Foldable(minimum))
 import Data.Bool (Bool(..))
 import qualified Data.Time as Time
-import Data.Ord (Ord((>)))
-import GHC.Num ((-), Num((*)))
 import Control.Monad (Monad((>>=)))
 import Common.Model (AppState (..), Stats(..))
+import Shared (formatTime)
 
 data StateStopwatch
     = SWInitial
@@ -146,19 +142,6 @@ mkStopwatch ev = do
         startStop (ESWToggle _ timeStart) _ = SWRun timeStart 0
 
     foldDyn startStop SWInitial (leftmost [evToggle, evTick]) >>= holdUniqDyn
-
--- in time 1.8.0.2 there is not FormatTime instance for Difftime
--- (or NominalDifftime)
--- and GHC 8.6.5 depends on that one specifically
-formatTime :: NominalDiffTime -> Text
-formatTime dt =
-    let seconds = realToFrac dt
-        secondsFull = floor @Double @Int seconds
-        secondsTenth = floor @Double @Int $ (seconds - fromIntegral secondsFull) * 10
-        minutes = secondsFull `div` 60
-        strMinutes = if minutes > 0 then printf "%2d:" minutes else ""
-        strSeconds = printf "%02d." $ secondsFull `mod` 60
-    in  Text.pack (strMinutes <> strSeconds) <> showt secondsTenth <> "s"
 
 toMinutes :: NominalDiffTime -> Double
 toMinutes t = realToFrac t / 60

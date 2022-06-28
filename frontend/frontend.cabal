@@ -40,7 +40,8 @@ library
   exposed-modules:
     Frontend
   other-modules:
-      AuthPages
+      AdminPages
+    , AuthPages
     , Client
     , Home
     , Shared

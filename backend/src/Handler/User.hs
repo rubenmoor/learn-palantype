@@ -39,7 +39,7 @@ import           AppData                   (Handler)
 import           Auth                      (UserInfo (..))
 import           Common.Api (RoutesUser)
 import qualified DbAdapter as Db
-import           Common.Model                     (EventUser (..), AppState (..), Journal (..))
+import           Common.Model                     (Event (EventUser), EventUser (..), AppState (..))
 import           Database (blobEncode, blobDecode, runDb)
 
 import qualified DbJournal
@@ -65,7 +65,7 @@ handleAliasRename UserInfo{..} new = do
   when (Text.length new > 16) $
     throwError $ err400 { errBody = "alias max length is 16 characters" }
   runDb $ update uiKeyAlias [ Db.AliasName =. new ]
-  DbJournal.insert (Just uiKeyAlias) $ JournalUser $ EventEdit "alias" (Db.aliasName uiAlias) new
+  DbJournal.insert (Just uiKeyAlias) $ EventUser $ EventEdit "alias" (Db.aliasName uiAlias) new
 
 handleAliasGetAll :: UserInfo -> Handler [Text]
 handleAliasGetAll UserInfo{..} = do
@@ -87,7 +87,7 @@ handleAliasSetDefault UserInfo{..} aliasName = do
     Just keyDefaultAlias -> runDb (get keyDefaultAlias)
     Nothing -> pure Nothing
   runDb $ update keyUser [ Db.UserFkDefaultAlias =. Just keyAlias ]
-  DbJournal.insert (Just uiKeyAlias) $ JournalUser $
+  DbJournal.insert (Just uiKeyAlias) $ EventUser $
     EventEdit "default alias" (fromMaybe "" $ Db.aliasName <$> mOldDefaultAlias) aliasName
 
 handleGetAppState :: UserInfo -> Handler AppState

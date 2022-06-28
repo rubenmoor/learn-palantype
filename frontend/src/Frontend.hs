@@ -19,17 +19,16 @@
 module Frontend where
 
 import           Control.Lens.Getter            ( (^.) )
-import           Control.Lens.Setter            ( (?~) )
+import           Control.Lens.Setter            ( (?~), (.~))
 import           Data.Generics.Product          ( field )
 import           Language.Javascript.JSaddle    ( liftJSM )
-import           State                          ( updateState
-                                                , Session(..)
+import           State                          (updateState,  Session(..)
                                                 , State(..)
                                                 , defaultState
                                                 , stageUrl
                                                 )
 
-import           Common.Route                   ( FrontendRoute(..)
+import           Common.Route                   (showRoute, fullRouteEncoder,  FrontendRoute(..)
                                                 , FrontendRoute_AuthPages(..)
                                                 )
 import           Control.Monad.Reader           ( ReaderT(runReaderT) )
@@ -37,9 +36,9 @@ import qualified Data.Aeson                    as Aeson
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 )
-import           Data.Function                  ( (.) )
+import           Data.Function                  ( (.), (&) )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( Maybe(..)
+import           Data.Maybe                     (maybe, isJust, isNothing,  Maybe(..)
                                                 , fromMaybe
                                                 )
 import           Data.Semigroup                 ( (<>)
@@ -52,9 +51,9 @@ import           GHCJS.DOM                      ( currentWindowUnchecked )
 import           GHCJS.DOM.Storage              ( getItem
                                                 , setItem
                                                 )
-import           GHCJS.DOM.Window               ( getLocalStorage )
+import           GHCJS.DOM.Window               (getLocalStorage)
 import           Home                           ( message
-                                                , settings
+
                                                 , landingPage
                                                 , stages
                                                 )
@@ -73,12 +72,12 @@ import           Obelisk.Route.Frontend         ( RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (constDyn,  zipDyn
+import           Reflex.Dom                     (select, fanMap, attachWith, attachWithMaybe, gate, widgetHold_, delay, performEvent, current, attach, Dynamic, never, switchDyn, constDyn
                                                 , holdDyn
-                                                , tag
+
                                                 , prerender
-                                                , current
-                                                , attach
+
+
                                                 , PerformEvent(performEvent_)
                                                 , PostBuild(getPostBuild)
                                                 , Reflex(updated)
@@ -95,22 +94,21 @@ import           Reflex.Dom                     (constDyn,  zipDyn
                                                 , (=:)
                                                 )
 
-import           Shared                         ( loadingScreen )
+import           Shared                         (redirectToWikipedia,  loadingScreen )
 import qualified AuthPages
-import           Control.Category               ( (<<<) )
-import           Common.Model                   ( Message(..)
+import           Control.Category               ( (<<<))
+import           Common.Model                   (Rank (RankAdmin),  Message(..)
                                                 , defaultAppState
                                                 )
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
                                                 )
 import           Common.Auth                    ( SessionData(..) )
-import           Client                         (getAuthData, getMaybeAuthData, postEventViewPage,  postAppState
+import           Client                         (getMaybeAuthData, postEventViewPage,  postAppState
                                                 , request
                                                 , getAppState
                                                 )
-import           Data.Either                    ( fromRight
-                                                , either
+import           Data.Either                    ( either
                                                 , Either(..)
                                                 )
 import           Control.Monad                  ( Monad((>>=))
@@ -122,14 +120,30 @@ import           Data.Function                  ( flip
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Data.Functor                   ( void )
-import           Data.Bool                      ( Bool(..)
+import           Data.Bool                      ((||),  Bool(..)
                                                 , not
                                                 )
 import           Data.Witherable                ( Filterable(mapMaybe, filter) )
-import           Control.Monad                  ( join )
 import           Data.Functor                   ( (<$>) )
 import qualified Data.Text as Text
 import Text.Show (Show(show))
+import Control.Lens (view)
+import qualified AdminPages
+import Data.Ord (Ord((>=)))
+import Reflex.Dom (Reflex(Event))
+import Data.Functor (Functor(fmap))
+import Data.Witherable (Filterable(catMaybes))
+import GHC.Err (error)
+import Obelisk.Route (renderFrontendRoute)
+import Obelisk.Route (checkEncoder)
+import Data.Eq (Eq)
+import Data.Functor.Misc (Const2(Const2))
+
+data FanAdmin
+  = FanAdminLogin
+  | FanAdminForbidden
+  | FanAdminAccess
+  deriving (Eq, Ord)
 
 frontend :: Frontend (R FrontendRoute)
 frontend =
@@ -151,54 +165,69 @@ frontendBody = mdo
         lsEncode :: forall a. ToJSON a => a -> Text
         lsEncode = Lazy.toStrict <<< Lazy.decodeUtf8 <<< Aeson.encode
 
-    dynMSession <- prerender (pure Nothing) do
-        mStrSession <- liftJSM $ lsRetrieve lsSession
-        pure $ Just $ lsDecode =<< mStrSession
+    evPb <- getPostBuild
+    evDelayedPb <- delay 0.1 evPb
 
-    let evMSession = updated dynMSession
+    (evSessionInitial :: Event t (Maybe Session)) <-
+      fmap switchDyn $ prerender (pure never) $
+        -- TODO: why do I need to rely on postbuild?
+        -- TODO: why do I need to rely on delayed postbuild?
+        -- if I don't (i.e. relying on the switchover event), evSessionInitial never fires
+        performEvent $ evDelayedPb $> fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
 
-        dynEAuthInitial = dynMSession <&> \case
-          Just (Just (SessionUser SessionData{..})) -> Right (sdJwt, sdAliasName)
-          Just _                                    -> Left "not logged in"
-          Nothing                                   -> Left "not yet loaded"
+    let evMaybeLocal = evSessionInitial <&> \case
+          Just (SessionUser _) -> Nothing
+          Just SessionAnon     -> Just True
+          Nothing              -> Just False
+    let evMaybeFromServer = evSessionInitial <&> \case
+          Just (SessionUser sd) -> Just sd
+          Just SessionAnon -> Nothing
+          Nothing -> Nothing
+        evSessionFromServer = void $ filter isJust evMaybeFromServer
+    dynSessionData <- holdDyn Nothing $ Just <$> catMaybes evMaybeFromServer
+    let dynAuthData = dynSessionData <&> \case
+          Nothing -> Left "not logged in"
+          Just SessionData{..} -> Right (sdJwt, sdAliasName)
 
-        isLoadedAndLoggedIn = \case
-          Just (Just (SessionUser _)) -> True
-          _                           -> False
+    evRespServerSession <-
+      request $ getAppState dynAuthData evSessionFromServer
 
-    evRespAppState <- request $ getAppState dynEAuthInitial $ void $ filter isLoadedAndLoggedIn evMSession
-    dynLSAppState <- prerender (pure defaultAppState) do
-        mStrState <- liftJSM $ lsRetrieve lsAppState
-        pure $ fromMaybe defaultAppState $ lsDecode =<< mStrState
+    -- cannot get the app state: something is fishy with this session: reset
+    let evAppStateInvalid = mapMaybe (either Just (const Nothing)) evRespServerSession
+        evAppState = mapMaybe (either (const Nothing) Just) evRespServerSession
+    prerender_ blank $ performEvent_ $ evAppStateInvalid $> liftJSM (lsPut lsSession $ lsEncode SessionAnon)
 
-    let evLSAppState = tag (current dynLSAppState) $ filter (not <<< isLoadedAndLoggedIn) evMSession
-        evLoaded = attach (current dynMSession) (leftmost
-          [ fromRight defaultAppState <$> evRespAppState
-          , evLSAppState
-          ]) <&> \(mSession, stApp) ->
-              let stSession = fromMaybe SessionAnon $ join mSession
-                  stRedirectUrl = FrontendRoute_Main :/ ()
-              in  Endo $ const State{..}
+    let evSessionLocal = leftmost
+          [ catMaybes evMaybeLocal
+          , evAppStateInvalid $> False
+          ]
+    let (evLoadedFromServer :: Event t (Endo State)) =
+           attach (current dynSessionData) evAppState <&> \case
+             (Just sd, stApp) ->
+               let stRedirectUrl = FrontendRoute_Main :/ ()
+                   stSession = SessionUser sd
+               in  Endo $ const State{..}
+             (Nothing, _) -> error "impossible"
 
-        evSessionInvalid = mapMaybe (either Just (const Nothing)) evRespAppState
+    (evLoadedLocal :: Event t (Endo State)) <-
+      fmap (Endo . const) . switchDyn <$> prerender (pure never) do
+        let stRedirectUrl = FrontendRoute_Main :/ ()
+            stSession = SessionAnon
+        performEvent $ evSessionLocal <&> \hasSession -> do
+          stApp <- fromMaybe defaultAppState <$> if hasSession
+                then fmap (lsDecode =<<) $ liftJSM $ lsRetrieve lsAppState
+                else pure Nothing
+          pure State {..}
 
-    -- in case there is a problem: delete session
-    prerender_ blank $ performEvent_ $
-      evSessionInvalid $> liftJSM (lsPut lsSession $ lsEncode SessionAnon)
-
+    let evLoaded = leftmost [evLoadedFromServer, evLoadedLocal]
     dynHasLoaded <- holdDyn False $ evLoaded $> True
-    dyn_ $ zipDyn dynHasLoaded dynMSession <&> \case
-            (True, _) -> blank
-            (False, mSession) -> loadingScreen $ case mSession of
-                Nothing                                   -> ""
-                Just Nothing                              -> "You seem to be new here. Welome!"
-                Just (Just SessionAnon)                   -> "Welcome back!"
-                Just (Just (SessionUser SessionData{..})) -> "Hi, " <> sdAliasName <> "!"
+    dyn_ $ dynHasLoaded <&> \hasLoaded ->
+      if hasLoaded then blank else loadingScreen ""
 
     dynState <- foldDyn appEndo defaultState $ leftmost [evLoaded, eStateUpdate]
 
     -- TODO: persist application state on visibility change (when hidden)
-    eUpdated <- tailE $ updated dynState
+    --eUpdated <- tailE $ updated dynState
 
     let isLoggedIn = \State{..} -> case stSession of
           SessionUser _ -> True
@@ -207,52 +236,53 @@ frontendBody = mdo
           SessionAnon -> Left "not logged in"
           SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
 
+    updatedTail <- tailE $ updated dynState
     _ <- request $ postAppState dynEAuth (Right . stApp <$> dynState) $
-      void $ filter isLoggedIn eUpdated
+      void $ filter isLoggedIn updatedTail
 
     prerender_ blank $ performEvent_ $
-      filter (not <<< isLoggedIn) eUpdated <&> \State{..} ->
+      filter (not <<< isLoggedIn) (updated dynState) <&> \State{..} ->
         liftJSM $ lsPut lsAppState $ lsEncode stApp
 
-    prerender_ blank $ performEvent_ $ eUpdated <&> \State{..} -> do
+    prerender_ blank $ performEvent_ $ updated dynState <&> \State{..} -> do
         liftJSM $ lsPut lsSession  $ lsEncode stSession
 
     (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
-        message
-        ePb <- getPostBuild
-        subRoute_ $ \case
-            FrontendRoute_Main -> dyn_ $ dynState <&> \st -> do
-               -- go to url where the user left the last time
-               let mUrl = do
-                       lang  <- st ^. field @"stApp" . field @"stMLang"
-                       stage <- Map.lookup lang $  st ^. field @"stApp" .  field @"stProgress"
-                       pure $ stageUrl lang stage
-               case mUrl of
-                   Just url -> do setRoute $ ePb $> url
 
-                   -- or show the landing page
-                   Nothing -> do
-                     request $ postEventViewPage (constDyn $ getMaybeAuthData st)
-                                                 (constDyn $ Right $ Text.pack $ show $ FrontendRoute_Main :/ ())
-                                                 ePb
-                     landingPage
+        message
+        subRoute_ $ \case
+            FrontendRoute_Main -> do
+              _ <- request $ postEventViewPage (getMaybeAuthData <$> dynState)
+                                               (constDyn $ Right $ showRoute $ FrontendRoute_Main :/ ())
+                                               evPb
+              landingPage
             FrontendRoute_EN -> do
-                el "header" $ settings EN
                 stages @EN.Key EN
             FrontendRoute_DE -> do
-                el "header" $ settings DE
                 stages @DE.Key DE
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
                   request $ postEventViewPage (getMaybeAuthData <$> dynState)
-                                              (constDyn $ Right $ Text.pack $ show $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
-                                              ePb
+                                              (constDyn $ Right $ showRoute $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+                                              evPb
                   AuthPages.signup
-                AuthPage_Login  -> AuthPages.login
-        updateState $ evSessionInvalid <&> \str ->
-          [ field @"stApp" . field @"stMsg" ?~
-              Message "Session invalid" ("Please log in again. " <> str)
-          ]
+                AuthPage_Login  -> do
+                  request $ postEventViewPage (getMaybeAuthData <$> dynState)
+                                              (constDyn $ Right $ showRoute $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
+                                              evPb
+                  AuthPages.login
+            FrontendRoute_Admin -> do
+                let evAdmin = attachWith const (current dynState) evPb
+                    selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
+                      SessionAnon -> Map.singleton FanAdminLogin $ setRoute $ evPb $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                      SessionUser SessionData{..} ->
+                        if sdIsSiteAdmin || sdClearances >= RankAdmin
+                        then Map.singleton FanAdminAccess $ AdminPages.journal
+                        else Map.singleton FanAdminForbidden $ redirectToWikipedia "HTTP_403"
+                    evLogin = select selector $ Const2 FanAdminLogin
+                    evAccess = select selector $ Const2 FanAdminAccess
+                    evForbidden = select selector $ Const2 FanAdminForbidden
+                widgetHold_ (loadingScreen "") $ leftmost [evLogin, evAccess, evForbidden]
     blank
 
 frontendHead

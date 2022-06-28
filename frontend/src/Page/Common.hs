@@ -130,7 +130,7 @@ import           Reflex.Dom                     ( TriggerEvent
                                                 , updated
                                                 )
 import           Safe                           ( initMay )
-import           Shared                         ( iFa
+import           Shared                         (formatTime,  iFa
                                                 , whenJust
                                                 )
 import           State                          ( State(..)
@@ -152,7 +152,6 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Data.Foldable                  ( Foldable(elem) )
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
-                                                , formatTime
                                                 , elStatistics
                                                 )
 import           Control.Monad                  ( when )

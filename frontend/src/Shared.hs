@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
@@ -9,20 +10,21 @@
 
 module Shared where
 
+import GHC.Real (div, mod, realToFrac, fromIntegral, floor)
 import           Control.Applicative            ( Applicative(pure)
                                                 , (<$>)
                                                 )
 import           Control.Category               ( Category((.)) )
 import           Control.Lens                   ( (.~) )
 import           Control.Monad                  ( (=<<) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  (flip,  ($) )
 import           Data.Functor                   ( void )
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Monoid                    ( (<>) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Data.Tuple                     ( fst )
-import           Reflex.Dom                     ( dyn_
+import           Reflex.Dom                     (Prerender, prerender_,  dyn_
                                                 , MonadHold
                                                 , Adjustable
                                                 , DomBuilder
@@ -67,6 +69,17 @@ import           Data.Functor                   ( (<&>) )
 import Data.Int (Int)
 import TextShow (TextShow(showt))
 import Control.Monad (unless)
+import           GHCJS.DOM                      ( currentWindowUnchecked )
+import GHCJS.DOM.Location (assign)
+import         GHCJS.DOM.Window               (getDocument)
+import GHCJS.DOM.Document (getLocationUnchecked)
+import Language.Javascript.JSaddle (liftJSM)
+import Control.Monad (Monad((>>=)))
+import Data.Time (NominalDiffTime)
+import GHC.Float (Double)
+import Text.Printf (printf)
+import GHC.Num ((*), Num((-)))
+import Data.Ord (Ord((>)))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -189,3 +202,25 @@ undynState
 undynState func = do
     dynState <- ask
     dyn_ $ dynState <&> \st -> func st
+
+redirectToWikipedia
+  :: forall t m . (Monad m, Prerender t m) => Text -> m ()
+redirectToWikipedia str =
+    prerender_ blank $ liftJSM $
+        currentWindowUnchecked >>=
+            getDocument >>=
+                getLocationUnchecked >>=
+                    flip assign ("https://en.wikipedia.org/wiki/" <> str)
+
+-- in time 1.8.0.2 there is not FormatTime instance for Difftime
+-- (or NominalDifftime)
+-- and GHC 8.6.5 depends on that one specifically
+formatTime :: NominalDiffTime -> Text
+formatTime dt =
+    let seconds = realToFrac dt
+        secondsFull = floor @Double @Int seconds
+        secondsTenth = floor @Double @Int $ (seconds - fromIntegral secondsFull) * 10
+        minutes = secondsFull `div` 60
+        strMinutes = if minutes > 0 then printf "%2d:" minutes else ""
+        strSeconds = printf "%02d." $ secondsFull `mod` 60
+    in  Text.pack (strMinutes <> strSeconds) <> showt secondsTenth <> "s"

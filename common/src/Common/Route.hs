@@ -19,13 +19,13 @@ module Common.Route where
 import           Control.Category               ( Category((.)) )
 import           Data.Functor.Identity          ( Identity )
 import           Data.Text                      ( Text )
-import           Data.Either                    ( Either )
+import           Data.Either                    (Either (..) )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( concat )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Traversable               ( mapM )
-import           Obelisk.Route                  ( pathComponentEncoder
+import           Obelisk.Route                  (checkEncoder, renderFrontendRoute,  pathComponentEncoder
                                                 , unwrappedEncoder
                                                 , singlePathSegmentEncoder
                                                 , mkFullRouteEncoder
@@ -43,6 +43,9 @@ import           Obelisk.Route                  ( pathComponentEncoder
 import           Obelisk.Route.TH               ( deriveRouteComponent )
 import           Common.Stage                   ( Stage )
 import           Control.Category               ( Category(id) )
+import Palantype.Common.TH (failure)
+import Data.Semigroup (Semigroup((<>)))
+import qualified Data.Text as Text
 
 data FrontendRoute_AuthPages :: * -> * where
   AuthPage_SignUp :: FrontendRoute_AuthPages ()
@@ -58,6 +61,7 @@ data FrontendRoute :: * -> * where
   FrontendRoute_EN   :: FrontendRoute Stage
   FrontendRoute_DE   :: FrontendRoute Stage
   FrontendRoute_Auth :: FrontendRoute (R FrontendRoute_AuthPages)
+  FrontendRoute_Admin :: FrontendRoute ()
 
 fullRouteEncoder
     :: Encoder
@@ -77,9 +81,10 @@ fullRouteEncoder = mkFullRouteEncoder
             PathSegment "EN" $ singlePathSegmentEncoder . unwrappedEncoder
         FrontendRoute_DE ->
             PathSegment "DE" $ singlePathSegmentEncoder . unwrappedEncoder
-        FrontendRoute_Auth -> PathSegment "auth" $ pathComponentEncoder \case
+        FrontendRoute_Auth  -> PathSegment "auth" $ pathComponentEncoder \case
             AuthPage_SignUp -> PathSegment "signup" $ unitEncoder mempty
             AuthPage_Login  -> PathSegment "login"  $ unitEncoder mempty
+        FrontendRoute_Admin -> PathSegment "admin" $ unitEncoder mempty
     )
 
 concat <$> mapM deriveRouteComponent
@@ -87,3 +92,8 @@ concat <$> mapM deriveRouteComponent
   , ''FrontendRoute
   , ''FrontendRoute_AuthPages
   ]
+
+showRoute :: R FrontendRoute -> Text
+showRoute = renderFrontendRoute $ case checkEncoder fullRouteEncoder of
+    Left strError -> $failure $ "Couldn't render route: " <> Text.unpack strError
+    Right enc -> enc

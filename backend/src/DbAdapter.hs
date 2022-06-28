@@ -35,7 +35,6 @@ User                             -- some real person
   fkDefaultAlias   AliasId Maybe
   blobAppState     ByteString
 Visitor
-  fkAlias          AliasId Maybe
   ipAddress        Text
   UIpAddress ipAddress
 Alias                            -- one of several identities
@@ -51,9 +50,10 @@ AuthPwd
   password         (PasswordHash Argon2)
   UAuthPwdFkUser fkUser
 Journal
-  created          UTCTime default=CURRENT_TIME
+  created          UTCTime
   blob             ByteString
   fkVisitor        VisitorId
+  fkMAlias         AliasId Maybe
 Stats
   fkAlias          AliasId
   blob             ByteString

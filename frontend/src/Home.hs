@@ -20,7 +20,7 @@
 module Home where
 
 import Client
-    (request,  postConfigNew,
+    (getMaybeAuthData, postEventViewPage, request,  postConfigNew,
       postRender,
     )
 import Common.PloverConfig
@@ -43,7 +43,7 @@ import Control.Category
       Category ((.), id),
     )
 import Control.Lens
-    ( At (at),
+    ((^.),  At (at),
       Ixed (ix),
       non,
       view,
@@ -179,7 +179,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
+    (attachPromptlyDynWithMaybe, current, attachWithMaybe, holdUniqDyn, constDyn, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -232,7 +232,7 @@ import Reflex.Dom
       wrapDomEvent,
     )
 import Shared
-    ( dynSimple,
+    (iFa',  dynSimple,
       iFa,
       whenJust,
     )
@@ -251,6 +251,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
 import Common.Auth (SessionData(..))
+import Text.Show (Show(show))
 
 default (Text)
 
@@ -459,6 +460,10 @@ settings lang = elClass "div" "topmenu" do
               el "span" $ text ". ("
               (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
               el "span" $ text ")"
+              when sdIsSiteAdmin $ do
+                el "span" $ text " "
+                domAdmin <- iFa' "fas fa-lock darkgray"
+                setRoute $ domEvent Click domAdmin $> FrontendRoute_Admin :/ ()
               let evLogout = domEvent Click domLogout
               updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
 
@@ -861,11 +866,14 @@ elCell showQwerty stenoKeys dynPressedKeys i colspan strCls =
   where
     setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
 
-elStenoOutput ::
-    forall key t (m :: * -> *).
-    (DomBuilder t m, MonadFix m, Palantype key) =>
-    Dynamic t (Set key) ->
-    m (InputElement EventResult (DomBuilderSpace m) t)
+elStenoOutput
+  :: forall key t (m :: * -> *)
+  .  ( DomBuilder t m
+     , MonadFix m
+     , Palantype key
+     )
+  => Dynamic t (Set key)
+  -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynDownKeys = mdo
     let eFocus = updated (_inputElement_hasFocus i) <&> \case
             True -> ("Type!", "class" =: Just "anthrazit")
@@ -1058,10 +1066,16 @@ toc lang current = elClass "section" "toc" $ do
 
                     elLi $ $readLoc "patternoverview"
 
-landingPage ::
-    forall t (m :: * -> *).
-    (DomBuilder t m, EventWriter t (Endo State) m) =>
-    m ()
+landingPage
+  :: forall t (m :: * -> *)
+  . ( DomBuilder t m
+    , EventWriter t (Endo State) m
+    , MonadFix m
+    , MonadHold t m
+    , MonadReader (Dynamic t State) m
+    , SetRoute t (R FrontendRoute) m
+    )
+  => m ()
 landingPage = elClass "div" "landing" $ do
     elClass "div" "top" $ el "h1" $ text "Palantype DE"
     elClass "div" "middle" $ do
@@ -1115,15 +1129,24 @@ landingPage = elClass "div" "landing" $ do
                             text " to create your own Palantype-style steno system."
                         pure elEN
 
-                    let eClickEN = domEvent Click elEN $> EN
-                        eClickDE = domEvent Click elDE $> DE
+                    let evClick = leftmost
+                          [ domEvent Click elEN $> EN
+                          , domEvent Click elDE $> DE
+                          ]
                     updateState $
-                        leftmost [eClickEN, eClickDE] <&> \lang ->
-                            [ field @"stApp" . field @"stMLang" .~ Just lang,
+                        evClick <&> \lang ->
+                            [ field @"stApp" . field @"stMLang" ?~ lang,
                               -- if no progress in map, insert "Introduction"
                               field @"stApp" . field @"stProgress"
                                   %~ Map.insertWith (\_ o -> o) lang ($readLoc "introduction")
                             ]
+                    dynState <- ask
+                    let toMNewRoute st _ = do
+                        lang <- st ^. field @"stApp" . field @"stMLang"
+                        stage <- st ^. field @"stApp" . field @"stProgress" . at lang
+                        pure $ stageUrl lang stage
+                    setRoute $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
+
     elClass "div" "bottom" $ do
 
         elClass "div" "usp" $ do
@@ -1211,6 +1234,7 @@ stages ::
     Lang ->
     RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
 stages navLang = do
+    el "header" $ settings navLang
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
   where
@@ -1223,7 +1247,7 @@ stages navLang = do
         navigation <- elClass "div" "row" $ mdo
             toc navLang current
 
-            let setEnv =
+            let setEnv page =
                     let navMPrevious = mPrev current
                         navCurrent = current
                         navMNext = mNext current
@@ -1234,7 +1258,14 @@ stages navLang = do
                                         envEChord = eChord,
                                         envNavigation = Navigation {..}
                                       }
-                            )
+                            ) do
+                              Env{..} <- ask
+                              evPb <- getPostBuild
+                              _ <- request $ postEventViewPage
+                                  (getMaybeAuthData <$> envDynState)
+                                  (constDyn $ Right $ Text.pack $ show $ stageUrl navLang current)
+                                  evPb
+                              page
             navigation <- elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text
                     $  "▲ "

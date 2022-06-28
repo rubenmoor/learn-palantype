@@ -10,29 +10,25 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Handler
-    ( handlers,
+    ( handlers
     )
 where
 
-import Servant.API ((:<|>) (..))
-import Servant.Server
-    (HasServer (ServerT)
-    )
-import Snap.Core (Snap)
+import           Servant.API                    ( (:<|>)(..) )
+import           Servant.Server                 ( HasServer(ServerT) )
 
-import Common.Api
-    ( RoutesApi,
-    )
-import qualified Handler.Palantype as Palantype
-import qualified Handler.Auth as Auth
-import qualified Handler.User as User
-import qualified Handler.Event as Event
-import Auth (UserInfo)
-import AppData (Handler)
+import           Common.Api                     ( RoutesApi )
+import qualified Handler.Palantype             as Palantype
+import qualified Handler.Auth                  as Auth
+import qualified Handler.User                  as User
+import qualified Handler.Event                 as Event
+import qualified Handler.Admin                 as Admin
+import           AppData                        ( Handler )
 
 handlers :: ServerT RoutesApi a Handler
 handlers =
-       Palantype.handlers
-  :<|> Auth.handlers
-  :<|> User.handlers
-  :<|> Event.handlers
+    Palantype.handlers
+        :<|> Auth.handlers
+        :<|> User.handlers
+        :<|> Event.handlers
+        :<|> Admin.handlers

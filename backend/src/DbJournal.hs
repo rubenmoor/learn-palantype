@@ -16,16 +16,16 @@ import Data.Function (($))
 import Control.Monad (Monad((>>=)))
 
 import qualified DbAdapter as Db
-import Common.Model (Journal (..))
+import Common.Model (Event)
 import AppData (Handler)
 import Database ( runDb, blobEncode )
 
-insert :: (Maybe (Key Db.Alias)) -> Journal -> Handler ()
+insert :: (Maybe (Key Db.Alias)) -> Event -> Handler ()
 insert mKeyAlias journal = do
   now <- liftIO getCurrentTime
   ip <- Text.decodeUtf8 . rqClientAddr <$> getRequest
   keyVisitor <- runDb (getBy $ Db.UIpAddress ip) >>= \case
     Just (Entity k _) -> pure k
     Nothing           ->
-      runDb $ Database.Gerippe.insert $ Db.Visitor mKeyAlias ip
-  runDb $ insert_ $ Db.Journal now (blobEncode journal) keyVisitor
+      runDb $ Database.Gerippe.insert $ Db.Visitor ip
+  runDb $ insert_ $ Db.Journal now (blobEncode journal) keyVisitor mKeyAlias

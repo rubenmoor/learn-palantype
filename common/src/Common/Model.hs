@@ -111,7 +111,6 @@ data Rank
   = RankMember
   | RankModerator
   | RankAdmin
-  | RankOwner
   deriving (Generic, Eq, Ord)
 
 instance FromJSON Rank
@@ -119,13 +118,23 @@ instance ToJSON Rank
 
 -- Journal
 
-data Journal
-  = JournalUser EventUser
-  | JournalApp  EventApp
+data Journal = Journal
+  { journalEvent :: Event
+  , journalVisitorId :: Int
+  , journalMAliasUser :: Maybe (Text, Text)
+  , journalTime :: UTCTime
+  } deriving (Generic)
+
+instance FromJSON Journal
+instance ToJSON Journal
+
+data Event
+  = EventUser EventUser
+  | EventApp  EventApp
   deriving (Generic)
 
-instance ToJSON Journal
-instance FromJSON Journal
+instance ToJSON Event
+instance FromJSON Event
 
 data EventUser
   = EventLogin

@@ -45,7 +45,7 @@ import           Common.Auth                    ( LoginData
                                                 , AuthRequired
                                                 , AuthOptional
                                                 )
-import           Common.Model (Stats, AppState)
+import           Common.Model (Journal, Stats, AppState)
 import Common.Stage (Stage)
 
 type RoutesAuth =
@@ -85,11 +85,15 @@ type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text           :> Post '[JSON] ()
   :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Stage, Stats) :> Post '[JSON] ()
 
+type RoutesAdmin =
+  AuthRequired "jwt" :> "journal" :> "get" :> "all" :> Get '[JSON] [Journal]
+
 type RoutesApi = "api" :>
     (      RoutesPalantype
       :<|> "auth"  :> RoutesAuth
       :<|> "user"  :> RoutesUser
       :<|> "event" :> RoutesEvent
+      :<|> "admin" :> RoutesAdmin
     )
 
 --

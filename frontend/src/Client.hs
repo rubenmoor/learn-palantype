@@ -68,7 +68,7 @@ import           State                          ( stSession
 import           Data.Bool                      ( Bool )
 import           Control.Lens.Getter            ( (^.) )
 import           Data.Text.Encoding             ( decodeUtf8' )
-import Common.Model (Stats, AppState)
+import Common.Model (Journal, Stats, AppState)
 import Common.Stage (Stage)
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
@@ -230,7 +230,13 @@ postEventStageCompleted
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted))
+getJournalAll
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Event t ()
+    -> m (Event t (ReqResult () [Journal]))
+
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted) :<|> (getJournalAll))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

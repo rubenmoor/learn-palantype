@@ -60,6 +60,7 @@ library
     , DbAdapter.Instances
     , DbJournal
     , Handler
+    , Handler.Admin
     , Handler.Auth
     , Handler.Palantype
     , Handler.User

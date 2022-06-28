@@ -601,13 +601,6 @@ main = putCss $ do
         position relative
         display inlineBlock
 
-        span # ".dropdown-button" ? do
-            color gray
-            fontSize $ pt 24
-            cursor pointer
-            hover & color darkblue
-            fontFamily ["Special Elite"] [cursive]
-
         div # ".dropdown-content" ? do
             display none
             position absolute
@@ -635,6 +628,14 @@ main = putCss $ do
                 borderBottom solid (px 1) lightgray
 
         ":hover" & div # ".dropdown-content" ? display block
+
+    span # ".dropdown-button" ? do
+        color gray
+        fontSize $ pt 24
+        cursor pointer
+        hover & color darkblue
+        fontFamily ["Special Elite"] [cursive]
+
 
     -- file input with custom look
     -- cf. https://stackoverflow.com/a/29251314/2925659
