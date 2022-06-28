@@ -24,7 +24,7 @@ import           Data.Monoid                    ( (<>) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Data.Tuple                     ( fst )
-import           Reflex.Dom                     (Prerender, prerender_,  dyn_
+import           Reflex.Dom                     (constDyn, getPostBuild, Prerender, prerender_,  dyn_
                                                 , MonadHold
                                                 , Adjustable
                                                 , DomBuilder
@@ -80,6 +80,10 @@ import GHC.Float (Double)
 import Text.Printf (printf)
 import GHC.Num ((*), Num((-)))
 import Data.Ord (Ord((>)))
+import Obelisk.Route.Frontend (R)
+import Common.Route (showRoute, FrontendRoute)
+import Data.Either (Either(Right))
+import Client ( getMaybeAuthData, postEventViewPage, request )
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -224,3 +228,15 @@ formatTime dt =
         strMinutes = if minutes > 0 then printf "%2d:" minutes else ""
         strSeconds = printf "%02d." $ secondsFull `mod` 60
     in  Text.pack (strMinutes <> strSeconds) <> showt secondsTenth <> "s"
+
+requestPostViewPage
+  :: forall m t
+  . ( MonadReader (Dynamic t State) m
+    , PostBuild t m
+    , Prerender t m
+    )
+  => Dynamic t (R FrontendRoute) -> m ()
+requestPostViewPage dynRoute = do
+  evPb <- getPostBuild
+  dynState <- ask
+  void $ request $ postEventViewPage (getMaybeAuthData <$> dynState) (Right . showRoute <$> dynRoute) evPb

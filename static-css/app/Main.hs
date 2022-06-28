@@ -423,6 +423,15 @@ main = putCss $ do
         float floatRight
         cursor pointer
 
+    button ? do
+        backgroundColor anthrazit
+        color white
+        fontSize $ pt 24
+        borderRadius (px 12) (px 12) (px 12) (px 12)
+        padding (px 12) (px 12) (px 12) (px 12)
+        border none (px 0) transparent
+        cursor pointer
+
     let keyboardWidth   = 650
         keyboardHeight  = 271
         keyboardPadding = 12
@@ -1022,8 +1031,7 @@ main = putCss $ do
             paddingRight $ em 1
 
     div # ".auth" ? do
-        paddingTop $ em 2
-        paddingBottom $ em 2
+        padding (em 2) (em 1) (em 2) (em 1)
         maxWidth $ px 1024
         marginLeft auto
         marginRight auto
@@ -1044,12 +1052,3 @@ main = putCss $ do
               [ bsColor myBlue
                     $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
               ]
-
-        button ? do
-            backgroundColor anthrazit
-            color white
-            fontSize $ pt 24
-            borderRadius (px 12) (px 12) (px 12) (px 12)
-            padding (px 12) (px 12) (px 12) (px 12)
-            border none (px 0) transparent
-            cursor pointer

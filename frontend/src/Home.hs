@@ -1259,12 +1259,12 @@ stages navLang = do
                                         envNavigation = Navigation {..}
                                       }
                             ) do
-                              Env{..} <- ask
-                              evPb <- getPostBuild
-                              _ <- request $ postEventViewPage
-                                  (getMaybeAuthData <$> envDynState)
-                                  (constDyn $ Right $ Text.pack $ show $ stageUrl navLang current)
-                                  evPb
+                              -- Env{..} <- ask
+                              -- evPb <- getPostBuild
+                              -- _ <- request $ postEventViewPage
+                              --     (getMaybeAuthData <$> envDynState)
+                              --     (constDyn $ Right $ Text.pack $ show $ stageUrl navLang current)
+                              --     evPb
                               page
             navigation <- elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text

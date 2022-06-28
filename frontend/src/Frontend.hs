@@ -31,7 +31,7 @@ import           State                          (updateState,  Session(..)
 import           Common.Route                   (showRoute, fullRouteEncoder,  FrontendRoute(..)
                                                 , FrontendRoute_AuthPages(..)
                                                 )
-import           Control.Monad.Reader           ( ReaderT(runReaderT) )
+import           Control.Monad.Reader           (MonadReader, ask,  ReaderT(runReaderT) )
 import qualified Data.Aeson                    as Aeson
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
@@ -64,7 +64,7 @@ import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Obelisk.Route.Frontend         ( RoutedT
+import           Obelisk.Route.Frontend         (Routed, askRoute,  RoutedT
                                                 , SetRoute(setRoute)
                                                 , mapRoutedT
                                                 , subRoute_
@@ -72,7 +72,7 @@ import           Obelisk.Route.Frontend         ( RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (select, fanMap, attachWith, attachWithMaybe, gate, widgetHold_, delay, performEvent, current, attach, Dynamic, never, switchDyn, constDyn
+import           Reflex.Dom                     (Prerender, fanEither, attachPromptlyDynWith, select, fanMap, attachWith, attachWithMaybe, gate, widgetHold_, delay, performEvent, current, attach, Dynamic, never, switchDyn, constDyn
                                                 , holdDyn
 
                                                 , prerender
@@ -94,7 +94,7 @@ import           Reflex.Dom                     (select, fanMap, attachWith, att
                                                 , (=:)
                                                 )
 
-import           Shared                         (redirectToWikipedia,  loadingScreen )
+import           Shared                         (requestPostViewPage, redirectToWikipedia,  loadingScreen )
 import qualified AuthPages
 import           Control.Category               ( (<<<))
 import           Common.Model                   (Rank (RankAdmin),  Message(..)
@@ -167,6 +167,7 @@ frontendBody = mdo
 
     evPb <- getPostBuild
     evDelayedPb <- delay 0.1 evPb
+    evLatePb <- delay 1.0 evPb
 
     (evSessionInitial :: Event t (Maybe Session)) <-
       fmap switchDyn $ prerender (pure never) $
@@ -252,32 +253,33 @@ frontendBody = mdo
         message
         subRoute_ $ \case
             FrontendRoute_Main -> do
-              _ <- request $ postEventViewPage (getMaybeAuthData <$> dynState)
-                                               (constDyn $ Right $ showRoute $ FrontendRoute_Main :/ ())
-                                               evPb
+              requestPostViewPage $ constDyn $ FrontendRoute_Main :/ ()
               landingPage
             FrontendRoute_EN -> do
-                stages @EN.Key EN
+              dynRoute <- askRoute
+              requestPostViewPage $ stageUrl EN <$> dynRoute
+              stages @EN.Key EN
             FrontendRoute_DE -> do
-                stages @DE.Key DE
+              dynRoute <- askRoute
+              requestPostViewPage $ stageUrl EN <$> dynRoute
+              stages @DE.Key DE
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
-                  request $ postEventViewPage (getMaybeAuthData <$> dynState)
-                                              (constDyn $ Right $ showRoute $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
-                                              evPb
+                  requestPostViewPage $ constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
                   AuthPages.signup
                 AuthPage_Login  -> do
-                  request $ postEventViewPage (getMaybeAuthData <$> dynState)
-                                              (constDyn $ Right $ showRoute $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
-                                              evPb
+                  requestPostViewPage $ constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ()
                   AuthPages.login
             FrontendRoute_Admin -> do
-                let evAdmin = attachWith const (current dynState) evPb
+                evPbAdmin <- getPostBuild
+                let evAdmin = attachWith const (current dynState) evPbAdmin
                     selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
                       SessionAnon -> Map.singleton FanAdminLogin $ setRoute $ evPb $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
                       SessionUser SessionData{..} ->
                         if sdIsSiteAdmin || sdClearances >= RankAdmin
-                        then Map.singleton FanAdminAccess $ AdminPages.journal
+                        then Map.singleton FanAdminAccess $ do
+                               requestPostViewPage $ constDyn $ FrontendRoute_Admin :/ ()
+                               AdminPages.journal
                         else Map.singleton FanAdminForbidden $ redirectToWikipedia "HTTP_403"
                     evLogin = select selector $ Const2 FanAdminLogin
                     evAccess = select selector $ Const2 FanAdminAccess
