@@ -32,7 +32,7 @@ import Common.PloverConfig
       lsStenoQwertz)
 import Common.Api (showSymbol)
 import Common.Route
-    ( FrontendRoute (..),
+    (showRoute,  FrontendRoute (..),
       FrontendRoute_AuthPages (..)
     )
 import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
@@ -179,7 +179,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (attachPromptlyDynWithMaybe, current, attachWithMaybe, holdUniqDyn, constDyn, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
+    (attachPromptlyDynWithMaybe, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -251,7 +251,6 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
 import Common.Auth (SessionData(..))
-import Text.Show (Show(show))
 
 default (Text)
 
@@ -1070,8 +1069,6 @@ landingPage
   :: forall t (m :: * -> *)
   . ( DomBuilder t m
     , EventWriter t (Endo State) m
-    , MonadFix m
-    , MonadHold t m
     , MonadReader (Dynamic t State) m
     , SetRoute t (R FrontendRoute) m
     )
@@ -1217,23 +1214,24 @@ landingPage = elClass "div" "landing" $ do
         elFlag cc =
             elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
 
-stages ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadHold t m,
-      MonadIO (Performable m),
-      MonadFix m,
-      Palantype key,
-      PerformEvent t m,
-      PostBuild t m,
-      Prerender t m,
-      RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m,
-      TriggerEvent t m
-    ) =>
-    Lang ->
-    RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-stages navLang = do
+stages
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadHold t m
+       , MonadIO (Performable m)
+       , MonadFix m
+       , Palantype key
+       , PerformEvent t m
+       , PostBuild t m
+       , Prerender t m
+       , RouteToUrl (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       )
+    => Lang
+    -> (Event t () -> Event t ())
+    -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+stages navLang toReady = do
     el "header" $ settings navLang
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
@@ -1259,12 +1257,13 @@ stages navLang = do
                                         envNavigation = Navigation {..}
                                       }
                             ) do
-                              -- Env{..} <- ask
-                              -- evPb <- getPostBuild
-                              -- _ <- request $ postEventViewPage
-                              --     (getMaybeAuthData <$> envDynState)
-                              --     (constDyn $ Right $ Text.pack $ show $ stageUrl navLang current)
-                              --     evPb
+                              dynRoute <- askRoute
+                              evReady <- toReady <$> getPostBuild
+                              Env{..} <- ask
+                              void $ request $ postEventViewPage
+                                (getMaybeAuthData <$> envDynState)
+                                (Right . showRoute . stageUrl navLang <$> dynRoute)
+                                evReady
                               page
             navigation <- elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text

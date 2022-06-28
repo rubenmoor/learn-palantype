@@ -36,9 +36,9 @@ journal = do
     evPb <- getPostBuild
     dynState <- ask
     evResp <- request $ getJournalAll (getAuthData <$> dynState) evPb
-    widgetHold_ (loadingScreen "Fetching journal ...") $ evResp <&> \case
+    widgetHold_ (loadingScreen "Checking your access rights ...") $ evResp <&> \case
       Left strErr -> elClass "p" "red small" $
-        text $ "journal: Couldn't load resource: " <> strErr
+        text $ "Couldn't load resource: " <> strErr
       Right lsJournal -> el "table" $ for_ lsJournal \Journal{..} -> el "tr" do
         el "td" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" journalTime
         case journalMAliasUser of

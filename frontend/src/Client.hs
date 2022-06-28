@@ -46,7 +46,7 @@ import           Servant.Reflex                 ( BaseUrl(BasePath)
 import           Data.Maybe                     ( fromMaybe
                                                 , Maybe(..)
                                                 )
-import           Data.Function                  ( const
+import           Data.Function                  ((.),  const
                                                 , ($)
                                                 )
 import           Data.Semigroup                 ( Semigroup((<>)) )
@@ -70,6 +70,7 @@ import           Control.Lens.Getter            ( (^.) )
 import           Data.Text.Encoding             ( decodeUtf8' )
 import Common.Model (Journal, Stats, AppState)
 import Common.Stage (Stage)
+import Data.Functor (Functor(fmap))
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
@@ -79,19 +80,21 @@ request
      . (Monad m, Prerender t m)
     => Client m (Event t (ReqResult () a))
     -> m (Event t (Either Text a))
-request req = do
-    eResult <- switchDyn <$> prerender (pure never) req
-    pure $ eResult <&> \case
-        ResponseSuccess _ x _ -> Right x
-        ResponseFailure _ _ resp ->
-          let mErrBody = do
-                  responseBody <- resp ^. xhrResponse_response
-                  bs           <- case responseBody of
-                      XhrResponseBody_ArrayBuffer bs -> pure bs
-                      _                              -> Nothing
-                  either (const Nothing) pure $ decodeUtf8' bs
-          in  Left $ fromMaybe "Couldn't decode error body" mErrBody
-        RequestFailure _ str -> Left $ "RequestFailure: " <> str
+request =
+    fmap (fmap resultToEither . switchDyn) . prerender (pure never)
+
+resultToEither :: ReqResult () a -> Either Text a
+resultToEither = \case
+    ResponseSuccess _ x _ -> Right x
+    ResponseFailure _ _ resp ->
+      let mErrBody = do
+              responseBody <- resp ^. xhrResponse_response
+              bs           <- case responseBody of
+                  XhrResponseBody_ArrayBuffer bs -> pure bs
+                  _                              -> Nothing
+              either (const Nothing) pure $ decodeUtf8' bs
+      in  Left $ fromMaybe "Couldn't decode error body" mErrBody
+    RequestFailure _ str -> Left $ "RequestFailure: " <> str
 
 postConfigNew
     :: SupportsServantReflex t m

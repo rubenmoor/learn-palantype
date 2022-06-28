@@ -73,7 +73,7 @@ import           GHCJS.DOM                      ( currentWindowUnchecked )
 import GHCJS.DOM.Location (assign)
 import         GHCJS.DOM.Window               (getDocument)
 import GHCJS.DOM.Document (getLocationUnchecked)
-import Language.Javascript.JSaddle (liftJSM)
+import Language.Javascript.JSaddle (MonadJSM, liftJSM)
 import Control.Monad (Monad((>>=)))
 import Data.Time (NominalDiffTime)
 import GHC.Float (Double)
@@ -177,7 +177,7 @@ loadingScreen :: DomBuilder t m => Text -> m ()
 loadingScreen strMessage = elClass "div" "mkOverlay" do
     el "div" $ do
       iFa "fas fa-spinner fa-spin"
-      text " Loading ..."
+      text " Loading"
     unless (Text.null strMessage) $ el "p" $ text strMessage
 
 elLabelCheckbox
@@ -208,13 +208,12 @@ undynState func = do
     dyn_ $ dynState <&> \st -> func st
 
 redirectToWikipedia
-  :: forall t m . (Monad m, Prerender t m) => Text -> m ()
-redirectToWikipedia str =
-    prerender_ blank $ liftJSM $
-        currentWindowUnchecked >>=
-            getDocument >>=
-                getLocationUnchecked >>=
-                    flip assign ("https://en.wikipedia.org/wiki/" <> str)
+  :: forall m . MonadJSM m => Text -> m ()
+redirectToWikipedia str = liftJSM $
+    currentWindowUnchecked >>=
+        getDocument >>=
+            getLocationUnchecked >>=
+                flip assign ("https://en.wikipedia.org/wiki/" <> str)
 
 -- in time 1.8.0.2 there is not FormatTime instance for Difftime
 -- (or NominalDifftime)
@@ -235,8 +234,12 @@ requestPostViewPage
     , PostBuild t m
     , Prerender t m
     )
-  => Dynamic t (R FrontendRoute) -> m ()
-requestPostViewPage dynRoute = do
-  evPb <- getPostBuild
+  => Dynamic t (R FrontendRoute)
+  -> Event t ()
+  -> m ()
+requestPostViewPage dynRoute ev = do
   dynState <- ask
-  void $ request $ postEventViewPage (getMaybeAuthData <$> dynState) (Right . showRoute <$> dynRoute) evPb
+  void $ request $ postEventViewPage
+    (getMaybeAuthData <$> dynState)
+    (Right . showRoute <$> dynRoute)
+    ev

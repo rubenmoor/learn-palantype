@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -18,27 +19,24 @@
 
 module Frontend where
 
-import           Control.Lens.Getter            ( (^.) )
-import           Control.Lens.Setter            ( (?~), (.~))
-import           Data.Generics.Product          ( field )
 import           Language.Javascript.JSaddle    ( liftJSM )
-import           State                          (updateState,  Session(..)
+import           State                          (Session(..)
                                                 , State(..)
                                                 , defaultState
-                                                , stageUrl
+
                                                 )
 
-import           Common.Route                   (showRoute, fullRouteEncoder,  FrontendRoute(..)
+import           Common.Route                   (FrontendRoute(..)
                                                 , FrontendRoute_AuthPages(..)
                                                 )
-import           Control.Monad.Reader           (MonadReader, ask,  ReaderT(runReaderT) )
+import           Control.Monad.Reader           (ReaderT(runReaderT) )
 import qualified Data.Aeson                    as Aeson
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 )
-import           Data.Function                  ( (.), (&) )
+import           Data.Function                  ( (.) )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     (maybe, isJust, isNothing,  Maybe(..)
+import           Data.Maybe                     (isJust,  Maybe(..)
                                                 , fromMaybe
                                                 )
 import           Data.Semigroup                 ( (<>)
@@ -64,7 +62,7 @@ import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Obelisk.Route.Frontend         (Routed, askRoute,  RoutedT
+import           Obelisk.Route.Frontend         (RoutedT
                                                 , SetRoute(setRoute)
                                                 , mapRoutedT
                                                 , subRoute_
@@ -72,12 +70,9 @@ import           Obelisk.Route.Frontend         (Routed, askRoute,  RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (Prerender, fanEither, attachPromptlyDynWith, select, fanMap, attachWith, attachWithMaybe, gate, widgetHold_, delay, performEvent, current, attach, Dynamic, never, switchDyn, constDyn
+import           Reflex.Dom                     (attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
                                                 , holdDyn
-
                                                 , prerender
-
-
                                                 , PerformEvent(performEvent_)
                                                 , PostBuild(getPostBuild)
                                                 , Reflex(updated)
@@ -97,14 +92,14 @@ import           Reflex.Dom                     (Prerender, fanEither, attachPro
 import           Shared                         (requestPostViewPage, redirectToWikipedia,  loadingScreen )
 import qualified AuthPages
 import           Control.Category               ( (<<<))
-import           Common.Model                   (Rank (RankAdmin),  Message(..)
+import           Common.Model                   (AppState, Rank (RankAdmin)
                                                 , defaultAppState
                                                 )
 import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
                                                 )
 import           Common.Auth                    ( SessionData(..) )
-import           Client                         (getMaybeAuthData, postEventViewPage,  postAppState
+import           Client                         (postAppState
                                                 , request
                                                 , getAppState
                                                 )
@@ -125,19 +120,15 @@ import           Data.Bool                      ((||),  Bool(..)
                                                 )
 import           Data.Witherable                ( Filterable(mapMaybe, filter) )
 import           Data.Functor                   ( (<$>) )
-import qualified Data.Text as Text
-import Text.Show (Show(show))
-import Control.Lens (view)
 import qualified AdminPages
 import Data.Ord (Ord((>=)))
 import Reflex.Dom (Reflex(Event))
 import Data.Functor (Functor(fmap))
 import Data.Witherable (Filterable(catMaybes))
 import GHC.Err (error)
-import Obelisk.Route (renderFrontendRoute)
-import Obelisk.Route (checkEncoder)
 import Data.Eq (Eq)
 import Data.Functor.Misc (Const2(Const2))
+import Palantype.Common.TH (failure)
 
 data FanAdmin
   = FanAdminLogin
@@ -165,27 +156,34 @@ frontendBody = mdo
         lsEncode :: forall a. ToJSON a => a -> Text
         lsEncode = Lazy.toStrict <<< Lazy.decodeUtf8 <<< Aeson.encode
 
-    evPb <- getPostBuild
-    evDelayedPb <- delay 0.1 evPb
-    evLatePb <- delay 1.0 evPb
-
-    (evSessionInitial :: Event t (Maybe Session)) <-
-      fmap switchDyn $ prerender (pure never) $
-        -- TODO: why do I need to rely on postbuild?
-        -- TODO: why do I need to rely on delayed postbuild?
-        -- if I don't (i.e. relying on the switchover event), evSessionInitial never fires
-        performEvent $ evDelayedPb $> fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
+    -- evPb <- getPostBuild
+    -- (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
+    --   switchDyn <$> prerender (pure never)
+    --     ( performEvent $ evPb $> do
+    --         mSession <- fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
+    --         stApp    <- fromMaybe defaultAppState . (lsDecode =<<) <$> liftJSM (lsRetrieve lsAppState)
+    --         pure $ (,stApp) <$> mSession
+    --     )
+    (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
+      updated <$> prerender (pure $ $failure "unexpected") do
+            mSession <- fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
+            stApp    <- fromMaybe defaultAppState . (lsDecode =<<) <$> liftJSM (lsRetrieve lsAppState)
+            pure $ (,stApp) <$> mSession
 
     let evMaybeLocal = evSessionInitial <&> \case
-          Just (SessionUser _) -> Nothing
-          Just SessionAnon     -> Just True
-          Nothing              -> Just False
-    let evMaybeFromServer = evSessionInitial <&> \case
-          Just (SessionUser sd) -> Just sd
-          Just SessionAnon -> Nothing
-          Nothing -> Nothing
+          Just (SessionUser _, _       ) -> Nothing
+          Just (SessionAnon  , appState) -> Just (Just appState)
+          Nothing                        -> Just Nothing
+
+        evMaybeFromServer = evSessionInitial <&> \case
+          Just (SessionUser sd, _) -> Just sd
+          Just (SessionAnon   , _) -> Nothing
+          Nothing                  -> Nothing
+
         evSessionFromServer = void $ filter isJust evMaybeFromServer
+
     dynSessionData <- holdDyn Nothing $ Just <$> catMaybes evMaybeFromServer
+
     let dynAuthData = dynSessionData <&> \case
           Nothing -> Left "not logged in"
           Just SessionData{..} -> Right (sdJwt, sdAliasName)
@@ -196,13 +194,15 @@ frontendBody = mdo
     -- cannot get the app state: something is fishy with this session: reset
     let evAppStateInvalid = mapMaybe (either Just (const Nothing)) evRespServerSession
         evAppState = mapMaybe (either (const Nothing) Just) evRespServerSession
+
     prerender_ blank $ performEvent_ $ evAppStateInvalid $> liftJSM (lsPut lsSession $ lsEncode SessionAnon)
 
     let evSessionLocal = leftmost
           [ catMaybes evMaybeLocal
-          , evAppStateInvalid $> False
+          , evAppStateInvalid $> Nothing
           ]
-    let (evLoadedFromServer :: Event t (Endo State)) =
+
+        (evLoadedFromServer :: Event t (Endo State)) =
            attach (current dynSessionData) evAppState <&> \case
              (Just sd, stApp) ->
                let stRedirectUrl = FrontendRoute_Main :/ ()
@@ -210,18 +210,17 @@ frontendBody = mdo
                in  Endo $ const State{..}
              (Nothing, _) -> error "impossible"
 
-    (evLoadedLocal :: Event t (Endo State)) <-
-      fmap (Endo . const) . switchDyn <$> prerender (pure never) do
-        let stRedirectUrl = FrontendRoute_Main :/ ()
-            stSession = SessionAnon
-        performEvent $ evSessionLocal <&> \hasSession -> do
-          stApp <- fromMaybe defaultAppState <$> if hasSession
-                then fmap (lsDecode =<<) $ liftJSM $ lsRetrieve lsAppState
-                else pure Nothing
-          pure State {..}
+        evLoadedLocal = fmap (Endo . const) $ evSessionLocal <&> \mAppState ->
+            let stRedirectUrl = FrontendRoute_Main :/ ()
+                stSession = SessionAnon
+                stApp = fromMaybe defaultAppState mAppState
+            in  State{..}
 
     let evLoaded = leftmost [evLoadedFromServer, evLoadedLocal]
     dynHasLoaded <- holdDyn False $ evLoaded $> True
+
+    let toReady evPb = leftmost [gate (current dynHasLoaded) evPb, void evLoaded]
+
     dyn_ $ dynHasLoaded <&> \hasLoaded ->
       if hasLoaded then blank else loadingScreen ""
 
@@ -251,40 +250,41 @@ frontendBody = mdo
     (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 
         message
-        subRoute_ $ \case
+        subRoute_ $ \r -> do
+          case r of
             FrontendRoute_Main -> do
-              requestPostViewPage $ constDyn $ FrontendRoute_Main :/ ()
+              toReady <$> getPostBuild >>=
+                requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
-            FrontendRoute_EN -> do
-              dynRoute <- askRoute
-              requestPostViewPage $ stageUrl EN <$> dynRoute
-              stages @EN.Key EN
-            FrontendRoute_DE -> do
-              dynRoute <- askRoute
-              requestPostViewPage $ stageUrl EN <$> dynRoute
-              stages @DE.Key DE
+            FrontendRoute_EN -> stages @EN.Key EN toReady
+            FrontendRoute_DE -> stages @DE.Key DE toReady
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
-                  requestPostViewPage $ constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+                  toReady <$> getPostBuild >>=
+                    requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                   AuthPages.signup
                 AuthPage_Login  -> do
-                  requestPostViewPage $ constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  toReady <$> getPostBuild >>=
+                    requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
                   AuthPages.login
             FrontendRoute_Admin -> do
-                evPbAdmin <- getPostBuild
-                let evAdmin = attachWith const (current dynState) evPbAdmin
+                evReady <- toReady <$> getPostBuild
+                let
+                    evAdmin = attachPromptlyDynWith const dynState evReady
                     selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
-                      SessionAnon -> Map.singleton FanAdminLogin $ setRoute $ evPb $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                      SessionAnon -> Map.singleton FanAdminLogin ()
                       SessionUser SessionData{..} ->
                         if sdIsSiteAdmin || sdClearances >= RankAdmin
-                        then Map.singleton FanAdminAccess $ do
-                               requestPostViewPage $ constDyn $ FrontendRoute_Admin :/ ()
-                               AdminPages.journal
-                        else Map.singleton FanAdminForbidden $ redirectToWikipedia "HTTP_403"
+                        then Map.singleton FanAdminAccess ()
+                        else Map.singleton FanAdminForbidden ()
                     evLogin = select selector $ Const2 FanAdminLogin
-                    evAccess = select selector $ Const2 FanAdminAccess
+                    -- evAccess = select selector $ Const2 FanAdminAccess
                     evForbidden = select selector $ Const2 FanAdminForbidden
-                widgetHold_ (loadingScreen "") $ leftmost [evLogin, evAccess, evForbidden]
+                setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
+
+                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) $ void evReady
+                AdminPages.journal
     blank
 
 frontendHead
