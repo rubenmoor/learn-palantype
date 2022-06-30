@@ -279,18 +279,20 @@ mkContext jwk pool =
                     )
                 pure
                 eSub
-            ls <- lift $ runDb' pool $ select $ from $ \(a `InnerJoin` u) -> do
+            eLs <- lift $ runDb' pool $ select $ from $ \(a `InnerJoin` u) -> do
                 on $ a Database.Gerippe.^. Db.AliasFkUser ==. u Database.Gerippe.^. Db.UserId
                 where_ $ u Database.Gerippe.^. Db.UserName ==. val uiUserName
                   &&. a Database.Gerippe.^. Db.AliasName   ==. val uiAliasName
                 pure (u, a)
-            (Entity _ Db.User {..}, Entity uiKeyAlias uiAlias) <- case ls of
-                [entry] -> pure entry
-                _       -> throwError $ AuthErrorOther $ "user not found: " <> uiUserName
+            (Entity _ Db.User {..}, Entity uiKeyAlias uiAlias) <- case eLs of
+                Right [entry] -> pure entry
+                Left strErr   -> throwError $ AuthErrorOther $ "database error: " <> Text.pack strErr
+                _             -> throwError $ AuthErrorOther $ "user not found: " <> uiUserName
             let uiIsSiteAdmin = userIsSiteAdmin
             uiClearances <- lift (runDb' pool $ getWhere Db.ClearanceFkAlias uiKeyAlias) >>= \case
-                [Entity _ Db.Clearance{..}] -> pure clearanceRank
-                _                        -> throwError $ AuthErrorOther $ "mkContext: clearance: expect unique entry"
+                Right [Entity _ Db.Clearance{..}] -> pure clearanceRank
+                Left  strErr                      -> throwError $ AuthErrorOther $ "database error: " <> Text.pack strErr
+                _                                 -> throwError $ AuthErrorOther $ "mkContext: clearance: expect unique entry"
                 -- for clearances $ \(Entity _ Clearance{..}, Entity _ Db.Podcast{..}) -> (podcastIdentifier, clearanceRank)
             pure $ UserInfo { .. }
     in

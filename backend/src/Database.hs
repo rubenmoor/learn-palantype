@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -34,13 +35,14 @@ import           Control.Category               ( (<<<) )
 runDb :: DbAction a -> Handler a
 runDb action = do
     pool <- asks envPool
-    lift $ runDb' pool action
+    lift (runDb' pool action) >>= \case
+      Left strErr -> throwError $ err500 { errBody = BSU.fromString strErr }
+      Right res -> pure res
 
-runDb' :: MonadSnap m => Pool SqlBackend -> DbAction a -> m a
+runDb' :: MonadSnap m => Pool SqlBackend -> DbAction a -> m (Either String a)
 runDb' pool action =
-    catch (liftIO $ runSqlPool action pool >>= evaluate)
-        $ \(e :: PersistentSqlException) -> throwError
-              $ err500 { errBody = BSU.fromString $ "db error: " <> show e }
+    catch (Right <$> liftIO (runSqlPool action pool >>= evaluate))
+        $ \(e :: PersistentSqlException) -> pure $ Left $ show e
 
 blobEncode :: forall a . ToJSON a => a -> ByteString
 blobEncode = Lazy.toStrict <<< Aeson.encode

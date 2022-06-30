@@ -70,7 +70,7 @@ import           Obelisk.Route.Frontend         (RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
+import           Reflex.Dom                     (Dynamic, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
                                                 , holdDyn
                                                 , prerender
                                                 , PerformEvent(performEvent_)
@@ -99,9 +99,7 @@ import           Data.Aeson                     ( ToJSON
                                                 , FromJSON
                                                 )
 import           Common.Auth                    ( SessionData(..) )
-import           Client                         (postAppState
-                                                , request
-                                                , getAppState
+import           Client                         (postAppState , request , getAppState
                                                 )
 import           Data.Either                    ( either
                                                 , Either(..)
@@ -129,6 +127,10 @@ import GHC.Err (error)
 import Data.Eq (Eq)
 import Data.Functor.Misc (Const2(Const2))
 import Palantype.Common.TH (failure)
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Time (UTCTime, getCurrentTime)
+
+default(Text)
 
 data FanAdmin
   = FanAdminLogin
@@ -156,14 +158,6 @@ frontendBody = mdo
         lsEncode :: forall a. ToJSON a => a -> Text
         lsEncode = Lazy.toStrict <<< Lazy.decodeUtf8 <<< Aeson.encode
 
-    -- evPb <- getPostBuild
-    -- (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
-    --   switchDyn <$> prerender (pure never)
-    --     ( performEvent $ evPb $> do
-    --         mSession <- fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
-    --         stApp    <- fromMaybe defaultAppState . (lsDecode =<<) <$> liftJSM (lsRetrieve lsAppState)
-    --         pure $ (,stApp) <$> mSession
-    --     )
     (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
       updated <$> prerender (pure $ $failure "unexpected") do
             mSession <- fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
@@ -216,7 +210,10 @@ frontendBody = mdo
                 stApp = fromMaybe defaultAppState mAppState
             in  State{..}
 
-    let evLoaded = leftmost [evLoadedFromServer, evLoadedLocal]
+    let evLoaded = leftmost
+            [ evLoadedFromServer
+            , evLoadedLocal
+            ]
     dynHasLoaded <- holdDyn False $ evLoaded $> True
 
     let toReady evPb = leftmost [gate (current dynHasLoaded) evPb, void evLoaded]
@@ -238,7 +235,7 @@ frontendBody = mdo
 
     updatedTail <- tailE $ updated dynState
     _ <- request $ postAppState dynEAuth (Right . stApp <$> dynState) $
-      void $ filter isLoggedIn updatedTail
+        void $ filter isLoggedIn updatedTail
 
     prerender_ blank $ performEvent_ $
       filter (not <<< isLoggedIn) (updated dynState) <&> \State{..} ->
@@ -246,6 +243,12 @@ frontendBody = mdo
 
     prerender_ blank $ performEvent_ $ updated dynState <&> \State{..} -> do
         liftJSM $ lsPut lsSession  $ lsEncode stSession
+
+    -- TODO: weird, probably a bug in reflex:
+    --       getting the current time later fails, `prerender` never switches
+    --       over
+    (dynNow :: Dynamic t (Either Text UTCTime)) <-
+      prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
 
     (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 
@@ -280,11 +283,12 @@ frontendBody = mdo
                     evLogin = select selector $ Const2 FanAdminLogin
                     -- evAccess = select selector $ Const2 FanAdminAccess
                     evForbidden = select selector $ Const2 FanAdminForbidden
+
                 setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
                 prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
-                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) $ void evReady
-                AdminPages.journal
+                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) evReady
+                AdminPages.journal dynHasLoaded dynNow
     blank
 
 frontendHead

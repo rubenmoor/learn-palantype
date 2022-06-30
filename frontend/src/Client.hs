@@ -13,7 +13,7 @@
 module Client where
 
 import           Common.PloverConfig            ( PloverSystemCfg )
-import           Common.Api                     ( RoutesApi )
+import           Common.Api                     (RoutesApi )
 import           Common.Auth                    ( CompactJWT
                                                 , SessionData(..)
                                                 , LoginData(..)
@@ -21,13 +21,11 @@ import           Common.Auth                    ( CompactJWT
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Monad                  ( Monad )
-import Data.Generics.Product (field)
+import           Data.Generics.Product          ( field )
 import           Data.Either                    ( either
                                                 , Either(..)
                                                 )
-import           Data.Functor                   ( (<&>)
-                                                , (<$>)
-                                                )
+import           Data.Functor                   ( (<$>) )
 import           Data.Proxy                     ( Proxy(Proxy) )
 import           Data.String                    ( String )
 import           Data.Text                      ( Text )
@@ -46,7 +44,8 @@ import           Servant.Reflex                 ( BaseUrl(BasePath)
 import           Data.Maybe                     ( fromMaybe
                                                 , Maybe(..)
                                                 )
-import           Data.Function                  ((.),  const
+import           Data.Function                  ( (.)
+                                                , const
                                                 , ($)
                                                 )
 import           Data.Semigroup                 ( Semigroup((<>)) )
@@ -68,9 +67,15 @@ import           State                          ( stSession
 import           Data.Bool                      ( Bool )
 import           Control.Lens.Getter            ( (^.) )
 import           Data.Text.Encoding             ( decodeUtf8' )
-import Common.Model (Journal, Stats, AppState)
-import Common.Stage (Stage)
-import Data.Functor (Functor(fmap))
+import           Common.Model                   ( Journal
+                                                , Stats
+                                                , AppState
+                                                )
+import           Common.Stage                   ( Stage )
+import           Data.Functor                   ( Functor(fmap) )
+import           Data.Time                      ( Day )
+import Servant.Reflex (QParam)
+import Data.Int (Int)
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
@@ -95,6 +100,20 @@ resultToEither = \case
               either (const Nothing) pure $ decodeUtf8' bs
       in  Left $ fromMaybe "Couldn't decode error body" mErrBody
     RequestFailure _ str -> Left $ "RequestFailure: " <> str
+
+getAuthData
+    :: State
+    -> (Either Text (CompactJWT, Text))
+getAuthData st = case stSession st of
+    SessionAnon                  -> Left "not logged in"
+    SessionUser SessionData {..} -> Right (sdJwt, sdAliasName)
+
+getMaybeAuthData
+    :: State -> (Either Text (Maybe (CompactJWT, Text)))
+getMaybeAuthData st =
+  Right $ case st ^. field @"stSession" of
+    SessionAnon -> Nothing
+    SessionUser SessionData{..} -> Just (sdJwt, sdAliasName)
 
 postConfigNew
     :: SupportsServantReflex t m
@@ -145,20 +164,6 @@ getDictDENumbers
     -> m (Event t (ReqResult () (Map RawSteno Text)))
 
 -- auth
-
-getAuthData
-    :: State
-    -> (Either Text (CompactJWT, Text))
-getAuthData st = case stSession st of
-    SessionAnon                  -> Left "not logged in"
-    SessionUser SessionData {..} -> Right (sdJwt, sdAliasName)
-
-getMaybeAuthData
-    :: State -> (Either Text (Maybe (CompactJWT, Text)))
-getMaybeAuthData st =
-  Right $ case st ^. field @"stSession" of
-    SessionAnon -> Nothing
-    SessionUser SessionData{..} -> Just (sdJwt, sdAliasName)
 
 postAuthenticate
     :: SupportsServantReflex t m
@@ -236,10 +241,16 @@ postEventStageCompleted
 getJournalAll
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
+    -> Dynamic t (QParam Day)
+    -> Dynamic t (QParam Day)
+    -> Dynamic t Bool
+    -> Dynamic t (QParam Int)
+    -> Dynamic t (QParam Text)
+    -> Dynamic t (QParam Text)
     -> Event t ()
     -> m (Event t (ReqResult () [Journal]))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted) :<|> (getJournalAll))
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
+import           Clay                           (label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -578,7 +578,6 @@ main = putCss $ do
           borderLeft solid (px 1) lightgray
 
         div # ".login-signup" ? do
-          float floatRight
           fontSize $ pt 14
           paddingTop $ em 0.3
           paddingRight $ em 0.5
@@ -1043,12 +1042,22 @@ main = putCss $ do
           outline none (px 0) transparent
           border solid (px 1) myBlue
 
-          -- really only meant for checkboxes:
-          -- input[type=checkbox] { ... }
-          -- `type_ :: Refinement` exists, but no plan
-          marginRight $ em 0.5
-        input # focus ? do
-          boxShadow
-              [ bsColor myBlue
-                    $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
-              ]
+    input ?
+      -- really only meant for checkboxes:
+      -- input[type=checkbox] { ... }
+      -- `type_ :: Refinement` exists, but no plan
+      marginRight (em 0.5)
+
+    input # focus ? do
+      boxShadow
+          [ bsColor myBlue
+                $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
+          ]
+
+    div # ".journal" ? do
+      div # ".filters" ? do
+        display flex
+        justifyContent center
+        flexWrap Flex.wrap
+        label ? do
+          fontSize $ pt 12

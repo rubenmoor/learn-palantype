@@ -8,9 +8,11 @@ library
   build-depends:
       base
     , aeson
+    , bytestring
     , common
     , containers
     , data-default
+    , either
     , generic-lens
     , ghcjs-dom
 

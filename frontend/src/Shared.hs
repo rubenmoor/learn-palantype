@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
@@ -10,21 +11,22 @@
 
 module Shared where
 
+import Data.Generics.Product (field)
 import GHC.Real (div, mod, realToFrac, fromIntegral, floor)
 import           Control.Applicative            ( Applicative(pure)
                                                 , (<$>)
                                                 )
 import           Control.Category               ( Category((.)) )
-import           Control.Lens                   ( (.~) )
+import           Control.Lens                   (set,  (.~) )
 import           Control.Monad                  ( (=<<) )
 import           Data.Function                  (flip,  ($) )
-import           Data.Functor                   ( void )
+import           Data.Functor                   (($>),  void )
 import           Data.Maybe                     ( Maybe(..) )
-import           Data.Monoid                    ( (<>) )
+import           Data.Monoid                    (Endo,  (<>) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Data.Tuple                     ( fst )
-import           Reflex.Dom                     (constDyn, getPostBuild, Prerender, prerender_,  dyn_
+import           Reflex.Dom                     (leftmost, current, tag, EventWriter, Prerender,  dyn_
                                                 , MonadHold
                                                 , Adjustable
                                                 , DomBuilder
@@ -60,11 +62,11 @@ import           Reflex.Dom                     (constDyn, getPostBuild, Prerend
                                                 , (&)
                                                 , (=:)
                                                 )
-import           Data.Bool                      ( Bool )
-import           Control.Monad.Reader           ( ask
+import           Data.Bool                      (Bool (..) )
+import           Control.Monad.Reader           (asks,  ask
                                                 , MonadReader
                                                 )
-import           State                          ( State )
+import           State                          (updateState, Session (..),  State (..))
 import           Data.Functor                   ( (<&>) )
 import Data.Int (Int)
 import TextShow (TextShow(showt))
@@ -75,15 +77,19 @@ import         GHCJS.DOM.Window               (getDocument)
 import GHCJS.DOM.Document (getLocationUnchecked)
 import Language.Javascript.JSaddle (MonadJSM, liftJSM)
 import Control.Monad (Monad((>>=)))
-import Data.Time (NominalDiffTime)
+import Data.Time (parseTimeM, defaultTimeLocale, Day, NominalDiffTime)
 import GHC.Float (Double)
 import Text.Printf (printf)
 import GHC.Num ((*), Num((-)))
 import Data.Ord (Ord((>)))
-import Obelisk.Route.Frontend (R)
-import Common.Route (showRoute, FrontendRoute)
+import Obelisk.Route.Frontend (setRoute, SetRoute, Routed, R, pattern (:/))
+import Common.Route (FrontendRoute_AuthPages (..), showRoute, FrontendRoute (..))
 import Data.Either (Either(Right))
 import Client ( getMaybeAuthData, postEventViewPage, request )
+import Common.Stage (Stage)
+import Common.Auth (SessionData(..))
+import Data.Functor (Functor(fmap))
+import Control.Monad (when)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -243,3 +249,41 @@ requestPostViewPage dynRoute ev = do
     (getMaybeAuthData <$> dynState)
     (Right . showRoute <$> dynRoute)
     ev
+
+elLoginSignup
+  :: forall t (m :: * -> *)
+  . ( DomBuilder t m,
+      PostBuild t m,
+      EventWriter t (Endo State) m,
+      MonadReader (Dynamic t State) m,
+      SetRoute t (R FrontendRoute) m
+    )
+  => Dynamic t (R FrontendRoute)
+  -> m ()
+elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
+    dynSession  <- asks $ fmap stSession
+    dyn_ $ dynSession <&> \case
+        SessionAnon -> do
+          (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
+          let evLogin = domEvent Click domLogin
+          setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+          el "span" $ text " or "
+          (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
+          let evSignup = domEvent Click domSignup
+          setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+          updateState $
+            tag (current dynRedirectRoute)
+                (leftmost [evSignup, evLogin]) <&> \r ->
+              [ field @"stRedirectUrl" .~ r ]
+        SessionUser SessionData{..} -> do
+          el "span" $ text "Logged in as "
+          el "span" $ text sdAliasName
+          el "span" $ text ". ("
+          (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
+          el "span" $ text ")"
+          when sdIsSiteAdmin $ do
+            el "span" $ text " "
+            domAdmin <- iFa' "fas fa-lock darkgray"
+            setRoute $ domEvent Click domAdmin $> FrontendRoute_Admin :/ ()
+          let evLogout = domEvent Click domLogout
+          updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]

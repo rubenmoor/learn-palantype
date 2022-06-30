@@ -32,8 +32,7 @@ import Common.PloverConfig
       lsStenoQwertz)
 import Common.Api (showSymbol)
 import Common.Route
-    (showRoute,  FrontendRoute (..),
-      FrontendRoute_AuthPages (..)
+    (showRoute,  FrontendRoute (..)
     )
 import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
 import Palantype.Common.TH (readLoc)
@@ -232,12 +231,12 @@ import Reflex.Dom
       wrapDomEvent,
     )
 import Shared
-    (iFa',  dynSimple,
+    (elLoginSignup, dynSimple,
       iFa,
       whenJust,
     )
 import State
-    (Session (..),  Env (..),
+    (Env (..),
       Navigation (..),
       State (..),
       stageUrl,
@@ -250,7 +249,6 @@ import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
-import Common.Auth (SessionData(..))
 
 default (Text)
 
@@ -304,7 +302,6 @@ settings ::
 settings lang = elClass "div" "topmenu" do
     dynState <- ask
     let dynAppState = stApp <$> dynState
-        dynSession  = stSession <$> dynState
 
     elClass "div" "floatLeft" $ do
         -- button to show configuration dropdown
@@ -439,32 +436,8 @@ settings lang = elClass "div" "topmenu" do
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
-    elClass "div" "login-signup" $ do
-        dyn_ $ dynSession <&> \case
-            SessionAnon -> do
-                dynCurrentStage <- askRoute
-                dyn_ $ dynCurrentStage <&> \currentStage -> do
-                    (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
-                    let evLogin = domEvent Click domLogin
-                    setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
-                    updateState $ evLogin $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
-                    el "span" $ text " or "
-                    (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
-                    let evSignup = domEvent Click domSignup
-                    setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
-                    updateState $ evSignup $> [ field @"stRedirectUrl" .~ stageUrl lang currentStage ]
-            SessionUser SessionData{..} -> do
-              el "span" $ text "Logged in as "
-              el "span" $ text sdAliasName
-              el "span" $ text ". ("
-              (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
-              el "span" $ text ")"
-              when sdIsSiteAdmin $ do
-                el "span" $ text " "
-                domAdmin <- iFa' "fas fa-lock darkgray"
-                setRoute $ domEvent Click domAdmin $> FrontendRoute_Admin :/ ()
-              let evLogout = domEvent Click domLogout
-              updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
+    dynRedirectRoute <- fmap (stageUrl lang) <$> askRoute
+    elLoginSignup dynRedirectRoute
 
     elClass "br" "clearBoth" blank
 

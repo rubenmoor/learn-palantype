@@ -8,7 +8,7 @@ import AppData (Handler)
 import Auth (UserInfo (..))
 import Data.Text (Text)
 import qualified DbJournal
-import Common.Model (EventApp (..), Stats, Event (..))
+import Common.Model (EventApp (..), Stats, JournalEvent (..))
 import Common.Stage (Stage)
 
 handlers :: ServerT RoutesEvent a Handler

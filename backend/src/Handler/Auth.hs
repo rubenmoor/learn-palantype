@@ -80,7 +80,7 @@ import           Common.Auth                    ( LoginData(..)
                                                 , UserNew(..)
                                                 )
 import           Database                       (blobDecode, blobEncode,  runDb )
-import           Common.Model                   (Rank (..), Event(..), EventUser(..), AppState,          )
+import           Common.Model                   (Rank (..), JournalEvent(..), EventUser(..), AppState,          )
 import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Data.Functor (Functor(fmap))

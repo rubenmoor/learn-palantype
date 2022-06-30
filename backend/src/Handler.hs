@@ -27,8 +27,8 @@ import           AppData                        ( Handler )
 
 handlers :: ServerT RoutesApi a Handler
 handlers =
-    Palantype.handlers
-        :<|> Auth.handlers
-        :<|> User.handlers
-        :<|> Event.handlers
-        :<|> Admin.handlers
+        Palantype.handlers
+   :<|> Admin.handlers
+   :<|> Auth.handlers
+   :<|> User.handlers
+   :<|> Event.handlers

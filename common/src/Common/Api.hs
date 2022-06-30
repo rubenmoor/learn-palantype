@@ -19,7 +19,7 @@ import           Data.Aeson                     ( FromJSON
                                                 )
 import           Data.Map                       ( Map )
 import           Data.Text                      ( Text )
-import           Servant.API                    ( Capture
+import           Servant.API                    (Strict, QueryParam', QueryFlag, QueryParam,  Capture
                                                 , (:<|>)
                                                 , Get
                                                 , (:>)
@@ -47,6 +47,7 @@ import           Common.Auth                    ( LoginData
                                                 )
 import           Common.Model (Journal, Stats, AppState)
 import Common.Stage (Stage)
+import Data.Time (Day)
 
 type RoutesAuth =
            "login"  :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
@@ -85,15 +86,32 @@ type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text           :> Post '[JSON] ()
   :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Stage, Stats) :> Post '[JSON] ()
 
+-- admin routes
+
+-- data GetJournalOptions = GetJournalOptions
+--   { gjoDayStart :: Day
+--   , gjoDayEnd :: Day
+--   , gjoExludeAdmin :: Bool
+--   , gjoFilterByVisitor :: Maybe Int
+--   , gjoFilterByUser :: Maybe Text
+--   , gjoFilterByAlias :: Maybe Text
+--   }
+
 type RoutesAdmin =
-  AuthRequired "jwt" :> "journal" :> "get" :> "all" :> Get '[JSON] [Journal]
+  AuthRequired "jwt" :> "journal" :> QueryParam "start" Day
+                                  :> QueryParam "end" Day
+                                  :> QueryFlag "exclude-admin"
+                                  :> QueryParam "filter-by-visitor" Int
+                                  :> QueryParam "filter-by-user" Text
+                                  :> QueryParam "filter-by-alias" Text
+                                  :> Get '[JSON] [Journal]
 
 type RoutesApi = "api" :>
     (      RoutesPalantype
+      :<|> "admin" :> RoutesAdmin
       :<|> "auth"  :> RoutesAuth
       :<|> "user"  :> RoutesUser
       :<|> "event" :> RoutesEvent
-      :<|> "admin" :> RoutesAdmin
     )
 
 --

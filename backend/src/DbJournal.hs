@@ -16,11 +16,11 @@ import Data.Function (($))
 import Control.Monad (Monad((>>=)))
 
 import qualified DbAdapter as Db
-import Common.Model (Event)
+import Common.Model (JournalEvent)
 import AppData (Handler)
 import Database ( runDb, blobEncode )
 
-insert :: (Maybe (Key Db.Alias)) -> Event -> Handler ()
+insert :: (Maybe (Key Db.Alias)) -> JournalEvent -> Handler ()
 insert mKeyAlias journal = do
   now <- liftIO getCurrentTime
   ip <- Text.decodeUtf8 . rqClientAddr <$> getRequest

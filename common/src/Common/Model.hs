@@ -119,7 +119,7 @@ instance ToJSON Rank
 -- Journal
 
 data Journal = Journal
-  { journalEvent :: Event
+  { journalEvent :: JournalEvent
   , journalVisitorId :: Int
   , journalMAliasUser :: Maybe (Text, Text)
   , journalTime :: UTCTime
@@ -128,13 +128,13 @@ data Journal = Journal
 instance FromJSON Journal
 instance ToJSON Journal
 
-data Event
+data JournalEvent
   = EventUser EventUser
   | EventApp  EventApp
   deriving (Generic)
 
-instance ToJSON Event
-instance FromJSON Event
+instance ToJSON JournalEvent
+instance FromJSON JournalEvent
 
 data EventUser
   = EventLogin
