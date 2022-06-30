@@ -306,7 +306,7 @@ settings lang = elClass "div" "topmenu" do
     elClass "div" "floatLeft" $ do
         -- button to show configuration dropdown
         eFile <- elClass "div" "topmenu-entry dropdown" $ do
-            elClass "span" "dropdown-button" $ iFa "fontSizeSmaller fas fa-cog"
+            elClass "span" "icon-link big" $ iFa "fas fa-cog"
             elClass "div" "dropdown-content" $ mdo
                 let dynMCfgName =
                         fmap pcfgName
@@ -372,7 +372,7 @@ settings lang = elClass "div" "topmenu" do
         -- button to switch between palantype systems, i.e. DE and EN
 
         elClass "div" "topmenu-entry dropdown" $ do
-            elClass "span" "dropdown-button" $ text $ showSymbol lang
+            elClass "span" "icon-link big" $ text $ showSymbol lang
             elClass "div" "dropdown-content" $ do
                 (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
                 let eClickRL = domEvent Click eRL

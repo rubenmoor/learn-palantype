@@ -15,7 +15,7 @@ import           Common.Api                     ( RoutesAdmin )
 import           AppData                        ( Handler )
 import           Auth                           ( UserInfo(..) )
 import           Common.Model                   ( Journal(..) )
-import           Database.Gerippe               (desc, orderBy, (&&.), (<=.), from, select, val, (>=.), (==.), (^.), where_, InnerJoin (..),  keyToId
+import           Database.Gerippe               ((||.), (!=.), just, (?.), valkey, not_, desc, orderBy, (&&.), (<=.), from, select, val, (>=.), (==.), (^.), where_, InnerJoin (..),  keyToId, LeftOuterJoin (..)
                                                 , joinMTo1Where'
                                                 , Entity(..)
                                                 )
@@ -24,7 +24,7 @@ import           Database                       ( blobDecode
                                                 , runDb
                                                 )
 import           Data.Maybe                     ( Maybe(..), fromMaybe)
-import           Control.Monad                  (Monad((>>=)) )
+import           Control.Monad                  (when, Monad((>>=)) )
 import           Data.Traversable               (for )
 import           Control.Applicative            ( Applicative(pure) )
 import           Data.Function                  ( ($) )
@@ -34,6 +34,8 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Bool (Bool)
 import Data.Int (Int)
 import Data.Text (Text)
+import GHC.Real (fromIntegral)
+import Database.Gerippe (isNothing)
 
 handlers :: ServerT RoutesAdmin a Handler
 handlers =
@@ -44,27 +46,37 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
     now <- liftIO getCurrentTime
     let end = fromMaybe (utctDay now) mEnd
         start = fromMaybe (addDays (-7) end) mStart
-    es <- runDb $ select $ from $ \(j `InnerJoin` v) -> do
+    es <- runDb $ select $ from $ \(j `InnerJoin` v `LeftOuterJoin` ma) -> do
+            on $ j ^. Db.JournalFkMAlias ==. ma ?. Db.AliasId
             on $ j ^. Db.JournalFkVisitor ==. v ^. Db.VisitorId
             where_ $ j ^. Db.JournalCreated >=. val (UTCTime start 0)
                  &&. j ^. Db.JournalCreated <=. val (UTCTime (addDays 1 end) 0)
-            -- when excludeAdmin $ where_ $ not_ $ j ^. Db.JournalFkMAlias ==. val (Just uiKeyAlias)
+            when bExcludeAdmin $
+              where_ $ isNothing (j ^. Db.JournalFkMAlias)
+                   ||. j ^. Db.JournalFkMAlias !=. val (Just uiKeyAlias)
+            whenJust mVisitorId $ \visitorId ->
+              where_ $ v ^. Db.VisitorId ==. valkey (fromIntegral visitorId)
+            whenJust mAlias $ \alias ->
+              where_ $ ma ?. Db.AliasName ==. just (val alias)
+            whenJust mUser $ \userName -> pure ()
             orderBy [desc $ j ^. Db.JournalCreated]
-            pure (j, v)
-    for es \(Entity _ Db.Journal {..}, Entity _ Db.Visitor {..}) -> do
+            pure (j, v, ma)
+    for es \(Entity _ Db.Journal {..}, Entity _ Db.Visitor {..}, ma) -> do
             let journalVisitorId = keyToId journalFkVisitor
                 journalTime = journalCreated
             journalEvent      <- blobDecode journalBlob
-            journalMAliasUser <- case journalFkMAlias of
+            journalMAliasUser <- case ma of
                 Nothing -> pure Nothing
-                Just keyAlias -> runDb (joinMTo1Where' Db.AliasFkUser
-                                                       Db.UserId
-                                                       Db.AliasId
-                                                       keyAlias
-                                       ) >>= \case
-                    [(Entity _ Db.Alias {..}, Entity _ Db.User {..})] ->
-                        pure $ Just (aliasName, userName)
+                Just (Entity keyAlias alias) ->
+                  runDb (joinMTo1Where' Db.AliasFkUser Db.UserId Db.AliasId keyAlias) >>= \case
+                    [(_, Entity _ Db.User {..})] ->
+                        pure $ Just (Db.aliasName alias, userName)
                     _ -> throwError $ err500
                         { errBody = "handleJournalGetAll: expected single entry"
                         }
             pure $ Journal { .. }
+
+whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
+whenJust x f = case x of
+  Just x  -> f x
+  Nothing -> pure ()

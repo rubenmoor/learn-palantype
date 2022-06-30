@@ -278,12 +278,15 @@ elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
         SessionUser SessionData{..} -> do
           el "span" $ text "Logged in as "
           el "span" $ text sdAliasName
-          el "span" $ text ". ("
+          el "span" $ text " ("
           (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
           el "span" $ text ")"
           when sdIsSiteAdmin $ do
             el "span" $ text " "
-            domAdmin <- iFa' "fas fa-lock darkgray"
-            setRoute $ domEvent Click domAdmin $> FrontendRoute_Admin :/ ()
+            domAdmin <- elClass "span" "icon-link small" $ iFa' "fas fa-lock"
+            let evClickAdmin = domEvent Click domAdmin
+            setRoute $ evClickAdmin $> FrontendRoute_Admin :/ ()
+            updateState $ tag (current dynRedirectRoute) evClickAdmin <&> \r ->
+              [ field @"stRedirectUrl" .~ r ]
           let evLogout = domEvent Click domLogout
           updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]

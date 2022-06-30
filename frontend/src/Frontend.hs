@@ -288,7 +288,7 @@ frontendBody = mdo
                 prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
                 requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) evReady
-                AdminPages.journal dynHasLoaded dynNow
+                AdminPages.journal dynHasLoaded
     blank
 
 frontendHead

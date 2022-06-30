@@ -10,9 +10,9 @@ module AdminPages where
 
 import Data.Generics.Sum (_As)
 import Data.Generics.Product (field)
-import Control.Lens.Getter ((^.))
+import Control.Lens.Getter (view)
 import Control.Lens.Setter ((.~))
-import           Reflex.Dom                     (current, gate, leftmost, prerender, updated, inputElementConfig_setValue, DomBuilderSpace, InputElementConfig, inputElementConfig_initialChecked, elementConfig_initialAttributes, inputElementConfig_elementConfig, inputElement, dyn_, InputElement (..)
+import           Reflex.Dom                     (dynText, tag, EventName (Click), domEvent, current, gate, leftmost, prerender, updated, inputElementConfig_setValue, DomBuilderSpace, InputElementConfig, inputElementConfig_initialChecked, elementConfig_initialAttributes, inputElementConfig_elementConfig, inputElement, InputElement (..)
 
 
 
@@ -39,13 +39,13 @@ import           Reflex.Dom                     (current, gate, leftmost, preren
                                                 )
 import           Control.Monad.Reader           ( MonadReader(ask) )
 import           Data.Foldable                  ( for_ )
-import           Data.Functor                   ( (<$>)
+import           Data.Functor                   ((<$>)
                                                 , (<&>)
                                                 )
 import           Data.Either                    (either,  Either(..) )
 import           Data.Time                      (getCurrentTime, parseTimeM, Day,  addDays
                                                 , utctDay
-                                                , UTCTime
+
                                                 , defaultTimeLocale
                                                 )
 import qualified Data.Time.Format              as Time
@@ -59,12 +59,12 @@ import           Data.Semigroup                 ( Endo
 import qualified Data.Text                     as Text
 import           TextShow                       ( TextShow(showt) )
 import           Data.Text                      ( Text )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (setRoute,  R
                                                 , SetRoute
                                                 , pattern (:/)
                                                 )
 
-import           Shared                         (elLoginSignup
+import           Shared                         (iFa', elLoginSignup
                                                 , loadingScreen
                                                 , formatTime
                                                 )
@@ -83,7 +83,6 @@ import           Common.Route                   ( FrontendRoute
                                                     ( FrontendRoute_Admin
                                                     )
                                                 )
-import           Reflex.Dom                     ( Reflex(Event) )
 import           Data.Functor                   ( Functor(fmap) )
 import Data.Bool (Bool(..))
 import Data.Foldable (Foldable(length))
@@ -101,6 +100,12 @@ import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Functor (void)
 import Control.Monad (when)
 import GHC.Base (Ord((>)))
+import Data.Word (Word)
+import Text.Read (readEither)
+import Data.Either.Combinators (mapLeft)
+import GHC.Real (fromIntegral)
+import Data.Foldable (Foldable(null))
+import Data.Traversable (Traversable(sequence))
 
 data JournalReqConfig = JournalReqConfig
   { jrcExcludeAdmin :: Bool
@@ -122,60 +127,90 @@ journal
        , SetRoute t (R FrontendRoute) m
        )
     => Dynamic t Bool
-    -> Dynamic t (Either Text UTCTime)
     -> m ()
-journal dynHasLoaded _ = mdo
-    elClass "div" "topmenu" $ do
-        elLoginSignup $ constDyn $ FrontendRoute_Admin :/ ()
-        elClass "br" "clearBoth" blank
+journal dynHasLoaded = mdo
 
     dynState <- ask
+
+    elClass "div" "topmenu" $ do
+        elClass "div" "floatLeft" $ do
+            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
+            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $ domEvent Click domBack
+        elLoginSignup $ constDyn $ FrontendRoute_Admin :/ ()
+        elClass "br" "clearBoth" blank
 
     let toQParam = maybe (QParamInvalid "couldn't parse date") QParamSome
         dynStart = toQParam <$> dynMStart
         dynEnd   = toQParam <$> dynMEnd
-        dynExcludeAdmin = constDyn True
-        dynFilterByVisitor = constDyn QNone
-        dynFilterByUser = constDyn QNone
-        dynFilterByAlias = constDyn QNone
+        dynFilterByVisitor =
+          either QParamInvalid (maybe QNone $ QParamSome <<< fromIntegral) <$> dynEId
+        dynFilterByUser = maybe QNone QParamSome <$> dynMUser
+        dynFilterByAlias = maybe QNone QParamSome <$> dynMAlias
 
+        evParamUpdate = leftmost $ updated <$>
+                  [ void dynMStart
+                  , void dynMEnd
+                  , void dynExclAdmin
+                  , void dynEId
+                  , void dynMUser
+                  , void dynMAlias
+                  ]
         evLoad = leftmost [ gate (current dynHasLoaded) evParamUpdate, void $ updated dynHasLoaded]
 
     evResp <- request
         $ getJournalAll (getAuthData <$> dynState)
             dynStart
             dynEnd
-            dynExcludeAdmin
+            dynExclAdmin
             dynFilterByVisitor
             dynFilterByUser
             dynFilterByAlias
             $ evLoad
 
-    (dynMStart, dynMEnd, evParamUpdate) <-
+    (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias) <-
       elClass "div" "journal" do
         params <- elClass "div" "filters" $ do
             dynENow <- prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
-            -- dyn $ dynENow <&> \eNow -> do
+
             let
                 evEDayEnd = updated dynENow <&> fmap utctDay
                 evEDayStart = evEDayEnd <&> fmap (addDays (-7))
                 eDayToStr = either id (Text.pack <<< show)
                 confStart = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayStart)
                 confEnd   = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayEnd)
-            (dynMStart', iStart) <- el "span" $ elLabelInputDate confStart "Start " "date-start"
-            (dynMEnd'  , iEnd) <- el "span" $ elLabelInputDate confEnd   "End " "date-end"
 
-            dyn_ $ dynState <&> \State{..} -> do
-              let userName = stSession ^. _As @"SessionUser" . field @"sdUserName"
-              el "span" $ elLabelCheckbox True userName "exclude-admin"
+            dynMStart' <- el "span" $ elLabelInputDate confStart "Start " "date-start"
+            dynMEnd'   <- el "span" $ elLabelInputDate confEnd   "End " "date-end"
+
+            let elemId = "exclude-admin"
+                confCbx = def
+                  & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ ("type" =: "checkbox" <> "id" =: elemId)
+                  & inputElementConfig_initialChecked .~ True
+            dynExclAdmin' <- el "span" do
+              domCbx <- inputElement confCbx
+              elAttr "label" ("for" =: elemId) $ el "span" $ do
+                text "Exclude admin user "
+                el "em" $ dynText $ dynState <&>
+                  view ( field @"stSession"
+                       . _As @"SessionUser"
+                       . field @"sdUserName"
+                       )
+                text " "
+              pure $ _inputElement_checked domCbx
+
+            dynEId' <- el "span" $ elLabelInputWord def "Visitor ID " "filter-visitor"
+
+            dynMUser' <- el "span" $ elLabelInput def "User name " "filter-user"
+
+            dynMAlias' <- el "span" $ elLabelInput def "Alias " "filter-alias"
 
             pure
               ( dynMStart'
               , dynMEnd'
-              , void $ leftmost $ updated <$>
-                  [ _inputElement_value iStart
-                  , _inputElement_value iEnd
-                  ]
+              , dynExclAdmin'
+              , dynEId'
+              , dynMUser'
+              , dynMAlias'
               )
 
         el "hr" blank
@@ -184,7 +219,7 @@ journal dynHasLoaded _ = mdo
 
             Left strErr     ->
               elClass "p" "red small" $
-                text $ "Couldn't load resource: " <> strErr
+                text $ "Error: " <> strErr
 
             Right lsJournal -> do
 
@@ -223,33 +258,50 @@ showEvent = \case
         EventStageCompleted stage Stats {..} ->
             "stage completed " <> showt stage <> formatTime statsTime
 
-elLabelCheckbox
-    :: (DomBuilder t m) => Bool -> Text -> Text -> m (Dynamic t Bool)
-elLabelCheckbox initial labelUserName elemId = do
-    cb <-
-        inputElement
-        $  def
-        &  inputElementConfig_elementConfig . elementConfig_initialAttributes .~ ("type" =: "checkbox" <> "id" =: elemId)
-        &  inputElementConfig_initialChecked .~ initial
-    elAttr "label" ("for" =: elemId) $ el "span" $ do
-      text "Exclude admin user "
-      el "em" $ text labelUserName
-    pure $ _inputElement_checked cb
-
 elLabelInputDate
     :: DomBuilder t m
     => InputElementConfig e t (DomBuilderSpace m)
     -> Text
     -> Text
-    -> m
-           ( Dynamic t (Maybe Day)
-           , InputElement e (DomBuilderSpace m) t
-           )
+    -> m ( Dynamic t (Maybe Day))
 elLabelInputDate conf label elemId = do
     elAttr "label" ("for" =: elemId) $ text label
     i <-
         inputElement
         $  conf & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ ("id" =: elemId <> "type" =: "date")
-    let dynMDay  = _inputElement_value i <&> \str ->
+    pure $ _inputElement_value i <&> \str ->
           parseTimeM True defaultTimeLocale "%Y-%m-%d" (Text.unpack str)
-    pure (dynMDay, i)
+
+elLabelInput
+    :: DomBuilder t m
+    => InputElementConfig e t (DomBuilderSpace m)
+    -> Text
+    -> Text
+    -> m ( Dynamic t (Maybe Text))
+elLabelInput conf label elemId = do
+    elAttr "label" ("for" =: elemId) $ text label
+    i <- inputElement $
+      conf & inputElementConfig_elementConfig
+           . elementConfig_initialAttributes
+           .~ ("id" =: elemId <> "type" =: "text" <> "maxlength" =: "64")
+    pure $ _inputElement_value i <&> \str ->
+      if Text.null str then Nothing else Just str
+
+elLabelInputWord
+    :: DomBuilder t m
+    => InputElementConfig e t (DomBuilderSpace m)
+    -> Text
+    -> Text
+    -> m ( Dynamic t (Either Text (Maybe Word)))
+elLabelInputWord conf label elemId = do
+    elAttr "label" ("for" =: elemId) $ text label
+    i <- inputElement $
+      conf & inputElementConfig_elementConfig
+           . elementConfig_initialAttributes
+           .~ ("id" =: elemId <> "type" =: "number" <> "patern" =: "\\d+")
+    let toMaybe str = if null str then Nothing else Just str
+    pure $ sequence
+         . fmap (mapLeft Text.pack . readEither)
+         . toMaybe
+         . Text.unpack
+         <$> _inputElement_value i

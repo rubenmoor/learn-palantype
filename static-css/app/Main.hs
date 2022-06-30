@@ -579,8 +579,8 @@ main = putCss $ do
 
         div # ".login-signup" ? do
           fontSize $ pt 14
-          paddingTop $ em 0.3
           paddingRight $ em 0.5
+          marginTop $ em 0.3
 
     div # ".btnToggleKeyboard" ? do
         cursor pointer
@@ -637,13 +637,11 @@ main = putCss $ do
 
         ":hover" & div # ".dropdown-content" ? display block
 
-    span # ".dropdown-button" ? do
+    span # ".icon-link" ? do
         color gray
-        fontSize $ pt 24
         cursor pointer
         hover & color darkblue
         fontFamily ["Special Elite"] [cursive]
-
 
     -- file input with custom look
     -- cf. https://stackoverflow.com/a/29251314/2925659
@@ -672,6 +670,7 @@ main = putCss $ do
     ".fgTransparent" ? color transparent
     ".red" ? color red
     ".small" ? fontSize (pt 12)
+    ".big" ? fontSize (pt 24)
     ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
     ".darkgray" ? color darkgray
@@ -1058,6 +1057,9 @@ main = putCss $ do
       div # ".filters" ? do
         display flex
         justifyContent center
+        alignItems center
         flexWrap Flex.wrap
         label ? do
           fontSize $ pt 12
+
+      div # ".filters" |> span ? paddingRight (em 1)
