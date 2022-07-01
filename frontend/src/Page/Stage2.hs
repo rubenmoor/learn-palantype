@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
@@ -33,7 +34,7 @@ import           Control.Lens                   ( (+~)
                                                 , (.~)
                                                 , (<&>)
                                                 )
-import           Control.Lens.TH
+import Control.Lens.TH ( makePrisms, makeLenses )
 import           Control.Monad                  ( (=<<)
                                                 , unless
                                                 , when
@@ -42,9 +43,8 @@ import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand )
 import           Control.Monad.Reader           ( MonadReader(ask)
-                                                , asks
                                                 )
-import           Data.Bool                      ( Bool(..) )
+import           Data.Bool                      (not,  Bool(..) )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(length)
@@ -90,7 +90,7 @@ import           Page.Common                    ( elBackUp
                                                 , loading
                                                 , taskWords
                                                 )
-import           Page.Common.Stopwatch
+import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
 import           Palantype.Common               ( kiChordsStart
                                                 , Chord(..)
                                                 , Lang(..)
@@ -106,7 +106,7 @@ import           Palantype.Common               ( RawSteno
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.DE                   ( Pattern(..) )
-import           Reflex.Dom                     ( TriggerEvent
+import           Reflex.Dom                     (current, gate,  TriggerEvent
                                                 , Performable
                                                 , holdUniqDyn
                                                 , (=:)
@@ -188,9 +188,9 @@ taskLetters
        , Prerender t m
        , TriggerEvent t m
        )
-    => m (Event t Stats)
-taskLetters = do
-    eChord  <- asks envEChord
+    => Event t (Chord key)
+    -> m (Event t Stats)
+taskLetters evChord = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -242,7 +242,7 @@ taskLetters = do
                 }
 
         let stateInitial = StateLettersPause 0
-        dynSingletons <- foldDyn step stateInitial eChord
+        dynSingletons <- foldDyn step stateInitial evChord
         evStartStop   <- fmap updated $ holdUniqDyn $ dynSingletons <&> \case
             StateLettersPause nMistakes -> nMistakes
             StateLettersRun   _         -> -1
@@ -296,7 +296,7 @@ exercise1
        , TriggerEvent t m
        )
     => m Navigation
-exercise1 = do
+exercise1 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang `elem` [DE, EN]) elNotImplemented
@@ -404,8 +404,30 @@ exercise1 = do
     elClass "div" "paragraph" $ do
         text "You can surely come up with a better one, yourself!"
 
-    evDone <- taskLetters
-    elCongraz (Just <$> evDone) envNavigation
+    el "p" $ text "This one is for the homerow:"
+
+    el "p" $ do
+      el "strong" $ text "D"
+      text "ussel "
+      el "strong" $ text "S"
+      text "ind "
+      el "strong" $ text "N"
+      text "iemand "
+      el "strong" $ text "+"
+      el "strong" $ text " A"
+      text "lle, "
+      el "strong" $ text "I"
+      text "mmer "
+      el "strong" $ text "+"
+      el "strong" $ text " N"
+      text "ie, "
+      el "strong" $ text "S"
+      text "ie "
+      el "strong" $ text "D"
+      text "ussel!"
+
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord)
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
 
 -- Ex 2.2
@@ -425,10 +447,11 @@ walkWords
        , Palantype key
        , PostBuild t m
        )
-    => [Text]
+    => Event t (Chord key)
+    -> [Text]
     -> RawSteno
     -> m (Event t ())
-walkWords words raw = do
+walkWords evChord words raw = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
@@ -456,7 +479,7 @@ walkWords words raw = do
                                 , wsDone     = Nothing
                                 }
 
-    dynWalk <- foldDyn step stepInitial envEChord
+    dynWalk <- foldDyn step stepInitial evChord
     let evDone = catMaybes $ wsDone <$> updated dynWalk
 
     el "blockquote" $ el "table" $ do
@@ -493,10 +516,11 @@ exercise2
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise2 = do
+exercise2 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang `elem` [DE, EN]) elNotImplemented
@@ -538,7 +562,7 @@ exercise2 = do
                     , "."
                     ]
 
-            evDone <- walkWords lsWord raw
+            evDone' <- walkWords (gate (not <$> current dynDone) envEChord) lsWord raw
 
             elClass "div" "paragraph" $ do
                 text
@@ -559,7 +583,7 @@ exercise2 = do
                     \Some words are almost beyond recognition. \
                     \No worries, we'll get to that."
 
-            pure evDone
+            pure evDone'
         DE -> do
             elClass "div" "paragraph"
                 $ text
@@ -573,7 +597,7 @@ exercise2 = do
             let raw = "MID DEM F+ISn F+Ä+Gʃs DEÜ ʃG+EI/FEL +-"
                 txt = "Mit dem Wissen wächst der Zwei fel ."
 
-            evDone <- walkWords (Text.words txt) raw
+            evDone' <- walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
 
             elClass "div" "paragraph" $ do
                 text
@@ -594,7 +618,7 @@ exercise2 = do
                     \Some words are almost beyond recognition. \
                     \No worries, we'll get to that."
 
-            pure evDone
+            pure evDone'
 
     elClass "div" "paragraph" $ do
         text "Let me introduce yet another useful chord: "
@@ -603,7 +627,7 @@ exercise2 = do
             ". It is the homerow of your right hand and deletes your last \
             \input. Now you can correct your mistakes!"
 
-    elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
 
     pure envNavigation
 
@@ -640,10 +664,10 @@ taskSingletons
        , Prerender t m
        , TriggerEvent t m
        )
-    => Event t (Map RawSteno Text, Map Text [RawSteno])
+    => Event t (Chord key)
+    -> Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t Stats)
-taskSingletons eMaps = do
-    eChord  <- asks envEChord
+taskSingletons evChord eMaps = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -721,7 +745,7 @@ taskSingletons eMaps = do
                         }
 
                 let stateInitial = StatePause 0
-                dynSingletons <- foldDyn step stateInitial eChord
+                dynSingletons <- foldDyn step stateInitial evChord
                 evStartStop   <-
                     fmap updated $ holdUniqDyn $ dynSingletons <&> \case
                         StatePause nMistakes -> nMistakes
@@ -790,7 +814,7 @@ exercise3
        , TriggerEvent t m
        )
     => m Navigation
-exercise3 = do
+exercise3 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -882,9 +906,9 @@ exercise3 = do
                 $  "Could not load resource: "
                 <> str
 
-    evDone <- taskSingletons $ filterRight eEDict
+    evDone <- taskSingletons (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
 
-    elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
 
 -- Ex 2.4
@@ -906,7 +930,7 @@ exercise4
        , TriggerEvent t m
        )
     => m Navigation
-exercise4 = do
+exercise4 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -954,7 +978,7 @@ exercise4 = do
     evEDoc  <- request $ getDocDEPattern' PatSimple 0 ePb
 
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
-        Right (mST, mTSs) -> taskWords mST mTSs
+        Right (mST, mTSs) -> taskWords (gate (not <$> current dynDone) envEChord) mST mTSs
         Left  str         -> never <$ elClass
             "div"
             "paragraph small red"
@@ -998,5 +1022,5 @@ exercise4 = do
         elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
         elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
 
-    elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
     pure envNavigation

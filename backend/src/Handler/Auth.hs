@@ -85,7 +85,6 @@ import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Data.Functor (Functor(fmap))
 import Control.Category ((<<<))
-import Snap.Core (finishWith)
 
 default(Text)
 

@@ -362,7 +362,6 @@ settings lang = elClass "div" "topmenu" do
                 (eRP, _) <- elClass' "span" "entry" $ text "Reset"
                 updateState $ domEvent Click eRP $>
                     [ field @"stApp" . field @"stProgress" .~ def
-                    , field @"stApp" . field @"stStats" .~ Map.empty
                     ]
 
                 pure eFile'

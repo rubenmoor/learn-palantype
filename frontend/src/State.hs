@@ -12,15 +12,9 @@ module State where
 import           Common.Route                   ( FrontendRoute(..) )
 import           Common.Stage                   ( Stage() )
 import           Common.Auth                    ( SessionData )
-import           Control.Applicative            ( pure
-
-                                                , (<$>)
+import           Control.Applicative            ( (<$>)
                                                 )
-import           Data.Aeson                     ( object
-                                                , (.=)
-                                                , withObject
-                                                , (.:)
-                                                , FromJSON(..)
+import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
 import           Data.Foldable                  ( Foldable(foldMap) )
@@ -28,6 +22,7 @@ import           Data.Function                  ( ($) )
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Semigroup                 ( Endo(..) )
 import           GHC.Generics                   ( Generic )
+import Data.Map.Strict (Map)
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
@@ -37,7 +32,8 @@ import           Palantype.Common               ( Lang(..)
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
-import Common.Model (defaultAppState, AppState)
+import Common.Model (Stats, defaultAppState, AppState)
+import qualified Data.Map.Strict as Map
 
 -- environment for frontend pages
 
@@ -72,8 +68,9 @@ data Navigation = Navigation
 
 
 data State = State
-    { stSession :: Session
-    , stApp     :: AppState
+    { stSession     :: Session
+    , stApp         :: AppState
+    , stStats       :: Map (Lang, Stage) [Stats]
     , stRedirectUrl :: R FrontendRoute
     }
     deriving Generic
@@ -81,6 +78,7 @@ data State = State
 defaultState :: State
 defaultState = State { stSession     = SessionAnon
                      , stApp         = defaultAppState
+                     , stStats       = Map.empty
                      , stRedirectUrl = FrontendRoute_Main :/ ()
                      }
 

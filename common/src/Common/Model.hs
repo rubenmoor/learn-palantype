@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric         #-}
@@ -40,7 +42,6 @@ data AppState = AppState
     , stKeyboardShowQwerty :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map Lang Stage
-    , stStats         :: Map (Lang, Stage) [Stats]
     , stTOCShowStage1 :: Bool
     , stTOCShowStage2 :: Bool
     , stTOCShowStage3 :: Bool
@@ -57,7 +58,6 @@ defaultAppState = AppState { stCleared            = Set.empty
                            , stMsg                = Nothing
                            , stPloverCfg          = defaultPloverCfg
                            , stProgress           = defaultProgress
-                           , stStats              = Map.empty
                            , stShowKeyboard       = True
                            , stKeyboardShowQwerty = True
                            , stShowTOC            = False
@@ -149,7 +149,7 @@ instance FromJSON EventUser
 
 data EventApp
   = EventViewPage Text
-  | EventStageCompleted Stage Stats
+  | EventStageCompleted Lang Stage Stats
   deriving (Generic)
 
 instance ToJSON EventApp

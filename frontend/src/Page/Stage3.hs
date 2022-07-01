@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage3 where
@@ -19,7 +20,7 @@ import Page.Common (elCongraz, elNotImplemented, elPatterns, loading, taskWords)
 import Palantype.Common (Lang (..), Palantype, toDescription)
 import Palantype.Common.TH (failure, readLoc)
 import Palantype.DE (Pattern (..))
-import Reflex.Dom (TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
+import Reflex.Dom (current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
 import State (Env (..), Navigation (..), State, stageUrl)
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
@@ -48,7 +49,7 @@ exercise
   -> Pattern
   -> (Lang -> m ())
   -> m Navigation
-exercise iEx elIntro pat elExplication = do
+exercise iEx elIntro pat elExplication = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -80,13 +81,13 @@ exercise iEx elIntro pat elExplication = do
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords mSW mWSs
+              else taskWords (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
     pure envNavigation
 
 exercise1 ::
@@ -644,7 +645,7 @@ exercise21
   :: forall key t (m :: * -> *)
   .  Constraints key t m
   => m Navigation
-exercise21 = do
+exercise21 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -677,11 +678,11 @@ exercise21 = do
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords mSW mWSs
+              else taskWords (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
     pure envNavigation

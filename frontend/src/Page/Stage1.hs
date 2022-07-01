@@ -14,8 +14,6 @@
 module Page.Stage1 where
 
 import           Client                         ( postRender )
-import           Common.PloverConfig            (defaultPloverSystemCfg,  PloverSystemCfg ( pcfgMapStenoKeys)
-                                                )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
@@ -23,10 +21,6 @@ import           Control.Applicative            ( (<$>)
 import           Control.Category               (Category((.), id) )
 import           Control.Lens                   ((.~)
                                                 , (<&>)
-                                                , At(at)
-                                                , _Wrapped'
-                                                , non
-                                                , view
                                                 )
 import           Control.Monad                  ( unless
                                                 , when
@@ -37,14 +31,13 @@ import           Control.Monad.Random           ( evalRand
                                                 , newStdGen
                                                 )
 import           Control.Monad.Reader           ( MonadReader(ask)
-                                                , asks
                                                 )
-import           Data.Bool                      ( Bool(..) )
+import           Data.Bool                      (not,  Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(elem, length)
                                                 , for_
                                                 )
-import           Data.Function                  ( ($) )
+import           Data.Function                  (($) )
 import           Data.Functor                   ( ($>)
                                                 , Functor(fmap)
                                                 , void
@@ -52,10 +45,8 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
-                                                , sort
                                                 , zip
                                                 )
-import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Ord                       ( Ord((<), (>)) )
 import           Data.Semigroup                 ( Endo(..)
@@ -78,7 +69,7 @@ import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , fromIndex
                                                 , allKeys
                                                 )
-import           Reflex.Dom                     (never, switchDyn, widgetHold,  DomBuilder
+import           Reflex.Dom                     (current, gate, never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)
                                                 , PostBuild(getPostBuild)
@@ -98,8 +89,6 @@ import           Reflex.Dom                     (never, switchDyn, widgetHold,  
                                                 , text
                                                 , widgetHold_
                                                 )
-import           Shared                         ( dynSimple
-                                                )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
@@ -108,7 +97,6 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import Common.Model (AppState(..))
 
 -- exercise 1
 
@@ -127,10 +115,11 @@ exercise1
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise1 = do
+exercise1 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -156,8 +145,9 @@ exercise1 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-    eDone <- taskAlphabet True
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
 
     when (navLang == DE) $ do
       elClass "div" "paragraph" $ text
@@ -195,10 +185,11 @@ exercise2
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise2 = do
+exercise2 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -217,8 +208,8 @@ exercise2 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-    eDone <- taskAlphabet False
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -258,10 +249,11 @@ exercise3
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise3 = do
+exercise3 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -279,8 +271,8 @@ exercise3 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
-    eDone <- taskAlphabet True
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -309,10 +301,11 @@ exercise4
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise4 = do
+exercise4 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -331,8 +324,8 @@ exercise4 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
-    eDone <- taskAlphabet False
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
     pure envNavigation
 
 {-|
@@ -343,91 +336,78 @@ taskAlphabet
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
-       , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
        )
-    => Bool -- ^ show the alphabet
+    => Event t (Chord key)
+    -> Bool -- ^ show the alphabet
     -> m (Event t ())
-taskAlphabet showAlphabet = do
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
+taskAlphabet evChord showAlphabet = do
 
-    let dynAlphabet =
-            sort
-                .   fmap fromIndex
-                .   Map.keys
-                .   pcfgMapStenoKeys
-                .   view (_Wrapped' . at navLang . non defaultPloverSystemCfg)
-                .   stPloverCfg
-                .   stApp
-                <$> envDynState
+    let len = length $ allKeys @key
 
-    dynSimple $ dynAlphabet <&> \ptAlphabet -> do
-        let len = length ptAlphabet
+        step :: Chord key -> WalkState key -> WalkState key
+        step (Chord ks) ws@WalkState {..} =
+            case (ks, wsMMistake, wsDone) of
 
-            step :: Chord key -> WalkState key -> WalkState key
-            step (Chord ks) ws@WalkState {..} =
-                case (ks, wsMMistake, wsDone) of
+        -- reset after done
+                (_, _, Just True) ->
+                    ws { wsDone = Just False, wsCounter = 0 }
 
-            -- reset after done
-                    (_, _, Just True) ->
-                        ws { wsDone = Just False, wsCounter = 0 }
+                -- reset after mistake
+                (_, Just _, _) ->
+                    ws { wsCounter = 0, wsMMistake = Nothing }
 
-                    -- reset after mistake
-                    (_, Just _, _) ->
-                        ws { wsCounter = 0, wsMMistake = Nothing }
+                -- correct
+                ([l], _, _) | allKeys !! wsCounter == l -> ws
+                    { wsDone    = if wsCounter == len - 1
+                                      then Just True
+                                      else Nothing
+                    , wsCounter = wsCounter + 1
+                    }
 
-                    -- correct
-                    ([l], _, _) | ptAlphabet !! wsCounter == l -> ws
-                        { wsDone    = if wsCounter == len - 1
-                                          then Just True
-                                          else Nothing
-                        , wsCounter = wsCounter + 1
-                        }
+                -- mistake
+                (ls, _, _) -> ws { wsDone     = Nothing
+                                 , wsMMistake = Just (wsCounter, Chord ls)
+                                 }
 
-                    -- mistake
-                    (ls, _, _) -> ws { wsDone     = Nothing
-                                     , wsMMistake = Just (wsCounter, Chord ls)
-                                     }
+        stepInitial = WalkState { wsCounter  = 0
+                                , wsMMistake = Nothing
+                                , wsDone     = Nothing
+                                }
 
-            stepInitial = WalkState { wsCounter  = 0
-                                    , wsMMistake = Nothing
-                                    , wsDone     = Nothing
-                                    }
+    dynWalk <- foldDyn step stepInitial evChord
+    let eDone = catMaybes $ wsDone <$> updated dynWalk
 
-        dynWalk <- foldDyn step stepInitial envEChord
-        let eDone = catMaybes $ wsDone <$> updated dynWalk
+    elClass "div" "exerciseField" $ el "code" $ do
+        let clsLetter = if showAlphabet then "" else "fgTransparent"
+        for_ (zip [0 :: Int ..] $ allKeys @key) $ \(i, c) -> do
+            let
+                dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
+                    Just (j, _) -> if i == j then "bgRed" else clsLetter
+                    Nothing ->
+                        if wsCounter > i then "bgGreen" else clsLetter
+            elDynClass "span" dynCls $ text $ Text.singleton $ keyCode c
+    elClass "div" "paragraph" $ do
+        dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
+        text $ " / " <> Text.pack (show len)
 
-        elClass "div" "exerciseField" $ el "code" $ do
-            let clsLetter = if showAlphabet then "" else "fgTransparent"
-            for_ (zip [0 :: Int ..] ptAlphabet) $ \(i, c) -> do
-                let
-                    dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
-                        Just (j, _) -> if i == j then "bgRed" else clsLetter
-                        Nothing ->
-                            if wsCounter > i then "bgGreen" else clsLetter
-                elDynClass "span" dynCls $ text $ Text.singleton $ keyCode c
-        elClass "div" "paragraph" $ do
-            dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
-            text $ " / " <> Text.pack (show len)
+    let eMistake = wsMMistake <$> updated dynWalk
+    widgetHold_ blank $ eMistake <&> \case
+        Just (_, w) ->
+            elClass "div" "red small paragraph"
+                $  text
+                $  "You typed "
+                <> showt w
+                <> ". Any key to start over."
+        Nothing -> blank
 
-        let eMistake = wsMMistake <$> updated dynWalk
-        widgetHold_ blank $ eMistake <&> \case
-            Just (_, w) ->
-                elClass "div" "red small paragraph"
-                    $  text
-                    $  "You typed "
-                    <> showt w
-                    <> ". Any key to start over."
-            Nothing -> blank
+    dynDone <- holdDyn False eDone
+    dyn_ $ dynDone <&> \bDone ->
+        when bDone $ elClass "div" "small anthrazit" $ text
+            "Cleared. Press any key to start over."
 
-        dynDone <- holdDyn False eDone
-        dyn_ $ dynDone <&> \bDone ->
-            when bDone $ elClass "div" "small anthrazit" $ text
-                "Cleared. Press any key to start over."
-
-        pure $ void $ filter id eDone
+    pure $ void $ filter id eDone
 
 -- stage 1.5
 
@@ -446,16 +426,14 @@ taskLetters
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
-       , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
        , Prerender t m
        )
-    => [key]
+    => Event t (Chord key)
+    -> [key]
     -> m (Event t ())
-taskLetters letters = do
-
-    eChord  <- asks envEChord
+taskLetters evChord letters = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -505,7 +483,7 @@ taskLetters letters = do
                     , slsLetters  = evalRand (shuffleM letters) stdGen
                     }
 
-            dynStenoLetters <- foldDyn step stepInitial eChord
+            dynStenoLetters <- foldDyn step stepInitial evChord
 
             let eDone = catMaybes $ slsDone <$> updated dynStenoLetters
 
@@ -554,7 +532,7 @@ exercise5
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise5 = do
+exercise5 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -586,9 +564,8 @@ exercise5 = do
         leftHand =
             filter (\k -> toFinger k `elem` fingersLeft) allKeys
 
-    eDone <- taskLetters leftHand
-
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) leftHand
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
     pure envNavigation
 
 exercise6
@@ -604,7 +581,7 @@ exercise6
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise6 = do
+exercise6 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -628,9 +605,8 @@ exercise6 = do
         rightHand =
             filter (\k -> toFinger k `elem` fingersRight) allKeys
 
-    eDone <- taskLetters rightHand
-
-    elCongraz (eDone $> Nothing) envNavigation
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) rightHand
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
     pure envNavigation
 
 exercise7
@@ -646,7 +622,7 @@ exercise7
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise7 = do
+exercise7 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -667,15 +643,15 @@ exercise7 = do
 
     let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
-    eDone <- taskLetters homeRow
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
 
     elClass "div" "paragraph"
         $ text
               "Be sure to practice this one to perfection. It will only get more \
               \difficult from here."
 
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
 
-    elCongraz (eDone $> Nothing) envNavigation
     pure envNavigation
 
 exercise8
@@ -691,7 +667,7 @@ exercise8
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise8 = do
+exercise8 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -716,13 +692,12 @@ exercise8 = do
     ePb <- getPostBuild
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-    eDone <- taskLetters allKeys
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
 
     elClass "div" "paragraph"
         $ text
               "By the way, you can re-shuffle the order, in which the keys \
            \are presented to you, by reloading the page, if you feel the need to."
 
-
-    elCongraz (eDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) envNavigation
     pure envNavigation

@@ -52,7 +52,7 @@ import           Reflex.Dom                     (el',  (=:)
                                                 , leftmost
                                                 , text
                                                 )
-import           State                          ( Env(..)
+import           State                          (stageUrl,  Env(..)
                                                 , Navigation(..)
                                                 , State
                                                 , updateState
@@ -176,7 +176,7 @@ introduction = do
                , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
                , field @"stApp" . field @"stTOCShowStage1" .~ True
                ]
-        setRoute $ eStart $> FrontendRoute_Main :/ ()
+        setRoute $ eStart $> stageUrl navLang ($readLoc "stage_1-1")
 
     elClass "div" "paragraph" $ do
         text "Instead of clicking the button, try to input "

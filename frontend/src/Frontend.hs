@@ -70,7 +70,7 @@ import           Obelisk.Route.Frontend         (RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (Dynamic, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
+import           Reflex.Dom                     (fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
                                                 , holdDyn
                                                 , prerender
                                                 , PerformEvent(performEvent_)
@@ -92,7 +92,7 @@ import           Reflex.Dom                     (Dynamic, attachPromptlyDynWith,
 import           Shared                         (requestPostViewPage, redirectToWikipedia,  loadingScreen )
 import qualified AuthPages
 import           Control.Category               ( (<<<))
-import           Common.Model                   (AppState, Rank (RankAdmin)
+import           Common.Model                   (Stats, AppState, Rank (RankAdmin)
                                                 , defaultAppState
                                                 )
 import           Data.Aeson                     ( ToJSON
@@ -101,8 +101,7 @@ import           Data.Aeson                     ( ToJSON
 import           Common.Auth                    ( SessionData(..) )
 import           Client                         (postAppState , request , getAppState
                                                 )
-import           Data.Either                    ( either
-                                                , Either(..)
+import           Data.Either                    ( Either(..)
                                                 )
 import           Control.Monad                  ( Monad((>>=))
                                                 , (=<<)
@@ -116,19 +115,18 @@ import           Data.Functor                   ( void )
 import           Data.Bool                      ((||),  Bool(..)
                                                 , not
                                                 )
-import           Data.Witherable                ( Filterable(mapMaybe, filter) )
+import           Data.Witherable                ( Filterable(filter) )
 import           Data.Functor                   ( (<$>) )
 import qualified AdminPages
 import Data.Ord (Ord((>=)))
 import Reflex.Dom (Reflex(Event))
 import Data.Functor (Functor(fmap))
 import Data.Witherable (Filterable(catMaybes))
-import GHC.Err (error)
 import Data.Eq (Eq)
 import Data.Functor.Misc (Const2(Const2))
 import Palantype.Common.TH (failure)
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Map.Strict (Map)
+import Common.Stage (Stage)
 
 default(Text)
 
@@ -149,6 +147,7 @@ frontendBody
 frontendBody = mdo
     let lsAppState = "appState" :: Text
         lsSession = "session" :: Text
+        lsStats = "stats" :: Text
         lsRetrieve key = currentWindowUnchecked >>= getLocalStorage >>= \s -> getItem s key
         lsPut key d = currentWindowUnchecked >>= getLocalStorage >>= \s -> setItem s key d
 
@@ -158,21 +157,22 @@ frontendBody = mdo
         lsEncode :: forall a. ToJSON a => a -> Text
         lsEncode = Lazy.toStrict <<< Lazy.decodeUtf8 <<< Aeson.encode
 
-    (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
+    (evSessionInitial :: Event t (Maybe (Session, AppState, Map (Lang, Stage) [Stats]))) <-
       updated <$> prerender (pure $ $failure "unexpected") do
             mSession <- fmap (lsDecode =<<) (liftJSM $ lsRetrieve lsSession)
-            stApp    <- fromMaybe defaultAppState . (lsDecode =<<) <$> liftJSM (lsRetrieve lsAppState)
-            pure $ (,stApp) <$> mSession
+            stats    <- fromMaybe Map.empty . (lsDecode =<<) <$> liftJSM (lsRetrieve lsStats)
+            appState <- fromMaybe defaultAppState . (lsDecode =<<) <$> liftJSM (lsRetrieve lsAppState)
+            pure $ (,appState, stats) <$> mSession
 
     let evMaybeLocal = evSessionInitial <&> \case
-          Just (SessionUser _, _       ) -> Nothing
-          Just (SessionAnon  , appState) -> Just (Just appState)
+          Just (SessionUser _, _       , _    ) -> Nothing
+          Just (SessionAnon  , appState, stats) -> Just (Just (appState, stats))
           Nothing                        -> Just Nothing
 
         evMaybeFromServer = evSessionInitial <&> \case
-          Just (SessionUser sd, _) -> Just sd
-          Just (SessionAnon   , _) -> Nothing
-          Nothing                  -> Nothing
+          Just (SessionUser sd, _, _) -> Just sd
+          Just (SessionAnon   , _, _) -> Nothing
+          Nothing                     -> Nothing
 
         evSessionFromServer = void $ filter isJust evMaybeFromServer
 
@@ -186,8 +186,7 @@ frontendBody = mdo
       request $ getAppState dynAuthData evSessionFromServer
 
     -- cannot get the app state: something is fishy with this session: reset
-    let evAppStateInvalid = mapMaybe (either Just (const Nothing)) evRespServerSession
-        evAppState = mapMaybe (either (const Nothing) Just) evRespServerSession
+    let (evAppStateInvalid, evAppState) = fanEither evRespServerSession
 
     prerender_ blank $ performEvent_ $ evAppStateInvalid $> liftJSM (lsPut lsSession $ lsEncode SessionAnon)
 
@@ -198,16 +197,16 @@ frontendBody = mdo
 
         (evLoadedFromServer :: Event t (Endo State)) =
            attach (current dynSessionData) evAppState <&> \case
-             (Just sd, stApp) ->
+             (Just sd, (stApp, stStats)) ->
                let stRedirectUrl = FrontendRoute_Main :/ ()
                    stSession = SessionUser sd
                in  Endo $ const State{..}
-             (Nothing, _) -> error "impossible"
+             (Nothing, _) -> $failure "impossible"
 
-        evLoadedLocal = fmap (Endo . const) $ evSessionLocal <&> \mAppState ->
+        evLoadedLocal = fmap (Endo . const) $ evSessionLocal <&> \mData ->
             let stRedirectUrl = FrontendRoute_Main :/ ()
                 stSession = SessionAnon
-                stApp = fromMaybe defaultAppState mAppState
+                (stApp, stStats) = fromMaybe (defaultAppState, Map.empty) mData
             in  State{..}
 
     let evLoaded = leftmost
@@ -243,12 +242,6 @@ frontendBody = mdo
 
     prerender_ blank $ performEvent_ $ updated dynState <&> \State{..} -> do
         liftJSM $ lsPut lsSession  $ lsEncode stSession
-
-    -- TODO: weird, probably a bug in reflex:
-    --       getting the current time later fails, `prerender` never switches
-    --       over
-    (dynNow :: Dynamic t (Either Text UTCTime)) <-
-      prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
 
     (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 

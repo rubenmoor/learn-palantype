@@ -23,6 +23,7 @@ import qualified Handler.Auth                  as Auth
 import qualified Handler.User                  as User
 import qualified Handler.Event                 as Event
 import qualified Handler.Admin                 as Admin
+import qualified Handler.Stats                 as Stats
 import           AppData                        ( Handler )
 
 handlers :: ServerT RoutesApi a Handler
@@ -32,3 +33,4 @@ handlers =
    :<|> Auth.handlers
    :<|> User.handlers
    :<|> Event.handlers
+   :<|> Stats.handlers

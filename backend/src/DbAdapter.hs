@@ -56,5 +56,10 @@ Journal
   fkMAlias         AliasId Maybe
 Stats
   fkAlias          AliasId
-  blob             ByteString
+  created          UTCTime
+  time             Double
+  lang             Text
+  stage            Text
+  length           Int
+  nErrors          Int
 |]

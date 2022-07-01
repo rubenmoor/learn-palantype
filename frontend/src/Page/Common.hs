@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
@@ -18,15 +19,14 @@
 
 module Page.Common where
 
-import           Client                         ( postRender )
+import           Client                         (getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Common.Stage                   ( stageMeta )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ( (>>>)
-                                                , (<<<)
-                                                , Category(id, (.))
+import           Control.Category               ( (<<<)
+                                                , Category((.))
                                                 )
-import           Control.Lens                   ( (?~)
+import           Control.Lens                   (non, view,  (?~)
                                                 , (%~)
                                                 , (.~)
                                                 , (<&>)
@@ -36,10 +36,10 @@ import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand
                                                 , newStdGen
                                                 )
-import           Control.Monad.Reader           ( MonadReader
-                                                , asks
+import           Control.Monad.Reader           (ask,  MonadReader
+
                                                 )
-import           Data.Bool                      ( (||)
+import           Data.Bool                      (otherwise,  (||)
                                                 , Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
@@ -48,7 +48,7 @@ import           Data.Foldable                  ( for_
                                                 , traverse_
                                                 )
 import           Data.Foldable                  ( Foldable(null) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  (const,  ($) )
 import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
@@ -61,7 +61,7 @@ import           Data.List                      ( (!!)
 import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     ( maybe
+import           Data.Maybe                     (maybe, isJust
                                                 , Maybe(..)
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
@@ -85,7 +85,6 @@ import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
-                                                , pattern (:/)
                                                 )
 import           Palantype.Common               ( kiChordsStart
                                                 , Chord
@@ -102,7 +101,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     ( TriggerEvent
+import           Reflex.Dom                     (Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -130,7 +129,7 @@ import           Reflex.Dom                     ( TriggerEvent
                                                 , updated
                                                 )
 import           Safe                           ( initMay )
-import           Shared                         (formatTime,  iFa
+import           Shared                         (dynSimple, formatTime,  iFa
                                                 , whenJust
                                                 )
 import           State                          ( State(..)
@@ -142,7 +141,7 @@ import           State                          ( State(..)
                                                 )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( showt )
-import           Text.Read                      ( read )
+import           Text.Read                      (readMaybe )
 import           Control.Lens                   ( makePrisms
                                                 , makeLenses
                                                 )
@@ -159,8 +158,11 @@ import           Data.Foldable                  ( Foldable(minimum) )
 import           Data.List                      ( take )
 import           Common.Model                   ( Message(..)
                                                 , Stats (..)
-                                                , AppState(..)
+
                                                 )
+import Data.Witherable (Filterable(catMaybes))
+import Palantype.Common.TH (readLoc)
+import Control.Lens.At (At(at))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -202,43 +204,48 @@ elCongraz
        , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
     -> Navigation
-    -> m ()
+    -> m (Dynamic t Bool)
 elCongraz evDone Navigation {..} = mdo
-    eChord   <- asks envEChord
-    dynStats <- asks $ envDynState >>> fmap
-        (stApp >>> stStats >>> Map.findWithDefault [] (navLang, navCurrent))
+    Env {..} <- ask
+    let dynStats = envDynState <&> view
+          (   field @"stStats"
+            . at (navLang, navCurrent)
+            . non []
+          )
 
-    let eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) eChord
-        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) eChord
+        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) envEChord
+        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
-        evCongraz    = leftmost [CongrazShow <$> evDone, eBack $> CongrazHide]
+    dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
+    let evNewStats = catMaybes $ catMaybes $ updated dynDone
 
-    updateState $ evDone <&> maybe
-        []
-        \s ->
-            [ field @"stApp" . field @"stStats" %~ Map.insertWith
-                  (<>)
-                  (navLang, navCurrent)
-                  [s]
+    updateState $ evNewStats <&> \s ->
+            [    field @"stStats"
+              %~ Map.insertWith (<>) (navLang, navCurrent) [s]
             ]
+    _ <- request $ postEventStageCompleted
+      (getMaybeAuthData <$> envDynState)
+      (dynDone <&> maybe (Left "not ready")
+        (maybe (Left "no stats") \stats ->
+          Right (navLang, navCurrent, stats)
+        )
+      )
+      (void evNewStats)
 
-    eBack <- fmap switchDyn $ widgetHold (pure never) $ evCongraz <&> \case
-        CongrazHide -> pure never
-        CongrazShow mt ->
+    evRepeat <- dynSimple $ dynDone <&> \case
+        Nothing -> pure never
+        Just mt ->
             elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
                 el "div" $ text "Task cleared!"
                 elClass "div" "check" $ iFa "fas fa-check-circle"
                 whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
-                    when
-                            (null ls || statsTime stats == minimum
-                                (statsTime <$> ls)
-                            )
-                        $ elClass "div" "paragraph newBest"
-                        $ do
+                    when (null ls || statsTime stats == minimum (statsTime <$> ls))
+                        $ elClass "div" "paragraph newBest" $ do
                               iFa "fa-solid fa-star-sharp"
                               el "strong" $ text $ "New best: " <> formatTime
                                   (statsTime stats)
@@ -262,24 +269,27 @@ elCongraz evDone Navigation {..} = mdo
                             pure e
                     let eContinue =
                             leftmost [eChordEnter, domEvent Click elACont]
-                    updateState
-                        $  eContinue
-                        $> [ field @"stApp"
-                           .  field @"stProgress"
-                           %~ Map.update
+                    updateState $ eContinue $>
+                      [ field @"stApp" .  field @"stProgress" %~ Map.update
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
-                           , field @"stApp"
-                           .  field @"stCleared"
-                           %~ Set.insert navCurrent
-                           , if nxt == read "stage_2-1"
-                               then
-                                   field @"stApp"
-                                   .  field @"stTOCShowStage2"
-                                   .~ True
-                               else id
-                           ]
-                    setRoute $ eContinue $> FrontendRoute_Main :/ ()
+                      , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
+                      ] <> if
+                        | nxt == $readLoc "stage_2-1" ->
+                          [ field @"stApp" . field @"stTOCShowStage2" .~ True
+                          ]
+                        | nxt == $readLoc "stage_PatReplCommon_0" ->
+                          [ field @"stApp" . field @"stTOCShowStage2" .~ False
+                          , field @"stApp" . field @"stTOCShowStage3" .~ True
+                          ]
+                        | nxt == $readLoc "stage_ploverCommands" ->
+                          [ field @"stApp" . field @"stTOCShowStage3" .~ False
+                          , field @"stApp" . field @"stTOCShowStage2" .~ True
+                          ]
+                        | otherwise -> []
+
+                    setRoute $ eContinue $> stageUrl navLang nxt
+
                 el "div" $ do
                     el "span" $ text "("
                     (elABack, _) <- elClass' "a" "normalLink" $ text "back"
@@ -287,7 +297,7 @@ elCongraz evDone Navigation {..} = mdo
                     elBackUp @key
                     el "span" $ text ")"
                     pure $ leftmost [eChordBackUp, domEvent Click elABack]
-    blank
+    pure $ isJust <$> dynDone
 
 parseStenoOrError
     :: forall proxy key t (m :: * -> *)
@@ -354,12 +364,11 @@ taskWords
        , Prerender t m
        , TriggerEvent t m
        )
-    => Map RawSteno Text
+    => Event t (Chord key)
+    -> Map RawSteno Text
     -> Map Text [RawSteno]
     -> m (Event t Stats)
-taskWords mapStenoWord mapWordStenos = do
-
-    eChord   <- asks envEChord
+taskWords evChord mapStenoWord mapWordStenos = do
 
     evStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -424,7 +433,7 @@ taskWords mapStenoWord mapWordStenos = do
 
             stateInitial = StatePause 0
 
-        dynStateWords <- foldDyn step stateInitial eChord
+        dynStateWords <- foldDyn step stateInitial evChord
 
         evStartStop   <- fmap updated $ holdUniqDyn $ dynStateWords <&> \case
             StatePause nMistakes -> nMistakes

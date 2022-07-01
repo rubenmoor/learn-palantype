@@ -55,7 +55,7 @@ import           Palantype.Common               ( kiChordsStart
                                                 , Chord
                                                 , Palantype
                                                 )
-import           Reflex.Dom                     ( dyn_
+import           Reflex.Dom                     (current, gate,  dyn_
                                                 , TriggerEvent
                                                 , PerformEvent
                                                 , Performable
@@ -112,6 +112,7 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Common.Model                   ( Stats )
 import GHC.Generics (Generic)
+import Data.Bool (not)
 
 data StateLiterals k
     = StatePause Int
@@ -139,8 +140,9 @@ taskLiterals
        , PostBuild t m
        , TriggerEvent t m
        )
-    => m (Event t Stats)
-taskLiterals = do
+    => Event t (Chord key)
+    -> m (Event t Stats)
+taskLiterals evChord = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
@@ -153,7 +155,7 @@ taskLiterals = do
                     then stepStart
                     else st
             StateRun Run {..} ->
-                let current = KI.toRaw @key $ fst $ dictLiterals !! stCounter
+                let currentLetter = KI.toRaw @key $ fst $ dictLiterals !! stCounter
                 in
                     case stMMistake of
 
@@ -165,7 +167,7 @@ taskLiterals = do
                         Just _ -> st
 
                         -- correct
-                        Nothing | Raw.fromChord c == current ->
+                        Nothing | Raw.fromChord c == currentLetter ->
                             if stCounter == len - 1
                                 then StatePause stNMistakes
                                 else st & _As @"StateRun" . field @"stCounter" +~ 1
@@ -186,7 +188,7 @@ taskLiterals = do
                                  }
         stateInitial = StatePause 0
 
-    dynLiterals <- foldDyn step stateInitial envEChord
+    dynLiterals <- foldDyn step stateInitial evChord
 
     evStartStop <- fmap updated $ holdUniqDyn $ dynLiterals <&> \case
         StatePause nMistakes -> nMistakes
@@ -243,7 +245,7 @@ fingerspelling
        , TriggerEvent t m
        )
     => m Navigation
-fingerspelling = do
+fingerspelling = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -377,8 +379,8 @@ fingerspelling = do
                 elAttr "code" ("class" =: "steno") $ text steno
         elClass "br" "clearBoth" blank
 
-    evDone <- taskLiterals
-    elCongraz (Just <$> evDone) envNavigation
+    evDone <- taskLiterals $ gate (not <$> current dynDone) envEChord
+    dynDone <- elCongraz (Just <$> evDone) envNavigation
 
     el "h3" $ text "Beyond text transcription"
 

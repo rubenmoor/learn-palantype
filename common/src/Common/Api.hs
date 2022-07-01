@@ -19,7 +19,7 @@ import           Data.Aeson                     ( FromJSON
                                                 )
 import           Data.Map                       ( Map )
 import           Data.Text                      ( Text )
-import           Servant.API                    (Strict, QueryParam', QueryFlag, QueryParam,  Capture
+import           Servant.API                    (QueryFlag, QueryParam,  Capture
                                                 , (:<|>)
                                                 , Get
                                                 , (:>)
@@ -66,7 +66,7 @@ type RoutesUser =
     )
   :<|> "app" :>
     (
-           AuthRequired "jwt" :> "get" :> Get '[JSON] AppState
+           AuthRequired "jwt" :> "get" :> Get '[JSON] (AppState, Map (Lang, Stage) [Stats])
       :<|> AuthRequired "jwt" :> "put" :> ReqBody '[JSON] AppState :> Post '[JSON] ()
     )
 
@@ -83,8 +83,11 @@ type RoutesPalantype =
                            :> Get '[JSON] (Map RawSteno Text)
 
 type RoutesEvent =
-       AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text           :> Post '[JSON] ()
-  :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Stage, Stats) :> Post '[JSON] ()
+       AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()
+  :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Lang, Stage, Stats) :> Post '[JSON] ()
+
+type RoutesStats =
+       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" Stage :> Get '[JSON] [(Text, Stats)]
 
 -- admin routes
 
@@ -104,6 +107,7 @@ type RoutesAdmin =
                                   :> QueryParam "filter-by-visitor" Int
                                   :> QueryParam "filter-by-user" Text
                                   :> QueryParam "filter-by-alias" Text
+                                  :> QueryFlag "filter-anonymous"
                                   :> Get '[JSON] [Journal]
 
 type RoutesApi = "api" :>
@@ -112,6 +116,7 @@ type RoutesApi = "api" :>
       :<|> "auth"  :> RoutesAuth
       :<|> "user"  :> RoutesUser
       :<|> "event" :> RoutesEvent
+      :<|> "stats" :> RoutesStats
     )
 
 --

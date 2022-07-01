@@ -12,6 +12,7 @@
 
 module Client where
 
+
 import           Common.PloverConfig            ( PloverSystemCfg )
 import           Common.Api                     (RoutesApi )
 import           Common.Auth                    ( CompactJWT
@@ -25,7 +26,7 @@ import           Data.Generics.Product          ( field )
 import           Data.Either                    ( either
                                                 , Either(..)
                                                 )
-import           Data.Functor                   ( (<$>) )
+import           Data.Functor                   ((<$>) )
 import           Data.Proxy                     ( Proxy(Proxy) )
 import           Data.String                    ( String )
 import           Data.Text                      ( Text )
@@ -76,6 +77,7 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
 import Data.Int (Int)
+import qualified Data.Map.Strict as Map
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
@@ -215,7 +217,7 @@ getAppState
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
     -> Event t ()
-    -> m (Event t (ReqResult () AppState))
+    -> m (Event t (ReqResult () (AppState, Map (Lang, Stage) [Stats])))
 
 postAppState
     :: SupportsServantReflex t m
@@ -234,7 +236,7 @@ postEventViewPage
 postEventStageCompleted
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
-    -> Dynamic t (Either Text (Stage, Stats))
+    -> Dynamic t (Either Text (Lang, Stage, Stats))
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
@@ -247,10 +249,19 @@ getJournalAll
     -> Dynamic t (QParam Int)
     -> Dynamic t (QParam Text)
     -> Dynamic t (QParam Text)
+    -> Dynamic t Bool
     -> Event t ()
     -> m (Event t (ReqResult () [Journal]))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted))
+getStats
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
+    -> Dynamic t (Either Text (Lang))
+    -> Dynamic t (Either Text (Stage))
+    -> Event t ()
+    -> m (Event t (ReqResult () [(Text, Stats)]))
+
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted) :<|> getStats)
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

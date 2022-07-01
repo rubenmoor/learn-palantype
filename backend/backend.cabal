@@ -62,9 +62,10 @@ library
     , Handler
     , Handler.Admin
     , Handler.Auth
-    , Handler.Palantype
-    , Handler.User
     , Handler.Event
+    , Handler.Palantype
+    , Handler.Stats
+    , Handler.User
       
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
 

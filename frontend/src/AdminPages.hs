@@ -10,17 +10,9 @@ module AdminPages where
 
 import Data.Generics.Sum (_As)
 import Data.Generics.Product (field)
-import Control.Lens.Getter (view)
+import Control.Lens.Getter (view, (^.))
 import Control.Lens.Setter ((.~))
 import           Reflex.Dom                     (dynText, tag, EventName (Click), domEvent, current, gate, leftmost, prerender, updated, inputElementConfig_setValue, DomBuilderSpace, InputElementConfig, inputElementConfig_initialChecked, elementConfig_initialAttributes, inputElementConfig_elementConfig, inputElement, InputElement (..)
-
-
-
-
-
-
-
-
                                                 , EventWriter
                                                 , constDyn
                                                 , (=:)
@@ -59,7 +51,7 @@ import           Data.Semigroup                 ( Endo
 import qualified Data.Text                     as Text
 import           TextShow                       ( TextShow(showt) )
 import           Data.Text                      ( Text )
-import           Obelisk.Route.Frontend         (setRoute,  R
+import           Obelisk.Route.Frontend         (RouteToUrl, routeLink, setRoute,  R
                                                 , SetRoute
                                                 , pattern (:/)
                                                 )
@@ -68,7 +60,7 @@ import           Shared                         (iFa', elLoginSignup
                                                 , loadingScreen
                                                 , formatTime
                                                 )
-import           State                          (State (..)  )
+import           State                          (Session (..), stageUrl, State (..)  )
 import           Client                         (getJournalAll,  request
                                                 , getAuthData
                                                 )
@@ -79,7 +71,7 @@ import           Common.Model                   ( JournalEvent(..)
                                                 , EventUser(..)
                                                 , EventApp(..)
                                                 )
-import           Common.Route                   ( FrontendRoute
+import           Common.Route                   (showRoute,  FrontendRoute
                                                     ( FrontendRoute_Admin
                                                     )
                                                 )
@@ -106,6 +98,7 @@ import Data.Either.Combinators (mapLeft)
 import GHC.Real (fromIntegral)
 import Data.Foldable (Foldable(null))
 import Data.Traversable (Traversable(sequence))
+import Data.Witherable (mapMaybe)
 
 data JournalReqConfig = JournalReqConfig
   { jrcExcludeAdmin :: Bool
@@ -124,6 +117,7 @@ journal
        , MonadReader (Dynamic t State) m
        , PostBuild t m
        , Prerender t m
+       , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )
     => Dynamic t Bool
@@ -138,6 +132,12 @@ journal dynHasLoaded = mdo
             setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $ domEvent Click domBack
         elLoginSignup $ constDyn $ FrontendRoute_Admin :/ ()
         elClass "br" "clearBoth" blank
+
+    let
+        logout st = case st ^. field @"stSession" of
+          SessionAnon   -> Just $ st ^. field @"stRedirectUrl"
+          SessionUser _ -> Nothing
+    setRoute $ mapMaybe logout $ updated dynState
 
     let toQParam = maybe (QParamInvalid "couldn't parse date") QParamSome
         dynStart = toQParam <$> dynMStart
@@ -154,6 +154,7 @@ journal dynHasLoaded = mdo
                   , void dynEId
                   , void dynMUser
                   , void dynMAlias
+                  , void dynFilterAnon
                   ]
         evLoad = leftmost [ gate (current dynHasLoaded) evParamUpdate, void $ updated dynHasLoaded]
 
@@ -165,9 +166,10 @@ journal dynHasLoaded = mdo
             dynFilterByVisitor
             dynFilterByUser
             dynFilterByAlias
+            dynFilterAnon
             $ evLoad
 
-    (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias) <-
+    (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias, dynFilterAnon) <-
       elClass "div" "journal" do
         params <- elClass "div" "filters" $ do
             dynENow <- prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
@@ -204,6 +206,17 @@ journal dynHasLoaded = mdo
 
             dynMAlias' <- el "span" $ elLabelInput def "Alias " "filter-alias"
 
+            let elemIdAnon = "filter-anonymous"
+                confCbxAnon = def &
+                  inputElementConfig_elementConfig
+                  . elementConfig_initialAttributes
+                  .~ ("type" =: "checkbox" <> "id" =: elemIdAnon)
+            dynFilterAnon' <- el "span" do
+              domCbx <- inputElement confCbxAnon
+              elAttr "label" ("for" =: elemIdAnon) $ el "span" $ do
+                text "Show only anonymous "
+              pure $ _inputElement_checked domCbx
+
             pure
               ( dynMStart'
               , dynMEnd'
@@ -211,6 +224,7 @@ journal dynHasLoaded = mdo
               , dynEId'
               , dynMUser'
               , dynMAlias'
+              , dynFilterAnon'
               )
 
         el "hr" blank
@@ -233,30 +247,44 @@ journal dynHasLoaded = mdo
                       el "th" $ text "VID"
                       el "th" $ text "Event"
                   for_ lsJournal \Journal {..} -> el "tr" do
-                      el "td" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" journalTime
+                      elClass "td" "date" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" journalTime
                       case journalMAliasUser of
                           Just (alias, user) -> do
                               el "td" $ text user
                               el "td" $ text alias
                           Nothing -> elAttr "td" ("colspan" =: "2") $ el "em" $ text "anonymous"
                       el "td" $ text $ showt journalVisitorId
-                      el "td" $ text $ showEvent journalEvent
+                      el "td" $ showEvent journalEvent
 
         pure params
     blank
 
-showEvent :: JournalEvent -> Text
+showEvent
+  :: forall (m :: * -> *) t
+  . ( DomBuilder t m
+    , Prerender t m
+    , RouteToUrl (R FrontendRoute) m
+    , SetRoute t (R FrontendRoute) m
+    )
+  => JournalEvent
+  -> m ()
 showEvent = \case
-    EventUser eu -> case eu of
+    EventUser eu -> text case eu of
         EventLogin          -> "login"
         EventLogout         -> "logout"
         EventSignup         -> "signup"
         EventEdit x old new -> "edit " <> x <> ": " <> old <> " → " <> new
         EventDelete         -> "delete"
     EventApp ea -> case ea of
-        EventViewPage path -> "page view " <> path
-        EventStageCompleted stage Stats {..} ->
-            "stage completed " <> showt stage <> formatTime statsTime
+        EventViewPage path -> do
+          text "page view "
+          elAttr "a" ("href" =: path) $ text path
+
+        EventStageCompleted lang stage Stats {..} -> do
+            text "stage completed "
+            let r = stageUrl lang stage
+            routeLink r $ text $ showRoute r
+            text $ " " <> formatTime statsTime
 
 elLabelInputDate
     :: DomBuilder t m

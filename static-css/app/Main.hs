@@ -1041,19 +1041,24 @@ main = putCss $ do
           outline none (px 0) transparent
           border solid (px 1) myBlue
 
+        input # focus ? do
+          boxShadow
+              [ bsColor myBlue
+                    $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
+              ]
+
+
     input ?
       -- really only meant for checkboxes:
       -- input[type=checkbox] { ... }
       -- `type_ :: Refinement` exists, but no plan
       marginRight (em 0.5)
 
-    input # focus ? do
-      boxShadow
-          [ bsColor myBlue
-                $ shadowWithSpread (px 0) (px 0) (px 5) (px 0)
-          ]
-
     div # ".journal" ? do
+
+      padding (em 1) (em 1) (em 1) (em 1)
+      fontSize $ pt 12
+
       div # ".filters" ? do
         display flex
         justifyContent center
@@ -1063,3 +1068,15 @@ main = putCss $ do
           fontSize $ pt 12
 
       div # ".filters" |> span ? paddingRight (em 1)
+
+      table ? do
+        borderCollapse collapse
+        th ? do
+          textAlign $ alignSide sideLeft
+          whiteSpace nowrap
+        td ? do
+          paddingRight $ em 1
+          whiteSpace nowrap
+        td # ".date" ? do
+          color darkgray
+          fontStyle italic

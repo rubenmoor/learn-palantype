@@ -51,7 +51,7 @@ import Data.Time (defaultTimeLocale, diffUTCTime, UTCTime, NominalDiffTime, getC
 import qualified Data.Text as Text
 import Control.Category ((<<<), (.))
 import Data.Witherable (Filterable(catMaybes))
-import State (stApp, Env (..), Navigation (..))
+import State (State (..), Env (..), Navigation (..))
 import qualified Data.Map.Strict as Map
 import Control.Monad.Reader (ask, MonadReader)
 import Control.Monad (when)
@@ -62,7 +62,7 @@ import Data.Foldable (for_, Foldable(minimum))
 import Data.Bool (Bool(..))
 import qualified Data.Time as Time
 import Control.Monad (Monad((>>=)))
-import Common.Model (AppState (..), Stats(..))
+import Common.Model (Stats(..))
 import Shared (formatTime)
 
 data StateStopwatch
@@ -100,7 +100,7 @@ elStopwatch dynStopwatch n = do
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    let dynMStats =  Map.lookup (navLang, navCurrent) . stStats . stApp <$> envDynState
+    let dynMStats =  Map.lookup (navLang, navCurrent) . stStats <$> envDynState
     dyn_ $ dynMStats <&> \case
         Nothing -> blank
         Just ls -> elClass "div" "paragraph stopwatch" $ do
