@@ -19,7 +19,7 @@ import           Data.Aeson                     ( FromJSON
                                                 )
 import           Data.Map                       ( Map )
 import           Data.Text                      ( Text )
-import           Servant.API                    (QueryFlag, QueryParam,  Capture
+import           Servant.API                    (Delete, QueryFlag, QueryParam,  Capture
                                                 , (:<|>)
                                                 , Get
                                                 , (:>)
@@ -47,7 +47,7 @@ import           Common.Auth                    ( LoginData
                                                 )
 import           Common.Model (Journal, Stats, AppState)
 import Common.Stage (Stage)
-import Data.Time (Day)
+import Data.Time (UTCTime, Day)
 
 type RoutesAuth =
            "login"  :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
@@ -66,7 +66,7 @@ type RoutesUser =
     )
   :<|> "app" :>
     (
-           AuthRequired "jwt" :> "get" :> Get '[JSON] (AppState, Map (Lang, Stage) [Stats])
+           AuthRequired "jwt" :> "get" :> Get '[JSON] AppState
       :<|> AuthRequired "jwt" :> "put" :> ReqBody '[JSON] AppState :> Post '[JSON] ()
     )
 
@@ -87,7 +87,10 @@ type RoutesEvent =
   :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Lang, Stage, Stats) :> Post '[JSON] ()
 
 type RoutesStats =
-       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" Stage :> Get '[JSON] [(Text, Stats)]
+       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" Stage :> Get '[JSON] [(Maybe Text, Stats)]
+
+type RouteStatsNew =
+       AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()
 
 -- admin routes
 

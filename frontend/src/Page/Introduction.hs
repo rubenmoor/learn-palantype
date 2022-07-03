@@ -34,8 +34,7 @@ import           Data.Semigroup                 ( Endo(..)
                                                 )
 import qualified Data.Set                      as Set
 import           Data.Witherable                ( Filterable(filter) )
-import           Obelisk.Route.Frontend         ( pattern (:/)
-                                                , R
+import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute(setRoute)
                                                 )
 import           Palantype.Common               (Lang(..),  Palantype )

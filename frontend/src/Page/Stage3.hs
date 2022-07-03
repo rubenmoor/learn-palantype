@@ -6,7 +6,7 @@ module Page.Stage3 where
 
 import Client (getDictDE', getDocDEPattern', postRender, request)
 import Common.Route (FrontendRoute)
-import Common.Stage (StageMeta (..), stageMeta)
+import Common.Stage (Stage, StageMeta (..), stageMeta)
 import Control.Category ((<<<))
 import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
@@ -15,8 +15,8 @@ import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Functor (($>), (<&>))
 import Data.Semigroup (Endo)
 import Obelisk.Route (R)
-import Obelisk.Route.Frontend (RouteToUrl, SetRoute, routeLink)
-import Page.Common (elCongraz, elNotImplemented, elPatterns, loading, taskWords)
+import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute, routeLink)
+import Page.Common (getStatsLocalAndRemote, elCongraz, elNotImplemented, elPatterns, loading, taskWords)
 import Palantype.Common (Lang (..), Palantype, toDescription)
 import Palantype.Common.TH (failure, readLoc)
 import Palantype.DE (Pattern (..))
@@ -36,6 +36,7 @@ type Constraints key t m =
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
+    , Routed t Stage m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
     , TriggerEvent t m
@@ -72,6 +73,7 @@ exercise iEx elIntro pat elExplication = mdo
 
     elExplication navLang
 
+    dynStats <- getStatsLocalAndRemote evDone
     evEDict <- request $ getDictDE' pat 0 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
@@ -81,13 +83,13 @@ exercise iEx elIntro pat elExplication = mdo
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords (gate (not <$> current dynDone) envEChord) mSW mWSs
+              else taskWords dynStats (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation
 
 exercise1 ::
@@ -669,6 +671,7 @@ exercise21 = mdo
 
     elClass "div" "paragraph" $ text "explication"
 
+    dynStats <- getStatsLocalAndRemote evDone
     evEDict <- request $ getDictDE' PatCodaGK 3 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
@@ -678,11 +681,11 @@ exercise21 = mdo
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords (gate (not <$> current dynDone) envEChord) mSW mWSs
+              else taskWords dynStats (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation

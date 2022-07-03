@@ -39,12 +39,12 @@ import           Data.Maybe                     ( Maybe(..) )
 import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (Routed,  R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
                                                 )
-import           Page.Common                    ( elCongraz
+import           Page.Common                    (getStatsLocalAndRemote,  elCongraz
                                                 , elNotImplemented
                                                 )
 import           Page.Common.Stopwatch          ( elStopwatch
@@ -55,7 +55,7 @@ import           Palantype.Common               ( kiChordsStart
                                                 , Chord
                                                 , Palantype
                                                 )
-import           Reflex.Dom                     (current, gate,  dyn_
+import           Reflex.Dom                     (Dynamic, current, gate,  dyn_
                                                 , TriggerEvent
                                                 , PerformEvent
                                                 , Performable
@@ -86,7 +86,7 @@ import           Palantype.Common.TH            ( readLoc )
 import           Control.Category               ( (<<<)
                                                 , (.)
                                                 )
-import           Common.Stage                   ( stageMeta )
+import           Common.Stage                   (Stage,  stageMeta )
 import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS
@@ -113,6 +113,7 @@ import           Control.Monad.IO.Class         ( MonadIO )
 import           Common.Model                   ( Stats )
 import GHC.Generics (Generic)
 import Data.Bool (not)
+import Data.Text (Text)
 
 data StateLiterals k
     = StatePause Int
@@ -131,6 +132,7 @@ pass through all the letters of the steno alphabet one by one
 taskLiterals
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -140,9 +142,10 @@ taskLiterals
        , PostBuild t m
        , TriggerEvent t m
        )
-    => Event t (Chord key)
+    => Dynamic t [(Maybe Text, Stats)]
+    -> Event t (Chord key)
     -> m (Event t Stats)
-taskLiterals evChord = do
+taskLiterals dynStats evChord = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
 
@@ -226,7 +229,7 @@ taskLiterals evChord = do
 
                 text $ showt stCounter <> " / " <> showt len
 
-        elStopwatch dynStopwatch len
+        elStopwatch dynStats dynStopwatch len
 
 fingerspelling
     :: forall key t (m :: * -> *)
@@ -240,6 +243,7 @@ fingerspelling
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -265,9 +269,8 @@ fingerspelling = mdo
         text "There are"
         el "ul" $ do
             el "li"
-                $ text
-                      "very rare words, not yet accounted for by the \
-                           \algorithm,"
+                $ text "very rare words, not yet accounted for by the \
+                       \algorithm,"
             el "li"
                 $ text
                       "loanwords, partially accounted for by means of \
@@ -379,8 +382,9 @@ fingerspelling = mdo
                 elAttr "code" ("class" =: "steno") $ text steno
         elClass "br" "clearBoth" blank
 
-    evDone <- taskLiterals $ gate (not <$> current dynDone) envEChord
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynStats <- getStatsLocalAndRemote evDone
+    evDone <- taskLiterals dynStats $ gate (not <$> current dynDone) envEChord
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
 
     el "h3" $ text "Beyond text transcription"
 

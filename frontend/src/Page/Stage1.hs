@@ -56,7 +56,7 @@ import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (Routed,  R
                                                 , SetRoute
                                                 )
 import           Page.Common                    ( elCongraz
@@ -69,7 +69,7 @@ import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , fromIndex
                                                 , allKeys
                                                 )
-import           Reflex.Dom                     (current, gate, never, switchDyn, widgetHold,  DomBuilder
+import           Reflex.Dom                     (constDyn, current, gate, never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)
                                                 , PostBuild(getPostBuild)
@@ -97,6 +97,7 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
+import Common.Stage (Stage)
 
 -- exercise 1
 
@@ -116,6 +117,7 @@ exercise1
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -147,7 +149,7 @@ exercise1 = mdo
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
 
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     when (navLang == DE) $ do
       elClass "div" "paragraph" $ text
@@ -186,6 +188,7 @@ exercise2
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -209,7 +212,7 @@ exercise2 = mdo
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -250,6 +253,7 @@ exercise3
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -272,7 +276,7 @@ exercise3 = mdo
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
         DE -> elClass "div" "paragraph" $ do
@@ -302,6 +306,7 @@ exercise4
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -325,7 +330,7 @@ exercise4 = mdo
     updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
     pure envNavigation
 
 {-|
@@ -529,6 +534,7 @@ exercise5
        , Palantype key
        , Prerender t m
        , PostBuild t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -565,7 +571,7 @@ exercise5 = mdo
             filter (\k -> toFinger k `elem` fingersLeft) allKeys
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) leftHand
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
     pure envNavigation
 
 exercise6
@@ -578,6 +584,7 @@ exercise6
        , Palantype key
        , Prerender t m
        , PostBuild t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -606,7 +613,7 @@ exercise6 = mdo
             filter (\k -> toFinger k `elem` fingersRight) allKeys
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) rightHand
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
     pure envNavigation
 
 exercise7
@@ -619,6 +626,7 @@ exercise7
        , Palantype key
        , Prerender t m
        , PostBuild t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -650,7 +658,7 @@ exercise7 = mdo
               "Be sure to practice this one to perfection. It will only get more \
               \difficult from here."
 
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     pure envNavigation
 
@@ -664,6 +672,7 @@ exercise8
        , Palantype key
        , Prerender t m
        , PostBuild t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -699,5 +708,5 @@ exercise8 = mdo
               "By the way, you can re-shuffle the order, in which the keys \
            \are presented to you, by reloading the page, if you feel the need to."
 
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
     pure envNavigation

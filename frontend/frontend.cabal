@@ -46,7 +46,7 @@ library
     , AuthPages
     , Client
     , Home
-    , Shared
+    , LocalStorage
     , Page.Common
     , Page.Common.Stopwatch
     , Page.Introduction
@@ -60,6 +60,7 @@ library
     , Page.Stage4.CommandKeys
     , Page.Stage4.SpecialCharacters
     , Page.Stage5
+    , Shared
     , State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
   default-extensions:

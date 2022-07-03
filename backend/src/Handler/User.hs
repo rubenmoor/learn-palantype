@@ -17,7 +17,7 @@ module Handler.User
 where
 
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ((<<<),  Category((.)) )
+import           Control.Category               (Category((.)) )
 import           Control.Monad                  ( Monad((>>=))
                                                 , when
                                                 )
@@ -49,7 +49,7 @@ import           AppData                        ( Handler )
 import           Auth                           ( UserInfo(..) )
 import           Common.Api                     ( RoutesUser )
 import qualified DbAdapter                     as Db
-import           Common.Model                   (Stats (..), JournalEvent(EventUser)
+import           Common.Model                   (JournalEvent(EventUser)
                                                 , EventUser(..)
                                                 , AppState(..)
                                                 )
@@ -60,16 +60,6 @@ import           Database                       ( blobEncode
 
 import qualified DbJournal
 import           Database.Gerippe               ( PersistStoreRead(get) )
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
-import Palantype.Common (Lang)
-import Common.Stage (Stage)
-import GHC.Real (realToFrac)
-import Data.Functor ((<&>))
-import Palantype.Common.TH (readLoc)
-import Text.Read (readMaybe)
-import Data.Semigroup (Semigroup((<>)))
-import Data.Foldable (Foldable(foldl'))
 
 default(Text)
 
@@ -115,20 +105,12 @@ handleAliasSetDefault UserInfo {..} aliasName = do
         (fromMaybe "" $ Db.aliasName <$> mOldDefaultAlias)
         aliasName
 
-handleGetAppState :: UserInfo -> Handler (AppState, Map (Lang, Stage) [Stats])
+handleGetAppState :: UserInfo -> Handler AppState
 handleGetAppState UserInfo {..} = do
     Db.User {..} <- runDb (getBy $ Db.UUserName uiUserName) >>= maybe
         (throwError $ err500 { errBody = "user not found" })
         (pure . entityVal)
-    appState <- blobDecode userBlobAppState
-    lsStats <- runDb (getWhere Db.StatsFkAlias uiKeyAlias)
-    let
-        acc m (k, v) = Map.insertWith (<>) k [v] m
-        stats = foldl' acc Map.empty $ lsStats <&> \(Entity _ Db.Stats{..}) ->
-          ( ($readLoc $ Text.unpack statsLang, $readLoc $ Text.unpack statsStage)
-          , (Stats statsCreated (realToFrac statsTime) statsLength statsNErrors)
-          )
-    pure (appState, stats)
+    blobDecode userBlobAppState
 
 handlePutAppState :: UserInfo -> AppState -> Handler ()
 handlePutAppState UserInfo {..} appState = do

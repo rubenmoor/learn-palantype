@@ -1224,9 +1224,10 @@ stages navLang toReady = do
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
-                                      { envDynState = dynState,
-                                        envEChord = eChord,
-                                        envNavigation = Navigation {..}
+                                      { envDynState = dynState
+                                      , envEChord = eChord
+                                      , envNavigation = Navigation {..}
+                                      , envToReady = toReady
                                       }
                             ) do
                               dynRoute <- askRoute

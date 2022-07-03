@@ -19,14 +19,14 @@
 
 module Page.Common where
 
-import           Client                         (getMaybeAuthData, postEventStageCompleted, request,  postRender )
+import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( stageMeta )
+import           Common.Stage                   (Stage,  stageMeta )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
                                                 )
-import           Control.Lens                   (non, view,  (?~)
+import           Control.Lens                   ( (?~)
                                                 , (%~)
                                                 , (.~)
                                                 , (<&>)
@@ -39,7 +39,7 @@ import           Control.Monad.Random           ( evalRand
 import           Control.Monad.Reader           (ask,  MonadReader
 
                                                 )
-import           Data.Bool                      (otherwise,  (||)
+import           Data.Bool                      (not, otherwise,  (||)
                                                 , Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
@@ -61,7 +61,7 @@ import           Data.List                      ( (!!)
 import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     (maybe, isJust
+import           Data.Maybe                     (fromMaybe, maybe, isJust
                                                 , Maybe(..)
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
@@ -81,7 +81,7 @@ import           GHC.Num                        ( Num((+)) )
 import           GHC.Real                       ( (/)
                                                 , fromIntegral
                                                 )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (Routed, askRoute,  R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
@@ -101,7 +101,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (Dynamic,  TriggerEvent
+import           Reflex.Dom                     (delay, zipDyn, tag, performEvent_, prerender_, gate, attach, current, fanEither, prerender, tagPromptlyDyn, constDyn, Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -132,7 +132,7 @@ import           Safe                           ( initMay )
 import           Shared                         (dynSimple, formatTime,  iFa
                                                 , whenJust
                                                 )
-import           State                          ( State(..)
+import           State                          (Session (..),  State(..)
                                                 , Env(..)
                                                 , Navigation(..)
                                                 , State
@@ -152,6 +152,7 @@ import           Data.Foldable                  ( Foldable(elem) )
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
                                                 , elStatistics
+                                                , ElStatsFlag (..)
                                                 )
 import           Control.Monad                  ( when )
 import           Data.Foldable                  ( Foldable(minimum) )
@@ -162,7 +163,11 @@ import           Common.Model                   ( Message(..)
                                                 )
 import Data.Witherable (Filterable(catMaybes))
 import Palantype.Common.TH (readLoc)
-import Control.Lens.At (At(at))
+import qualified LocalStorage as LS
+import Language.Javascript.JSaddle (liftJSM)
+import Data.Tuple (snd)
+import Control.Category (Category(id))
+import Control.Monad ((=<<))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -191,10 +196,6 @@ elBackUp
 elBackUp =
     elClass "span" "btnSteno" $ text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
-data Congraz
-  = CongrazShow (Maybe Stats)
-  | CongrazHide
-
 elCongraz
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -205,29 +206,23 @@ elCongraz
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
+    -> Dynamic t [(Maybe Text, Stats)]
     -> Navigation
     -> m (Dynamic t Bool)
-elCongraz evDone Navigation {..} = mdo
+elCongraz evDone dynStats Navigation {..} = mdo
     Env {..} <- ask
-    let dynStats = envDynState <&> view
-          (   field @"stStats"
-            . at (navLang, navCurrent)
-            . non []
-          )
 
+    let
         eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) envEChord
         eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
     dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
     let evNewStats = catMaybes $ catMaybes $ updated dynDone
 
-    updateState $ evNewStats <&> \s ->
-            [    field @"stStats"
-              %~ Map.insertWith (<>) (navLang, navCurrent) [s]
-            ]
     _ <- request $ postEventStageCompleted
       (getMaybeAuthData <$> envDynState)
       (dynDone <&> maybe (Left "not ready")
@@ -237,6 +232,18 @@ elCongraz evDone Navigation {..} = mdo
       )
       (void evNewStats)
 
+    let isLoggedIn = \case
+          SessionAnon   -> False
+          SessionUser _ -> True
+        evLSPutStats =
+          gate (not . isLoggedIn . stSession <$> current envDynState) evNewStats
+
+    dynStage <- askRoute
+    prerender_ blank $ performEvent_ $ attach (current dynStage) evLSPutStats <&> \(stage, stats) -> do
+      mMap <- liftJSM $ LS.retrieve LS.KeyStats
+      let oldStats = fromMaybe Map.empty mMap
+      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, stage) [stats] oldStats
+
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
         Just mt ->
@@ -244,13 +251,13 @@ elCongraz evDone Navigation {..} = mdo
                 el "div" $ text "Task cleared!"
                 elClass "div" "check" $ iFa "fas fa-check-circle"
                 whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
-                    when (null ls || statsTime stats == minimum (statsTime <$> ls))
+                    when (null ls || statsTime stats == minimum (statsTime . snd <$> ls))
                         $ elClass "div" "paragraph newBest" $ do
                               iFa "fa-solid fa-star-sharp"
                               el "strong" $ text $ "New best: " <> formatTime
                                   (statsTime stats)
                               iFa "fa-solid fa-star-sharp"
-                    elStatistics $ take 3 ls
+                    elStatistics ElStatsPersonal $ take 3 ls
                     elClass "hr" "visibilityHidden" blank
                 whenJust navMNext $ \nxt -> do
                     elACont <- elClass "div" "anthrazit" $ do
@@ -354,6 +361,7 @@ makeLenses ''Run
 taskWords
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -364,11 +372,12 @@ taskWords
        , Prerender t m
        , TriggerEvent t m
        )
-    => Event t (Chord key)
+    => Dynamic t [(Maybe Text, Stats)]
+    -> Event t (Chord key)
     -> Map RawSteno Text
     -> Map Text [RawSteno]
     -> m (Event t Stats)
-taskWords evChord mapStenoWord mapWordStenos = do
+taskWords dynStats evChord mapStenoWord mapWordStenos = do
 
     evStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -480,7 +489,7 @@ taskWords evChord mapStenoWord mapWordStenos = do
                     el "strong" $ text $ showt _stCounter
                     text $ " / " <> showt len
 
-            elStopwatch dynStopwatch len
+            elStopwatch dynStats dynStopwatch len
 
 elPatterns
     :: forall (m :: * -> *) t
@@ -513,3 +522,61 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
             elAttr "code" ("class" =: "steno" <> styleSteno) $ text $ showt
                 steno
         elClass "br" "clearBoth" blank
+
+getStatsLocalAndRemote
+  :: forall key (m :: * -> *) t
+  . ( EventWriter t (Endo State) m
+    , MonadFix m
+    , MonadHold t m
+    , MonadIO (Performable m)
+    , MonadReader (Env t key) m
+    , PerformEvent t m
+    , PostBuild t m
+    , Prerender t m
+    , Routed t Stage m
+    , TriggerEvent t m
+    )
+  => Event t Stats
+  -> m (Dynamic t [(Maybe Text, Stats)])
+getStatsLocalAndRemote evNewStats = do
+  Env{..} <- ask
+  let Navigation{..} = envNavigation
+  evPb <- delay 3 =<< getPostBuild
+  evReady <- fmap envToReady $ getPostBuild
+  dynStage <- askRoute
+
+  (evRespFail, evRespSucc) <- fmap fanEither $ request $
+      getStats (getMaybeAuthData <$> envDynState)
+               (constDyn $ Right navLang)
+               (Right <$> dynStage)
+               evReady
+
+  updateState $ evRespFail $> [ field @"stApp" . field @"stMsg" ?~
+                                  Message "Error" "Couldn't load statistics"
+                              ]
+
+  -- TODO: performEvent within prerender doesn't seem to work
+  --let isLoggedIn = \case
+  --      SessionAnon   -> False
+  --      SessionUser _ -> True
+  --    evAnon =
+  --      tag (current dynStage) $
+  --      filter id $
+  --      tagPromptlyDyn (not . isLoggedIn . stSession <$> envDynState) evReady
+
+  --evLSMapStats <- fmap switchDyn $ prerender (pure never) $ performEvent $ evAnon <&> \stage -> do
+  --  mMap <- liftJSM $ LS.retrieve LS.KeyStats
+  --  pure $ Map.findWithDefault [] (navLang, stage) $ fmap (Nothing,) <$> fromMaybe Map.empty mMap
+
+  --       this is a workaround
+  evLSMapStats <- fmap updated $ prerender (pure Map.empty) $
+    fromMaybe Map.empty <$> liftJSM (LS.retrieve LS.KeyStats)
+
+  let evLSStats = attach (current dynStage) evLSMapStats <&> \(stage, map) ->
+        (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
+
+  foldDyn (<>) [] $ leftmost
+    [ evLSStats
+    , evRespSucc
+    , evNewStats <&> \s -> [(Nothing, s)]
+    ]

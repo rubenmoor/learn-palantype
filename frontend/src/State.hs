@@ -22,7 +22,6 @@ import           Data.Function                  ( ($) )
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Semigroup                 ( Endo(..) )
 import           GHC.Generics                   ( Generic )
-import Data.Map.Strict (Map)
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
@@ -32,8 +31,7 @@ import           Palantype.Common               ( Lang(..)
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
-import Common.Model (Stats, defaultAppState, AppState)
-import qualified Data.Map.Strict as Map
+import Common.Model (defaultAppState, AppState)
 
 -- environment for frontend pages
 
@@ -44,6 +42,7 @@ data Env t key = Env
   -- however, that requires a choice of k (e.g. k ~ DE.Key)
     , envEChord     :: Event t (Chord key)
     , envNavigation :: Navigation
+    , envToReady    :: Event t () -> Event t ()
     }
 
 data Navigation = Navigation
@@ -70,7 +69,6 @@ data Navigation = Navigation
 data State = State
     { stSession     :: Session
     , stApp         :: AppState
-    , stStats       :: Map (Lang, Stage) [Stats]
     , stRedirectUrl :: R FrontendRoute
     }
     deriving Generic
@@ -78,7 +76,6 @@ data State = State
 defaultState :: State
 defaultState = State { stSession     = SessionAnon
                      , stApp         = defaultAppState
-                     , stStats       = Map.empty
                      , stRedirectUrl = FrontendRoute_Main :/ ()
                      }
 

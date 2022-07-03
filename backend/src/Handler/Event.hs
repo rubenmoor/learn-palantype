@@ -13,7 +13,6 @@ import Common.Model (EventApp (..), Stats (..), JournalEvent (..))
 import Common.Stage (Stage)
 import Palantype.Common (Lang)
 import qualified DbAdapter as Db
-import TextShow (TextShow(showt))
 import qualified Data.Text as Text
 import Database.Gerippe (insert_)
 import Database (runDb)

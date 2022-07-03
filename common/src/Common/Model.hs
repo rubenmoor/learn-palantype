@@ -46,6 +46,7 @@ data AppState = AppState
     , stTOCShowStage2 :: Bool
     , stTOCShowStage3 :: Bool
     , stTOCShowStage4 :: Bool
+    , stShowStats     :: ShowStats
     }
     deriving (Eq, Generic, Show)
 
@@ -65,6 +66,7 @@ defaultAppState = AppState { stCleared            = Set.empty
                            , stTOCShowStage2      = False
                            , stTOCShowStage3      = False
                            , stTOCShowStage4      = False
+                           , stShowStats          = ShowStatsHide
                            }
 
 data Message = Message
@@ -75,6 +77,16 @@ data Message = Message
 
 instance FromJSON Message
 instance ToJSON Message
+
+data ShowStats
+  = ShowStatsHide
+  | ShowStatsPersonal
+  | ShowStatsPublic
+  deriving (Eq, Generic, Show)
+
+instance FromJSON ShowStats
+instance ToJSON ShowStats
+
 
 defaultProgress :: Map Lang Stage
 defaultProgress =

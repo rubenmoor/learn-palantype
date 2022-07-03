@@ -50,12 +50,12 @@ import           Data.Maybe                     ( maybe
 import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (Routed,  R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
                                                 )
-import           Page.Common                    ( elNotImplemented
+import           Page.Common                    (getStatsLocalAndRemote,  elNotImplemented
                                                 , elCongraz
                                                 , loading
                                                 )
@@ -67,7 +67,7 @@ import           Palantype.Common               ( kiChordsStart
                                                 , Palantype
                                                 , RawSteno
                                                 )
-import           Reflex.Dom                     ( Performable
+import           Reflex.Dom                     (current, gate, Dynamic,  Performable
                                                 , PerformEvent
                                                 , TriggerEvent
                                                 , holdUniqDyn
@@ -106,7 +106,7 @@ import           Palantype.Common.TH            ( readLoc )
 import           Control.Category               ( (<<<)
                                                 , (.)
                                                 )
-import           Common.Stage                   ( stageMeta )
+import           Common.Stage                   (Stage,  stageMeta )
 import           Data.Text                      ( Text )
 import           Data.Map.Strict                ( Map )
 import qualified Palantype.Common.Indices      as KI
@@ -119,7 +119,6 @@ import           Data.Time                      ( defaultTimeLocale
                                                 , Day(ModifiedJulianDay)
                                                 , Day
                                                 )
-import           Control.Monad.Reader           ( asks )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Safe                           ( initMay )
 import           Data.Traversable               ( Traversable(sequence) )
@@ -143,6 +142,7 @@ import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
 import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
+import Data.Bool (not)
 
 data StateDates k
     = StatePause Int
@@ -159,6 +159,7 @@ data Run key = Run
 taskDates
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -169,10 +170,11 @@ taskDates
        , Prerender t m
        , TriggerEvent t m
        )
-    => Map RawSteno Text
+    => Dynamic t [(Maybe Text, Stats)]
+    -> Event t (Chord key)
+    -> Map RawSteno Text
     -> m (Event t Stats)
-taskDates map = do
-    eChord  <- asks envEChord
+taskDates dynStats evChord map = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -225,7 +227,7 @@ taskDates map = do
                     , stNMistakes = 0
                     }
 
-            dynStenoDates <- foldDyn step (StatePause 0) eChord
+            dynStenoDates <- foldDyn step (StatePause 0) evChord
 
             evStartStop <- fmap updated $ holdUniqDyn $ dynStenoDates <&> \case
                 StatePause nMistakes -> nMistakes
@@ -267,7 +269,7 @@ taskDates map = do
                         el "strong" $ text $ showt stCounter
                         text $ " / " <> showt numDates
 
-                elStopwatch dynStopwatch numDates
+                elStopwatch dynStats dynStopwatch numDates
 
 getRandomDates :: MonadRandom m => m [Day]
 getRandomDates =
@@ -291,12 +293,13 @@ numberMode
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
     => m Navigation
-numberMode = do
+numberMode = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
@@ -403,14 +406,15 @@ numberMode = do
              \Feel free to type digit by digit or use as many fingers as \
              \possible at once."
 
+    dynStats <- getStatsLocalAndRemote evDone
     evPb <- postRender $ delay 0.1 =<< getPostBuild
     evEDict <- request $ getDictDENumbers evPb
-    eDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
+    evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
         Left str -> never <$ elClass
             "span"
             "red small"
             (text $ "Couldn't load resource: " <> str)
-        Right map -> taskDates map
+        Right map -> taskDates dynStats (gate (not <$> current dynDone) envEChord) map
 
-    elCongraz (Just <$> eDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation

@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
+import           Clay                           (p, label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -256,7 +256,7 @@ main = putCss $ do
         height $ pct 100
         h2 ? do
             color darkblue
-            marginTop $ px 60
+            paddingTop $ px 60
             a # link ? do
                 textDecoration none
                 color inherit
@@ -277,11 +277,12 @@ main = putCss $ do
     div # ".box" ? do
         display flex
         flexFlow column Flex.nowrap
-        height $ pct 100
+        height $ pct 97
 
     header ? do
         flexGrow 0
         flexShrink 1
+        height $ pct 3
       -- already the default? flexBasis auto
 
     div # ".row" ? do
@@ -348,7 +349,6 @@ main = putCss $ do
         zIndex 1
 
     section # ".toc" ? do
-        marginTop $ em 0.83
         paddingLeft $ px 12
         paddingTop $ px 12
         flexShrink 0
@@ -363,7 +363,7 @@ main = putCss $ do
                 whiteSpace nowrap
                 ".stage" & do
                     cursor pointer
-                    marginTop $ em 0.2
+                    paddingTop $ em 0.2
                     i ? do
                         color anthrazit
                         fontSize $ pt 18
@@ -444,6 +444,7 @@ main = putCss $ do
         marginLeft auto
         marginRight auto
         textAlign center
+        paddingTop $ em 0.5
         borderBottom dotted (px 1) lightgray
         input # "#stenoOutput" ? do
             width $ px keyboardWidth
@@ -566,7 +567,6 @@ main = putCss $ do
           [ bsColor (rgba 0 0 0 0.2)
             $ shadowWithSpread (px 0) (px 2) (px 8) (px 0)
           ]
-        marginBottom $ em 0.5
         padding (em 0.2) (em 0.2) (em 0.2) (em 0.2)
 
         div # ".topmenu-entry" ? do
@@ -580,7 +580,7 @@ main = putCss $ do
         div # ".login-signup" ? do
           fontSize $ pt 14
           paddingRight $ em 0.5
-          marginTop $ em 0.3
+          paddingTop $ em 0.3
 
     div # ".btnToggleKeyboard" ? do
         cursor pointer
@@ -681,7 +681,6 @@ main = putCss $ do
         width $ other "fit-content"
         padding (px 6) (px 6) (px 6) (px 6)
         span ? padding (px 2) (px 2) (px 2) (px 2)
-        marginBottom $ em 0.5
     div # ".exerciseField.multiline" ? do
         width $ pct 100
         overflowWrap breakWord
@@ -700,8 +699,9 @@ main = putCss $ do
             textShadow (px 1) (px 1) (px 5) gray
         table # ".statistics" ? tr # firstChild ? backgroundColor lightyellow
 
-    div # ".paragraph" ? marginBottom (em 0.5)
+    div # ".paragraph" ? paddingBottom (em 0.5)
     div # ".paragraph" |> code ? fontSize (pt 12)
+    p |> code ? fontSize (pt 12)
 
     ".floatLeft" ? float floatLeft
     ".floatRight" ? float floatRight
@@ -709,6 +709,7 @@ main = putCss $ do
 
     div # ".start" ? do
         textAlign center
+        -- TODO
         margin (px 24) (px 24) (px 24) (px 24)
 
     hr ? do
@@ -1009,6 +1010,11 @@ main = putCss $ do
             borderRadius (px 8) (px 8) (px 8) (px 8)
             backgroundColor myLightblue
             width $ other "fit-content"
+
+    div # ".stats" ? do
+      textAlign center
+      width $ pct 100
+
     table # ".statistics" ? do
         borderCollapse collapse
         fontSize $ pt 14
@@ -1025,7 +1031,10 @@ main = putCss $ do
             paddingLeft $ em 1
             paddingRight $ em 1
             fontFamily ["DejaVu Sans Mono"] [monospace]
+        td # ".alias" ? do
+          paddingRight $ em  1
         td # ".nMistakes" ? do
+            textAlign $ alignSide sideRight
             paddingRight $ em 1
 
     div # ".auth" ? do

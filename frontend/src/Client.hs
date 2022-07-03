@@ -77,7 +77,6 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
 import Data.Int (Int)
-import qualified Data.Map.Strict as Map
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender action = switchDyn <$> prerender (pure never) action
@@ -217,7 +216,7 @@ getAppState
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
     -> Event t ()
-    -> m (Event t (ReqResult () (AppState, Map (Lang, Stage) [Stats])))
+    -> m (Event t (ReqResult () (AppState)))
 
 postAppState
     :: SupportsServantReflex t m
@@ -259,7 +258,7 @@ getStats
     -> Dynamic t (Either Text (Lang))
     -> Dynamic t (Either Text (Stage))
     -> Event t ()
-    -> m (Event t (ReqResult () [(Text, Stats)]))
+    -> m (Event t (ReqResult () [(Maybe Text, Stats)]))
 
 ((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted) :<|> getStats)
     = client (Proxy :: Proxy RoutesApi)

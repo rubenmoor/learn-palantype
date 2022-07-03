@@ -78,12 +78,12 @@ import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         ( R
+import           Obelisk.Route.Frontend         (Routed, R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Page.Common                    ( elBackUp
+import           Page.Common                    (getStatsLocalAndRemote, elBackUp
                                                 , elCongraz
                                                 , elNotImplemented
                                                 , elPatterns
@@ -106,7 +106,7 @@ import           Palantype.Common               ( RawSteno
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.DE                   ( Pattern(..) )
-import           Reflex.Dom                     (current, gate,  TriggerEvent
+import           Reflex.Dom                     (constDyn, Dynamic, current, gate,  TriggerEvent
                                                 , Performable
                                                 , holdUniqDyn
                                                 , (=:)
@@ -154,6 +154,7 @@ import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Bifunctor                 ( Bifunctor(second) )
 import Common.Model (Stats)
+import Common.Stage (Stage)
 
 -- Ex. 2.1
 
@@ -178,6 +179,7 @@ makePrisms ''StateLetters
 taskLetters
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -188,9 +190,10 @@ taskLetters
        , Prerender t m
        , TriggerEvent t m
        )
-    => Event t (Chord key)
+    => Dynamic t [(Maybe Text, Stats)]
+    -> Event t (Chord key)
     -> m (Event t Stats)
-taskLetters evChord = do
+taskLetters dynStats evChord = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -279,7 +282,8 @@ taskLetters evChord = do
                     el "strong" $ text $ showt _stlCounter
                     text $ " / " <> showt len
 
-            elStopwatch dynStopwatch len
+            elStopwatch dynStats dynStopwatch len
+
 exercise1
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -292,6 +296,7 @@ exercise1
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -323,7 +328,8 @@ exercise1 = mdo
             \looking down. Just orient yourself once in the beginning!"
 
     let eChordBackUp =
-            void $ filter (\c -> KI.fromChord c == kiBackUp) envEChord
+          void $ gate (not <$> current dynDone) $
+            filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
     elABack <- elClass "div" "paragraph" $ do
         text "Type "
@@ -426,8 +432,9 @@ exercise1 = mdo
       el "strong" $ text "D"
       text "ussel!"
 
-    evDone <- taskLetters (gate (not <$> current dynDone) envEChord)
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynStats <- getStatsLocalAndRemote evDone
+    evDone <- taskLetters dynStats (gate (not <$> current dynDone) envEChord)
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation
 
 -- Ex 2.2
@@ -517,6 +524,7 @@ exercise2
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -627,7 +635,7 @@ exercise2 = mdo
             ". It is the homerow of your right hand and deletes your last \
             \input. Now you can correct your mistakes!"
 
-    dynDone <- elCongraz (evDone $> Nothing) envNavigation
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     pure envNavigation
 
@@ -654,6 +662,7 @@ makePrisms ''StateSingletons
 taskSingletons
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -664,10 +673,11 @@ taskSingletons
        , Prerender t m
        , TriggerEvent t m
        )
-    => Event t (Chord key)
+    => Dynamic t [(Maybe Text, Stats)]
+    -> Event t (Chord key)
     -> Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t Stats)
-taskSingletons evChord eMaps = do
+taskSingletons dynStats evChord eMaps = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -796,7 +806,7 @@ taskSingletons evChord eMaps = do
                             el "strong" $ text $ showt _stCounter
                             text $ " / " <> showt len
 
-                    elStopwatch dynStopwatch len
+                    elStopwatch dynStats dynStopwatch len
 
 exercise3
     :: forall key t (m :: * -> *)
@@ -810,6 +820,7 @@ exercise3
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -906,9 +917,10 @@ exercise3 = mdo
                 $  "Could not load resource: "
                 <> str
 
-    evDone <- taskSingletons (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
+    dynStats <- getStatsLocalAndRemote evDone
+    evDone <- taskSingletons dynStats (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
 
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation
 
 -- Ex 2.4
@@ -925,6 +937,7 @@ exercise4
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
+       , Routed t Stage m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -977,8 +990,9 @@ exercise4 = mdo
     evEDict <- request $ getDictDE' PatSimpleMulti 0 ePb
     evEDoc  <- request $ getDocDEPattern' PatSimple 0 ePb
 
+    dynStats <- getStatsLocalAndRemote evDone
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
-        Right (mST, mTSs) -> taskWords (gate (not <$> current dynDone) envEChord) mST mTSs
+        Right (mST, mTSs) -> taskWords dynStats (gate (not <$> current dynDone) envEChord) mST mTSs
         Left  str         -> never <$ elClass
             "div"
             "paragraph small red"
@@ -1022,5 +1036,5 @@ exercise4 = mdo
         elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
         elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
 
-    dynDone <- elCongraz (Just <$> evDone) envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
     pure envNavigation
