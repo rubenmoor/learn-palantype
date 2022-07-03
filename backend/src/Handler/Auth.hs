@@ -126,6 +126,7 @@ handleGrantAuthPwd LoginData {..} =
                     let sdIsSiteAdmin = userIsSiteAdmin
                         sdUserName    = userName
                         sdAliasName   = Db.aliasName alias
+                        sdAliasVisible = Db.aliasIsVisible alias
                     appState <- blobDecode userBlobAppState
 
                     DbJournal.insert (Just keyAlias) $ EventUser EventLogin
@@ -151,7 +152,7 @@ handleUserNew UserNew {..} = do
                                               sdIsSiteAdmin
                                               Nothing
                                               (blobEncode unAppState)
-    password <- hashPassword (mkPassword unPassword)
+    password <- hashPassword $ mkPassword unPassword
     runDb $ insert_ $ Db.AuthPwd user password
     let sdAliasName = fromMaybe (Text.take 16 unUserName) unMAlias
     keyAlias <- runDb $ insert $ Db.Alias sdAliasName user unVisible
@@ -170,6 +171,7 @@ handleUserNew UserNew {..} = do
     let sdClearances = if sdIsSiteAdmin then RankAdmin else RankMember
     runDb $ insert_ $ Db.Clearance keyAlias sdClearances
     let sdUserName = unUserName
+        sdAliasVisible = False
     pure SessionData { .. }
 
 handleDoesUserExist :: Text -> Handler Bool

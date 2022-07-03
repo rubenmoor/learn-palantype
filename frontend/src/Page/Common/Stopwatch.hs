@@ -92,7 +92,7 @@ import           Control.Applicative            ( Applicative(pure) )
 import           Data.Foldable                  ( for_
                                                 , Foldable(minimum)
                                                 )
-import           Data.Bool                      (not )
+import           Data.Bool                      (Bool, not )
 import qualified Data.Time                     as Time
 import           Control.Monad                  ( Monad((>>=)) )
 import           Common.Model                   ( ShowStats(..)
@@ -104,7 +104,6 @@ import           Data.Text                      ( Text )
 import           Data.Tuple                     (fst,  snd )
 import Data.Foldable (Foldable(null))
 import Data.List (filter)
-import Control.Category (Category(id))
 
 data StateStopwatch
     = SWInitial
@@ -123,7 +122,7 @@ elStopwatch
        , EventWriter t (Endo State) m
        , MonadReader (Env t key) m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Dynamic t StateStopwatch
     -> Int
     -> m (Event t Stats)
@@ -171,18 +170,18 @@ elStopwatch dynStats dynStopwatch n = do
         dyn_ $ zipDyn (stShowStats . stApp <$> envDynState) dynStats <&> \case
             (ShowStatsHide    , _ ) -> blank
             (ShowStatsPersonal, ls) -> do
-              let lsPersonal = filter (isNothing . fst) ls
+              let lsPersonal = filter (isNothing . fst . snd) ls
               when (not $ null lsPersonal) $ el "p" $ do
                 text $ "Personal best: "
                 elClass "span" "stopwatch" $ text $ formatTime
-                  (minimum $ statsTime . snd <$> ls)
+                  (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPersonal lsPersonal
             (ShowStatsPublic, ls) -> do
-              let lsPersonal = filter (isNothing . fst) ls
+              let lsPersonal = filter (isNothing . fst . snd) ls
               when (not $ null lsPersonal) $ el "p" $ do
                 text $ "Personal best: "
                 elClass "span" "stopwatch" $ text $ formatTime
-                  (minimum $ statsTime . snd <$> ls)
+                  (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPublic ls
 
 
@@ -228,10 +227,14 @@ elStatistics
     :: forall t (m :: * -> *)
      . (DomBuilder t m)
     => ElStatsFlag
-    -> [(Maybe Text, Stats)]
+    -> [(Bool, (Maybe Text, Stats))]
     -> m ()
-elStatistics flag ls = elClass "table" "statistics" $ do
-    for_ ls \(mAlias, Stats {..}) -> el "tr" $ do
+elStatistics flag ls = do
+  let lsShow = snd <$> case flag of
+        ElStatsPublic   -> filter fst ls
+        ElStatsPersonal -> ls
+  elClass "table" "statistics" $ do
+    for_ lsShow \(mAlias, Stats {..}) -> el "tr" $ do
             elClass "td" "date" $ text $ Text.pack $ Time.formatTime
                 defaultTimeLocale
                 "%F %R"

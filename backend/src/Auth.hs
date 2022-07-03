@@ -180,14 +180,14 @@ data UserInfo = UserInfo
   , uiClearances  :: Rank
   } deriving (Generic)
 
-mkSessionData :: CompactJWT -> UserInfo -> SessionData
-mkSessionData jwt UserInfo {..} =
-    let sdJwt         = jwt
-        sdIsSiteAdmin = uiIsSiteAdmin
-        sdUserName    = uiUserName
-        sdAliasName   = Db.aliasName uiAlias
-        sdClearances  = uiClearances
-    in  SessionData { .. }
+-- mkSessionData :: CompactJWT -> UserInfo -> SessionData
+-- mkSessionData jwt UserInfo {..} =
+--     let sdJwt         = jwt
+--         sdIsSiteAdmin = uiIsSiteAdmin
+--         sdUserName    = uiUserName
+--         sdAliasName   = Db.aliasName uiAlias
+--         sdClearances  = uiClearances
+--     in  SessionData { .. }
 
 type ContextAuth = Snap (Either AuthError UserInfo)
 

@@ -190,7 +190,7 @@ taskLetters
        , Prerender t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
     -> m (Event t Stats)
 taskLetters dynStats evChord = do
@@ -673,7 +673,7 @@ taskSingletons
        , Prerender t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
     -> Event t (Map RawSteno Text, Map Text [RawSteno])
     -> m (Event t Stats)

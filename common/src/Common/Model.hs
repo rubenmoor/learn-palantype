@@ -28,8 +28,6 @@ import           Palantype.Common               (Lang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
 import           Common.Stage                   ( Stage )
-import Data.Int (Int64)
-import TextShow (fromText, TextShow (showb))
 
 -- frontend/Localstorage
 
@@ -107,17 +105,6 @@ instance FromJSON Stats
 instance ToJSON Stats
 
 -- backend
-
-data Anon = Anon
-  { anonId :: Int64
-  }
-  deriving (Generic, Eq, Ord)
-
-instance ToJSON Anon
-instance FromJSON Anon
-
-instance TextShow Anon where
-  showb Anon{..} = fromText "anon" <> showb anonId
 
 data Rank
   = RankMember

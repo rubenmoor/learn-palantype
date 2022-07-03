@@ -142,7 +142,7 @@ import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
 import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
-import Data.Bool (not)
+import Data.Bool (Bool, not)
 
 data StateDates k
     = StatePause Int
@@ -170,7 +170,7 @@ taskDates
        , Prerender t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
     -> Map RawSteno Text
     -> m (Event t Stats)

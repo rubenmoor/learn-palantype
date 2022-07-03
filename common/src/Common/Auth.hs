@@ -127,6 +127,7 @@ data SessionData = SessionData
   , sdIsSiteAdmin :: Bool
   , sdUserName :: Text
   , sdAliasName :: Text
+  , sdAliasVisible :: Bool
   , sdClearances :: Rank
   } deriving (Generic)
 

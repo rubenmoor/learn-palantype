@@ -26,10 +26,12 @@ import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
                                                 )
-import           Control.Lens                   ( (?~)
+import           Control.Lens                   ((^?), (?~), (^.)
                                                 , (%~)
                                                 , (.~)
                                                 , (<&>)
+                                                , non
+                                                , preview
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
@@ -54,6 +56,7 @@ import           Data.Functor                   ( ($>)
                                                 )
 import           Data.Functor                   ( (<$>) )
 import           Data.Generics.Product          ( field )
+import           Data.Generics.Sum          ( _As )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , head
@@ -101,7 +104,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (delay, zipDyn, tag, performEvent_, prerender_, gate, attach, current, fanEither, prerender, tagPromptlyDyn, constDyn, Dynamic,  TriggerEvent
+import           Reflex.Dom                     (performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -166,8 +169,6 @@ import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
 import Language.Javascript.JSaddle (liftJSM)
 import Data.Tuple (snd)
-import Control.Category (Category(id))
-import Control.Monad ((=<<))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -210,7 +211,7 @@ elCongraz
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
-    -> Dynamic t [(Maybe Text, Stats)]
+    -> Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Navigation
     -> m (Dynamic t Bool)
 elCongraz evDone dynStats Navigation {..} = mdo
@@ -251,7 +252,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                 el "div" $ text "Task cleared!"
                 elClass "div" "check" $ iFa "fas fa-check-circle"
                 whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
-                    when (null ls || statsTime stats == minimum (statsTime . snd <$> ls))
+                    when (null ls || statsTime stats == minimum (statsTime . snd . snd <$> ls))
                         $ elClass "div" "paragraph newBest" $ do
                               iFa "fa-solid fa-star-sharp"
                               el "strong" $ text $ "New best: " <> formatTime
@@ -372,7 +373,7 @@ taskWords
        , Prerender t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
     -> Map RawSteno Text
     -> Map Text [RawSteno]
@@ -523,25 +524,27 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
                 steno
         elClass "br" "clearBoth" blank
 
+-- | get the statistics for the score board for the current page
+--   'evNewStats': an event stream of new stats records
+--   evaluates to a dynamic of a list of tuples:
+--       Bool: whether or not this is a public stats record (visible to anyone)
+--       Maybe Text: Nothing for personal stats, Just aliasName for the stats of others
 getStatsLocalAndRemote
   :: forall key (m :: * -> *) t
   . ( EventWriter t (Endo State) m
     , MonadFix m
     , MonadHold t m
-    , MonadIO (Performable m)
     , MonadReader (Env t key) m
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
     , Routed t Stage m
-    , TriggerEvent t m
     )
   => Event t Stats
-  -> m (Dynamic t [(Maybe Text, Stats)])
+  -> m (Dynamic t [(Bool, (Maybe Text, Stats))])
 getStatsLocalAndRemote evNewStats = do
   Env{..} <- ask
   let Navigation{..} = envNavigation
-  evPb <- delay 3 =<< getPostBuild
   evReady <- fmap envToReady $ getPostBuild
   dynStage <- askRoute
 
@@ -554,6 +557,10 @@ getStatsLocalAndRemote evNewStats = do
   updateState $ evRespFail $> [ field @"stApp" . field @"stMsg" ?~
                                   Message "Error" "Couldn't load statistics"
                               ]
+
+  let dynMIsVisible =
+        envDynState <&> preview (field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible")
+      evNewStats' = attach (current dynMIsVisible <&> fromMaybe False) $ evNewStats <&> \s -> (Nothing, s)
 
   -- TODO: performEvent within prerender doesn't seem to work
   --let isLoggedIn = \case
@@ -569,14 +576,16 @@ getStatsLocalAndRemote evNewStats = do
   --  pure $ Map.findWithDefault [] (navLang, stage) $ fmap (Nothing,) <$> fromMaybe Map.empty mMap
 
   --       this is a workaround
+  --       .. and I don't know why this works, `updated <$> prerender` fires
+  --       also when I navigate through the pages
   evLSMapStats <- fmap updated $ prerender (pure Map.empty) $
     fromMaybe Map.empty <$> liftJSM (LS.retrieve LS.KeyStats)
 
   let evLSStats = attach (current dynStage) evLSMapStats <&> \(stage, map) ->
-        (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
+        (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
 
   foldDyn (<>) [] $ leftmost
     [ evLSStats
-    , evRespSucc
-    , evNewStats <&> \s -> [(Nothing, s)]
+    , fmap (True,) <$> evRespSucc
+    , pure <$> evNewStats'
     ]

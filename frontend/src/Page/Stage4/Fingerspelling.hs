@@ -112,7 +112,7 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Common.Model                   ( Stats )
 import GHC.Generics (Generic)
-import Data.Bool (not)
+import Data.Bool (Bool, not)
 import Data.Text (Text)
 
 data StateLiterals k
@@ -142,7 +142,7 @@ taskLiterals
        , PostBuild t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Maybe Text, Stats)]
+    => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
     -> m (Event t Stats)
 taskLiterals dynStats evChord = do
