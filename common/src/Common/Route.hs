@@ -48,8 +48,9 @@ import Data.Semigroup (Semigroup((<>)))
 import qualified Data.Text as Text
 
 data FrontendRoute_AuthPages :: * -> * where
-  AuthPage_SignUp :: FrontendRoute_AuthPages ()
-  AuthPage_Login  :: FrontendRoute_AuthPages ()
+  AuthPage_SignUp   :: FrontendRoute_AuthPages ()
+  AuthPage_Login    :: FrontendRoute_AuthPages ()
+  AuthPage_Settings :: FrontendRoute_AuthPages ()
 
 data BackendRoute :: * -> * where
   -- | Used to handle unparseable routes.
@@ -82,8 +83,9 @@ fullRouteEncoder = mkFullRouteEncoder
         FrontendRoute_DE ->
             PathSegment "DE" $ singlePathSegmentEncoder . unwrappedEncoder
         FrontendRoute_Auth  -> PathSegment "auth" $ pathComponentEncoder \case
-            AuthPage_SignUp -> PathSegment "signup" $ unitEncoder mempty
-            AuthPage_Login  -> PathSegment "login"  $ unitEncoder mempty
+            AuthPage_SignUp   -> PathSegment "signup"   $ unitEncoder mempty
+            AuthPage_Login    -> PathSegment "login"    $ unitEncoder mempty
+            AuthPage_Settings -> PathSegment "settings" $ unitEncoder mempty
         FrontendRoute_Admin -> PathSegment "admin" $ unitEncoder mempty
     )
 

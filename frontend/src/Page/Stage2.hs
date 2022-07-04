@@ -268,9 +268,7 @@ taskLetters dynStats evChord = do
                         $  _stlLetters
                         !! _stlCounter
 
-                    whenJust
-                        _stlMMistake
-                        \case
+                    whenJust _stlMMistake \case
                             SLMistakeOne c -> do
                                 elClass "code" "red small" $ text $ showt c
                                 elClass "span" "small" $ text " try again!"

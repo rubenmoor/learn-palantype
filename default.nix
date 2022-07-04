@@ -68,25 +68,25 @@ in
       #base64-bytestring = self.callHackage "base64-bytestring" "1.2.1.0" {};
       #jose = self.callHackage "jose" "0.8.5.1" {};
 
-      #servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-      #  owner = "imalsogreg";
-      #  repo = "servant-reflex";
-      #  rev = "a6f859e52857e0eda753cf113fabfff61f06da6a";
-      #  sha256 = "0j36sl7l553iy1vpwy6263xdpj3m2n2rkkkdcsxpkr48p328lac4";
-      #}) {};
-      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
+      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+        owner = "imalsogreg";
+        repo = "servant-reflex";
+        rev = "3c0578d191f19a02f3ca6bec735509cb11dcc0ee";
+        sha256 = "1gljcnycw55jq8z9j58i5cdcx9w2d7y2addxhfva0dyc7xj8im5n";
+      }) {};
+      #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex { };
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";
         rev = "b54c5da86f2f2ed994e9dfbb0694c72301b5a220";
         sha256 = "0j0a3lznxnf8f98fibla7d0bksz3kk4z9q02afmls5f9yylpf2ad";
       }) {};
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      # my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-      #   owner = "rubenmoor";
-      #   repo = "my-palantype";
-      #   rev = "aa72cdf5c04aa8818863254524870c2225ed6f62";
-      #   sha256 = "1scp62rvdwpa20lxfdbdazkbjfdbpfijy37l4v807lvd1l4z8k6f";
-      # }) {});
+      #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = dontCheck (self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "my-palantype";
+        rev = "3f46d0d0b2cb78f2d6a0611fb146d9216ef22898";
+        sha256 = "0ciad7jgw7c0cv850bifax7h3bx39wqz55hky6a61pwlm9jpk6q1";
+      }) {});
     };
   })

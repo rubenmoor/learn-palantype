@@ -17,7 +17,7 @@ import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Aeson as Aeson
 import qualified Data.Text.Lazy.Encoding as Lazy
 import qualified Data.Text.Lazy as Lazy
-import Language.Javascript.JSaddle (ToJSVal (..), ToJSString (..), MonadJSM)
+import Language.Javascript.JSaddle (MonadJSM)
 import Control.Category ((<<<))
 import TextShow (TextShow (..), fromText)
 import Common.Model (Stats, AppState)
@@ -37,21 +37,15 @@ instance TextShow (Key a) where
     KeySession  -> "session"
     KeyStats    -> "stats"
 
-instance ToJSString (Key a) where
-  toJSString = toJSString . showt
-
-instance ToJSVal (Key a) where
-  toJSVal = toJSVal . showt
-
 retrieve :: (MonadJSM m, FromJSON a) => Key a -> m (Maybe a)
 retrieve key =
   currentWindowUnchecked >>= getLocalStorage >>= \s ->
-    fmap (decode =<<) $ getItem s key
+    fmap (decode =<<) $ getItem s (showt key)
 
 put :: (MonadJSM m, ToJSON a) => Key a -> a -> m ()
 put key d =
   currentWindowUnchecked >>= getLocalStorage >>= \s ->
-    setItem s key $ encode d
+    setItem s (showt key) $ encode d
 
 decode :: forall a. FromJSON a => Text -> Maybe a
 decode = Aeson.decode <<< Lazy.encodeUtf8 <<< Lazy.fromStrict

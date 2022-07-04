@@ -184,6 +184,12 @@ postDoesUserExist
     -> Event t ()
     -> m (Event t (ReqResult () Bool))
 
+postDoesAliasExist
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () Bool))
+
 postLogout
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
@@ -197,7 +203,7 @@ postAliasRename
     => Dynamic t (Either Text (CompactJWT, Text))
     -> Dynamic t (Either Text Text)
     -> Event t ()
-    -> m (Event t (ReqResult () ()))
+    -> m (Event t (ReqResult () Text))
 
 getAliasAll
     :: SupportsServantReflex t m
@@ -209,6 +215,13 @@ postAliasSetDefault
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
     -> Dynamic t (Either Text Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+postAliasVisibility
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Dynamic t (Either Text Bool)
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
@@ -260,7 +273,13 @@ getStats
     -> Event t ()
     -> m (Event t (ReqResult () [(Maybe Text, Stats)]))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage :<|> postEventStageCompleted) :<|> getStats)
+postStatsStart
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage) :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

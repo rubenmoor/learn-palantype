@@ -93,6 +93,7 @@ handlers =
        handleGrantAuthPwd
   :<|> handleUserNew
   :<|> handleDoesUserExist
+  :<|> handleDoesAliasExist
   :<|> handleLogout
 
 handleGrantAuthPwd :: LoginData -> Handler (Maybe (SessionData, AppState))
@@ -155,13 +156,13 @@ handleUserNew UserNew {..} = do
     password <- hashPassword $ mkPassword unPassword
     runDb $ insert_ $ Db.AuthPwd user password
     let sdAliasName = fromMaybe (Text.take 16 unUserName) unMAlias
-    keyAlias <- runDb $ insert $ Db.Alias sdAliasName user unVisible
+    now <- liftIO getCurrentTime
+    keyAlias <- runDb $ insert $ Db.Alias sdAliasName user unVisible now
     runDb $ update user [Db.UserFkDefaultAlias =. Just keyAlias]
 
     DbJournal.insert (Just keyAlias) $ EventUser EventSignup
 
     jwk <- asks envJwk
-    now <- liftIO getCurrentTime
     let claims = mkClaims now unUserName
         toServerError e =
             throwError $ err500 { errBody = BSU.fromString $ show e }
@@ -176,6 +177,9 @@ handleUserNew UserNew {..} = do
 
 handleDoesUserExist :: Text -> Handler Bool
 handleDoesUserExist = runDb <<< fmap isJust <<< getBy <<< Db.UUserName
+
+handleDoesAliasExist :: Text -> Handler Bool
+handleDoesAliasExist = runDb <<< fmap isJust <<< getBy <<< Db.UAliasName
 
 handleLogout :: UserInfo -> Handler ()
 handleLogout UserInfo{..} = DbJournal.insert (Just uiKeyAlias) $ EventUser EventLogout

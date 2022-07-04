@@ -27,7 +27,7 @@ import           Data.Maybe                     ( fromMaybe
                                                 , Maybe(..)
                                                 , maybe
                                                 )
-import           Data.Ord                       ( Ord((>)) )
+import           Data.Ord                       ((<),  Ord((>)) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Database.Gerippe               ( Entity(..)
@@ -60,24 +60,41 @@ import           Database                       ( blobEncode
 
 import qualified DbJournal
 import           Database.Gerippe               ( PersistStoreRead(get) )
+import Data.Time (getCurrentTime, diffUTCTime)
+import GHC.Num (fromInteger, Num((*)))
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Bool (Bool, (&&), not)
+import TextShow (TextShow(showt))
 
 default(Text)
 
 handlers :: ServerT RoutesUser a Handler
 handlers =
-    (handleAliasRename :<|> handleAliasGetAll :<|> handleAliasSetDefault)
-        :<|> (handleGetAppState :<|> handlePutAppState)
+        (      handleAliasRename
+          :<|> handleAliasGetAll
+          :<|> handleAliasSetDefault
+          :<|> handleAliasSetVisibility
+        )
+   :<|> (      handleGetAppState
+          :<|> handlePutAppState
+        )
 
-handleAliasRename :: UserInfo -> Text -> Handler ()
+handleAliasRename :: UserInfo -> Text -> Handler Text
 handleAliasRename UserInfo {..} new = do
+    now <- liftIO getCurrentTime
     when (Text.length new > 16) $ throwError $ err400
         { errBody = "alias max length is 16 characters"
         }
-    runDb $ update uiKeyAlias [Db.AliasName =. new]
+    when (not uiIsSiteAdmin && diffUTCTime now (Db.aliasLastEdited uiAlias) < fromInteger (3 * 30 * 86400)) $
+      throwError $ err400
+        { errBody = "You can rename your alias only once every 90 days."
+        }
+    runDb $ update uiKeyAlias [Db.AliasName =. new, Db.AliasLastEdited =. now]
     DbJournal.insert (Just uiKeyAlias) $ EventUser $ EventEdit
         "alias"
         (Db.aliasName uiAlias)
         new
+    pure new
 
 handleAliasGetAll :: UserInfo -> Handler [Text]
 handleAliasGetAll UserInfo {..} = do
@@ -104,6 +121,14 @@ handleAliasSetDefault UserInfo {..} aliasName = do
         "default alias"
         (fromMaybe "" $ Db.aliasName <$> mOldDefaultAlias)
         aliasName
+
+handleAliasSetVisibility :: UserInfo -> Bool -> Handler ()
+handleAliasSetVisibility UserInfo {..} bVisible = do
+    runDb $ update uiKeyAlias [Db.AliasIsVisible =. bVisible]
+    DbJournal.insert (Just uiKeyAlias) $ EventUser $ EventEdit
+        "alias visibility"
+        (showt $ Db.aliasIsVisible uiAlias)
+        (showt bVisible)
 
 handleGetAppState :: UserInfo -> Handler AppState
 handleGetAppState UserInfo {..} = do

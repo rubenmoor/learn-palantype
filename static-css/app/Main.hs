@@ -277,12 +277,12 @@ main = putCss $ do
     div # ".box" ? do
         display flex
         flexFlow column Flex.nowrap
-        height $ pct 97
+        height $ pct 96.5
 
     header ? do
         flexGrow 0
         flexShrink 1
-        height $ pct 3
+        height $ pct 3.5
       -- already the default? flexBasis auto
 
     div # ".row" ? do
@@ -431,6 +431,7 @@ main = putCss $ do
         padding (px 12) (px 12) (px 12) (px 12)
         border none (px 0) transparent
         cursor pointer
+        ".small" ? fontSize (pt 18)
 
     let keyboardWidth   = 650
         keyboardHeight  = 271
@@ -885,14 +886,14 @@ main = putCss $ do
 
     div # ".taskWords" |> span # ".word" ? minWidth (px 120)
 
-    span # ".button-submit" ? do
-        fontSize $ pt 12
-        fontWeight bold
-        backgroundColor $ rgb 102 141 60
-        color white
-        borderRadius (px 12) (px 12) (px 12) (px 12)
-        padding (px 6) (px 6) (px 6) (px 6)
-        display inlineBlock
+    -- span # ".button-submit" ? do
+    --     fontSize $ pt 12
+    --     fontWeight bold
+    --     backgroundColor $ rgb 102 141 60
+    --     color white
+    --     borderRadius (px 12) (px 12) (px 12) (px 12)
+    --     padding (px 6) (px 6) (px 6) (px 6)
+    --     display inlineBlock
 
     div # ".patternTable" ? do
         marginTop $ em 1.5

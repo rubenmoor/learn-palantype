@@ -139,10 +139,16 @@ elLabelPasswordInput conf label id = do
         dynMStr = ffor dynStr $ \s -> if Text.null s then Nothing else Just s
     pure (dynMStr, i)
 
-btnSubmit :: DomBuilder t m => m () -> m (Event t ())
-btnSubmit inner = do
+elButtonSubmit
+  :: DomBuilder t m
+  => Text
+  -> m ()
+  -> m (Event t ())
+elButtonSubmit cls inner = do
     (e, _) <- elAttr' "button"
-                      ("class" =: "button-submit" <> "type" =: "submit")
+                      (  "type" =: "submit"
+                      <> "class" =: cls
+                      )
                       inner
     pure $ domEvent Click e
 

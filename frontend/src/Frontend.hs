@@ -62,7 +62,7 @@ import           Obelisk.Route.Frontend         (RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
+import           Reflex.Dom                     (widgetHold_, zipDyn, holdUniqDyn, fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
                                                 , holdDyn
                                                 , prerender
                                                 , PerformEvent(performEvent_)
@@ -111,7 +111,7 @@ import Data.Ord (Ord((>=)))
 import Reflex.Dom (Reflex(Event))
 import Data.Functor (Functor(fmap))
 import Data.Witherable (Filterable(catMaybes))
-import Data.Eq (Eq)
+import Data.Eq ((==), Eq)
 import Data.Functor.Misc (Const2(Const2))
 import Palantype.Common.TH (failure)
 import qualified LocalStorage as LS
@@ -198,9 +198,6 @@ frontendBody = mdo
 
     dynState <- foldDyn appEndo defaultState $ leftmost [evLoaded, eStateUpdate]
 
-    -- TODO: persist application state on visibility change (when hidden)
-    --eUpdated <- tailE $ updated dynState
-
     let isLoggedIn = \State{..} -> case stSession of
           SessionUser _ -> True
           SessionAnon   -> False
@@ -208,6 +205,7 @@ frontendBody = mdo
           SessionAnon -> Left "not logged in"
           SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
 
+    -- TODO: persist application state on visibility change (when hidden)
     updatedTail <- tailE $ updated dynState
     _ <- request $ postAppState dynEAuth (Right . stApp <$> dynState) $
         void $ filter isLoggedIn updatedTail
@@ -239,6 +237,18 @@ frontendBody = mdo
                   toReady <$> getPostBuild >>=
                     requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
                   AuthPages.login
+                AuthPage_Settings -> do
+                  dynSettings <- holdUniqDyn $ zipDyn dynHasLoaded (isLoggedIn <$> dynState) <&> \case
+                    (False, _        ) -> Nothing
+                    (True , bLoggedIn) -> Just bLoggedIn
+                  let evToLogin = filter (== Just False) $ updated dynSettings
+                      evToSettings = filter (== Just True) $ updated dynSettings
+                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+
+                  requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
+                  dyn_ $ dynSettings <&> \case
+                    Just True -> AuthPages.settings
+                    _         -> blank
             FrontendRoute_Admin -> do
                 evReady <- toReady <$> getPostBuild
                 let
@@ -249,14 +259,14 @@ frontendBody = mdo
                         if sdIsSiteAdmin || sdClearances >= RankAdmin
                         then Map.singleton FanAdminAccess ()
                         else Map.singleton FanAdminForbidden ()
-                    evLogin = select selector $ Const2 FanAdminLogin
-                    -- evAccess = select selector $ Const2 FanAdminAccess
+                    evToLogin = select selector $ Const2 FanAdminLogin
+                    evAccess = select selector $ Const2 FanAdminAccess
                     evForbidden = select selector $ Const2 FanAdminForbidden
 
-                setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
                 prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
-                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) evReady
+                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) evAccess
                 AdminPages.journal dynHasLoaded
     blank
 

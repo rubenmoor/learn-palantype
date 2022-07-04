@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RecursiveDo #-}
@@ -8,10 +9,11 @@
 module AuthPages
     ( login
     , signup
+    , settings
     )
 where
 
-import           Reflex.Dom                     (leftmost, keypress,  Key (Enter),  attachWith
+import           Reflex.Dom                     (tailE,  domEvent, EventName (Click), inputElementConfig_setChecked, tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
                                                 , dyn_
                                                 , widgetHold_
                                                 , PostBuild
@@ -48,12 +50,14 @@ import           Common.Route                   ( FrontendRoute
                                                     )
                                                 , FrontendRoute_AuthPages
                                                     ( AuthPage_SignUp
+
                                                     )
                                                 , FrontendRoute
                                                 )
 import           Control.Monad.Writer.Strict    ( MonadFix )
 import           Data.Semigroup                 ( Endo )
 import           Data.Generics.Product          ( field )
+import           Data.Generics.Sum          ( _As )
 import           Data.Witherable                ( filter )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
@@ -63,6 +67,7 @@ import           Data.Function                  ( const
                                                 , (&)
                                                 )
 import           Data.Functor                   ( (<&>)
+                                                , fmap
                                                 , void
                                                 , (<$>)
                                                 , ($>)
@@ -71,13 +76,13 @@ import           Data.Bool                      ( not
                                                 , Bool(..)
                                                 , bool
                                                 )
-import           Data.Eq                        ( (/=) )
+import           Data.Eq                        ((==),  (/=) )
 import           Data.Either                    ( either
                                                 , isRight
                                                 , Either(..)
                                                 )
 import           Data.Default                   ( Default(def) )
-import           Client                         (postAuthenticate
+import           Client                         (postAliasVisibility, getAuthData, postAliasRename, postDoesAliasExist, postAuthenticate
                                                 , postAuthNew
                                                 , request
                                                 , postDoesUserExist
@@ -92,9 +97,10 @@ import           Control.Lens.Setter            ( (?~)
                                                 )
 import qualified Data.Text                     as Text
 
-import           Shared                         ( elLabelInput
-                                                , btnSubmit
+import           Shared                         (iFa',  elLabelInput
+                                                , elButtonSubmit
                                                 , elLabelCheckbox
+                                                , elLoginSignup
                                                 )
 import           State                          (State(..)
                                                 , Session(..)
@@ -113,6 +119,8 @@ import           Data.Witherable                ( Filterable
                                                     )
                                                 )
 import           Common.Model                   (Message(..) )
+import Data.Semigroup (Semigroup((<>)))
+import Control.Lens (view, preview)
 
 signup
     :: forall t (m :: * -> *)
@@ -134,7 +142,6 @@ signup = elClass "div" "auth" $ mdo
 
     (dynMUserName, inputUserName) <- elLabelInput def "User name" 64 "username"
 
-    let evPressEnter = keypress Enter inputUserName
     dynUserExists                 <- holdDyn False evUserExists
     dyn_ $ dynUserExists <&> \userExists -> if userExists
         then elClass "p" "red small" (text "This user name already exists.")
@@ -144,7 +151,7 @@ signup = elClass "div" "auth" $ mdo
             Just str -> Text.filter (not <<< isAlphaNum) str /= ""
             Nothing  -> False
     dynNotAlphaNumeric <- holdDyn False
-        $ attachWith (\na _ -> na) behNotAlphanumeric evFocusLost
+        $ attachWith (\na _ -> na) behNotAlphanumeric evFocusLostUser
     dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric -> if notAlphaNumeric
         then elClass "p" "red small"
             $ text "The user name can only contain A-Z, a-z, 0-9."
@@ -155,21 +162,31 @@ signup = elClass "div" "auth" $ mdo
               "Your user name must contain only alphanumeric characters \
                   \and it won't be publicly visible."
 
-    let evFocusLost =
+    let evFocusLostUser =
             void $ filter not $ updated $ _inputElement_hasFocus inputUserName
         eUserName = maybe (Left "user empty") Right <$> dynMUserName
 
-    evUserExists <- mapMaybe (either (const Nothing) Just)
-        <$> request (postDoesUserExist eUserName evFocusLost)
+    (_, evUserExists) <- fanEither <$> request (postDoesUserExist eUserName evFocusLostUser)
 
     dynDefaultAlias <- holdDyn True $ _inputElement_input inputAlias $> False
     let evSetDefaultAlias =
             tag (Text.take 16 . fromMaybe "" <$> current dynMUserName)
-                $ gate (current dynDefaultAlias) evFocusLost
+                $ gate (current dynDefaultAlias) evFocusLostUser
         inputAliasConf = def & inputElementConfig_setValue .~ evSetDefaultAlias
     (dynMAlias, inputAlias) <- elLabelInput inputAliasConf "Alias" 16 "alias"
 
+    dynAliasExists <- holdDyn False evAliasExists
+    dyn_ $ dynAliasExists <&> \aliasExists ->
+      if aliasExists
+      then elClass "p" "red small" $ text "This alias is already in use."
+      else blank
+
     el "p" $ text "Your alias is your public identity, maximum 16 characters."
+
+    let evFocusLostAlias =
+            void $ filter not $ updated $ _inputElement_hasFocus inputAlias
+        eAlias = maybe (Left "alias empty") Right <$> dynMAlias
+    (_, evAliasExists) <- fanEither <$> request (postDoesAliasExist eAlias evFocusLostAlias)
 
     el "h3" $ text "Public visibility"
     dynCheckedVisible <- elLabelCheckbox False "Show my scores" "scores-visible"
@@ -186,7 +203,8 @@ signup = elClass "div" "auth" $ mdo
                 .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
                    <$> evCheckedHidePassword
                    )
-    (dynMPassword, _) <- elLabelInput conf "Password" 64 "password"
+    (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
+    let evPressEnter = keypress Enter inputPassword
     el "br" blank
     evCheckedHidePassword <- updated
         <$> elLabelCheckbox False "Hide password input" "hide-password"
@@ -198,19 +216,22 @@ signup = elClass "div" "auth" $ mdo
 
     el "hr" blank
 
-    evSubmit <- btnSubmit $ text "Submit"
+    evSubmit <- elButtonSubmit "" $ text "Submit"
 
     let dynEUserNew =
           zipDyn dynState (
             zipDyn dynUserExists $
               zipDyn dynMUserName $
-                zipDyn dynMPassword $
-                  zipDyn dynMAlias dynCheckedVisible
+                zipDyn dynAliasExists $
+                  zipDyn dynMPassword $
+                    zipDyn dynMAlias dynCheckedVisible
             ) <&> \case
-                (_, (True, _)) -> Left "User name already exists."
-                (State{..}, (_, (Just u, (Just p, (mAlias, isVisible))))) ->
+                (_, (True, _))               -> Left "User name already exists."
+                (_, (False, (_, (True, _)))) -> Left "Alias already in use."
+                (State{..}, (False, (Just u, (False, (Just p, (mAlias, isVisible)))))) ->
                     Right $ UserNew u p mAlias isVisible stApp
                 _ -> Left "User name and password required."
+
     evRespNew <- request $ postAuthNew dynEUserNew $ leftmost [evSubmit, evPressEnter]
     updateState $ evRespNew <&> \case
         Left errMsg ->
@@ -289,7 +310,7 @@ login = elClass "div" "auth" $ mdo
         (text "Wrong user name or password.")
 
     el "hr" blank
-    evSubmit <- btnSubmit $ text "Submit"
+    evSubmit <- elButtonSubmit "" $ text "Submit"
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
             (Just ldUserName, Just ldPassword) -> Right LoginData { .. }
@@ -313,3 +334,107 @@ login = elClass "div" "auth" $ mdo
             routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                 $ text "Sign up"
             text " here."
+
+settings
+    :: forall t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Dynamic t State) m
+       , PostBuild t m
+       , Prerender t m
+       , SetRoute t (R FrontendRoute) m
+       )
+    => m ()
+settings = do
+
+    dynState <- ask
+
+    evPb <- getPostBuild
+
+    elClass "div" "topmenu" $ do
+        elClass "div" "floatLeft" $ do
+            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
+            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $
+              domEvent Click domBack
+        elLoginSignup $ stRedirectUrl <$> dynState
+        elClass "br" "clearBoth" blank
+
+    elClass "div" "auth" $ mdo
+        el "h1" $ text "Settings"
+
+        let dynCurrentAlias = dynState <&> fromMaybe "" . preview
+              (   field @"stSession"
+                . _As @"SessionUser"
+                . field @"sdAliasName"
+              )
+            conf = def & inputElementConfig_setValue
+              .~ tagPromptlyDyn dynCurrentAlias
+                                (leftmost [evPb, void evRespAliasRenameFail])
+        (dynMAliasNew, inputAliasNew) <- elLabelInput conf "Change alias" 64 "alias-new"
+
+        let evFocusLostAlias =
+              void $ filter not $ updated $ _inputElement_hasFocus inputAliasNew
+            dynEAliasNew = zipDyn dynAliasExists (zipDyn dynMAliasNew dynCurrentAlias) <&> \case
+              (True, _                         ) -> Left "alias already taken"
+              (False, (Nothing      , _       )) -> Left "alias empty"
+              (False, (Just aliasNew, aliasOld)) | aliasNew == aliasOld -> Left ""
+              (False, (Just aliasNew, _       )) -> Right aliasNew
+
+        (_, evAliasExists) <-
+          fmap fanEither $ request $
+            postDoesAliasExist dynEAliasNew
+                               evFocusLostAlias
+
+        let evPressEnter = keypress Enter inputAliasNew
+        evSubmit <- elButtonSubmit "small" $ text "Submit"
+        (evRespAliasRenameFail, evRespAliasRename) <-
+          fanEither <$> request (postAliasRename (getAuthData <$> dynState)
+                                                 dynEAliasNew
+                                                 (leftmost [evSubmit, evPressEnter])
+                                )
+
+        dynAliasExists <- holdDyn False evAliasExists
+        dyn_ $ dynAliasExists <&> \aliasExists ->
+          if aliasExists
+          then elClass "p" "red small" $ text "This alias is already in use."
+          else blank
+
+        updateState $ evRespAliasRename <&> \new ->
+          [ field @"stSession" . _As @"SessionUser" . field @"sdAliasName" .~ new
+          , field @"stApp" . field @"stMsg" ?~ Message "Succes" "Alias changed successfully"
+          ]
+        updateState $ evRespAliasRenameFail <&> \strErr ->
+          [ field @"stApp" . field @"stMsg" ?~ Message "Error" strErr ]
+
+        el "hr" blank
+
+        el "h3" $ text "Public visibility"
+
+        let elemId = "cb-visiblity"
+            dynVisible = dynState <&> fromMaybe False . preview
+              (   field @"stSession"
+                . _As @"SessionUser"
+                . field @"sdAliasVisible"
+              )
+        cb <-
+            inputElement
+            $  def
+            &  inputElementConfig_elementConfig
+            .  elementConfig_initialAttributes
+            .~ ("type" =: "checkbox" <> "id" =: elemId)
+            & inputElementConfig_setChecked
+            .~ tagPromptlyDyn dynVisible evPb
+        elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
+        let dynShowScoresChecked = _inputElement_checked cb
+        evShowScoresChecked <- tailE $ updated dynShowScoresChecked
+        updateState $ evShowScoresChecked <&> \isChecked ->
+          [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
+        _ <- request $ postAliasVisibility (getAuthData <$> dynState)
+                                           (Right <$> dynShowScoresChecked)
+                                           (void evShowScoresChecked)
+
+        el "p" $ text
+            "If you check this, your scores will be publicly visible. \
+            \If not, nothing will be shown, not even your alias."

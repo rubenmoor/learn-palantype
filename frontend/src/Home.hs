@@ -33,6 +33,7 @@ import Common.PloverConfig
 import Common.Api (showSymbol)
 import Common.Route
     (showRoute,  FrontendRoute (..)
+    , FrontendRoute_AuthPages (..)
     )
 import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
 import Palantype.Common.TH (readLoc)
@@ -178,7 +179,7 @@ import Palantype.Common
     )
 import qualified Palantype.Common.Indices as KI
 import Reflex.Dom
-    (attachPromptlyDynWithMaybe, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
+    (current, tag, attachPromptlyDynWithMaybe, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -236,7 +237,7 @@ import Shared
       whenJust,
     )
 import State
-    (Env (..),
+    (Session (..), Env (..),
       Navigation (..),
       State (..),
       stageUrl,
@@ -314,13 +315,11 @@ settings lang = elClass "div" "topmenu" do
                             . stPloverCfg
                             <$> dynAppState
                     elCheckmark co =
-                        dyn_ $
-                            dynMCfgName
-                                <&> \cfgName ->
-                                    elClass "span" "checkmark" $
-                                        if cfgName == Just co
-                                            then text "✓ "
-                                            else blank
+                        dyn_ $ dynMCfgName <&> \cfgName ->
+                            elClass "span" "checkmark" $
+                                if cfgName == Just co
+                                then text "✓ "
+                                else blank
 
                 elClass "span" "caption" $ text "Keyboard layout"
 
@@ -363,6 +362,17 @@ settings lang = elClass "div" "topmenu" do
                 updateState $ domEvent Click eRP $>
                     [ field @"stApp" . field @"stProgress" .~ def
                     ]
+
+                dyn_ $ dynState <&> \State{..} -> case stSession of
+                  SessionAnon -> blank
+                  SessionUser _ -> do
+                    dynStage <- askRoute
+                    elClass "span" "caption" $ text "Account"
+                    (domSettings, _) <- elClass' "span" "entry" $ text "Go to settings"
+                    let evGotoSettings = tag (current dynStage) $ domEvent Click domSettings
+                    updateState $ evGotoSettings <&> \stage ->
+                      [ field @"stRedirectUrl" .~ stageUrl lang stage ]
+                    setRoute $ evGotoSettings $> FrontendRoute_Auth :/ AuthPage_Settings :/ ()
 
                 pure eFile'
 
@@ -895,7 +905,7 @@ toc ::
     Lang ->
     Stage ->
     m ()
-toc lang current = elClass "section" "toc" $ do
+toc lang stageCurrent = elClass "section" "toc" $ do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
         dynShowStage1 = stTOCShowStage1 <$> dynState
@@ -926,7 +936,7 @@ toc lang current = elClass "section" "toc" $ do
             dynCleared <&> \cleared -> do
                 let elLi stage = do
                         let cls =
-                                if stage == current
+                                if stage == stageCurrent
                                     then "bgLightgray"
                                     else ""
                         elClass "li" cls $ do
@@ -1211,16 +1221,16 @@ stages navLang toReady = do
     stages' ::
         Stage ->
         RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-    stages' current = elClass "div" "box" $ do
+    stages' stageCurrent = elClass "div" "box" $ do
         eChord <- stenoInput @key navLang
 
         navigation <- elClass "div" "row" $ mdo
-            toc navLang current
+            toc navLang stageCurrent
 
             let setEnv page =
-                    let navMPrevious = mPrev current
-                        navCurrent = current
-                        navMNext = mNext current
+                    let navMPrevious = mPrev stageCurrent
+                        navCurrent = stageCurrent
+                        navMNext = mNext stageCurrent
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
@@ -1245,49 +1255,49 @@ stages navLang toReady = do
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
                 nav <- elClass "div" "content" $ setEnv $
                     if
-                        | $readLoc "introduction" == current -> introduction
-                        | $readLoc "stage_1-1" == current -> Stage1.exercise1
-                        | $readLoc "stage_1-2" == current -> Stage1.exercise2
-                        | $readLoc "stage_1-3" == current -> Stage1.exercise3
-                        | $readLoc "stage_1-4" == current -> Stage1.exercise4
-                        | $readLoc "stage_1-5" == current -> Stage1.exercise5
-                        | $readLoc "stage_1-6" == current -> Stage1.exercise6
-                        | $readLoc "stage_1-7" == current -> Stage1.exercise7
-                        | $readLoc "stage_1-8" == current -> Stage1.exercise8
-                        | $readLoc "stage_2-1" == current -> Stage2.exercise1
-                        | $readLoc "stage_2-2" == current -> Stage2.exercise2
-                        | $readLoc "stage_2-3" == current -> Stage2.exercise3
-                        | $readLoc "stage_PatSimple_0"      == current -> Stage2.exercise4
-                        | $readLoc "stage_PatReplCommon_0"  == current -> Stage3.exercise1
-                        | $readLoc "stage_PatCodaComboT_0"  == current -> Stage3.exercise2
-                        | $readLoc "stage_PatOnsetR_0"      == current -> Stage3.exercise3
-                        | $readLoc "stage_PatOnsetL_0"      == current -> Stage3.exercise4
-                        | $readLoc "stage_PatSmallS_0"      == current -> Stage3.exercise5
-                        | $readLoc "stage_PatDiConsonant_0" == current -> Stage3.exercise6
-                        | $readLoc "stage_PatCodaH_0"       == current -> Stage3.exercise7
-                        | $readLoc "stage_PatCodaR_0"       == current -> Stage3.exercise8
-                        | $readLoc "stage_PatCodaRR_0"      == current -> Stage3.exercise9
-                        | $readLoc "stage_PatCodaHR_0"      == current -> Stage3.exercise10
-                        | $readLoc "stage_PatDt_0"          == current -> Stage3.exercise11
-                        | $readLoc "stage_PatDiphtong_0"    == current -> Stage3.exercise12
-                        | $readLoc "stage_PatReplC_0"       == current -> Stage3.exercise13
-                        | $readLoc "stage_PatSZ_0"          == current -> Stage3.exercise14
-                        | $readLoc "stage_PatBreakUpI_0"    == current -> Stage3.exercise15
-                        | $readLoc "stage_PatSwapS_0"       == current -> Stage3.exercise16
-                        | $readLoc "stage_PatSwapSch_0"     == current -> Stage3.exercise17
-                        | $readLoc "stage_PatSwapZ_0"       == current -> Stage3.exercise18
-                        | $readLoc "stage_PatDiVowel_0"     == current -> Stage3.exercise19
-                        | $readLoc "stage_PatReplH_0"       == current -> Stage3.exercise20
-                        | $readLoc "stage_PatCodaGK_3"      == current -> Stage3.exercise21
-                        | $readLoc "stage_ploverCommands"   == current -> ploverCommands
-                        | $readLoc "stage_fingerspelling"   == current -> fingerspelling
-                        | $readLoc "stage_numbermode"       == current -> numberMode
-                        | $readLoc "stage_commandKeys"      == current -> commandKeys
-                        | $readLoc "stage_specialCharacters"== current -> specialCharacters
-                        | $readLoc "patternoverview" == current -> Patterns.overview
+                        | $readLoc "introduction" == stageCurrent -> introduction
+                        | $readLoc "stage_1-1" == stageCurrent -> Stage1.exercise1
+                        | $readLoc "stage_1-2" == stageCurrent -> Stage1.exercise2
+                        | $readLoc "stage_1-3" == stageCurrent -> Stage1.exercise3
+                        | $readLoc "stage_1-4" == stageCurrent -> Stage1.exercise4
+                        | $readLoc "stage_1-5" == stageCurrent -> Stage1.exercise5
+                        | $readLoc "stage_1-6" == stageCurrent -> Stage1.exercise6
+                        | $readLoc "stage_1-7" == stageCurrent -> Stage1.exercise7
+                        | $readLoc "stage_1-8" == stageCurrent -> Stage1.exercise8
+                        | $readLoc "stage_2-1" == stageCurrent -> Stage2.exercise1
+                        | $readLoc "stage_2-2" == stageCurrent -> Stage2.exercise2
+                        | $readLoc "stage_2-3" == stageCurrent -> Stage2.exercise3
+                        | $readLoc "stage_PatSimple_0"      == stageCurrent -> Stage2.exercise4
+                        | $readLoc "stage_PatReplCommon_0"  == stageCurrent -> Stage3.exercise1
+                        | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise2
+                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise3
+                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise4
+                        | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise5
+                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise6
+                        | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise7
+                        | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise8
+                        | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise9
+                        | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise10
+                        | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise11
+                        | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise12
+                        | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise13
+                        | $readLoc "stage_PatSZ_0"          == stageCurrent -> Stage3.exercise14
+                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
+                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
+                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
+                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
+                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
+                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
+                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
+                        | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
+                        | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
+                        | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
+                        | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
+                        | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
+                        | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $
-                                text ("Page not implemented: " <> showt current)
+                                text ("Page not implemented: " <> showt stageCurrent)
                                     $> Navigation navLang Nothing ($readLoc "introduction") Nothing
 
                 elClass "div" "scrollBottom"

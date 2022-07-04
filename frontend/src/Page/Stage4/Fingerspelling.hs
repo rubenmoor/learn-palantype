@@ -140,6 +140,7 @@ taskLiterals
        , Palantype key
        , PerformEvent t m
        , PostBuild t m
+       , Prerender t m
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]

@@ -50,9 +50,10 @@ import Common.Stage (Stage)
 import Data.Time (UTCTime, Day)
 
 type RoutesAuth =
-           "login"  :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
-      :<|> "new"    :> ReqBody '[JSON] UserNew   :> Post '[JSON] SessionData
-      :<|> "exists" :> ReqBody '[JSON] Text      :> Post '[JSON] Bool
+           "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
+      :<|> "new"   :> ReqBody '[JSON] UserNew   :> Post '[JSON] SessionData
+      :<|> "user"  :> "exists" :> ReqBody '[JSON] Text      :> Post '[JSON] Bool
+      :<|> "alias" :> "exists" :> ReqBody '[JSON] Text      :> Post '[JSON] Bool
 
       -- logout doesn't do anything server-side apart from journaling
       :<|> AuthRequired "jwt" :> "logout" :> Post '[JSON] ()
@@ -60,9 +61,10 @@ type RoutesAuth =
 type RoutesUser =
        "alias" :>
     (
-           AuthRequired "jwt" :> "rename"       :> ReqBody '[JSON] Text :> Post '[JSON] ()
+           AuthRequired "jwt" :> "rename"       :> ReqBody '[JSON] Text :> Post '[JSON] Text
       :<|> AuthRequired "jwt" :> "get" :> "all" :> Get '[JSON] [Text]
       :<|> AuthRequired "jwt" :> "setDefault"   :> ReqBody '[JSON] Text :> Post '[JSON] ()
+      :<|> AuthRequired "jwt" :> "visibility"   :> ReqBody '[JSON] Bool :> Post '[JSON] ()
     )
   :<|> "app" :>
     (
@@ -84,10 +86,11 @@ type RoutesPalantype =
 
 type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()
-  :<|> AuthOptional "jwt" :> "stage-completed" :> ReqBody '[JSON] (Lang, Stage, Stats) :> Post '[JSON] ()
 
 type RoutesStats =
        AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" Stage :> Get '[JSON] [(Maybe Text, Stats)]
+  :<|> AuthRequired "jwt" :> "start" :> Post '[JSON] ()
+  :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (Lang, Stage, Stats) :> Post '[JSON] ()
 
 type RouteStatsNew =
        AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()

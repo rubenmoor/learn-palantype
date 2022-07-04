@@ -41,6 +41,7 @@ Alias                            -- one of several identities
   name             Text
   fkUser           UserId
   isVisible        Bool
+  lastEdited       UTCTime
   UAliasName name
 Clearance
   fkAlias          AliasId
@@ -62,4 +63,8 @@ Stats
   stage            Text
   length           Int
   nErrors          Int
+StageBegin
+  fkAlias          AliasId
+  created          UTCTime
+  UFkAlias fkAlias
 |]

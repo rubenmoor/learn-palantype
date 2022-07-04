@@ -14,6 +14,7 @@ module Page.Common.Stopwatch
     )
 where
 
+import Client
 import           Control.Lens.Setter            ( (.~) )
 import           Data.Generics.Product          ( field )
 import           Control.Monad.Fix              ( MonadFix )
@@ -33,7 +34,7 @@ import           GHC.Real                       ( realToFrac
                                                 , fromIntegral
                                                 , round
                                                 )
-import           Reflex.Dom                     ( EventWriter
+import           Reflex.Dom                     (Prerender,  EventWriter
                                                 , zipDyn
                                                 , DomBuilder
                                                 , MonadHold
@@ -104,6 +105,8 @@ import           Data.Text                      ( Text )
 import           Data.Tuple                     (fst,  snd )
 import Data.Foldable (Foldable(null))
 import Data.List (filter)
+import qualified Data.Witherable as Witherable
+import Data.Functor (void)
 
 data StateStopwatch
     = SWInitial
@@ -188,18 +191,23 @@ elStopwatch dynStats dynStopwatch n = do
     pure evStats
 
 mkStopwatch
-    :: forall t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadFix m
+       , MonadReader (Env t key) m
        , PerformEvent t m
+       , Prerender t m
        , PostBuild t m
        , TriggerEvent t m
        )
     => Event t Int
     -> m (Dynamic t StateStopwatch)
 mkStopwatch ev = do
+    Env{..} <- ask
+    let evGo = void $ Witherable.filter (== (-1)) ev
+    _ <- request $ postStatsStart (getAuthData <$> envDynState) evGo
     evToggle <- performEvent $ ev <&> \nErrors ->
         (ESWToggle nErrors <$> liftIO getCurrentTime)
     evTick <- fmap (ESWTick <<< _tickInfo_lastUTC)
