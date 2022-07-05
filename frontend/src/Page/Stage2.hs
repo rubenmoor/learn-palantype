@@ -22,7 +22,7 @@ import           Client                         ( getDictDE'
                                                 , request
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Control.Applicative            ( (<$>)
+import           Control.Applicative            ((<*>),  (<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.), id)
@@ -687,10 +687,7 @@ taskSingletons dynStats evChord eMaps = do
             catMaybes
                 $   updated
                 $   zipDyn dynMStdGen dynMMaps
-                <&> \(mStdGen, mMaps) -> do
-                        stdGen <- mStdGen
-                        maps   <- second (Map.take 10) <$> mMaps
-                        pure (stdGen, maps)
+                <&> \(mStdGen, mMaps) -> (,) <$> mStdGen <*> mMaps
 
     fmap switchDyn
         $   widgetHold (loading $> never)

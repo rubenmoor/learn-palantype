@@ -13,7 +13,7 @@ module AuthPages
     )
 where
 
-import           Reflex.Dom                     (tailE,  domEvent, EventName (Click), inputElementConfig_setChecked, tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
+import           Reflex.Dom                     (inputElementConfig_initialChecked, tailE,  domEvent, EventName (Click), inputElementConfig_setChecked, tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
                                                 , dyn_
                                                 , widgetHold_
                                                 , PostBuild
@@ -418,22 +418,22 @@ settings = do
                 . _As @"SessionUser"
                 . field @"sdAliasVisible"
               )
-        cb <-
-            inputElement
-            $  def
-            &  inputElementConfig_elementConfig
-            .  elementConfig_initialAttributes
-            .~ ("type" =: "checkbox" <> "id" =: elemId)
-            & inputElementConfig_setChecked
-            .~ tagPromptlyDyn dynVisible evPb
-        elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
-        let dynShowScoresChecked = _inputElement_checked cb
-        evShowScoresChecked <- tailE $ updated dynShowScoresChecked
-        updateState $ evShowScoresChecked <&> \isChecked ->
-          [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
-        _ <- request $ postAliasVisibility (getAuthData <$> dynState)
-                                           (Right <$> dynShowScoresChecked)
-                                           (void evShowScoresChecked)
+        dyn_ $ dynVisible <&> \bVisible -> do
+          cb <-
+              inputElement
+              $  def
+              &  inputElementConfig_elementConfig
+              .  elementConfig_initialAttributes
+              .~ ("type" =: "checkbox" <> "id" =: elemId)
+              & inputElementConfig_initialChecked .~ bVisible
+          elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
+          let dynShowScoresChecked = _inputElement_checked cb
+              evShowScoresChecked = updated dynShowScoresChecked
+          updateState $ evShowScoresChecked <&> \isChecked ->
+            [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
+          void $ request $ postAliasVisibility (getAuthData <$> dynState)
+                                             (Right <$> dynShowScoresChecked)
+                                             (void evShowScoresChecked)
 
         el "p" $ text
             "If you check this, your scores will be publicly visible. \
