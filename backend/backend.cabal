@@ -35,7 +35,7 @@ library
     , obelisk-route
     , password
     , password-instances
-    , persistent >= 2.13
+    , persistent
     , persistent-mysql
     , resource-pool
     , resourcet
