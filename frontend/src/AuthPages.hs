@@ -216,7 +216,7 @@ signup = elClass "div" "auth" $ mdo
 
     el "hr" blank
 
-    evSubmit <- elButtonSubmit "" $ text "Submit"
+    evSubmit <- elButtonSubmit "small" $ text "Submit"
 
     let dynEUserNew =
           zipDyn dynState (
@@ -310,7 +310,7 @@ login = elClass "div" "auth" $ mdo
         (text "Wrong user name or password.")
 
     el "hr" blank
-    evSubmit <- elButtonSubmit "" $ text "Submit"
+    evSubmit <- elButtonSubmit "small" $ text "Submit"
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
             (Just ldUserName, Just ldPassword) -> Right LoginData { .. }

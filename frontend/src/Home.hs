@@ -151,8 +151,7 @@ import Obelisk.Route.Frontend
       pattern (:/),
     )
 import Page.Common
-    ( elFooter,
-      rawToggleKeyboard,
+    ( elFooter
     )
 import Page.Introduction (introduction)
 import qualified Page.Patterns as Patterns
@@ -172,12 +171,15 @@ import Palantype.Common
       fromChord,
       fromIndex,
       kiDown,
+      kiInsert,
       kiUp,
       kiPageUp,
       kiPageDown,
       mkChord,
     )
 import qualified Palantype.Common.Indices as KI
+import qualified Palantype.DE.Keys as DE
+import qualified Palantype.EN.Keys as EN
 import Reflex.Dom
     (current, tag, attachPromptlyDynWithMaybe, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
@@ -383,7 +385,7 @@ settings lang = elClass "div" "topmenu" do
         elClass "div" "topmenu-entry dropdown" $ do
             elClass "span" "icon-link big" $ text $ showSymbol lang
             elClass "div" "dropdown-content" $ do
-                (eRL, _) <- elClass' "span" "entry" $ text "Switch system"
+                (eRL, _) <- elClass' "span" "entry" $ text "Back to landing page"
                 let eClickRL = domEvent Click eRL
                 updateState $ eClickRL $> [ field @"stApp" . field @"stMLang" .~ Nothing]
                 setRoute $ eClickRL $> FrontendRoute_Main :/ ()
@@ -441,7 +443,9 @@ settings lang = elClass "div" "topmenu" do
                         else "keyboardHidden"
         (s, _) <- elDynClass' "div" dynClass $ do
             iFa "fas fa-keyboard"
-            el "code" $ text $ showt $ rawToggleKeyboard lang
+            el "code" $ text $ showt $ case lang of
+              DE -> KI.toRaw @DE.Key kiInsert
+              EN -> KI.toRaw @EN.Key kiInsert
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
@@ -605,7 +609,7 @@ stenoInput lang = do
 
         let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
             selector = fanMap $ eChordAll <&> \c -> if
-                | fromChord c == rawToggleKeyboard lang -> Map.singleton FanToggle c
+                | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanToggle c
                 | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
                 | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
                 | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
@@ -1056,8 +1060,8 @@ landingPage
     )
   => m ()
 landingPage = elClass "div" "landing" $ do
-    elClass "div" "top" $ el "h1" $ text "Palantype DE"
-    elClass "div" "middle" $ do
+    elClass "div" "title" $ el "h1" $ text "Palantype DE"
+    elClass "div" "video-and-buttons" $ do
         elClass "div" "container" $ do
             elAttr "video"
                 (  "width"    =: "480"
@@ -1077,6 +1081,8 @@ landingPage = elClass "div" "landing" $ do
                         el' "button" $ do
                             elClass "div" "container" $ do
                                 elClass "div" "icon" $ do
+                                    let elFlag cc =
+                                          elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
                                     elFlag "de"
                                     el "br" blank
                                     elFlag "at"
@@ -1126,7 +1132,7 @@ landingPage = elClass "div" "landing" $ do
                         pure $ stageUrl lang stage
                     setRoute $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
 
-    elClass "div" "bottom" $ do
+    elClass "div" "info-columns" $ do
 
         elClass "div" "usp" $ do
             elClass "div" "icon" $ iFa "fas fa-rocket"
@@ -1187,14 +1193,32 @@ landingPage = elClass "div" "landing" $ do
                     $ text "issue tracker"
                 text "."
 
-    el "footer" $ do
+    elClass "div" "reach-out" $ do
         text "Want to reach out? Join the "
         elAttr "a" ("href" =: "https://discord.gg/spymr5aCr5") $
             text "Plover Discord Server"
         text " and find me in #palantype, @gurubm."
-    where
-        elFlag cc =
-            elClass "span" ("flag-icon flag-icon-squared flag-icon-" <> cc) blank
+
+    elClass "div" "tech-stack" $ do
+      el "h1" $ text "The technology"
+
+      el "dl" $ do
+        el "dt" $ text "Obsidian Systems Obelisk"
+        el "dd" $ do
+          text "Functional reactive programming for web and mobile—a sublime experience, find the "
+          elAttr "a" ("href" =: "https://github.com/obsidiansystems/obelisk") $ text "code on GitHub"
+          text "."
+        el "dt" $ text "GHCJS"
+        el "dd" $ do
+          text "Let the JavaScript be generated and stay type-safe and functional all the way, cf. "
+          elAttr "a" ("href" =: "https://github.com/ghcjs/ghcjs") $ text "GHCJS on GitHub"
+          text "."
+        el "dt" $ text "Haskell"
+        el "dd" $ do
+          text "Category theory, lazy evaluation, purely functional programming since 1990. "
+          elAttr "a" ("href" =: "https://en.wikipedia.org/wiki/Haskell") $ text "Read more on Wikipedia"
+          text "."
+
 
 stages
     :: forall key t (m :: * -> *)

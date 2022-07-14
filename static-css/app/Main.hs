@@ -5,7 +5,7 @@
 
 module Main where
 
-import           Clay                           (p, label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
+import           Clay                           (dl, dt, p, label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
                                                 , (&)
                                                 , (-:)
                                                 , (?)
@@ -214,6 +214,8 @@ import Clay (borderRight)
 import Clay (lightyellow)
 import Clay (flexWrap)
 import Clay (wrap)
+import Clay.Flexbox (flexDirection)
+import Clay.Flexbox (SpaceAround(spaceAround))
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -271,6 +273,13 @@ main = putCss $ do
             paddingLeft $ em 0.5
             paddingRight $ em 0.5
     star ? boxSizing borderBox
+
+    dl ? do
+      dt ? do
+        fontSize $ pt 16
+        fontWeight bold
+        paddingTop $ em 1.5
+        paddingBottom $ em 0.5
 
     -- flex layout
 
@@ -428,10 +437,11 @@ main = putCss $ do
         color white
         fontSize $ pt 24
         borderRadius (px 12) (px 12) (px 12) (px 12)
-        padding (px 12) (px 12) (px 12) (px 12)
         border none (px 0) transparent
         cursor pointer
-        ".small" ? fontSize (pt 18)
+        ".small" & do
+          fontSize (pt 18)
+          padding (px 12) (px 12) (px 12) (px 12)
 
     let keyboardWidth   = 650
         keyboardHeight  = 271
@@ -733,37 +743,41 @@ main = putCss $ do
 
     div # ".landing" ? do
         backgroundColor myGray
-        div # ".top" ? do
+        div # ".title" ? do
             width $ pct 100
-            height $ px 160
+            height $ px 120
             h1 ? do
                 fontFamily ["Special Elite"] [cursive]
                 display inlineBlock
                 marginTop $ em 1
                 marginLeft $ em 1
                 fontWeight normal
-        div # ".middle" ? do
+        div # ".video-and-buttons" ? do
             width $ pct 100
             backgroundColor myLightblue
             textAlign center
-            paddingTop $ em 4
-            paddingBottom $ em 4
+            paddingTop $ em 2
+            paddingBottom $ em 2
             paddingLeft $ em 2
             paddingRight $ em 2
-            h1 ? do
-                color white
-                marginBottom $ em 1.5
+            h1 ? color white
 
-        div # ".middle" |> div # ".container" ? do
-            display flex
-            flexWrap Flex.wrap
-            alignItems center
-            justifyContent center
-            video ? do
+        div # ".video-and-buttons" |> div # ".container" |> video ? do
                 backgroundColor white
                 margin (px 4) (px 4) (px 4) (px 4)
                 border solid (px 8) white
 
+        div # ".video-and-buttons" |> div # ".container" |> div ? do
+          minHeight $ px 405
+          display flex
+          flexDirection column
+          justifyContent spaceAround
+
+        div # ".video-and-buttons" |> div # ".container" ? do
+            display flex
+            flexWrap Flex.wrap
+            alignItems center
+            justifyContent center
             div # ".right" ? do
                 display flex
                 flexWrap Flex.wrap
@@ -836,7 +850,7 @@ main = putCss $ do
                     width $ px 296
 
 
-        div # ".bottom" ? do
+        div # ".info-columns" ? do
             display flex
             flexWrap Flex.wrap
             justifyContent center
@@ -845,9 +859,9 @@ main = putCss $ do
                 maxWidth $ px 300
                 paddingLeft $ px 30
                 paddingRight $ px 30
-                marginTop $ em 4
-                marginBottom $ em 4
-                color white
+                marginTop $ em 2
+                marginBottom $ em 2
+                color myLightgray
                 div # ".icon" ? do
                     textAlign center
                     height $ px 120
@@ -863,13 +877,23 @@ main = putCss $ do
                 div # ".description" ? do
                     fontSize $ pt 14
 
-        footer ? do
+        div # ".reach-out" ? do
             paddingTop $ em 1
             paddingBottom $ em 1
             color anthrazit
             width $ pct 100
             textAlign center
-            backgroundColor white
+            backgroundColor myLightgray
+
+        div # ".tech-stack" ? do
+            h1 ? color anthrazit
+            color myLightgray
+            width $ pct 100
+            textAlign center
+            paddingTop $ em 2
+            paddingBottom $ em 2
+            paddingLeft $ em 2
+            paddingRight $ em 2
 
     div # ".taskSingletons" ? do
         padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)

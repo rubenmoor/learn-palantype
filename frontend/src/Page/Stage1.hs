@@ -61,13 +61,13 @@ import           Obelisk.Route.Frontend         (Routed,  R
                                                 )
 import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
-                                                , rawToggleKeyboard
                                                 )
 import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex
                                                 , allKeys
+                                                , kiInsert
                                                 )
 import           Reflex.Dom                     (constDyn, current, gate, never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
@@ -98,6 +98,7 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import Common.Stage (Stage)
+import qualified Palantype.Common.Indices as KI
 
 -- exercise 1
 
@@ -130,18 +131,15 @@ exercise1 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 1"
-    elClass "div" "paragraph"
-        $ text
-              "Palantype relies on chords. A chord means: \
-      \You press up to ten keys at the same time. \
-      \The order in which you press down does not matter. \
+    el "p" $ text
+      "Palantype relies on chords. A chord means: You press up to ten keys at \
+      \the same time. The order in which you press down does not matter. \
       \Instead, all the letters of one chord will appear in their proper order. \
       \Therefore, you will learn the Palantype Alphabet in its proper order now."
-    elClass "div" "paragraph" $ text
+    el "p" $ text
         "Type the following steno letters in order, one after another."
-    elClass "div" "paragraph"
-        $ text
-              "Some letters occur twice, the first time for your left hand \
+    el "p" $ text
+      "Some letters occur twice, the first time for your left hand \
       \and the second time for your right hand."
 
     ePb <- getPostBuild
@@ -152,12 +150,12 @@ exercise1 = mdo
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     when (navLang == DE) $ do
-      elClass "div" "paragraph" $ text
+      el "p" $ text
             "In case you wonder: The letter ʃ is a phonetic symbol \
             \related to the German \"sch\". \
             \We don't care about exact phonetics and thus simply treat ʃ \
             \as \"sch\"."
-      elClass "div" "paragraph" $ do
+      el "p" $ do
         text "Also, the keys with small letters are special. "
         el "code" $ text "v"
         text ", "
@@ -165,8 +163,8 @@ exercise1 = mdo
         text ", and "
         el "code" $ text "n"
         text " stand for \"ver-\", \"be-\", and \"-en\", respectively. \
-             \These keys aren't necessary and you won't use them in the \
-             \upcoming exercises. E.g. \"be\" can be typed simply by typing "
+             \These keys aren't necessary and you won't use them in a while. \
+             \E.g. \"be\" can be typed simply by typing "
         el "code" $ text "BE"
         text ". But given the high frequency of these word parts, these \
             \ special keys will help a lot with typing efficiency. The "
@@ -201,9 +199,8 @@ exercise2 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 2"
-    el "span"
-        $ text
-              "Again, type the letters in the Palantype Alphabet. \
+    el "p" $ text
+      "Again, type the letters in the Palantype Alphabet. \
       \But now, without seeing them. \
       \Learn to remember the correct order by \
       \pronouncing each letter while you type it!"
@@ -215,7 +212,7 @@ exercise2 = mdo
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
-        DE -> elClass "div" "paragraph" $ do
+        DE -> el "p" $ do
             text "Well, how to pronounce ~? This symbol is used to turn "
             el "em" $ text "u"
             text " into "
@@ -234,7 +231,7 @@ exercise2 = mdo
             el "em" $ text "üh"
             text ". It is called «lang» (the German word for long)."
         EN ->
-            elClass "div" "paragraph"
+            el "p"
                 $ text
                       "The + is called cross and the ^ is called point, \
               \in case you wondered."
@@ -266,7 +263,7 @@ exercise3 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 3"
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "How about you type the letters in their proper order \
       \without the virtual keyboard? \
@@ -279,7 +276,7 @@ exercise3 = mdo
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
-        DE -> elClass "div" "paragraph" $ do
+        DE -> el "p" $ do
             text
                 "Missing the letter T? It's not there and you don't need it. \
                    \You will learn to type "
@@ -319,7 +316,7 @@ exercise4 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 4"
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "And for maximum difficulty, type the letters in their proper \
       \order without seeing neither the letters nor the keyboard! To makes this \
@@ -393,7 +390,7 @@ taskAlphabet evChord showAlphabet = do
                     Nothing ->
                         if wsCounter > i then "bgGreen" else clsLetter
             elDynClass "span" dynCls $ text $ Text.singleton $ keyCode c
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
         text $ " / " <> Text.pack (show len)
 
@@ -502,7 +499,7 @@ taskLetters evChord letters = do
                     $  text
                     $  showt
                     $  slsLetters !! slsCounter
-                elClass "div" "paragraph" $ do
+                el "p" $ do
                     el "strong" $ text (Text.pack $ show slsCounter)
                     text " / "
                     text (Text.pack $ show len)
@@ -547,17 +544,18 @@ exercise5 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 5"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "You get the virtual keyboard back. Feel free, to toggle it anytime. \
          \You can even use "
-        el "code" $ text $ showt $ rawToggleKeyboard navLang
-        text
-            " to do that. This is a chord that just exists \
-         \for this purpose here on this website. \
-         \It doesn't have a meaning, so it hopefully doesn't interfere."
-    elClass "div" "paragraph" $ text "Type every steno letter as it appears!"
-    elClass "div" "paragraph" $ do
+        el "code" $ text $ showt $ KI.toRaw @key kiInsert
+        text " to do that. This is one of the "
+        el "em" $ text "command keys"
+        text ". You will later learn that it is meant to replace the "
+        el "em" $ text "insert"
+        text " key on your keyboard."
+    el "p" $ text "Type every steno letter as it appears!"
+    el "p" $ do
         text
             "The - symbol is used to distinguish between letters that appear \
          \twice. In this task, you will only need your left hand. Thus \
@@ -597,11 +595,11 @@ exercise6 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 6"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "Switching hands now. The leading - symbol indicates that the letter \
          \is on your right-hand side."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text "Type every steno letter as it appears!"
 
     ePb <- getPostBuild
@@ -639,7 +637,7 @@ exercise7 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 7"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "This one will be fun. You won't have to move your hands at all. \
             \All the keys you practice in this exercise lie on home row. \
@@ -653,7 +651,7 @@ exercise7 = mdo
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Be sure to practice this one to perfection. It will only get more \
               \difficult from here."
@@ -685,17 +683,17 @@ exercise8 = mdo
     el "h1" $ text "Stage 1"
     el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 7"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "Before your continue with this last exercise of Stage 1: There is a \
          \table of contents on the left. Use it to jump back to any of the \
          \previous exercises to practice some more."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "For the next stage, you should have some muscle memory for every \
          \key. Be sure to complete this exercise without \
          \the virtual keyboard, too."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text "Type every steno letter as it appears!"
 
     ePb <- getPostBuild
@@ -703,8 +701,7 @@ exercise8 = mdo
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
 
-    elClass "div" "paragraph"
-        $ text
+    el "p" $ text
               "By the way, you can re-shuffle the order, in which the keys \
            \are presented to you, by reloading the page, if you feel the need to."
 

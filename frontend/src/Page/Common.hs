@@ -333,11 +333,6 @@ elNotImplemented = elClass "blockquote" "warning" $ do
         \implemented for the original English palantype. \
         \Feel free to read, but don't expect things to work from here on."
 
-rawToggleKeyboard :: Lang -> RawSteno
-rawToggleKeyboard = \case
-    DE -> "U+NSD"
-    EN -> "ALFTS"
-
 loading :: forall (m :: * -> *) t . (DomBuilder t m) => m ()
 loading = elClass "div" "paragraph" $ do
     iFa "fas fa-spinner fa-spin"

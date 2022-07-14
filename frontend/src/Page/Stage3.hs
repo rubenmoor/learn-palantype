@@ -78,7 +78,7 @@ exercise iEx elIntro pat elExplication = mdo
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
             Right (mSW, mWSs) -> if null mSW
-              then do elClass "div" "paragraph" $
+              then do el "p" $
                         text "There are no words in this exercise. \
                           \This is probably an error. \
                           \Skip this for now."
@@ -100,7 +100,7 @@ exercise1 =
     exercise
         1
         ( \_ ->
-              elClass "div" "paragraph" $
+              el "p" $
                   text
                       "In general, any word in the natural language translates to some \
                       \steno code based on a couple of straightforward substitutions. \
@@ -108,7 +108,7 @@ exercise1 =
         )
         PatReplCommon
         ( \navLang -> do
-              elClass "div" "paragraph" $ do
+              el "p" $ do
                   text
                       "First of all, note that these patterns are in addition to the \
                       \simple patterns of the previous "
@@ -143,38 +143,30 @@ exercise1 =
                   el "code" $ text "SL-"
                   text ", always obeying the proper order of steno keys."
 
-              elClass "div" "paragraph" $ do
+              el "p" $ do
                   text
                       "This is a lot to memorize, right from the start. Take your \
-                      \time to discover some regularities. E.g. "
+                      \time to discover some regularities. E.g. the "
+                  el "code" $ text "+"
+                  text " turns "
+                  el "em" $ text "g"
+                  text ", "
+                  el "em" $ text "d"
+                  text ", and"
+                  el "em" $ text "b"
+                  text " into "
                   el "em" $ text "k"
                   text ", "
-                  el "em" $ text "ck"
-                  text ", "
-                  el "em" $ text "qu"
+                  el "em" $ text "t"
                   text ", and"
+                  el "em" $ text "p"
+                  text ", respectively. The "
                   el "em" $ text "x"
-                  text " all make use of "
-                  el "code" $ text "GD"
-                  text
-                      " and phonetically they are, indeed, similar. Other \
-                      \apparently weird rules follow from necessity. E.g. "
-                  el "em" $ text "sch"
-                  text " in the onset has the steno code "
-                  el "code" $ text "SJ"
-                  text ", which doesn't work for "
-                  el "em" $ text "schm"
-                  text " and "
-                  el "em" $ text "schw"
-                  text
-                      ", because you only have one middle finger on your left hand! \
-                      \Luckily, "
-                  el "code" $ text "SM"
-                  text " and "
-                  el "code" $ text "SW"
-                  text
-                      " happen to be quite convenient shorthands, of which we will \
-                      \learn more about later."
+                  text " looks weird but it really is simply typed by "
+                  el "code" $ text "DSG"
+                  text " with the left hand, which becomes "
+                  el "code" $ text "GSD"
+                  text " with the right hand."
         )
 
 exercise2 ::
@@ -183,11 +175,22 @@ exercise2 ::
     m Navigation
 exercise2 = exercise
    2
-   ( \_ -> elClass "div" "paragraph" $ do
-       text "TODO: introductory text"
+   ( \_ -> el "p" $ do
+       text "The new rules of this exercise all follow from one single rule: "
+       el "em" $ text "t"
+       text " is typed by "
+       el "code" $ text "+D"
+       text ". But there is a lot space between those two keys to squeeze in \
+            \another consonant when needed. Exceptions are needed for "
+       el "em" $ text "mt"
+       text " and "
+       el "em" $ text "lt"
+       text ", where the "
+       el "code" $ text "+"
+       text " is omitted at the expense of specificity."
    )
    PatCodaComboT
-   ( \_ -> elClass "div" "paragraph" $ do
+   ( \_ -> el "p" $ do
        text "TODO: follow-up text"
    )
 
@@ -197,11 +200,11 @@ exercise3 ::
     m Navigation
 exercise3 = exercise
    3
-   ( \_ -> elClass "div" "paragraph" $ do
+   ( \_ -> el "p" $ do
        text "TODO: introductory text"
    )
    PatOnsetR
-   ( \_ -> elClass "div" "paragraph" $ do
+   ( \_ -> el "p" $ do
        text "TODO: follow-up text"
    )
 
@@ -211,11 +214,11 @@ exercise4 ::
     m Navigation
 exercise4 = exercise
    4
-   ( \_ -> elClass "div" "paragraph" $ do
+   ( \_ -> el "p" $ do
        text "TODO: introductory text"
    )
    PatOnsetL
-   ( \_ -> elClass "div" "paragraph" $ do
+   ( \_ -> el "p" $ do
        text "TODO: follow-up text"
    )
 
@@ -226,7 +229,7 @@ exercise5 ::
 exercise5 =
     exercise
         5
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "For the "
               el "code" $ text "F"
               text " and the "
@@ -238,7 +241,7 @@ exercise5 =
               text " key in that case."
         )
         PatSmallS
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "This extra key will give us some flexibility when dealing \
                   \with "
@@ -258,7 +261,7 @@ exercise6 =
     exercise
         6
         ( \_ ->
-              elClass "div" "paragraph" $
+              el "p" $
                   text
                       "Now you'll learn a nice simplification. When you encounter one of the \
                       \double consonants of the table below in the coda, you will only need one \
@@ -268,7 +271,7 @@ exercise6 =
         )
         PatDiConsonant
         ( \_ ->
-              elClass "div" "paragraph" $
+              el "p" $
                   text
                       "This rule only is about double consonants in the coda. \
                       \Quite often, a double consonant is devided by an ortographic syllable \
@@ -283,7 +286,7 @@ exercise7 ::
 exercise7 =
     exercise
         7
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "You might have wondered why there is no key for h for your right hand. \
                   \Vowels that are being stretched out, e.g. with an h, are typed using \
@@ -301,7 +304,7 @@ exercise7 =
               text ", which doubles as a second stretch key."
         )
         PatCodaH
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "Note that the stretch key isn't only for h, but it also turns i into ie. \
                   \Another thing: "
@@ -318,7 +321,7 @@ exercise8 ::
 exercise8 =
     exercise
         8
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "This might come as a little surprise but, just like with "
               el "em" $ text "h"
               text ", the letter "
@@ -328,7 +331,7 @@ exercise8 =
                   \typed using the same stretch keys."
         )
         PatCodaR
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "As in the previous exercise, "
               el "em" $ text "ö"
               text
@@ -345,7 +348,7 @@ exercise9 ::
 exercise9 =
     exercise
         9
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "Following the idea of stretching vowels, a "
               el "em" $ text "rr"
               text
@@ -355,7 +358,7 @@ exercise9 =
               text " key."
         )
         PatCodaRR
-        ( \lang -> elClass "div" "paragraph" $ do
+        ( \lang -> el "p" $ do
               text "Do not let the appereance of "
               el "em" $ text "t"
               text
@@ -395,13 +398,13 @@ exercise10 =
     exercise
         10
         ( \_ ->
-              elClass "div" "paragraph" $
+              el "p" $
                   text
                       "This is the last rule regarding regular vowel streting and \
                       \it is fairly straightforward."
         )
         PatCodaHR
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "Use "
               el "code" $ text "~"
               text " with "
@@ -419,7 +422,7 @@ exercise11 =
     exercise
         11
         ( \_ -> do
-              elClass "div" "paragraph" $ do
+              el "p" $ do
                   text
                       "Now for something a bit different. \
                       \A word part that ends with -dt, requires an additional stroke. \
@@ -432,7 +435,7 @@ exercise11 =
                   text " and "
                   el "em" $ text "Brandt"
                   text "."
-              elClass "div" "paragraph" $ do
+              el "p" $ do
                   text
                       "Luckily, there are not that many words at all that suffer \
                       \from ambiguity regarding -dt and this exercise is quite small. \
@@ -441,7 +444,7 @@ exercise11 =
                   text " alone and thus don't show up here."
         )
         PatDt
-        ( \lang -> elClass "div" "paragraph" $ do
+        ( \lang -> el "p" $ do
               text
                   "You can find more information and examples of this \
                   \rule in the correspondig section of the "
@@ -457,14 +460,14 @@ exercise12 ::
 exercise12 =
     exercise
         12
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "Here you find combinations of vowels in the nucleus that \
                   \do not conform to the rules of simple, letter-by-letter \
                   \replacement."
         )
         PatDiphtong
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "If those seemed weird to you, that's because they are weird. \
                   \Fortunately, the weird rules usually affect rare words."
@@ -477,7 +480,7 @@ exercise13 ::
 exercise13 =
     exercise
         13
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "You will learn an alternative to type "
               el "em" $ text "c"
               text " later. To help you memorize this rule, think of "
@@ -487,7 +490,7 @@ exercise13 =
               text " in the onset."
         )
         PatReplC
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "Also, remember that you already learned "
               el "em" $ text "ch"
               text ", which is treated as an entirely different letter and typed "
@@ -504,7 +507,7 @@ exercise14 ::
 exercise14 =
     exercise
         14
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "The main takeaway regarding the German letter "
               el "em" $ text "ß"
               text ": Use "
@@ -520,7 +523,7 @@ exercise14 =
               text " in steno code."
         )
         PatSZ
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "Also, "
               el "em" $ text "ß"
               text " in the onset usually is simply "
@@ -541,7 +544,7 @@ exercise15 ::
 exercise15 =
     exercise
         15
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text
                   "This rule increase efficiency for vowel-heavy words. \
                   \Using "
@@ -553,7 +556,7 @@ exercise15 =
                   \just for one vowel."
         )
         PatBreakUpI
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "In order to reach "
               el "em" $ text "lio"
               text " and "
@@ -575,11 +578,11 @@ exercise16 ::
 exercise16 =
     exercise
         16
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "intro"
         )
         PatSwapS
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "explication"
         )
 
@@ -590,11 +593,11 @@ exercise17 ::
 exercise17 =
     exercise
         17
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "intro"
         )
         PatSwapSch
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "explication"
         )
 
@@ -605,11 +608,11 @@ exercise18 ::
 exercise18 =
     exercise
         18
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "intro"
         )
         PatSwapZ
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "explication"
         )
 
@@ -620,11 +623,11 @@ exercise19 ::
 exercise19 =
     exercise
         19
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "intro"
         )
         PatDiVowel
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "explication"
         )
 
@@ -635,11 +638,11 @@ exercise20 ::
 exercise20 =
     exercise
         20
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "intro"
         )
         PatReplH
-        ( \_ -> elClass "div" "paragraph" $ do
+        ( \_ -> el "p" $ do
               text "explication"
         )
 
@@ -656,7 +659,7 @@ exercise21 = mdo
     el "h2" $ text $ toDescription PatCodaGK
     el "h3" $ text $ "Exercise 21"
 
-    elClass "div" "paragraph" $ text "intro"
+    el "p" $ text "intro"
 
     ePb <- postRender $ delay 0.1 =<< getPostBuild
     evEDoc <- request $ getDocDEPattern' PatCodaGK 3 ePb
@@ -669,14 +672,14 @@ exercise21 = mdo
                     $ text
                     $ "Could not load resource: docs: " <> str
 
-    elClass "div" "paragraph" $ text "explication"
+    el "p" $ text "explication"
 
     dynStats <- getStatsLocalAndRemote evDone
     evEDict <- request $ getDictDE' PatCodaGK 3 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
             Right (mSW, mWSs) -> if null mSW
-              then do elClass "div" "paragraph" $
+              then do el "p" $
                         text "There are no words in this exercise. \
                           \This is probably an error. \
                           \Skip this for now."

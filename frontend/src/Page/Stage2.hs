@@ -152,7 +152,6 @@ import           Palantype.Common.TH            ( fromJust
                                                 )
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
-import           Data.Bifunctor                 ( Bifunctor(second) )
 import Common.Model (Stats)
 import Common.Stage (Stage)
 
@@ -307,18 +306,18 @@ exercise1 = mdo
     el "h1" $ text "Stage 2"
     el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 1"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "You probably have noticed that on the virtual keyboard some keys \
             \are highlighted blue. These keys are called home row. \
             \The idea is that there is a resting position for your hands, where \
             \every finger is placed on one key of home row."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "From this resting position your fingers can find any key, without \
             \any need to look down on your keyboard, so your eyes can stay on \
             \the screen all the time."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "In case you have been looking on your fingers during the exercises, \
             \it's probably a good idea to get used to home row now. \
@@ -329,7 +328,7 @@ exercise1 = mdo
           void $ gate (not <$> current dynDone) $
             filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
-    elABack <- elClass "div" "paragraph" $ do
+    elABack <- el "p" $ do
         text "Type "
         elBackUp @key
         text " to "
@@ -346,17 +345,17 @@ exercise1 = mdo
                  %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
            ]
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "Also, just like looking down on your fingers will slow you down, \
             \you can't actually use the virtual keyboard if you want to get up \
             \to speed. I recommend, turning it off. The following exercise \
             \is an important prerequisite to actually learn the chords."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "Maybe, you want to come up with a mnemonic phrase that helps \
             \remembering the keyboard layout, e.g."
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         el "div" $ do
             el "strong" $ text "V"
             text "er"
@@ -385,7 +384,7 @@ exercise1 = mdo
             el "strong" $ text "+"
             el "strong" $ text " L"
             text "ebertran"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         el "div" $ do
             el "strong" $ text "Ä"
             text "tna-"
@@ -394,7 +393,7 @@ exercise1 = mdo
             el "strong" $ text "A"
             text "ußergewöhnlich "
             el "strong" $ text "Lang"
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         el "div" $ do
             el "strong" $ text "U"
             text "rgewalt "
@@ -405,7 +404,7 @@ exercise1 = mdo
             el "strong" $ text "Ü"
             text "berlebende "
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text "You can surely come up with a better one, yourself!"
 
     el "p" $ text "This one is for the homerow:"
@@ -537,7 +536,7 @@ exercise2 = mdo
 
     evDone <- case navLang of
         EN -> do
-            elClass "div" "paragraph" $ do
+            el "p" $ do
                 text
                     "We can begin with actually typing sentences now. \
                     \How about this one sentences I found in the "
@@ -570,7 +569,7 @@ exercise2 = mdo
 
             evDone' <- walkWords (gate (not <$> current dynDone) envEChord) lsWord raw
 
-            elClass "div" "paragraph" $ do
+            el "p" $ do
                 text
                     "Each word is one chord, except the word \"lazy\". You will \
                     \have to strike "
@@ -583,7 +582,7 @@ exercise2 = mdo
                 el "code" $ text "LE^/S+I"
                 text ", with a /."
 
-            elClass "div" "paragraph" $ do
+            el "p" $ do
                 text
                     "You wonder why the steno code looks so weird? \
                     \Some words are almost beyond recognition. \
@@ -591,7 +590,7 @@ exercise2 = mdo
 
             pure evDone'
         DE -> do
-            elClass "div" "paragraph"
+            el "p"
                 $ text
                       "We can begin with actually typing sentences now. \
                     \How about this quote from Goethe? In case you have trouble \
@@ -605,7 +604,7 @@ exercise2 = mdo
 
             evDone' <- walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
 
-            elClass "div" "paragraph" $ do
+            el "p" $ do
                 text
                     "Each word is one chord, except the word «Zweifel». You will \
                     \have to strike "
@@ -618,7 +617,7 @@ exercise2 = mdo
                 el "code" $ text "ʃG+EI/FEL"
                 text ", with a /."
 
-            elClass "div" "paragraph" $ do
+            el "p" $ do
                 text
                     "You wonder why the steno code looks so weird? \
                     \Some words are almost beyond recognition. \
@@ -626,7 +625,7 @@ exercise2 = mdo
 
             pure evDone'
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text "Let me introduce yet another useful chord: "
         el "code" $ text $ showt $ KI.toRaw @key kiBackUp
         text
@@ -829,20 +828,20 @@ exercise3 = mdo
     el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 3"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "During the following exercises, you will learn to type words, \
             \starting with the most straightfoward ones. \
             \You will be able to guess the correct chord without problem."
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "There are rules that will become progressively more complex \
             \in the course of this tutorial. We start simple:"
 
     el "h4" $ text "Rule 1: Steno key order"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Every chord consists of up to ten keys \
             \pressed at once. \
@@ -851,7 +850,7 @@ exercise3 = mdo
             \Instead, all keys of one chord will always be interpreted \
             \in their proper order."
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text "For example, the steno keys "
         el "code" $ text "BUʃ"
         text
@@ -860,14 +859,21 @@ exercise3 = mdo
             \, and indeed here it is: "
         el "code" $ text "ʃUB"
         text "."
-    elClass "div" "paragraph"
-        $ text
-              "Note how the U determines which keys are meant in both cases. \
-             \There is no ambiguity as long as you follow the steno order."
+    el "p" $ do
+      text "In conclusion, it "
+      el "em" $ text "does"
+      text " matter which key (or which hand) you use: "
+      el "code" $ text "ʃ-"
+      text " isn't the same as "
+      el "code" $ text "-ʃ"
+      text ". But it "
+      el "em" $ text "does not"
+      text " matter in which order you actually put down your fingers. \
+           \Ideally you press all the keys of one chord at the same time."
 
     el "h4" $ text "Rule 2: Word part structure"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "One chord either makes a word or a word part. \
             \In general, a part consists of an onset, a nucleus, \
@@ -875,7 +881,7 @@ exercise3 = mdo
             \and can be missing. The nucleus comprises the vowels that follow \
             \and the coda finally comprises the consonants in the end."
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "For a word part structured that way, you will use the fingers \
             \of your left hand for the consonants of the onset and the fingers \
@@ -884,11 +890,11 @@ exercise3 = mdo
 
     el "h4" $ text "Practice simple words"
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "To get started, we start with the most simple words. \
             \Every letter can be typed as it is, just make sure to use the \
-            \correct finger. The only specialty for now is -sch in the coda, \
+            \correct finger. The only specialty for now is \"sch\", \
             \for which you will have to use "
         el "code" $ text "ʃ"
         text ". And remember: the small keys "
@@ -947,7 +953,7 @@ exercise4 = mdo
     el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 4"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Introducing words that rely on two or more chords to type now. \
             \In general, the idea of any steno system is typing efficiency \
@@ -957,7 +963,7 @@ exercise4 = mdo
             \the words are simply split up and you type the corresponding chord \
             \in succession to produce the word."
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         text
             "As a rule of thumb, words are split up along their ortographic \
             \syllables, e.g. we saw «Zweifel» as "
@@ -976,7 +982,7 @@ exercise4 = mdo
 
     el "h4" $ text "Rule 3: syllables and word parts"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Words that contain more than one syllable can be typed \
             \by typing the syllables separately, one after the other."
@@ -995,7 +1001,7 @@ exercise4 = mdo
 
     el "h3" $ text "Simple substitution rules"
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Like with a lot of rules, there are exceptions. \
             \We don't need to bother right now, the words of this exercise \
@@ -1005,7 +1011,7 @@ exercise4 = mdo
             \type a single syllable. For this reason we generally speak of \
             \word parts instead of syllables."
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "For completeness sake, find below the \"substitution rules\" \
             \that have been applied so far. They look trivial still, but will \
@@ -1019,13 +1025,13 @@ exercise4 = mdo
                 $  "Could not load resource: doc: "
                 <> str
 
-    elClass "div" "paragraph"
+    el "p"
         $ text
               "Each lowercase letter in the table is a letter of natural \
             \language. Next to it you find a steno code, denoted as \
             \uppercase letter. The entries are sorted alphabetically."
 
-    elClass "div" "paragraph" $ do
+    el "p" $ do
         let styleHuge = "style" =: "font-size: 48pt"
         elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
         elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
