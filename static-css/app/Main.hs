@@ -432,16 +432,15 @@ main = putCss $ do
         float floatRight
         cursor pointer
 
-    button ? do
+    button # ".small" ? do
         backgroundColor anthrazit
         color white
         fontSize $ pt 24
         borderRadius (px 12) (px 12) (px 12) (px 12)
         border none (px 0) transparent
         cursor pointer
-        ".small" & do
-          fontSize (pt 18)
-          padding (px 12) (px 12) (px 12) (px 12)
+        fontSize (pt 18)
+        padding (px 12) (px 12) (px 12) (px 12)
 
     let keyboardWidth   = 650
         keyboardHeight  = 271
