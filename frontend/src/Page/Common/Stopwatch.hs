@@ -154,7 +154,7 @@ elStopwatch dynStats dynStopwatch n = do
               if stShowStats (stApp st) == ss
               then el "strong" x
               else x
-        text "Statistics ("
+        text "10 most recent scores ("
         (domPersonal, _) <- elClass' "a" "normalLink" $
           elStrongWhen ShowStatsPersonal $ text "personal"
         text " | "

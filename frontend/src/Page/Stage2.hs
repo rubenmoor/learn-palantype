@@ -693,7 +693,9 @@ taskSingletons dynStats evChord eMaps = do
         $   evReady
         <&> \(stdGen, (mapStenoWord, mapWordStenos)) -> do
 
-                let len = Map.size mapWordStenos
+                let
+                    len = Map.size mapWordStenos
+
                     step :: Chord key -> StateSingletons -> StateSingletons
                     step c st = case st of
                         StatePause _ ->
@@ -707,9 +709,7 @@ taskSingletons dynStats evChord eMaps = do
                             let
                                 raw  = Raw.fromChord c
                                 word = _stWords !! _stCounter
-                                isCorrect =
-                                    Map.findWithDefault "" raw mapStenoWord
-                                        == word
+                                isCorrect = Map.findWithDefault "" raw mapStenoWord == word
                             in
                                 if isCorrect
                                     then if _stCounter == len - 1
@@ -721,11 +721,9 @@ taskSingletons dynStats evChord eMaps = do
                                             .  (stMMistake .~ Nothing)
                                     else case _stMMistake of
                                             -- first mistake
-                                        Nothing ->
-                                            st
-                                                &  _StateRun
-                                                .  stMMistake
-                                                ?~ MistakeOne raw
+                                        Nothing -> st &  _StateRun
+                                          %~ ( stMMistake ?~ MistakeOne raw )
+                                          .  ( stNMistakes +~ 1)
                                         -- second mistake
                                         Just (MistakeOne _) ->
                                             let

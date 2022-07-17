@@ -57,7 +57,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Generics.Sum          ( _As )
 import           Data.Int                       ( Int )
-import           Data.List                      ( (!!)
+import           Data.List                      (sortOn, (!!)
                                                 , head
                                                 )
 import           Data.List                      ( intersperse )
@@ -67,7 +67,7 @@ import           Data.Maybe                     (fromMaybe, maybe, isJust
                                                 , Maybe(..)
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
-import           Data.Ord                       ( Ord((>)) )
+import           Data.Ord                       (Down  (Down),  Ord((>)) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
@@ -168,6 +168,7 @@ import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
 import Language.Javascript.JSaddle (liftJSM)
 import Data.Tuple (snd)
+import Data.Bifunctor (Bifunctor(second))
 
 elFooter
     :: forall t (m :: * -> *)
@@ -578,7 +579,7 @@ getStatsLocalAndRemote evNewStats = do
   let evLSStats = attach (current dynStage) evLSMapStats <&> \(stage, map) ->
         (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
 
-  foldDyn (<>) [] $ leftmost
+  fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (<>) [] $ leftmost
     [ evLSStats
     , fmap (True,) <$> evRespSucc
     , pure <$> evNewStats'
