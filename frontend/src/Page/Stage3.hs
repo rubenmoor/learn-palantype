@@ -20,7 +20,7 @@ import Page.Common (getStatsLocalAndRemote, elCongraz, elNotImplemented, elPatte
 import Palantype.Common (Lang (..), Palantype, toDescription)
 import Palantype.Common.TH (failure, readLoc)
 import Palantype.DE (Pattern (..))
-import Reflex.Dom (current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
+import Reflex.Dom (blank, current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
 import State (Env (..), Navigation (..), State, stageUrl)
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
@@ -181,17 +181,20 @@ exercise2 = exercise
        text " is typed by "
        el "code" $ text "+D"
        text ". But there is a lot space between those two keys to squeeze in \
-            \another consonant when needed. Exceptions are needed for "
+            \another consonant when needed."
+   )
+   PatCodaComboT
+   ( \_ -> el "p" $ do
+       text "Exceptions are needed for "
        el "em" $ text "mt"
        text " and "
        el "em" $ text "lt"
        text ", where the "
        el "code" $ text "+"
-       text " is omitted at the expense of specificity."
-   )
-   PatCodaComboT
-   ( \_ -> el "p" $ do
-       text "TODO: follow-up text"
+       text " is omitted at the expense of specificity. Also, note that the coda \
+            \\"scht\" is simply typed by "
+       el "code" $ text "-ʃD"
+       text "."
    )
 
 exercise3 ::
@@ -201,11 +204,62 @@ exercise3 ::
 exercise3 = exercise
    3
    ( \_ -> el "p" $ do
-       text "TODO: introductory text"
+       el "em" $ text "R"
+       text " is quite a common letter in German, still it is missing from the \
+            \keyboard. To see why, note that in German a syllable combines a lot \
+            \of consonants. In the onset, there are "
+       el "em" $ text "dr"
+       text ", "
+       el "em" $ text "tr"
+       text ", "
+       el "em" $ text "schr"
+       text ", "
+       el "em" $ text "fr"
+       text ", "
+       el "em" $ text "gr"
+       text ", "
+       el "em" $ text "kr"
+       text ", "
+       el "em" $ text "br"
+       text ", and "
+       el "em" $ text "pr"
+       text ", and even "
+       el "em" $ text "str"
+       text ", "
+       el "em" $ text "spr"
+       text ". The straightforward way to implement "
+       el "em" $ text "R"
+       text " thus would be an R-key on the index finger of the left hand, to \
+            \the right of all the other keys, including "
+       el "code" $ text "+"
+       text ". You see, we are simply running out of space and need a different \
+            \solution. The basic idea is that the "
+       el "code" $ text "M"
+       text "-key and the "
+       el "code" $ text "L"
+       text "-key fill the role of "
+       el "em" $ text "r"
+       text "in the onset. They can't combine with "
+       el "em" $ text "r"
+       text " themselves, which is fine. In particular, you use "
+       el "code" $ text "M"
+       text " in the most simple case and "
+       el "code" $ text "L"
+       text " to type "
+       el "em" $ text "tr"
+       text " and "
+       el "em" $ text "spr"
+       text ". Unfortunately, this is not enough and we need to add "
+       el "code" $ text "D"
+       text " as a replacement for "
+       el "code" $ text "+"
+       text " in a couple of cases. "
    )
    PatOnsetR
    ( \_ -> el "p" $ do
-       text "TODO: follow-up text"
+       text "And don't forget: The "
+       el "em" $ text "r"
+       text " without any other consonants exists, too."
    )
 
 exercise4 ::
@@ -215,11 +269,18 @@ exercise4 ::
 exercise4 = exercise
    4
    ( \_ -> el "p" $ do
-       text "TODO: introductory text"
+       text "The keys "
+       el "code" $ text "+"
+       text " and "
+       el "code" $ text "L"
+       text " sharing the same finger, implies that we need to use "
+       el "code" $ text "D"
+       text " as a replacement for "
+       el "code" $ text "+"
+       text " sometimes. Note that we did the same in the last exercise."
    )
    PatOnsetL
-   ( \_ -> el "p" $ do
-       text "TODO: follow-up text"
+   ( \_ -> blank
    )
 
 exercise5 ::

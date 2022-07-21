@@ -253,7 +253,7 @@ journal dynHasLoaded = mdo
                               el "td" $ text user
                               el "td" $ text alias
                           Nothing -> elAttr "td" ("colspan" =: "2") $ el "em" $ text "anonymous"
-                      el "td" $ text $ showt journalVisitorId
+                      elAttr "td" ("title" =: journalVisitorIp)$ text $ showt journalVisitorId
                       el "td" $ showEvent journalEvent
 
         pure params

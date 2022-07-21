@@ -120,6 +120,7 @@ instance ToJSON Rank
 data Journal = Journal
   { journalEvent :: JournalEvent
   , journalVisitorId :: Int
+  , journalVisitorIp :: Text
   , journalMAliasUser :: Maybe (Text, Text)
   , journalTime :: UTCTime
   } deriving (Generic)

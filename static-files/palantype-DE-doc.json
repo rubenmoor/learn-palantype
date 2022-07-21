@@ -2043,7 +2043,7 @@
         "PatCodaComboT",
         {
             "0": [
-                19241,
+                19243,
                 [
                     [
                         "nicht",
@@ -2858,7 +2858,7 @@
         "PatOnsetR",
         {
             "0": [
-                118050,
+                118049,
                 [
                     [
                         "Prozent",
@@ -3054,7 +3054,7 @@
                     ],
                     [
                         "Kontrolle",
-                        "G+OND/SMOL/LE"
+                        "G+ON/DLOL/LE"
                     ],
                     [
                         "recht",
@@ -3146,7 +3146,7 @@
                     ],
                     [
                         "extrem",
-                        "EGSD/D+-/SMEM"
+                        "EGSD/DLEM"
                     ],
                     [
                         "gefragt",
@@ -3218,7 +3218,7 @@
                     ],
                     [
                         "Zentrum",
-                        "ʃGEND/SMUM"
+                        "ʃGEN/DLUM"
                     ],
                     [
                         "relativ",
@@ -4493,7 +4493,7 @@
         "PatDiConsonant",
         {
             "0": [
-                38123,
+                38124,
                 [
                     [
                         "kann",
@@ -4840,6 +4840,10 @@
                         "GMAM"
                     ],
                     [
+                        "Müll",
+                        "MÜL"
+                    ],
+                    [
                         "Bull",
                         "BUL"
                     ],
@@ -4890,15 +4894,11 @@
                     [
                         "Blatt",
                         "BLA+D"
-                    ],
-                    [
-                        "Stoff",
-                        "DSOF"
                     ]
                 ]
             ],
             "4": [
-                818,
+                817,
                 [
                     [
                         "schnell",
@@ -4967,10 +4967,6 @@
                     [
                         "still",
                         "DSIL"
-                    ],
-                    [
-                        "Müll",
-                        "MÜL"
                     ],
                     [
                         "Unfallstelle",
@@ -5299,6 +5295,10 @@
                     [
                         "visuell",
                         "FI/SU/EL"
+                    ],
+                    [
+                        "stillstehen",
+                        "DSIL/DSE/SNEN"
                     ]
                 ]
             ],
@@ -6118,7 +6118,7 @@
                 ]
             ],
             "3": [
-                574,
+                573,
                 [
                     [
                         "die",
@@ -6528,7 +6528,7 @@
         "PatCodaR",
         {
             "0": [
-                395151,
+                395150,
                 [
                     [
                         "der",
@@ -18586,7 +18586,7 @@
                 ]
             ],
             "6": [
-                578371,
+                578372,
                 [
                     [
                         "den",

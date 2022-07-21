@@ -100,8 +100,9 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
                 where_ $ isNothing $ j ^. Db.JournalFkMAlias
               orderBy [desc $ j ^. Db.JournalCreated]
               pure (j, v, ma, mu)
-    for es \(Entity _ Db.Journal {..}, Entity _ Db.Visitor {..}, ma, mu) -> do
+    for es \(Entity _ Db.Journal{..}, Entity _ Db.Visitor{..}, ma, mu) -> do
             let journalVisitorId = keyToId journalFkVisitor
+                journalVisitorIp = visitorIpAddress
                 journalTime      = journalCreated
             journalEvent      <- blobDecode journalBlob
             journalMAliasUser <- case (ma, mu) of
