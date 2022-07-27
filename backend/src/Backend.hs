@@ -60,7 +60,6 @@ import           Auth                           (AuthError,  UserInfo
 import           AppData                        ( EnvApplication(..) )
 import           DbAdapter                      ( entities )
 
-
 serveApi :: Context '[Snap (Either AuthError UserInfo)] -> EnvApplication -> Snap ()
 serveApi ctx =
     runReaderT $ serveSnapWithContext (Proxy :: Proxy RoutesApi) ctx handlers

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BlockArguments #-}
@@ -103,7 +104,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
+import           Reflex.Dom                     (elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -144,9 +145,6 @@ import           State                          (Session (..),  State(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( showt )
 import           Text.Read                      (readMaybe )
-import           Control.Lens                   ( makePrisms
-                                                , makeLenses
-                                                )
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
@@ -159,16 +157,18 @@ import           Page.Common.Stopwatch          ( elStopwatch
 import           Control.Monad                  ( when )
 import           Data.Foldable                  ( Foldable(minimum) )
 import           Data.List                      ( take )
-import           Common.Model                   ( Message(..)
+import           Common.Model                   (AppState (stSound),  Message(..)
                                                 , Stats (..)
 
                                                 )
 import Data.Witherable (Filterable(catMaybes))
 import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
-import Language.Javascript.JSaddle (liftJSM)
+import Language.Javascript.JSaddle (eval, liftJSM)
 import Data.Tuple (snd)
 import Data.Bifunctor (Bifunctor(second))
+import Obelisk.Generated.Static (static)
+import GHC.Generics (Generic)
 
 elFooter
     :: forall t (m :: * -> *)
@@ -286,7 +286,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                         | nxt == $readLoc "stage_2-1" ->
                           [ field @"stApp" . field @"stTOCShowStage2" .~ True
                           ]
-                        | nxt == $readLoc "stage_PatReplCommon_0" ->
+                        | nxt == $readLoc "stage_PatReplCommon1_0" ->
                           [ field @"stApp" . field @"stTOCShowStage2" .~ False
                           , field @"stApp" . field @"stTOCShowStage3" .~ True
                           ]
@@ -342,17 +342,15 @@ loading = elClass "div" "paragraph" $ do
 data StateWords
     = StatePause Int
     | StateRun Run
+    deriving (Generic)
 
 data Run = Run
-    { _stCounter   :: Int
-    , _stChords    :: [RawSteno]
-    , _stWords     :: [Text]
-    , _stNMistakes :: Int
-    , _stMHint     :: Maybe [RawSteno]
-    }
-
-makePrisms ''StateWords
-makeLenses ''Run
+    { stCounter   :: Int
+    , stChords    :: [RawSteno]
+    , stWords     :: [Text]
+    , stNMistakes :: Int
+    , stMHint     :: Maybe [RawSteno]
+    } deriving (Generic)
 
 taskWords
     :: forall key t (m :: * -> *)
@@ -391,49 +389,49 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                         else st
                 -- undo last input
                 StateRun Run {..} | Raw.fromChord c == KI.toRaw @key kiBackUp ->
-                    case initMay _stChords of
+                    case initMay stChords of
                         Just cs ->
                             st
-                                &  _StateRun
-                                %~ (stChords .~ cs)
-                                .  (stNMistakes %~ succ)
-                                .  (stMHint .~ Nothing)
+                                &  _As @"StateRun"
+                                %~ (field @"stChords" .~ cs)
+                                .  (field @"stNMistakes" %~ succ)
+                                .  (field @"stMHint" .~ Nothing)
                         Nothing ->
                             st
-                                &  _StateRun
-                                .  stMHint
+                                &  _As @"StateRun"
+                                .  field @"stMHint"
                                 ?~ (Map.findWithDefault
                                        []
-                                       (_stWords !! _stCounter)
+                                       (stWords !! stCounter)
                                        mapWordStenos
                                    )
                 StateRun Run {..} ->
-                    let rawSteno = unparts $ _stChords <> [Raw.fromChord c]
+                    let rawSteno = unparts $ stChords <> [Raw.fromChord c]
                         word     = Map.findWithDefault "" rawSteno mapStenoWord
-                    in  if word == _stWords !! _stCounter
+                    in  if word == stWords !! stCounter
 
                             -- correct
-                            then if _stCounter == pred len
-                                then StatePause _stNMistakes
+                            then if stCounter == pred len
+                                then StatePause stNMistakes
                                 else
                                     st
-                                    &  _StateRun
-                                    %~ (stCounter %~ succ)
-                                    .  (stMHint .~ Nothing)
-                                    .  (stChords .~ [])
+                                    &  _As @"StateRun"
+                                    %~ (field @"stCounter" %~ succ)
+                                    .  (field @"stMHint" .~ Nothing)
+                                    .  (field @"stChords" .~ [])
 
                             -- not correct
                             else
                                 st
-                                &  _StateRun
-                                .  stChords
-                                .~ (_stChords <> [Raw.fromChord c])
+                                &  _As @"StateRun"
+                                .  field @"stChords"
+                                .~ (stChords <> [Raw.fromChord c])
             stepStart = StateRun Run
-                { _stCounter   = 0
-                , _stChords    = []
-                , _stWords = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
-                , _stNMistakes = 0
-                , _stMHint     = Nothing
+                { stCounter   = 0
+                , stChords    = []
+                , stWords = evalRand (shuffleM $ Map.keys mapWordStenos) stdGen
+                , stNMistakes = 0
+                , stMHint     = Nothing
                 }
 
             stateInitial = StatePause 0
@@ -446,6 +444,13 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
         dynStopwatch <- mkStopwatch evStartStop
 
         elClass "div" "taskWords" $ do
+
+            evTrigger <- void . updated <$> holdUniqDyn
+              ( dynStateWords <&> fromMaybe 0
+                  . preview (_As @"StateRun" . field @"stCounter")
+              )
+            elBtnSound evTrigger
+
             dyn_ $ dynStateWords <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
@@ -460,29 +465,29 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                         $  elClass "span" "exerciseField"
                         $  el "code"
                         $  text
-                        $  _stWords
-                        !! _stCounter
+                        $  stWords
+                        !! stCounter
 
                     elClass "span" "input"
                         $  traverse_ (el "code" <<< text)
                         $  intersperse "/"
-                        $  (showt <$> _stChords)
+                        $  (showt <$> stChords)
                         <> [" …"]
 
                     el "span" $ do
                         elClass "span" "btnSteno" $ text $ "↤ " <> showt
                             (KI.toRaw @key kiBackUp) -- U+21A4
-                        elClass "span" "small" $ text $ if null _stChords
+                        elClass "span" "small" $ text $ if null stChords
                             then " to show hint"
                             else " to back up"
 
-                    whenJust _stMHint $ \hint ->
+                    whenJust stMHint $ \hint ->
                         elClass "span" "small" $ for_ hint $ \r -> do
                             text $ showt r
                             el "br" blank
 
                     elClass "hr" "visibilityHidden" blank
-                    el "strong" $ text $ showt _stCounter
+                    el "strong" $ text $ showt stCounter
                     text $ " / " <> showt len
 
             elStopwatch dynStats dynStopwatch len
@@ -584,3 +589,39 @@ getStatsLocalAndRemote evNewStats = do
     , fmap (True,) <$> evRespSucc
     , pure <$> evNewStats'
     ]
+
+elBtnSound
+    :: forall key t (m :: * -> *)
+     . ( DomBuilder t m
+       , EventWriter t (Endo State) m
+       , MonadReader (Env t key) m
+       , PostBuild t m
+       , Prerender t m
+       )
+    => Event t ()
+    -> m ()
+elBtnSound evTrigger = do
+
+    Env{..} <- ask
+    let dynSound = stSound . stApp <$> envDynState
+        evPlaySound = gate (current dynSound) evTrigger
+
+        jsPlaySound :: Text
+        jsPlaySound =
+          "let domAudio = document.getElementById(\"audio-tick\"); \
+          \domAudio.play()"
+    prerender_ blank $ do
+      elAttr "audio"
+           ("src"     =: $(static "tick.mp3")
+         <> "preload" =: "auto"
+         <> "id"      =: "audio-tick"
+           ) blank
+      performEvent_ $ evPlaySound $> liftJSM (void $ eval jsPlaySound)
+
+    (domSound, _) <- elAttr' "span"
+      (  "class" =: "floatRight icon-link"
+      <> "title" =: "toggle sound"
+      ) $ dyn_ $ dynSound <&> \case
+        True  -> iFa "fas fa-volume-down"
+        False -> iFa "fas fa-volume-mute"
+    updateState $ domEvent Click domSound $> [field @"stApp" . field @"stSound" %~ not]

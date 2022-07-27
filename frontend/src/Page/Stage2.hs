@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE DataKinds #-}
@@ -28,7 +29,7 @@ import           Control.Applicative            ((<*>),  (<$>)
 import           Control.Category               ( Category((.), id)
                                                 , (<<<)
                                                 )
-import           Control.Lens                   ( (+~)
+import           Control.Lens                   (preview, (^?),  (+~)
                                                 , (?~)
                                                 , (%~)
                                                 , (.~)
@@ -58,6 +59,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Functor                   ( Functor((<$)) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Generics.Product          ( field )
+import Data.Generics.Sum (_As)
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , elem
@@ -68,7 +70,7 @@ import           Data.List                      ( (!!)
                                                 )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     ( Maybe(..) )
+import           Data.Maybe                     (fromMaybe,  Maybe(..) )
 import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( (<>)
                                                 , Endo
@@ -83,7 +85,7 @@ import           Obelisk.Route.Frontend         (Routed, R
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Page.Common                    (getStatsLocalAndRemote, elBackUp
+import           Page.Common                    (elBtnSound, getStatsLocalAndRemote, elBackUp
                                                 , elCongraz
                                                 , elNotImplemented
                                                 , elPatterns
@@ -136,7 +138,7 @@ import           Reflex.Dom                     (constDyn, Dynamic, current, gat
                                                 , widgetHold_
                                                 , zipDyn
                                                 )
-import           Shared                         ( whenJust )
+import           Shared                         (whenJust )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
@@ -154,6 +156,7 @@ import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import Common.Model (Stats)
 import Common.Stage (Stage)
+import GHC.Generics (Generic)
 
 -- Ex. 2.1
 
@@ -641,13 +644,14 @@ exercise2 = mdo
 data StateSingletons
     = StatePause Int
     | StateRun Run
+    deriving (Generic)
 
 data Run = Run
     { _stCounter   :: Int
     , _stMMistake  :: Maybe Mistake
     , _stWords     :: [Text]
     , _stNMistakes :: Int
-    }
+    } deriving (Generic)
 
 data Mistake
     = MistakeOne RawSteno
@@ -676,6 +680,7 @@ taskSingletons
     -> m (Event t Stats)
 taskSingletons dynStats evChord eMaps = do
 
+    Env{..} <- ask
     eStdGen <- postRender $ do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
@@ -755,6 +760,13 @@ taskSingletons dynStats evChord eMaps = do
                 dynStopwatch <- mkStopwatch evStartStop
 
                 elClass "div" "taskSingletons" $ do
+
+                    evTrigger <- void . updated <$> holdUniqDyn
+                      ( dynSingletons <&> fromMaybe 0
+                          . preview (_As @"StateRun" . field @"_stCounter")
+                      )
+                    elBtnSound evTrigger
+
                     dyn_ $ dynSingletons <&> \case
                         StatePause _ -> el "div" $ do
                             text "Type "

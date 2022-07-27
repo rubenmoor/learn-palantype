@@ -306,6 +306,7 @@ main = putCss $ do
         "scroll-behavior" -: "smooth"
         paddingLeft $ em 1
         paddingRight $ em 1
+        width $ pct 100
         height $ pct 100
         position relative
 

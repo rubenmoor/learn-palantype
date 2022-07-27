@@ -53,9 +53,7 @@ import           Common.Model                   (JournalEvent(EventUser)
                                                 , EventUser(..)
                                                 , AppState(..)
                                                 )
-import           Database                       ( blobEncode
-                                                , blobDecode
-                                                , runDb
+import           Database                       (blobDecode, blobEncode,  runDb
                                                 )
 
 import qualified DbJournal

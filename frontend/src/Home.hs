@@ -61,7 +61,7 @@ import Control.Monad
     )
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader
-    (ask,  MonadReader,
+    (MonadIO, ask,  MonadReader,
       ReaderT,
       asks,
       withReaderT,
@@ -181,7 +181,7 @@ import qualified Palantype.Common.Indices as KI
 import qualified Palantype.DE.Keys as DE
 import qualified Palantype.EN.Keys as EN
 import Reflex.Dom
-    (current, tag, attachPromptlyDynWithMaybe, TriggerEvent, Performable, zipDyn, inputElementConfig_initialChecked, (=:),
+    (Performable, current, tag, attachPromptlyDynWithMaybe, TriggerEvent, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -249,7 +249,6 @@ import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
 import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
-import Control.Monad.IO.Class (MonadIO)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
 
@@ -1009,7 +1008,8 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                     let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
 
                     elDynClass "ul" dynClassUl3 $ do
-                        elLi $ $readLoc "stage_PatReplCommon_0"
+                        elLi $ $readLoc "stage_PatReplCommon1_0"
+                        elLi $ $readLoc "stage_PatReplCommon2_0"
                         elLi $ $readLoc "stage_PatCodaComboT_0"
                         elLi $ $readLoc "stage_PatOnsetR_0"
                         elLi $ $readLoc "stage_PatOnsetL_0"
@@ -1030,6 +1030,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatDiVowel_0"
                         elLi $ $readLoc "stage_PatReplH_0"
                         elLi $ $readLoc "stage_PatCodaGK_3"
+                        elLi $ $readLoc "stage_PatReplRare_0"
 
                     (s4, _) <- elClass' "li" "stage" $ do
                         let dynClass =
@@ -1224,8 +1225,8 @@ stages
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
-       , MonadIO (Performable m)
        , MonadFix m
+       , MonadIO (Performable m)
        , Palantype key
        , PerformEvent t m
        , PostBuild t m
@@ -1292,27 +1293,29 @@ stages navLang toReady = do
                         | $readLoc "stage_2-2" == stageCurrent -> Stage2.exercise2
                         | $readLoc "stage_2-3" == stageCurrent -> Stage2.exercise3
                         | $readLoc "stage_PatSimple_0"      == stageCurrent -> Stage2.exercise4
-                        | $readLoc "stage_PatReplCommon_0"  == stageCurrent -> Stage3.exercise1
-                        | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise2
-                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise3
-                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise4
-                        | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise5
-                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise6
-                        | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise7
-                        | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise8
-                        | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise9
-                        | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise10
-                        | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise11
-                        | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise12
-                        | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise13
-                        | $readLoc "stage_PatSZ_0"          == stageCurrent -> Stage3.exercise14
-                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
-                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
-                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
-                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
-                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
-                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
-                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
+                        | $readLoc "stage_PatReplCommon1_0" == stageCurrent -> Stage3.exercise1
+                        | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
+                        | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
+                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise4
+                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise5
+                        | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
+                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise7
+                        | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
+                        | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
+                        | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
+                        | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise11
+                        | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
+                        | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
+                        | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
+                        | $readLoc "stage_PatSZ_0"          == stageCurrent -> Stage3.exercise15
+                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise16
+                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise17
+                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise18
+                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise19
+                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise20
+                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise21
+                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise22
+                        | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise23
                         | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
                         | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
                         | $readLoc "stage_numbermode"       == stageCurrent -> numberMode

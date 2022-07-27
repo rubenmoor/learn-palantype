@@ -10,9 +10,13 @@
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage1 where
 
+import GHCJS.DOM.HTMLMediaElement (HTMLMediaElement, play)
+import GHCJS.DOM.MediaElementAudioSourceNode (getMediaElement)
+import Obelisk.Generated.Static (static)
 import           Client                         ( postRender )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>)
@@ -69,7 +73,7 @@ import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
                                                 , allKeys
                                                 , kiInsert
                                                 )
-import           Reflex.Dom                     (constDyn, current, gate, never, switchDyn, widgetHold,  DomBuilder
+import           Reflex.Dom                     (elAttr, prerender_, PerformEvent, performEvent_, holdUniqDyn, elAttr', (=:), constDyn, current, gate, never, switchDyn, widgetHold,  DomBuilder
                                                 , EventWriter
                                                 , MonadHold(holdDyn)
                                                 , PostBuild(getPostBuild)
@@ -88,6 +92,7 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
                                                 , performEvent
                                                 , text
                                                 , widgetHold_
+                                                , Element (_element_raw)
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -99,6 +104,10 @@ import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import Common.Stage (Stage)
 import qualified Palantype.Common.Indices as KI
+import Unsafe.Coerce (unsafeCoerce)
+import Palantype.Common.TH (fromJust)
+import Language.Javascript.JSaddle (liftJSM, eval)
+import Data.Text (Text)
 
 -- exercise 1
 
@@ -340,6 +349,7 @@ taskAlphabet
        , MonadHold t m
        , Palantype key
        , PostBuild t m
+       , Prerender t m
        )
     => Event t (Chord key)
     -> Bool -- ^ show the alphabet

@@ -820,10 +820,10 @@
         }
     ],
     [
-        "PatReplCommon",
+        "PatReplCommon1",
         {
             "0": [
-                134715,
+                142689,
                 [
                     [
                         "mit",
@@ -866,12 +866,16 @@
                         "SNA/BE"
                     ],
                     [
-                        "sagte",
-                        "SAG/D+E"
+                        "Prozent",
+                        "DBMO/ʃGE+ND"
                     ],
                     [
-                        "zwei",
-                        "ʃG+EI"
+                        "Euro",
+                        "EU/SMO"
+                    ],
+                    [
+                        "sagte",
+                        "SAG/D+E"
                     ],
                     [
                         "vom",
@@ -894,8 +898,8 @@
                         "DA/MI+D"
                     ],
                     [
-                        "Polizei",
-                        "B+O/LI/ʃGEI"
+                        "rund",
+                        "SMUND"
                     ],
                     [
                         "etwa",
@@ -910,10 +914,6 @@
                         "F+EIL"
                     ],
                     [
-                        "ganz",
-                        "GAMGʃ"
-                    ],
-                    [
                         "doch",
                         "DO+ʃ"
                     ],
@@ -924,6 +924,10 @@
                     [
                         "dazu",
                         "DA/ʃGU"
+                    ],
+                    [
+                        "weitere",
+                        "F+EI/D+E/SME"
                     ],
                     [
                         "heute",
@@ -954,8 +958,8 @@
                         "MON/D+AG"
                     ],
                     [
-                        "stehen",
-                        "DSE/SNEN"
+                        "wäre",
+                        "F+Ä/SME"
                     ],
                     [
                         "davon",
@@ -994,8 +998,20 @@
                         "SNÄ+D/D+EN"
                     ],
                     [
+                        "zurück",
+                        "ʃGU/SMÜ+G"
+                    ],
+                    [
                         "einfach",
                         "EIN/FA+ʃ"
+                    ],
+                    [
+                        "darauf",
+                        "DA/SMAUF"
+                    ],
+                    [
+                        "gerade",
+                        "GE/SMA/DE"
                     ],
                     [
                         "Samstag",
@@ -1006,20 +1022,12 @@
                         "SNÄ+D/D+E"
                     ],
                     [
-                        "nächsten",
-                        "NÄ+GS/D+EN"
-                    ],
-                    [
                         "wenig",
                         "F+E/NIG"
                     ],
                     [
                         "Anfang",
                         "AN/FAMG"
-                    ],
-                    [
-                        "zweiten",
-                        "ʃG+EI/D+EN"
                     ],
                     [
                         "könne",
@@ -1034,16 +1042,20 @@
                         "DEU+D/ʃEN"
                     ],
                     [
+                        "Virus",
+                        "FBLI/SMUS"
+                    ],
+                    [
+                        "April",
+                        "A+B/SMIL"
+                    ],
+                    [
                         "halten",
                         "SNAL/D+EN"
                     ],
                     [
                         "zudem",
                         "ʃGU/DEM"
-                    ],
-                    [
-                        "sechs",
-                        "SE+GS"
                     ],
                     [
                         "tun",
@@ -1098,8 +1110,16 @@
                         "MO/NA/D+EN"
                     ],
                     [
+                        "Richtung",
+                        "SMI+ʃ/D+UMG"
+                    ],
+                    [
                         "wichtig",
                         "F+I+ʃ/D+IG"
+                    ],
+                    [
+                        "Europa",
+                        "EU/SMO/B+A"
                     ],
                     [
                         "Mitte",
@@ -1154,6 +1174,10 @@
                         "B+O/LI/D+I+G"
                     ],
                     [
+                        "daran",
+                        "DA/SMAN"
+                    ],
+                    [
                         "Seite",
                         "SEI/D+E"
                     ],
@@ -1170,8 +1194,8 @@
                         "ʃGEI/D+EN"
                     ],
                     [
-                        "Schweiz",
-                        "ʃBEIGʃ"
+                        "richtig",
+                        "SMI+ʃ/D+IG"
                     ],
                     [
                         "jeden",
@@ -1180,6 +1204,10 @@
                     [
                         "Michael",
                         "MI/ʃ+A/EL"
+                    ],
+                    [
+                        "Quarantäne",
+                        "FG+A/SMAN/D+Ä/NE"
                     ],
                     [
                         "je",
@@ -1196,444 +1224,288 @@
                     [
                         "Patienten",
                         "B+A/D+I/EN/D+EN"
-                    ],
-                    [
-                        "zweite",
-                        "ʃG+EI/D+E"
-                    ],
-                    [
-                        "Daten",
-                        "DA/D+EN"
-                    ],
-                    [
-                        "mindestens",
-                        "MIN/DES/D+ENS"
-                    ],
-                    [
-                        "Monate",
-                        "MO/NA/D+E"
-                    ],
-                    [
-                        "solche",
-                        "SOL/ʃ+E"
-                    ],
-                    [
-                        "hoch",
-                        "SNO+ʃ"
-                    ],
-                    [
-                        "stand",
-                        "DSAND"
                     ]
                 ]
             ],
             "4": [
-                1055,
+                68,
                 [
                     [
-                        "Symptome",
-                        "SIMB/D+O/ME"
+                        "exemplarisch",
+                        "EGSD/EMB/LA/SMIʃ"
                     ],
                     [
-                        "Impfung",
-                        "IMB/FUMG"
+                        "holprig",
+                        "SNOLB/SMIG"
                     ],
                     [
-                        "empfängt",
-                        "EMB/FÄMGD"
-                    ],
-                    [
-                        "Empfang",
-                        "EMB/FAMG"
-                    ],
-                    [
-                        "empfinden",
-                        "EMB/FIN/DEN"
-                    ],
-                    [
-                        "empfunden",
-                        "EMB/FUN/DEN"
-                    ],
-                    [
-                        "empfindet",
-                        "EMB/FIN/DED"
-                    ],
-                    [
-                        "Zweikämpfe",
-                        "ʃG+EI/G+ÄMB/FE"
-                    ],
-                    [
-                        "empfinde",
-                        "EMB/FIN/DE"
-                    ],
-                    [
-                        "empfindlich",
-                        "EMB/FIND/LI+ʃ"
-                    ],
-                    [
-                        "Kempten",
-                        "G+EMB/D+EN"
-                    ],
-                    [
-                        "simple",
-                        "SIMB/LE"
-                    ],
-                    [
-                        "empfindliche",
-                        "EMB/FIND/LI/ʃ+E"
-                    ],
-                    [
-                        "Kampfes",
-                        "G+AMB/FES"
-                    ],
-                    [
-                        "empfand",
-                        "EMB/FAND"
-                    ],
-                    [
-                        "simplen",
-                        "SIMB/LEN"
-                    ],
-                    [
-                        "empfing",
-                        "EMB/FIMG"
-                    ],
-                    [
-                        "kämpfe",
-                        "G+ÄMB/FE"
-                    ],
-                    [
-                        "Symptom",
-                        "SIMB/D+OM"
-                    ],
-                    [
-                        "Titelkämpfe",
-                        "D+I/D+EL/G+ÄMB/FE"
-                    ],
-                    [
-                        "Kamp",
-                        "G+AMB"
-                    ],
-                    [
-                        "empfanden",
-                        "EMB/FAN/DEN"
-                    ],
-                    [
-                        "nachempfunden",
-                        "NA+ʃ/EMB/FUN/DEN"
-                    ],
-                    [
-                        "symptomatisch",
-                        "SIMB/D+O/MA/D+Iʃ"
-                    ],
-                    [
-                        "Symptomatik",
-                        "SIMB/D+O/MA/D+I+G"
-                    ],
-                    [
-                        "empfänglich",
-                        "EMB/FÄMG/LI+ʃ"
-                    ],
-                    [
-                        "Espelkamp",
-                        "ES/B+EL/G+AMB"
-                    ],
-                    [
-                        "Jump",
-                        "FNUMB"
-                    ],
-                    [
-                        "Pump",
-                        "B+UMB"
-                    ],
-                    [
-                        "simples",
-                        "SIMB/LES"
-                    ],
-                    [
-                        "Pomp",
-                        "B+OMB"
-                    ],
-                    [
-                        "Empfindlichkeit",
-                        "EMB/FIND/LI+ʃ/G+EID"
-                    ],
-                    [
-                        "Olymp",
-                        "O/LIMB"
-                    ],
-                    [
-                        "Dämpfung",
-                        "DÄMB/FUMG"
-                    ],
-                    [
-                        "nachempfinden",
-                        "NA+ʃ/EMB/FIN/DEN"
-                    ],
-                    [
-                        "stumpfe",
-                        "DSUMB/FE"
-                    ],
-                    [
-                        "pumpte",
-                        "B+UMB/D+E"
-                    ],
-                    [
-                        "Feldkamp",
-                        "FELD/G+AMB"
-                    ],
-                    [
-                        "Handyempfang",
-                        "SNAN/DFNEMB/FAMG"
-                    ],
-                    [
-                        "Champ",
-                        "ʃ+AMB"
-                    ],
-                    [
-                        "Pumps",
-                        "B+UMBS"
-                    ],
-                    [
-                        "Empfindung",
-                        "EMB/FIN/DUMG"
-                    ],
-                    [
-                        "Zwangsimpfung",
-                        "ʃG+AMGS/IMB/FUMG"
-                    ],
-                    [
-                        "Samples",
-                        "SAMB/LES"
-                    ],
-                    [
-                        "Lämpchen",
-                        "LÄMB/ʃ+EN"
-                    ],
-                    [
-                        "empfänden",
-                        "EMB/FÄN/DEN"
-                    ],
-                    [
-                        "Empfänge",
-                        "EMB/FÄN/GE"
-                    ],
-                    [
-                        "dumpfe",
-                        "DUMB/FE"
-                    ],
-                    [
-                        "Empfangs",
-                        "EMB/FAMGS"
+                        "holprige",
+                        "SNOLB/SMI/GE"
                     ],
                     [
                         "Sampling",
                         "SAMB/LIMG"
                     ],
                     [
-                        "Empfängnis",
-                        "EMB/FÄMG/NIS"
-                    ],
-                    [
-                        "Sektempfang",
-                        "SE+GD/EMB/FAMG"
-                    ],
-                    [
-                        "Mumps",
-                        "MUMBS"
-                    ],
-                    [
                         "Amplitude",
                         "AMB/LI/D+U/DE"
                     ],
                     [
-                        "Mobilfunkempfang",
-                        "MO/BIL/FUMN/EMB/FAMG"
-                    ],
-                    [
-                        "Champs",
-                        "ʃ+AMBS"
-                    ],
-                    [
-                        "pumpten",
-                        "B+UMB/D+EN"
-                    ],
-                    [
-                        "unempfindlich",
-                        "UN/EMB/FIND/LI+ʃ"
-                    ],
-                    [
-                        "Sümpfe",
-                        "SÜMB/FE"
-                    ],
-                    [
-                        "Empfangsgebäude",
-                        "EMB/FAMGS/GE/BÄU/DE"
-                    ],
-                    [
-                        "Impfens",
-                        "IMB/FENS"
-                    ],
-                    [
-                        "Hampton",
-                        "SNAMB/D+ON"
-                    ],
-                    [
-                        "Gimp",
-                        "GIMB"
-                    ],
-                    [
-                        "Baumstümpfe",
-                        "BAUM/DSÜMB/FE"
-                    ],
-                    [
-                        "empfindliches",
-                        "EMB/FIND/LI/ʃ+ES"
-                    ],
-                    [
-                        "stumpfes",
-                        "DSUMB/FES"
-                    ],
-                    [
-                        "dämpfend",
-                        "DÄMB/FEND"
-                    ],
-                    [
-                        "dumpfes",
-                        "DUMB/FES"
-                    ],
-                    [
-                        "Hamptons",
-                        "SNAMB/D+ONS"
-                    ],
-                    [
-                        "empfange",
-                        "EMB/FAN/GE"
-                    ],
-                    [
-                        "Empfindlichkeiten",
-                        "EMB/FIND/LI+ʃ/G+EI/D+EN"
-                    ],
-                    [
-                        "empfindlichsten",
-                        "EMB/FIND/LI+GS/D+EN"
-                    ],
-                    [
-                        "Flügelkämpfe",
-                        "FLÜ/GEL/G+ÄMB/FE"
-                    ],
-                    [
-                        "Empfänglichkeit",
-                        "EMB/FÄMG/LI+ʃ/G+EID"
-                    ],
-                    [
-                        "Empfangshalle",
-                        "EMB/FAMGS/SNAL/LE"
-                    ],
-                    [
-                        "Empfindsamkeit",
-                        "EMB/FIND/SAM/G+EID"
-                    ],
-                    [
-                        "Schlümpfe",
-                        "ʃLÜMB/FE"
-                    ],
-                    [
-                        "Boxkämpfe",
-                        "BOGSD/G+ÄMB/FE"
-                    ],
-                    [
-                        "dämpfe",
-                        "DÄMB/FE"
-                    ],
-                    [
-                        "Sandkamp",
-                        "SAND/G+AMB"
+                        "holprigem",
+                        "SNOLB/SMI/GEM"
                     ],
                     [
                         "Schoppen",
                         "ʃOB/B+EN"
                     ],
                     [
-                        "schimpfend",
-                        "ʃIMB/FEND"
-                    ],
-                    [
-                        "Abstumpfung",
-                        "AB/DSUMB/FUMG"
-                    ],
-                    [
-                        "empfangene",
-                        "EMB/FAN/GE/NE"
-                    ],
-                    [
-                        "kampfeslustig",
-                        "G+AMB/FES/LUS/D+IG"
-                    ],
-                    [
-                        "Pumpgun",
-                        "B+UMB/GUN"
-                    ],
-                    [
-                        "kämpfend",
-                        "G+ÄMB/FEND"
-                    ],
-                    [
-                        "schimpfe",
-                        "ʃIMB/FE"
-                    ],
-                    [
-                        "hitzeempfindlich",
-                        "SNID/ʃGE/EMB/FIND/LI+ʃ"
-                    ],
-                    [
                         "Alphütte",
                         "ALB/SNÜD/D+E"
-                    ],
-                    [
-                        "empfindsame",
-                        "EMB/FIND/SA/ME"
-                    ],
-                    [
-                        "Stümpfe",
-                        "DSÜMB/FE"
-                    ],
-                    [
-                        "Eichkamp",
-                        "EI+ʃ/G+AMB"
-                    ],
-                    [
-                        "Lump",
-                        "LUMB"
-                    ],
-                    [
-                        "Schluckimpfung",
-                        "ʃLU+G/IMB/FUMG"
                     ],
                     [
                         "Simplon",
                         "SIMB/LON"
                     ],
                     [
-                        "empfindsam",
-                        "EMB/FIND/SAM"
+                        "Simplizität",
+                        "SIMB/LI/ʃGI/D+ÄD"
                     ],
                     [
-                        "stülpte",
-                        "DSÜLB/D+E"
+                        "Zilpzalp",
+                        "ʃGILB/ʃGALB"
                     ],
                     [
-                        "Zeitempfinden",
-                        "ʃGEID/EMB/FIN/DEN"
+                        "holpriges",
+                        "SNOLB/SMI/GES"
                     ],
                     [
-                        "nachzuempfinden",
-                        "NA+ʃ/ʃGU/EMB/FIN/DEN"
+                        "Alpweiden",
+                        "ALB/F+EI/DEN"
+                    ],
+                    [
+                        "Alphütten",
+                        "ALB/SNÜD/D+EN"
+                    ],
+                    [
+                        "kontemplativ",
+                        "G+ON/D+EMB/LA/D+IF"
+                    ],
+                    [
+                        "Alpspitze",
+                        "ALB/SB+ID/ʃGE"
+                    ],
+                    [
+                        "Alpsaison",
+                        "ALB/SAI/SON"
+                    ],
+                    [
+                        "Analplugs",
+                        "A/NALB/LUGS"
+                    ],
+                    [
+                        "Simplontunnel",
+                        "SIMB/LON/D+UN/NEL"
+                    ],
+                    [
+                        "Zilpzalps",
+                        "ʃGILB/ʃGALBS"
+                    ],
+                    [
+                        "Älplerin",
+                        "ÄLB/LE/SMIN"
+                    ],
+                    [
+                        "holprigere",
+                        "SNOLB/SMI/GE/SME"
+                    ],
+                    [
+                        "Holprigkeit",
+                        "SNOLB/SMIG/G+EID"
+                    ],
+                    [
+                        "rülpste",
+                        "SMÜLBS/D+E"
+                    ],
+                    [
+                        "Alpweide",
+                        "ALB/F+EI/DE"
+                    ],
+                    [
+                        "Doppelplus",
+                        "DOB/B+ELB/LUS"
+                    ],
+                    [
+                        "Inneralpbach",
+                        "IN/NE/SMALB/BA+ʃ"
+                    ],
+                    [
+                        "Rülpsens",
+                        "SMÜLB/SENS"
+                    ],
+                    [
+                        "Zilpzalpe",
+                        "ʃGILB/ʃGAL/B+E"
+                    ],
+                    [
+                        "rülps",
+                        "SMÜLBS"
+                    ],
+                    [
+                        "rülpsten",
+                        "SMÜLBS/D+EN"
+                    ],
+                    [
+                        "Alpkäses",
+                        "ALB/G+Ä/SES"
+                    ],
+                    [
+                        "Alpspitzen",
+                        "ALB/SB+ID/ʃGEN"
+                    ],
+                    [
+                        "Analplug",
+                        "A/NALB/LUG"
+                    ],
+                    [
+                        "Bibelpsalmen",
+                        "BI/BELB/SAL/MEN"
+                    ],
+                    [
+                        "Einzelpsalmen",
+                        "EIN/ʃGELB/SAL/MEN"
+                    ],
+                    [
+                        "Gipsmodel",
+                        "GIBS/MO/DEL"
+                    ],
+                    [
+                        "Hinteralp",
+                        "SNIN/D+E/SMALB"
+                    ],
+                    [
+                        "Mantelpneumothorax",
+                        "MAN/D+ELB/NEU/MOD/SNO/SMAGSD"
+                    ],
+                    [
+                        "Originalplural",
+                        "O/SMI/GI/NALB/LU/SMAL"
+                    ],
+                    [
+                        "Schoppens",
+                        "ʃOB/B+ENS"
+                    ],
+                    [
+                        "Schälpflug",
+                        "ʃÄLB/FLUG"
+                    ],
+                    [
+                        "Schälpfluges",
+                        "ʃÄLB/FLU/GES"
+                    ],
+                    [
+                        "Schälpflugs",
+                        "ʃÄLB/FLUGS"
+                    ],
+                    [
+                        "Schälpflüge",
+                        "ʃÄLB/FLÜ/GE"
+                    ],
+                    [
+                        "Teppichhai",
+                        "D+EB/B+I+ʃ/SNAI"
+                    ],
+                    [
+                        "Ventilpneumothorax",
+                        "FEN/D+ILB/NEU/MOD/SNO/SMAGSD"
+                    ],
+                    [
+                        "Vokalphoneme",
+                        "FO+G/ALB/SNO/NE/ME"
+                    ],
+                    [
+                        "anrülpsend",
+                        "AN/SMÜLB/SEND"
+                    ],
+                    [
+                        "anrülpste",
+                        "AN/SMÜLBS/D+E"
+                    ],
+                    [
+                        "anrülpsten",
+                        "AN/SMÜLBS/D+EN"
+                    ],
+                    [
+                        "ausgerülpste",
+                        "AUS/GE/SMÜLBS/D+E"
+                    ],
+                    [
+                        "ausgerülpstem",
+                        "AUS/GE/SMÜLBS/D+EM"
+                    ],
+                    [
+                        "ausgerülpsten",
+                        "AUS/GE/SMÜLBS/D+EN"
+                    ],
+                    [
+                        "ausgerülpstes",
+                        "AUS/GE/SMÜLBS/D+ES"
+                    ],
+                    [
+                        "holpre",
+                        "SNOLB/SME"
+                    ],
+                    [
+                        "holprigerem",
+                        "SNOLB/SMI/GE/SMEM"
+                    ],
+                    [
+                        "holprigeres",
+                        "SNOLB/SMI/GE/SMES"
+                    ],
+                    [
+                        "kompliante",
+                        "G+OMB/LI/AN/D+E"
+                    ],
+                    [
+                        "kompliantem",
+                        "G+OMB/LI/AN/D+EM"
+                    ],
+                    [
+                        "komplianten",
+                        "G+OMB/LI/AN/D+EN"
+                    ],
+                    [
+                        "kompliantes",
+                        "G+OMB/LI/AN/D+ES"
+                    ],
+                    [
+                        "rülpsend",
+                        "SMÜLB/SEND"
+                    ],
+                    [
+                        "rülpstet",
+                        "SMÜLBS/D+ED"
+                    ],
+                    [
+                        "sozialphobisch",
+                        "SO/ʃGI/ALB/SNO/BIʃ"
+                    ],
+                    [
+                        "sozialphobische",
+                        "SO/ʃGI/ALB/SNO/BI/ʃE"
+                    ],
+                    [
+                        "sozialphobischem",
+                        "SO/ʃGI/ALB/SNO/BI/ʃEM"
+                    ],
+                    [
+                        "sozialphobisches",
+                        "SO/ʃGI/ALB/SNO/BI/ʃES"
                     ]
                 ]
             ],
             "3": [
-                2706,
+                1141,
                 [
                     [
                         "hat",
@@ -1652,24 +1524,8 @@
                         "F+EID"
                     ],
                     [
-                        "Kontakt",
-                        "G+ON/D+A+GD"
-                    ],
-                    [
-                        "Zeitpunkt",
-                        "ʃGEID/B+UMND"
-                    ],
-                    [
-                        "Punkt",
-                        "B+UMND"
-                    ],
-                    [
                         "unbedingt",
                         "UN/BE/DIMGD"
-                    ],
-                    [
-                        "steckt",
-                        "DSE+GD"
                     ],
                     [
                         "einst",
@@ -1684,32 +1540,8 @@
                         "GE/ʃI+GD"
                     ],
                     [
-                        "denkt",
-                        "DEMND"
-                    ],
-                    [
-                        "Auftakt",
-                        "AUF/D+A+GD"
-                    ],
-                    [
                         "Mut",
                         "MUD"
-                    ],
-                    [
-                        "Höhepunkt",
-                        "SNÄO/SNE/B+UMND"
-                    ],
-                    [
-                        "angesteckt",
-                        "AN/GE/DSE+GD"
-                    ],
-                    [
-                        "Mittelpunkt",
-                        "MID/D+EL/B+UMND"
-                    ],
-                    [
-                        "Konflikt",
-                        "G+ON/FLI+GD"
                     ],
                     [
                         "fit",
@@ -1720,88 +1552,48 @@
                         "BLI+GD"
                     ],
                     [
-                        "gesenkt",
-                        "GE/SEMND"
-                    ],
-                    [
-                        "Typ",
-                        "D+I+B"
-                    ],
-                    [
-                        "Effekt",
-                        "EF/FE+GD"
+                        "rückt",
+                        "SMÜ+GD"
                     ],
                     [
                         "schickt",
                         "ʃI+GD"
                     ],
                     [
-                        "sinkt",
-                        "SIMND"
-                    ],
-                    [
                         "bedingt",
                         "BE/DIMGD"
-                    ],
-                    [
-                        "Aspekt",
-                        "AS/B+E+GD"
                     ],
                     [
                         "Papst",
                         "B+A+BSD"
                     ],
                     [
-                        "Fakt",
-                        "FA+GD"
-                    ],
-                    [
-                        "exakt",
-                        "EGSD/A+GD"
-                    ],
-                    [
                         "fängt",
                         "FÄMGD"
                     ],
                     [
-                        "aufgestockt",
-                        "AUF/GE/DSO+GD"
+                        "zentral",
+                        "ʃGEND/SMAL"
                     ],
                     [
-                        "Anthony",
-                        "AND/SNO/NI"
+                        "rot",
+                        "SMOD"
                     ],
                     [
                         "singt",
                         "SIMGD"
                     ],
                     [
-                        "gesteckt",
-                        "GE/DSE+GD"
-                    ],
-                    [
-                        "Objekt",
-                        "OB/FNE+GD"
-                    ],
-                    [
-                        "geschenkt",
-                        "GE/ʃEMND"
-                    ],
-                    [
                         "bedeckt",
                         "BE/DE+GD"
                     ],
                     [
-                        "Akt",
-                        "A+GD"
+                        "Spektrum",
+                        "SB+E+GD/SMUM"
                     ],
                     [
-                        "pünktlich",
-                        "B+ÜMND/LI+ʃ"
-                    ],
-                    [
-                        "zwingt",
-                        "ʃG+IMGD"
+                        "gerückt",
+                        "GE/SMÜ+GD"
                     ],
                     [
                         "gedeckt",
@@ -1812,24 +1604,12 @@
                         "LO+GD"
                     ],
                     [
-                        "bedankt",
-                        "BE/DAMND"
+                        "Elektromobilität",
+                        "E/LE+GD/SMO/MO/BI/LI/D+ÄD"
                     ],
                     [
                         "schmeckt",
                         "ʃME+GD"
-                    ],
-                    [
-                        "Kontaktdaten",
-                        "G+ON/D+A+GD/DA/D+EN"
-                    ],
-                    [
-                        "gefilmt",
-                        "GE/FI+D"
-                    ],
-                    [
-                        "Ausgangspunkt",
-                        "AUS/GAMGS/B+UMND"
                     ],
                     [
                         "deckt",
@@ -1844,12 +1624,16 @@
                         "AB/GE/DE+GD"
                     ],
                     [
-                        "lenkt",
-                        "LEMND"
-                    ],
-                    [
                         "geweckt",
                         "GE/F+E+GD"
+                    ],
+                    [
+                        "Astrid",
+                        "ASD/SMID"
+                    ],
+                    [
+                        "elektrisch",
+                        "E/LE+GD/SMIʃ"
                     ],
                     [
                         "gepackt",
@@ -1860,108 +1644,60 @@
                         "GE/ʃO+GD"
                     ],
                     [
-                        "senkt",
-                        "SEMND"
-                    ],
-                    [
                         "weckt",
                         "F+E+GD"
-                    ],
-                    [
-                        "winkt",
-                        "F+IMND"
-                    ],
-                    [
-                        "Saisonauftakt",
-                        "SAI/SON/AUF/D+A+GD"
-                    ],
-                    [
-                        "My",
-                        "MI"
-                    ],
-                    [
-                        "Standpunkt",
-                        "DSAND/B+UMND"
                     ],
                     [
                         "Nest",
                         "NESD"
                     ],
                     [
-                        "Takt",
-                        "D+A+GD"
+                        "Gastronom",
+                        "GASD/SMO/NOM"
                     ],
                     [
                         "nackt",
                         "NA+GD"
                     ],
                     [
-                        "schenkt",
-                        "ʃEMND"
-                    ],
-                    [
                         "aufgedeckt",
                         "AUF/GE/DE+GD"
                     ],
                     [
-                        "tanzt",
-                        "D+AMGʃD"
+                        "konstruktiv",
+                        "G+ONSD/SMU+G/D+IF"
                     ],
                     [
-                        "dankt",
-                        "DAMND"
+                        "elektronisch",
+                        "E/LE+GD/SMO/NIʃ"
+                    ],
+                    [
+                        "Elektronik",
+                        "E/LE+GD/SMO/NI+G"
+                    ],
+                    [
+                        "Epizentrum",
+                        "E/B+I/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Elektroauto",
+                        "E/LE+GD/SMO/AU/D+O"
                     ],
                     [
                         "Mist",
                         "MISD"
                     ],
                     [
-                        "schwingt",
-                        "ʃBIMGD"
-                    ],
-                    [
-                        "ansteckt",
-                        "AN/DSE+GD"
-                    ],
-                    [
-                        "bestückt",
-                        "BE/DSÜ+GD"
-                    ],
-                    [
-                        "Dylan",
-                        "DFNLAN"
-                    ],
-                    [
                         "aufgehängt",
                         "AUF/GE/SNÄMGD"
                     ],
                     [
-                        "Endeffekt",
-                        "END/EF/FE+GD"
+                        "ausgerückt",
+                        "AUS/GE/SMÜ+GD"
                     ],
                     [
-                        "intakt",
-                        "IN/D+A+GD"
-                    ],
-                    [
-                        "flankt",
-                        "FLAMND"
-                    ],
-                    [
-                        "kontaktlos",
-                        "G+ON/D+A+GD/LOS"
-                    ],
-                    [
-                        "bedenkt",
-                        "BE/DEMND"
-                    ],
-                    [
-                        "glänzt",
-                        "GLÄMGʃD"
-                    ],
-                    [
-                        "kompakt",
-                        "G+OM/B+A+GD"
+                        "Magistrat",
+                        "MA/GISD/SMAD"
                     ],
                     [
                         "geblockt",
@@ -1976,14 +1712,6 @@
                         "GE/ʃMÜ+GD"
                     ],
                     [
-                        "getanzt",
-                        "GE/D+AMGʃD"
-                    ],
-                    [
-                        "stockt",
-                        "DSO+GD"
-                    ],
-                    [
                         "geglückt",
                         "GE/GLÜ+GD"
                     ],
@@ -1996,44 +1724,891 @@
                         "AB/SNÄMGD"
                     ],
                     [
+                        "ringt",
+                        "SMIMGD"
+                    ],
+                    [
                         "tickt",
                         "D+I+GD"
+                    ],
+                    [
+                        "Polizeikontrolle",
+                        "B+O/LI/ʃGEI/G+OND/SMOL/LE"
                     ],
                     [
                         "guckt",
                         "GU+GD"
                     ],
                     [
-                        "hinkt",
-                        "SNIMND"
-                    ],
-                    [
                         "Spot",
                         "SB+OD"
-                    ],
-                    [
-                        "Sekt",
-                        "SE+GD"
-                    ],
-                    [
-                        "hakt",
-                        "SNA+GD"
                     ],
                     [
                         "gehängt",
                         "GE/SNÄMGD"
                     ],
                     [
-                        "abgehakt",
-                        "AB/GE/SNA+GD"
+                        "Schulzentrum",
+                        "ʃUL/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Jugendzentrum",
+                        "FNU/GEND/ʃGEND/SMUM"
                     ],
                     [
                         "Antholz",
                         "AND/SNOLGʃ"
                     ],
                     [
-                        "schwankt",
-                        "ʃBAMND"
+                        "zugeschickt",
+                        "ʃGU/GE/ʃI+GD"
+                    ],
+                    [
+                        "Bistro",
+                        "BISD/SMO"
+                    ],
+                    [
+                        "abgeblockt",
+                        "AB/GE/BLO+GD"
+                    ],
+                    [
+                        "nickt",
+                        "NI+GD"
+                    ],
+                    [
+                        "gehackt",
+                        "GE/SNA+GD"
+                    ],
+                    [
+                        "bangt",
+                        "BAMGD"
+                    ],
+                    [
+                        "Detlev",
+                        "DED/LEF"
+                    ],
+                    [
+                        "zurückgeschickt",
+                        "ʃGU/SMÜ+G/GE/ʃI+GD"
+                    ],
+                    [
+                        "lest",
+                        "LESD"
+                    ],
+                    [
+                        "gespickt",
+                        "GE/SB+I+GD"
+                    ],
+                    [
+                        "abdeckt",
+                        "AB/DE+GD"
+                    ],
+                    [
+                        "Mantra",
+                        "MAND/SMA"
+                    ],
+                    [
+                        "eingedeckt",
+                        "EIN/GE/DE+GD"
+                    ],
+                    [
+                        "Maestro",
+                        "MA/ESD/SMO"
+                    ],
+                    [
+                        "angepackt",
+                        "AN/GE/B+A+GD"
+                    ],
+                    [
+                        "eingepackt",
+                        "EIN/GE/B+A+GD"
+                    ],
+                    [
+                        "Elektrizität",
+                        "E/LE+GD/SMI/ʃGI/D+ÄD"
+                    ],
+                    [
+                        "blockt",
+                        "BLO+GD"
+                    ],
+                    [
+                        "Bildungszentrum",
+                        "BIL/DUMGS/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Gentleman",
+                        "GEND/LE/MAN"
+                    ],
+                    [
+                        "abgesackt",
+                        "AB/GE/SA+GD"
+                    ],
+                    [
+                        "speist",
+                        "SB+EISD"
+                    ],
+                    [
+                        "geguckt",
+                        "GE/GU+GD"
+                    ],
+                    [
+                        "kickt",
+                        "G+I+GD"
+                    ],
+                    [
+                        "vgl",
+                        "FGL-"
+                    ],
+                    [
+                        "Astronaut",
+                        "ASD/SMO/NAUD"
+                    ],
+                    [
+                        "gekickt",
+                        "GE/G+I+GD"
+                    ],
+                    [
+                        "umringt",
+                        "UM/SMIMGD"
+                    ],
+                    [
+                        "ausgepackt",
+                        "AUS/GE/B+A+GD"
+                    ],
+                    [
+                        "schmückt",
+                        "ʃMÜ+GD"
+                    ],
+                    [
+                        "Elektrotechnik",
+                        "E/LE+GD/SMO/D+E+ʃ/NI+G"
+                    ],
+                    [
+                        "geschluckt",
+                        "GE/ʃLU+GD"
+                    ],
+                    [
+                        "Elektra",
+                        "E/LE+GD/SMA"
+                    ],
+                    [
+                        "Australierin",
+                        "AUSD/SMA/LI/E/SMIN"
+                    ],
+                    [
+                        "schockt",
+                        "ʃO+GD"
+                    ],
+                    [
+                        "spuckt",
+                        "SB+U+GD"
+                    ],
+                    [
+                        "ungeschickt",
+                        "UN/GE/ʃI+GD"
+                    ]
+                ]
+            ]
+        }
+    ],
+    [
+        "PatReplCommon2",
+        {
+            "0": [
+                40444,
+                [
+                    [
+                        "zwei",
+                        "ʃG+EI"
+                    ],
+                    [
+                        "Polizei",
+                        "B+O/LI/ʃGEI"
+                    ],
+                    [
+                        "ganz",
+                        "GAMGʃ"
+                    ],
+                    [
+                        "stehen",
+                        "DSE/SNEN"
+                    ],
+                    [
+                        "nächsten",
+                        "NÄ+GS/D+EN"
+                    ],
+                    [
+                        "zweiten",
+                        "ʃG+EI/D+EN"
+                    ],
+                    [
+                        "sechs",
+                        "SE+GS"
+                    ],
+                    [
+                        "Schweiz",
+                        "ʃBEIGʃ"
+                    ],
+                    [
+                        "zweite",
+                        "ʃG+EI/D+E"
+                    ],
+                    [
+                        "stand",
+                        "DSAND"
+                    ],
+                    [
+                        "Kampf",
+                        "G+AMBF"
+                    ],
+                    [
+                        "nächste",
+                        "NÄ+GS/D+E"
+                    ],
+                    [
+                        "Bank",
+                        "BAMN"
+                    ],
+                    [
+                        "Film",
+                        "FI+"
+                    ],
+                    [
+                        "Zeitpunkt",
+                        "ʃGEID/B+UMND"
+                    ],
+                    [
+                        "links",
+                        "LIMNS"
+                    ],
+                    [
+                        "zwölf",
+                        "ʃG+ÄOLF"
+                    ],
+                    [
+                        "bestätigte",
+                        "BE/DSÄ/D+IG/D+E"
+                    ],
+                    [
+                        "Stück",
+                        "DSÜ+G"
+                    ],
+                    [
+                        "Punkt",
+                        "B+UMND"
+                    ],
+                    [
+                        "System",
+                        "SÄIS/D+EM"
+                    ],
+                    [
+                        "Stefan",
+                        "DSE/FAN"
+                    ],
+                    [
+                        "schwere",
+                        "ʃBE/SME"
+                    ],
+                    [
+                        "dank",
+                        "DAMN"
+                    ],
+                    [
+                        "standen",
+                        "DSAN/DEN"
+                    ],
+                    [
+                        "Städten",
+                        "DSÄD/D+EN"
+                    ],
+                    [
+                        "Stimmung",
+                        "DSIM/MUMG"
+                    ],
+                    [
+                        "Staffel",
+                        "DSAF/FEL"
+                    ],
+                    [
+                        "stehe",
+                        "DSE/SNE"
+                    ],
+                    [
+                        "manchmal",
+                        "MANʃ/MAL"
+                    ],
+                    [
+                        "Kanzlerin",
+                        "G+AMGʃ/LE/SMIN"
+                    ],
+                    [
+                        "Städte",
+                        "DSÄD/D+E"
+                    ],
+                    [
+                        "steckt",
+                        "DSE+GD"
+                    ],
+                    [
+                        "Zweifel",
+                        "ʃG+EI/FEL"
+                    ],
+                    [
+                        "Symptome",
+                        "SÄIMB/D+O/ME"
+                    ],
+                    [
+                        "Ausstellung",
+                        "AUS/DSEL/LUMG"
+                    ],
+                    [
+                        "bestehen",
+                        "BE/DSE/SNEN"
+                    ],
+                    [
+                        "Bundeskanzlerin",
+                        "BUN/DES/G+AMGʃ/LE/SMIN"
+                    ],
+                    [
+                        "Abstimmung",
+                        "AB/DSIM/MUMG"
+                    ],
+                    [
+                        "höchsten",
+                        "SNÄO+GS/D+EN"
+                    ],
+                    [
+                        "Stiftung",
+                        "DSIF/D+UMG"
+                    ],
+                    [
+                        "zweimal",
+                        "ʃG+EI/MAL"
+                    ],
+                    [
+                        "zuständig",
+                        "ʃGU/DSÄN/DIG"
+                    ],
+                    [
+                        "Wachstum",
+                        "F+A+GS/D+UM"
+                    ],
+                    [
+                        "ständig",
+                        "DSÄN/DIG"
+                    ],
+                    [
+                        "höchste",
+                        "SNÄO+GS/D+E"
+                    ],
+                    [
+                        "stolz",
+                        "DSOLGʃ"
+                    ],
+                    [
+                        "Bilanz",
+                        "BI/LAMGʃ"
+                    ],
+                    [
+                        "denkt",
+                        "DEMND"
+                    ],
+                    [
+                        "Einstufung",
+                        "EIN/DSU/FUMG"
+                    ],
+                    [
+                        "Schweden",
+                        "ʃBE/DEN"
+                    ],
+                    [
+                        "Zustimmung",
+                        "ʃGU/DSIM/MUMG"
+                    ],
+                    [
+                        "bestätigten",
+                        "BE/DSÄ/D+IG/D+EN"
+                    ],
+                    [
+                        "Mainz",
+                        "MAIMGʃ"
+                    ],
+                    [
+                        "Handy",
+                        "SNAN/DÄI"
+                    ],
+                    [
+                        "Distanz",
+                        "DIS/D+AMGʃ"
+                    ],
+                    [
+                        "Umständen",
+                        "UM/DSÄN/DEN"
+                    ],
+                    [
+                        "bestehenden",
+                        "BE/DSE/SNEN/DEN"
+                    ],
+                    [
+                        "gestalten",
+                        "GE/DSAL/D+EN"
+                    ],
+                    [
+                        "Geschwindigkeit",
+                        "GE/ʃBIN/DIG/G+EI+D"
+                    ],
+                    [
+                        "Höhepunkt",
+                        "SNÄO/SNE/B+UMND"
+                    ],
+                    [
+                        "Statistik",
+                        "DSA/D+IS/D+I+G"
+                    ],
+                    [
+                        "Volk",
+                        "FBLOLG"
+                    ],
+                    [
+                        "angesteckt",
+                        "AN/GE/DSE+GD"
+                    ],
+                    [
+                        "Mittelpunkt",
+                        "MID/D+EL/B+UMND"
+                    ],
+                    [
+                        "stoppen",
+                        "DSO+B/B+EN"
+                    ],
+                    [
+                        "Rückstand",
+                        "SMÜ+G/DSAND"
+                    ],
+                    [
+                        "ausgestattet",
+                        "AUS/GE/DSA+D/D+E+D"
+                    ],
+                    [
+                        "Impfung",
+                        "IMB/FUMG"
+                    ],
+                    [
+                        "Baustelle",
+                        "BAU/DSEL/LE"
+                    ],
+                    [
+                        "gestaltet",
+                        "GE/DSAL/D+E+D"
+                    ],
+                    [
+                        "Studenten",
+                        "DSU/DEN/D+EN"
+                    ],
+                    [
+                        "Analysten",
+                        "A/NA/LÄIS/D+EN"
+                    ],
+                    [
+                        "Lkw",
+                        "-LGF"
+                    ],
+                    [
+                        "Ansteckung",
+                        "AN/DSE/G+UMG"
+                    ],
+                    [
+                        "gestanden",
+                        "GE/DSAN/DEN"
+                    ],
+                    [
+                        "stabil",
+                        "DSA/BIL"
+                    ],
+                    [
+                        "Zweck",
+                        "ʃG+E+G"
+                    ],
+                    [
+                        "sank",
+                        "SAMN"
+                    ],
+                    [
+                        "bestehende",
+                        "BE/DSE/SNEN/DE"
+                    ],
+                    [
+                        "Stein",
+                        "DSEIN"
+                    ],
+                    [
+                        "Baby",
+                        "BA/BÄI"
+                    ],
+                    [
+                        "nächstes",
+                        "NÄ+GS/D+ES"
+                    ],
+                    [
+                        "Stellung",
+                        "DSEL/LUMG"
+                    ],
+                    [
+                        "Existenz",
+                        "E/DSGIS/D+EMGʃ"
+                    ],
+                    [
+                        "Jury",
+                        "FNU/SMÄI"
+                    ],
+                    [
+                        "stelle",
+                        "DSEL/LE"
+                    ],
+                    [
+                        "gesenkt",
+                        "GE/SEMND"
+                    ],
+                    [
+                        "Linz",
+                        "LIMGʃ"
+                    ],
+                    [
+                        "Einstellung",
+                        "EIN/DSEL/LUMG"
+                    ],
+                    [
+                        "Steffen",
+                        "DSEF/FEN"
+                    ],
+                    [
+                        "zweites",
+                        "ʃG+EI/D+ES"
+                    ],
+                    [
+                        "stünden",
+                        "DSÜND/EN"
+                    ],
+                    [
+                        "Videokonferenz",
+                        "FBLI/DEO/G+ON/FE/SMEMGʃ"
+                    ],
+                    [
+                        "Umstände",
+                        "UM/DSÄN/DE"
+                    ],
+                    [
+                        "bestehe",
+                        "BE/DSE/SNE"
+                    ],
+                    [
+                        "Heinz",
+                        "SNEIMGʃ"
+                    ],
+                    [
+                        "Konferenz",
+                        "G+ON/FE/SMEMGʃ"
+                    ],
+                    [
+                        "Story",
+                        "DSO/SMÄI"
+                    ],
+                    [
+                        "einstimmig",
+                        "EIN/DSIM/MIG"
+                    ]
+                ]
+            ],
+            "3": [
+                72,
+                [
+                    [
+                        "Typ",
+                        "D+I+B"
+                    ],
+                    [
+                        "Anthony",
+                        "AND/SNO/NI"
+                    ],
+                    [
+                        "My",
+                        "MI"
+                    ],
+                    [
+                        "Dylan",
+                        "DFNLAN"
+                    ],
+                    [
+                        "Symptom",
+                        "SIMB/D+OM"
+                    ],
+                    [
+                        "Sidney",
+                        "SID/NEI"
+                    ],
+                    [
+                        "symptomatisch",
+                        "SIMB/D+O/MA/D+Iʃ"
+                    ],
+                    [
+                        "Symptomatik",
+                        "SIMB/D+O/MA/D+I+G"
+                    ],
+                    [
+                        "Smiley",
+                        "SMI/LEI"
+                    ],
+                    [
+                        "Mickey",
+                        "MI/G+EI"
+                    ],
+                    [
+                        "Handyempfang",
+                        "SNAN/DFNEMB/FAMG"
+                    ],
+                    [
+                        "Dylans",
+                        "DFNLANS"
+                    ],
+                    [
+                        "systembedingt",
+                        "SIS/D+EM/BE/DIMGD"
+                    ],
+                    [
+                        "Elektrolyt",
+                        "E/LE+GD/SMO/LID"
+                    ],
+                    [
+                        "Handyakku",
+                        "SNAN/DFNA+G/G+U"
+                    ],
+                    [
+                        "Handymasten",
+                        "SNAN/DFNMAS/D+EN"
+                    ],
+                    [
+                        "Pantry",
+                        "B+AND/SMI"
+                    ],
+                    [
+                        "Rileys",
+                        "SMI/LEIS"
+                    ],
+                    [
+                        "Handyantenne",
+                        "SNAN/DFNAN/D+EN/NE"
+                    ],
+                    [
+                        "Anthonys",
+                        "AND/SNO/NIS"
+                    ],
+                    [
+                        "Hypozentrum",
+                        "SNI/B+O/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Lysistrata",
+                        "LI/SISD/SMA/D+A"
+                    ],
+                    [
+                        "Handymodelle",
+                        "SNAN/DFNMO/DEL/LE"
+                    ],
+                    [
+                        "Baryzentrum",
+                        "BA/SMI/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Handyakkus",
+                        "SNAN/DFNA+G/G+US"
+                    ],
+                    [
+                        "Punktsystem",
+                        "B+UMND/SIS/D+EM"
+                    ],
+                    [
+                        "asymptotisch",
+                        "A/SIMB/D+O/D+Iʃ"
+                    ],
+                    [
+                        "elektrolytisch",
+                        "E/LE+GD/SMO/LI/D+Iʃ"
+                    ],
+                    [
+                        "Handyanruf",
+                        "SNAN/DFNAN/SMUF"
+                    ],
+                    [
+                        "Spondylitis",
+                        "SB+ON/DFNLI/D+IS"
+                    ],
+                    [
+                        "Handyanrufe",
+                        "SNAN/DFNAN/SMU/FE"
+                    ],
+                    [
+                        "Modeltyp",
+                        "MO/DEL/D+I+B"
+                    ],
+                    [
+                        "Schulphysik",
+                        "ʃULB/SNI/SI+G"
+                    ],
+                    [
+                        "Systemadministratorin",
+                        "SIS/D+EM/AD/MI/NISD/SMA/D+O/SMIN"
+                    ],
+                    [
+                        "Asymptote",
+                        "A/SIMB/D+O/D+E"
+                    ],
+                    [
+                        "Teddymantel",
+                        "D+ED/DFNMAN/D+EL"
+                    ],
+                    [
+                        "Elektrodynamik",
+                        "E/LE+GD/SMO/DI/NA/MI+G"
+                    ],
+                    [
+                        "Handyläuten",
+                        "SNAN/DFNLÄU/D+EN"
+                    ],
+                    [
+                        "Jurypunkt",
+                        "FNU/SMI/B+UMND"
+                    ],
+                    [
+                        "Punktsysteme",
+                        "B+UMND/SIS/D+E/ME"
+                    ],
+                    [
+                        "Punktsystems",
+                        "B+UMND/SIS/D+EMS"
+                    ],
+                    [
+                        "Teddymänteln",
+                        "D+ED/DFNMÄN/D+ELN"
+                    ],
+                    [
+                        "lyncht",
+                        "LINʃD"
+                    ],
+                    [
+                        "Dyopol",
+                        "DFNO/B+OL"
+                    ],
+                    [
+                        "Gastyachten",
+                        "GASD/FNA+ʃ/D+EN"
+                    ],
+                    [
+                        "Gleitpunkttyp",
+                        "GLEID/B+UMND/D+I+B"
+                    ],
+                    [
+                        "Gleitpunkttyps",
+                        "GLEID/B+UMND/D+I+BS"
+                    ],
+                    [
+                        "Handyempfanges",
+                        "SNAN/DFNEMB/FAN/GES"
+                    ],
+                    [
+                        "Handylizenz",
+                        "SNAN/DFNLI/ʃGEMGʃ"
+                    ],
+                    [
+                        "Handylogo",
+                        "SNAN/DFNLO/GO"
+                    ],
+                    [
+                        "Handylogos",
+                        "SNAN/DFNLO/GOS"
+                    ],
+                    [
+                        "Handyläutens",
+                        "SNAN/DFNLÄU/D+ENS"
+                    ],
+                    [
+                        "Handymuffel",
+                        "SNAN/DFNMUF/FEL"
+                    ],
+                    [
+                        "Handymuffeln",
+                        "SNAN/DFNMUF/FELN"
+                    ],
+                    [
+                        "Handymuffels",
+                        "SNAN/DFNMUF/FELS"
+                    ],
+                    [
+                        "Kondylus",
+                        "G+ON/DFNLUS"
+                    ],
+                    [
+                        "Leistungspunktsystem",
+                        "LEIS/D+UMGS/B+UMND/SIS/D+EM"
+                    ],
+                    [
+                        "Leistungspunktsysteme",
+                        "LEIS/D+UMGS/B+UMND/SIS/D+E/ME"
+                    ],
+                    [
+                        "Leistungspunktsystems",
+                        "LEIS/D+UMGS/B+UMND/SIS/D+EMS"
+                    ],
+                    [
+                        "Punkttyp",
+                        "B+UMND/D+I+B"
+                    ],
+                    [
+                        "Sammelpseudonym",
+                        "SAM/MELB/SEUD/O/NIM"
+                    ],
+                    [
+                        "Sammelpseudonyme",
+                        "SAM/MELB/SEUD/O/NI/ME"
+                    ],
+                    [
+                        "Spondylusmuschel",
+                        "SB+ON/DFNLUS/MU/ʃEL"
+                    ],
+                    [
+                        "Spondylusmuscheln",
+                        "SB+ON/DFNLUS/MU/ʃELN"
+                    ],
+                    [
+                        "Symbolphonetik",
+                        "SIM/BOLB/SNO/NE/D+I+G"
+                    ],
+                    [
+                        "Systempunkt",
+                        "SIS/D+EM/B+UMND"
+                    ],
+                    [
+                        "Teddymantels",
+                        "D+ED/DFNMAN/D+ELS"
+                    ],
+                    [
+                        "Teddymäntel",
+                        "D+ED/DFNMÄN/D+EL"
+                    ],
+                    [
+                        "Zweipunktregelsystem",
+                        "ʃG+EI/B+UMND/SME/GEL/SIS/D+EM"
+                    ],
+                    [
+                        "Zweipunktregelsysteme",
+                        "ʃG+EI/B+UMND/SME/GEL/SIS/D+E/ME"
+                    ],
+                    [
+                        "Zweipunktregelsystems",
+                        "ʃG+EI/B+UMND/SME/GEL/SIS/D+EMS"
+                    ],
+                    [
+                        "elektrodynamisch",
+                        "E/LE+GD/SMO/DI/NA/MIʃ"
                     ]
                 ]
             ]
@@ -2043,7 +2618,7 @@
         "PatCodaComboT",
         {
             "0": [
-                19243,
+                25963,
                 [
                     [
                         "nicht",
@@ -2110,6 +2685,10 @@
                         "NA+ʃD"
                     ],
                     [
+                        "direkt",
+                        "DI/SME+GD"
+                    ],
+                    [
                         "acht",
                         "A+ʃD"
                     ],
@@ -2138,6 +2717,14 @@
                         "F+ELD/F+EI+D"
                     ],
                     [
+                        "Kontakt",
+                        "G+ON/D+A+GD"
+                    ],
+                    [
+                        "Gericht",
+                        "GE/SMI+ʃD"
+                    ],
+                    [
                         "bestätigt",
                         "BE/DSÄ/D+I+GD"
                     ],
@@ -2160,6 +2747,10 @@
                     [
                         "angekündigt",
                         "AN/GE/G+ÜN/DI+GD"
+                    ],
+                    [
+                        "recht",
+                        "SME+ʃD"
                     ],
                     [
                         "entscheiden",
@@ -2250,6 +2841,14 @@
                         "GE/DA+ʃD"
                     ],
                     [
+                        "reicht",
+                        "SMEI+ʃD"
+                    ],
+                    [
+                        "Nachricht",
+                        "NA+ʃ/SMI+ʃD"
+                    ],
+                    [
                         "nennt",
                         "NE+ND"
                     ],
@@ -2260,6 +2859,10 @@
                     [
                         "genannt",
                         "GE/NA+ND"
+                    ],
+                    [
+                        "voraussichtlich",
+                        "FBLO/SMAUS/SI+ʃD/LI+ʃ"
                     ],
                     [
                         "teilt",
@@ -2330,6 +2933,10 @@
                         "UM/F+ELD"
                     ],
                     [
+                        "Restaurant",
+                        "SMES/D+AU/SMA+ND"
+                    ],
+                    [
                         "dicht",
                         "DI+ʃD"
                     ],
@@ -2340,6 +2947,10 @@
                     [
                         "entlang",
                         "E+ND/LAMG"
+                    ],
+                    [
+                        "Auftakt",
+                        "AUF/D+A+GD"
                     ],
                     [
                         "Haft",
@@ -2374,6 +2985,10 @@
                         "AN/F+ALD"
                     ],
                     [
+                        "Landgericht",
+                        "LAND/GE/SMI+ʃD"
+                    ],
+                    [
                         "wesentlich",
                         "F+E/SE+ND/LI+ʃ"
                     ],
@@ -2386,69 +3001,29 @@
                         "E+ND/ʃEI/DE+D"
                     ],
                     [
+                        "veröffentlichten",
+                        "FBLE/SMÄOF/FE+ND/LI+ʃ/D+EN"
+                    ],
+                    [
+                        "ruft",
+                        "SMU+FD"
+                    ],
+                    [
+                        "rechtzeitig",
+                        "SME+ʃD/ʃGEI/D+IG"
+                    ],
+                    [
                         "doppelt",
                         "DO+B/B+ELD"
                     ],
                     [
-                        "weltweiten",
-                        "F+ELD/F+EI/D+EN"
-                    ],
-                    [
-                        "entscheidend",
-                        "E+ND/ʃEI/DEND"
-                    ],
-                    [
-                        "könnt",
-                        "G+ÄO+ND"
-                    ],
-                    [
-                        "geholt",
-                        "GE/SNOLD"
-                    ],
-                    [
-                        "mitteilt",
-                        "MI+D/D+EILD"
-                    ],
-                    [
-                        "Bundesamt",
-                        "BUN/DES/AMD"
-                    ],
-                    [
-                        "enttäuscht",
-                        "E+ND/D+ÄUʃD"
-                    ],
-                    [
-                        "angezeigt",
-                        "AN/GE/ʃGEI+GD"
-                    ],
-                    [
-                        "Inhalt",
-                        "IN/SNALD"
-                    ],
-                    [
-                        "wünscht",
-                        "F+ÜNʃD"
-                    ],
-                    [
-                        "holt",
-                        "SNOLD"
-                    ],
-                    [
-                        "schlicht",
-                        "ʃLI+ʃD"
-                    ],
-                    [
-                        "gesammelt",
-                        "GE/SAM/MELD"
-                    ],
-                    [
-                        "wechselt",
-                        "F+E+ʃ/SELD"
+                        "Respekt",
+                        "SMES/B+E+GD"
                     ]
                 ]
             ],
             "3": [
-                259,
+                269,
                 [
                     [
                         "sagt",
@@ -2479,28 +3054,64 @@
                         "END/DE+GD"
                     ],
                     [
+                        "kämpft",
+                        "G+ÄMBFD"
+                    ],
+                    [
                         "gefolgt",
                         "GE/FOLGD"
+                    ],
+                    [
+                        "geimpft",
+                        "GEIMBFD"
+                    ],
+                    [
+                        "Instrument",
+                        "INSD/SMU/MEND"
+                    ],
+                    [
+                        "gekämpft",
+                        "GE/G+ÄMBFD"
                     ],
                     [
                         "Vogt",
                         "FOGD"
                     ],
                     [
+                        "regt",
+                        "SMEGD"
+                    ],
+                    [
                         "tagt",
                         "D+AGD"
+                    ],
+                    [
+                        "aufgeregt",
+                        "AUF/GE/SMEGD"
+                    ],
+                    [
+                        "gedämpft",
+                        "GE/DÄMBFD"
+                    ],
+                    [
+                        "schimpft",
+                        "ʃIMBFD"
                     ],
                     [
                         "hegt",
                         "SNEGD"
                     ],
                     [
+                        "umkämpft",
+                        "UM/G+ÄMBFD"
+                    ],
+                    [
                         "unentdeckt",
                         "UN/END/DE+GD"
                     ],
                     [
-                        "gepumpt",
-                        "GE/B+UMBD"
+                        "dämpft",
+                        "DÄMBFD"
                     ],
                     [
                         "getilgt",
@@ -2511,16 +3122,28 @@
                         "G+END"
                     ],
                     [
-                        "pumpt",
-                        "B+UMBD"
+                        "gerügt",
+                        "GE/SMÜGD"
+                    ],
+                    [
+                        "gestampft",
+                        "GE/DSAMBFD"
+                    ],
+                    [
+                        "rügt",
+                        "SMÜGD"
                     ],
                     [
                         "ablegt",
                         "AB/LEGD"
                     ],
                     [
-                        "abgepumpt",
-                        "AB/GE/B+UMBD"
+                        "geschimpft",
+                        "GE/ʃIMBFD"
+                    ],
+                    [
+                        "aufregt",
+                        "AUF/SMEGD"
                     ],
                     [
                         "absagt",
@@ -2547,8 +3170,28 @@
                         "AUF/LEGD"
                     ],
                     [
-                        "ausgepumpt",
-                        "AUS/GE/B+UMBD"
+                        "zurückgekämpft",
+                        "ʃGU/SMÜ+G/GE/G+ÄMBFD"
+                    ],
+                    [
+                        "eingedampft",
+                        "EIN/GE/DAMBFD"
+                    ],
+                    [
+                        "impft",
+                        "IMBFD"
+                    ],
+                    [
+                        "eingestampft",
+                        "EIN/GE/DSAMBFD"
+                    ],
+                    [
+                        "entrückt",
+                        "END/SMÜ+GD"
+                    ],
+                    [
+                        "Musikinstrument",
+                        "MU/SI+G/INSD/SMU/MEND"
                     ],
                     [
                         "nachfolgt",
@@ -2557,6 +3200,10 @@
                     [
                         "mithilft",
                         "MID/SNILFD"
+                    ],
+                    [
+                        "dampft",
+                        "DAMBFD"
                     ],
                     [
                         "Schaft",
@@ -2571,6 +3218,14 @@
                         "GE/DSÜLBD"
                     ],
                     [
+                        "eingeimpft",
+                        "EIN/GEIMBFD"
+                    ],
+                    [
+                        "ankämpft",
+                        "AN/G+ÄMBFD"
+                    ],
+                    [
                         "wölbt",
                         "F+ÄOLBD"
                     ],
@@ -2579,16 +3234,28 @@
                         "AUS/SNILFD"
                     ],
                     [
+                        "stampft",
+                        "DSAMBFD"
+                    ],
+                    [
                         "Hauptpunkt",
                         "SNAUBD/B+UMND"
                     ],
                     [
-                        "geschlampt",
-                        "GE/ʃLAMBD"
+                        "angekämpft",
+                        "AN/GE/G+ÄMBFD"
                     ],
                     [
-                        "aufgepumpt",
-                        "AUF/GE/B+UMBD"
+                        "abgestumpft",
+                        "AB/GE/DSUMBFD"
+                    ],
+                    [
+                        "Ministrant",
+                        "MI/NISD/SMAND"
+                    ],
+                    [
+                        "abgekämpft",
+                        "AB/GE/G+ÄMBFD"
                     ],
                     [
                         "entschlackt",
@@ -2611,8 +3278,16 @@
                         "D+ILGD"
                     ],
                     [
+                        "ungeimpft",
+                        "UN/GEIMBFD"
+                    ],
+                    [
                         "gewölbt",
                         "GE/F+ÄOLBD"
+                    ],
+                    [
+                        "Blasinstrument",
+                        "BLAS/INSD/SMU/MEND"
                     ],
                     [
                         "ausgebombt",
@@ -2627,12 +3302,20 @@
                         "END/B+A+GD"
                     ],
                     [
+                        "geregt",
+                        "GE/SMEGD"
+                    ],
+                    [
+                        "rümpft",
+                        "SMÜMBFD"
+                    ],
+                    [
                         "gebombt",
                         "GE/BOMBD"
                     ],
                     [
-                        "umgepumpt",
-                        "UM/GE/B+UMBD"
+                        "Kontrollinstrument",
+                        "G+OND/SMOL/LINSD/SMU/MEND"
                     ],
                     [
                         "elft",
@@ -2643,6 +3326,22 @@
                         "GE/ʃBELGD"
                     ],
                     [
+                        "stumpft",
+                        "DSUMBFD"
+                    ],
+                    [
+                        "abgedämpft",
+                        "AB/GE/DÄMBFD"
+                    ],
+                    [
+                        "Saiteninstrument",
+                        "SAI/D+EN/INSD/SMU/MEND"
+                    ],
+                    [
+                        "intrigant",
+                        "IND/SMI/GAND"
+                    ],
+                    [
                         "zwölft",
                         "ʃG+ÄOLFD"
                     ],
@@ -2651,28 +3350,40 @@
                         "END/GELD/B+UMND"
                     ],
                     [
-                        "Luftkämpfe",
-                        "LUFD/G+ÄMB/FE"
-                    ],
-                    [
-                        "hineingepumpt",
-                        "SNIN/EIN/GE/B+UMBD"
+                        "Tasteninstrument",
+                        "D+AS/D+EN/INSD/SMU/MEND"
                     ],
                     [
                         "entkalkt",
                         "END/G+ALGD"
                     ],
                     [
-                        "pimpt",
-                        "B+IMBD"
+                        "Soloinstrument",
+                        "SO/LO/INSD/SMU/MEND"
                     ],
                     [
-                        "aufgepimpt",
-                        "AUF/GE/B+IMBD"
+                        "mampft",
+                        "MAMBFD"
+                    ],
+                    [
+                        "mitgekämpft",
+                        "MID/GE/G+ÄMBFD"
+                    ],
+                    [
+                        "hochgekämpft",
+                        "SNO+ʃ/GE/G+ÄMBFD"
+                    ],
+                    [
+                        "gerümpft",
+                        "GE/SMÜMBFD"
                     ],
                     [
                         "schifft",
                         "ʃIFD"
+                    ],
+                    [
+                        "Schlaginstrument",
+                        "ʃLAG/INSD/SMU/MEND"
                     ],
                     [
                         "golft",
@@ -2683,172 +3394,36 @@
                         "NA+ʃ/SNILFD"
                     ],
                     [
-                        "hochgepumpt",
-                        "SNO+ʃ/GE/B+UMBD"
+                        "ausgekämpft",
+                        "AUS/GE/G+ÄMBFD"
                     ],
                     [
-                        "gepimpt",
-                        "GE/B+IMBD"
+                        "Entrücktheit",
+                        "END/SMÜ+GD/SNEID"
+                    ],
+                    [
+                        "Abgestumpftheit",
+                        "AB/GE/DSUMBFD/SNEID"
+                    ],
+                    [
+                        "abstumpft",
+                        "AB/DSUMBFD"
                     ],
                     [
                         "gesalbt",
                         "GE/SALBD"
                     ],
                     [
-                        "schlampt",
-                        "ʃLAMBD"
-                    ],
-                    [
                         "weggebombt",
                         "F+EG/GE/BOMBD"
-                    ],
-                    [
-                        "Hauptaspekt",
-                        "SNAUBD/AS/B+E+GD"
-                    ],
-                    [
-                        "aufpumpt",
-                        "AUF/B+UMBD"
                     ],
                     [
                         "gegolft",
                         "GE/GOLFD"
                     ],
                     [
-                        "hinweghilft",
-                        "SNIN/F+EG/SNILFD"
-                    ],
-                    [
-                        "Hauptakt",
-                        "SNAUBD/A+GD"
-                    ],
-                    [
-                        "balgt",
-                        "BALGD"
-                    ],
-                    [
-                        "salbt",
-                        "SALBD"
-                    ],
-                    [
-                        "Kontaktgift",
-                        "G+ON/D+A+GD/GIFD"
-                    ],
-                    [
-                        "kalbt",
-                        "G+ALBD"
-                    ],
-                    [
-                        "umgestülpt",
-                        "UM/GE/DSÜLBD"
-                    ],
-                    [
-                        "angepumpt",
-                        "AN/GE/B+UMBD"
-                    ],
-                    [
-                        "konzeptbedingt",
-                        "G+ON/ʃGEBD/BE/DIMGD"
-                    ],
-                    [
-                        "Entlastungseffekt",
-                        "END/LAS/D+UMGS/EF/FE+GD"
-                    ],
-                    [
-                        "Entstehungszeitpunkt",
-                        "END/DSE/SNUMGS/ʃGEID/B+UMND"
-                    ],
-                    [
-                        "Hauptkonflikt",
-                        "SNAUBD/G+ON/FLI+GD"
-                    ],
-                    [
-                        "ausgetilgt",
-                        "AUS/GE/D+ILGD"
-                    ],
-                    [
-                        "entwicklungsbedingt",
-                        "END/F+I+G/LUMGS/BE/DIMGD"
-                    ],
-                    [
-                        "konflikthaft",
-                        "G+ON/FLI+GD/SNAFD"
-                    ],
-                    [
-                        "Hauptkämpfe",
-                        "SNAUBD/G+ÄMB/FE"
-                    ],
-                    [
-                        "Hauptobjekt",
-                        "SNAUBD/OB/FNE+GD"
-                    ],
-                    [
-                        "umstülpt",
-                        "UM/DSÜLBD"
-                    ],
-                    [
-                        "zwölftbeste",
-                        "ʃG+ÄOLFD/BES/D+E"
-                    ],
-                    [
-                        "Entspannungseffekt",
-                        "END/SB+AN/NUMGS/EF/FE+GD"
-                    ],
-                    [
-                        "abhilft",
-                        "AB/SNILFD"
-                    ],
-                    [
-                        "aufhilft",
-                        "AUF/SNILFD"
-                    ],
-                    [
-                        "halft",
-                        "SNALFD"
-                    ],
-                    [
-                        "Entlassungszeitpunkt",
-                        "END/LAS/SUMGS/ʃGEID/B+UMND"
-                    ],
-                    [
-                        "Entscheidungszeitpunkt",
-                        "END/ʃEI/DUMGS/ʃGEID/B+UMND"
-                    ],
-                    [
-                        "Hauptanlaufpunkt",
-                        "SNAUBD/AN/LAUF/B+UMND"
-                    ],
-                    [
-                        "Hauptdiskussionspunkt",
-                        "SNAUBD/DIS/G+US/SI/ONS/B+UMND"
-                    ],
-                    [
-                        "Luftkontakt",
-                        "LUFD/G+ON/D+A+GD"
-                    ],
-                    [
-                        "Spant",
-                        "SB+AND"
-                    ],
-                    [
-                        "abpumpt",
-                        "AB/B+UMBD"
-                    ],
-                    [
-                        "elftbeste",
-                        "ELFD/BES/D+E"
-                    ],
-                    [
-                        "flogt",
-                        "FLOGD"
-                    ],
-                    [
-                        "schlafft",
-                        "ʃLAFD"
-                    ],
-                    [
-                        "Entscheidungspunkt",
-                        "END/ʃEI/DUMGS/B+UMND"
+                        "beimpft",
+                        "BEIMBFD"
                     ]
                 ]
             ]
@@ -2858,31 +3433,11 @@
         "PatOnsetR",
         {
             "0": [
-                118049,
+                67291,
                 [
-                    [
-                        "Prozent",
-                        "DBMO/ʃGE+ND"
-                    ],
-                    [
-                        "Euro",
-                        "EU/SMO"
-                    ],
                     [
                         "drei",
                         "DMEI"
-                    ],
-                    [
-                        "rund",
-                        "SMUND"
-                    ],
-                    [
-                        "weitere",
-                        "F+EI/D+E/SME"
-                    ],
-                    [
-                        "wäre",
-                        "F+Ä/SME"
                     ],
                     [
                         "Freitag",
@@ -2897,26 +3452,6 @@
                         "DLUMB"
                     ],
                     [
-                        "zurück",
-                        "ʃGU/SMÜ+G"
-                    ],
-                    [
-                        "darauf",
-                        "DA/SMAUF"
-                    ],
-                    [
-                        "gerade",
-                        "GE/SMA/DE"
-                    ],
-                    [
-                        "Virus",
-                        "FBLI/SMUS"
-                    ],
-                    [
-                        "April",
-                        "A+B/SMIL"
-                    ],
-                    [
                         "Grund",
                         "GMUND"
                     ],
@@ -2925,40 +3460,12 @@
                         "DBMÄ/SI/DE+ND"
                     ],
                     [
-                        "Richtung",
-                        "SMI+ʃ/D+UMG"
-                    ],
-                    [
-                        "Europa",
-                        "EU/SMO/B+A"
-                    ],
-                    [
                         "aufgrund",
                         "AUF/GMUND"
                     ],
                     [
-                        "daran",
-                        "DA/SMAN"
-                    ],
-                    [
                         "gebracht",
                         "GE/BMA+ʃD"
-                    ],
-                    [
-                        "richtig",
-                        "SMI+ʃ/D+IG"
-                    ],
-                    [
-                        "Quarantäne",
-                        "FG+A/SMAN/D+Ä/NE"
-                    ],
-                    [
-                        "direkt",
-                        "DI/SME+GD"
-                    ],
-                    [
-                        "Region",
-                        "SME/GI/ON"
                     ],
                     [
                         "Kritik",
@@ -2997,14 +3504,6 @@
                         "LAND/DGMEIS"
                     ],
                     [
-                        "darum",
-                        "DA/SMUM"
-                    ],
-                    [
-                        "Raum",
-                        "SMAUM"
-                    ],
-                    [
                         "Franken",
                         "FMAN/G+EN"
                     ],
@@ -3017,16 +3516,8 @@
                         "DLEF/FEN"
                     ],
                     [
-                        "warum",
-                        "F+A/SMUM"
-                    ],
-                    [
                         "schreibt",
                         "DʃMEI+BD"
-                    ],
-                    [
-                        "Gericht",
-                        "GE/SMI+ʃD"
                     ],
                     [
                         "sprach",
@@ -3057,28 +3548,8 @@
                         "G+ON/DLOL/LE"
                     ],
                     [
-                        "recht",
-                        "SME+ʃD"
-                    ],
-                    [
                         "Grad",
                         "GMAD"
-                    ],
-                    [
-                        "heraus",
-                        "SNE/SMAUS"
-                    ],
-                    [
-                        "rechnen",
-                        "SME+ʃ/NEN"
-                    ],
-                    [
-                        "Interesse",
-                        "IN/D+E/SMES/SE"
-                    ],
-                    [
-                        "darin",
-                        "DA/SMIN"
                     ],
                     [
                         "Streit",
@@ -3093,16 +3564,8 @@
                         "DBMÄ/SI/DEN/D+EN"
                     ],
                     [
-                        "Risiko",
-                        "SMI/SI/G+O"
-                    ],
-                    [
                         "Ausbreitung",
                         "AUS/BMEI/D+UMG"
-                    ],
-                    [
-                        "Paris",
-                        "B+A/SMIS"
                     ],
                     [
                         "Gruppen",
@@ -3117,24 +3580,12 @@
                         "AN/DLAG"
                     ],
                     [
-                        "schwere",
-                        "ʃBE/SME"
-                    ],
-                    [
                         "trägt",
                         "DLÄ+GD"
                     ],
                     [
-                        "weiteres",
-                        "F+EI/D+E/SMES"
-                    ],
-                    [
                         "dringend",
                         "DMIN/GEND"
-                    ],
-                    [
-                        "übrigens",
-                        "ÜB/SMI/GENS"
                     ],
                     [
                         "Branche",
@@ -3153,16 +3604,8 @@
                         "GE/FMA+GD"
                     ],
                     [
-                        "Regel",
-                        "SME/GEL"
-                    ],
-                    [
                         "Gespräche",
                         "GE/SBLÄ/ʃ+E"
-                    ],
-                    [
-                        "geraten",
-                        "GE/SMA/D+EN"
                     ],
                     [
                         "Beitrag",
@@ -3185,10 +3628,6 @@
                         "DLUMBS"
                     ],
                     [
-                        "rechnet",
-                        "SME+ʃ/NE+D"
-                    ],
-                    [
                         "frühere",
                         "FMÜ/SNE/SME"
                     ],
@@ -3197,32 +3636,12 @@
                         "DMI+D/D+E"
                     ],
                     [
-                        "richtige",
-                        "SMI+ʃ/D+I/GE"
-                    ],
-                    [
-                        "reicht",
-                        "SMEI+ʃD"
-                    ],
-                    [
-                        "Nachrichten",
-                        "NA+ʃ/SMI+ʃ/D+EN"
-                    ],
-                    [
                         "britische",
                         "BMI/D+I/ʃE"
                     ],
                     [
-                        "Nachricht",
-                        "NA+ʃ/SMI+ʃD"
-                    ],
-                    [
                         "Zentrum",
                         "ʃGEN/DLUM"
-                    ],
-                    [
-                        "relativ",
-                        "SME/LA/D+IF"
                     ],
                     [
                         "Sprecherin",
@@ -3237,28 +3656,184 @@
                         "DLAF"
                     ],
                     [
-                        "daraufhin",
-                        "DA/SMAUF/SNIN"
-                    ],
-                    [
                         "privaten",
                         "DBMI/FBLA/D+EN"
                     ],
                     [
-                        "Tore",
-                        "D+O/SME"
+                        "Anspruch",
+                        "AN/SBLU+ʃ"
                     ],
                     [
-                        "Rassismus",
-                        "SMAS/SIS/MUS"
+                        "Auftrag",
+                        "AUF/DLAG"
                     ],
                     [
-                        "Zeitraum",
-                        "ʃGEI+D/SMAUM"
+                        "Umfrage",
+                        "UM/FMA/GE"
                     ],
                     [
-                        "Zürich",
-                        "ʃGÜ/SMI+ʃ"
+                        "entsprechend",
+                        "E+ND/SBLE/ʃ+END"
+                    ],
+                    [
+                        "Eindruck",
+                        "EIN/DMU+G"
+                    ],
+                    [
+                        "treten",
+                        "DLE/D+EN"
+                    ],
+                    [
+                        "betrifft",
+                        "BE/DLI+FD"
+                    ],
+                    [
+                        "Krankheit",
+                        "DGMAMN/SNEI+D"
+                    ],
+                    [
+                        "beträgt",
+                        "BE/DLÄ+GD"
+                    ],
+                    [
+                        "Ausbruch",
+                        "AUS/BMU+ʃ"
+                    ],
+                    [
+                        "Grundlage",
+                        "GMUND/LA/GE"
+                    ],
+                    [
+                        "Freiheit",
+                        "FMEI/SNEI+D"
+                    ],
+                    [
+                        "Trend",
+                        "DLEND"
+                    ],
+                    [
+                        "Freitagabend",
+                        "FMEI/D+AG/A/BEND"
+                    ],
+                    [
+                        "brauche",
+                        "BMAU/ʃ+E"
+                    ],
+                    [
+                        "entspricht",
+                        "E+ND/SBLI+ʃD"
+                    ],
+                    [
+                        "private",
+                        "DBMI/FBLA/D+E"
+                    ],
+                    [
+                        "Sprache",
+                        "SBLA/ʃ+E"
+                    ],
+                    [
+                        "Praxis",
+                        "DBMA/DSGIS"
+                    ],
+                    [
+                        "Freundin",
+                        "FMEUN/DIN"
+                    ],
+                    [
+                        "Eintracht",
+                        "EIN/DLA+ʃD"
+                    ],
+                    [
+                        "Brüssel",
+                        "BMÜS/SEL"
+                    ],
+                    [
+                        "trat",
+                        "DLA+D"
+                    ],
+                    [
+                        "praktisch",
+                        "DBMA+G/D+Iʃ"
+                    ],
+                    [
+                        "Strom",
+                        "DSMOM"
+                    ],
+                    [
+                        "geprüft",
+                        "GE/DBMÜ+FD"
+                    ],
+                    [
+                        "Migranten",
+                        "MI/GMAN/D+EN"
+                    ],
+                    [
+                        "fragt",
+                        "FMA+GD"
+                    ],
+                    [
+                        "gegründet",
+                        "GE/GMÜN/DE+D"
+                    ],
+                    [
+                        "kritisch",
+                        "DGMI/D+Iʃ"
+                    ],
+                    [
+                        "freue",
+                        "FMEU/E"
+                    ],
+                    [
+                        "eingeschränkt",
+                        "EIN/GE/DʃMÄMND"
+                    ],
+                    [
+                        "trug",
+                        "DLUG"
+                    ],
+                    [
+                        "Franz",
+                        "FMAMGʃ"
+                    ],
+                    [
+                        "antreten",
+                        "AN/DLE/D+EN"
+                    ],
+                    [
+                        "französische",
+                        "FMAN/ʃGÄO/SI/ʃE"
+                    ],
+                    [
+                        "betreut",
+                        "BE/DLEU+D"
+                    ],
+                    [
+                        "dran",
+                        "DMAN"
+                    ],
+                    [
+                        "Dresden",
+                        "DMES/DEN"
+                    ],
+                    [
+                        "drohen",
+                        "DMO/SNEN"
+                    ],
+                    [
+                        "konkrete",
+                        "G+ON/DGME/D+E"
+                    ],
+                    [
+                        "Prinz",
+                        "DBMIMGʃ"
+                    ],
+                    [
+                        "zentrale",
+                        "ʃGEN/DLA/LE"
+                    ],
+                    [
+                        "Prüfung",
+                        "DBMÜ/FUMG"
                     ]
                 ]
             ]
@@ -3268,7 +3843,7 @@
         "PatOnsetL",
         {
             "0": [
-                11080,
+                11118,
                 [
                     [
                         "geplant",
@@ -3436,7 +4011,7 @@
                     ],
                     [
                         "Exemplare",
-                        "EGSD/EM/DBLA/SME"
+                        "E/DSGEM/DBLA/SME"
                     ],
                     [
                         "Klimawandels",
@@ -3564,7 +4139,7 @@
                     ],
                     [
                         "klimaneutral",
-                        "DGLI/MA/NEU+D/SMAL"
+                        "DGLI/MA/NEU/DLAL"
                     ],
                     [
                         "Triple",
@@ -3678,7 +4253,7 @@
         "PatSmallS",
         {
             "0": [
-                2910,
+                2986,
                 [
                     [
                         "Test",
@@ -3925,6 +4500,10 @@
                         "EIN/G+AUFs/DBMEIS"
                     ],
                     [
+                        "Kampfs",
+                        "G+AMBFs"
+                    ],
+                    [
                         "Bungalows",
                         "BUN/GA/LOFs"
                     ],
@@ -4075,15 +4654,11 @@
                     [
                         "Notenbankchefs",
                         "NO/D+EN/BAMN/ʃ+EFs"
-                    ],
-                    [
-                        "Hilfsmöglichkeiten",
-                        "SNILFs/MÄOG/LI+ʃ/G+EI/D+EN"
                     ]
                 ]
             ],
             "6": [
-                276,
+                277,
                 [
                     [
                         "freie",
@@ -4414,6 +4989,10 @@
                         "DMEIs/G+ES"
                     ],
                     [
+                        "Kampfschreie",
+                        "G+AMBF/DʃMEIs"
+                    ],
+                    [
                         "Nackedeie",
                         "NA/G+E/DEIs"
                     ],
@@ -4480,10 +5059,6 @@
                     [
                         "koffeinfreie",
                         "G+OF/FEIN/FMEIs"
-                    ],
-                    [
-                        "kraftmeierische",
-                        "DGMAFD/MEIs/SMI/ʃE"
                     ]
                 ]
             ]
@@ -4493,7 +5068,7 @@
         "PatDiConsonant",
         {
             "0": [
-                38124,
+                38616,
                 [
                     [
                         "kann",
@@ -4556,6 +5131,10 @@
                         "MUSs/D+E"
                     ],
                     [
+                        "schnell",
+                        "ʃNEL"
+                    ],
+                    [
                         "statt",
                         "DSA+D"
                     ],
@@ -4566,6 +5145,10 @@
                     [
                         "wollte",
                         "F+OL/D+E"
+                    ],
+                    [
+                        "aktuell",
+                        "A+G/D+U/EL"
                     ],
                     [
                         "konnten",
@@ -4596,6 +5179,10 @@
                         "NIMD"
                     ],
                     [
+                        "Gesellschaft",
+                        "GE/SEL/ʃA+FD"
+                    ],
+                    [
                         "müssten",
                         "MÜSs/D+EN"
                     ],
@@ -4612,6 +5199,14 @@
                         "FÄLD"
                     ],
                     [
+                        "Unfall",
+                        "UN/FAL"
+                    ],
+                    [
+                        "Ball",
+                        "BAL"
+                    ],
+                    [
                         "Russland",
                         "SMUSs/LAND"
                     ],
@@ -4624,6 +5219,10 @@
                         "F+OL/D+EN"
                     ],
                     [
+                        "voll",
+                        "FBLOL"
+                    ],
+                    [
                         "Hoffnung",
                         "SNOF/NUMG"
                     ],
@@ -4634,6 +5233,10 @@
                     [
                         "sogenannten",
                         "SO/GE/NAN/D+EN"
+                    ],
+                    [
+                        "all",
+                        "AL"
                     ],
                     [
                         "App",
@@ -4658,6 +5261,10 @@
                     [
                         "müsste",
                         "MÜSs/D+E"
+                    ],
+                    [
+                        "Impfstoff",
+                        "IMBF/DSOF"
                     ],
                     [
                         "Abschluss",
@@ -4862,72 +5469,12 @@
                     [
                         "abgestimmt",
                         "AB/GE/DSIMD"
-                    ],
-                    [
-                        "Ausschuss",
-                        "AUS/ʃUSs"
-                    ],
-                    [
-                        "Stress",
-                        "DSMESs"
-                    ],
-                    [
-                        "Mannheim",
-                        "MAN/SNEIM"
-                    ],
-                    [
-                        "gesellschaftliche",
-                        "GE/SEL/ʃA+FD/LI/ʃ+E"
-                    ],
-                    [
-                        "Kabinett",
-                        "G+A/BI/NE+D"
-                    ],
-                    [
-                        "schlimmsten",
-                        "ʃLIMS/D+EN"
-                    ],
-                    [
-                        "anlässlich",
-                        "AN/LÄSs/LI+ʃ"
-                    ],
-                    [
-                        "Blatt",
-                        "BLA+D"
                     ]
                 ]
             ],
             "4": [
-                817,
+                810,
                 [
-                    [
-                        "schnell",
-                        "ʃNEL"
-                    ],
-                    [
-                        "aktuell",
-                        "A+G/D+U/EL"
-                    ],
-                    [
-                        "Gesellschaft",
-                        "GE/SEL/ʃAFD"
-                    ],
-                    [
-                        "Unfall",
-                        "UN/FAL"
-                    ],
-                    [
-                        "Ball",
-                        "BAL"
-                    ],
-                    [
-                        "voll",
-                        "FOL"
-                    ],
-                    [
-                        "all",
-                        "AL"
-                    ],
                     [
                         "offiziell",
                         "OF/FI/ʃGI/EL"
@@ -5299,11 +5846,39 @@
                     [
                         "stillstehen",
                         "DSIL/DSE/SNEN"
+                    ],
+                    [
+                        "Karussell",
+                        "G+A/SMUS/SEL"
+                    ],
+                    [
+                        "originell",
+                        "O/SMI/GI/NEL"
+                    ],
+                    [
+                        "industriell",
+                        "IN/DUSD/SMI/EL"
+                    ],
+                    [
+                        "hellhörig",
+                        "SNEL/SNÄO/SMIG"
+                    ],
+                    [
+                        "Hausmüll",
+                        "SNAUS/MÜL"
+                    ],
+                    [
+                        "intellektuell",
+                        "IN/D+EL/LE+G/D+U/EL"
+                    ],
+                    [
+                        "Kristallkugel",
+                        "DGMIS/D+AL/G+U/GEL"
                     ]
                 ]
             ],
             "3": [
-                424,
+                320,
                 [
                     [
                         "gestoppt",
@@ -5328,10 +5903,6 @@
                     [
                         "Boss",
                         "BOS"
-                    ],
-                    [
-                        "Wettkämpfe",
-                        "F+ED/G+ÄMB/FE"
                     ],
                     [
                         "Watt",
@@ -5526,10 +6097,6 @@
                         "B+AS/G+OND/SMOL/LE"
                     ],
                     [
-                        "Wettkampfes",
-                        "F+ED/G+AMB/FES"
-                    ],
-                    [
                         "ausgeflippt",
                         "AUS/GE/FLIBD"
                     ],
@@ -5548,10 +6115,6 @@
                     [
                         "aufgeschnappt",
                         "AUF/GE/ʃNABD"
-                    ],
-                    [
-                        "Bosskämpfe",
-                        "BOS/G+ÄMB/FE"
                     ],
                     [
                         "gekidnappt",
@@ -5588,14 +6151,6 @@
                     [
                         "nippt",
                         "NIBD"
-                    ],
-                    [
-                        "Schlussakt",
-                        "ʃLUS/A+GD"
-                    ],
-                    [
-                        "Hassobjekt",
-                        "SNAS/OB/FNE+GD"
                     ],
                     [
                         "hochgeklappt",
@@ -5704,6 +6259,26 @@
                     [
                         "schnippt",
                         "ʃNIBD"
+                    ],
+                    [
+                        "abgetippt",
+                        "AB/GE/D+IBD"
+                    ],
+                    [
+                        "aufgepoppt",
+                        "AUF/GE/B+OBD"
+                    ],
+                    [
+                        "gekloppt",
+                        "GE/DGLOBD"
+                    ],
+                    [
+                        "pappt",
+                        "B+ABD"
+                    ],
+                    [
+                        "kloppt",
+                        "DGLOBD"
                     ]
                 ]
             ]
@@ -5713,7 +6288,7 @@
         "PatCodaH",
         {
             "0": [
-                66246,
+                66868,
                 [
                     [
                         "geht",
@@ -5842,10 +6417,6 @@
                     [
                         "bietet",
                         "B~I/D+E+D"
-                    ],
-                    [
-                        "Studie",
-                        "DSU/D~I"
                     ],
                     [
                         "spielt",
@@ -6114,11 +6685,15 @@
                     [
                         "Einführung",
                         "EIN/F~Ü/SMUMG"
+                    ],
+                    [
+                        "Ausnahme",
+                        "AUS/NAÜ/ME"
                     ]
                 ]
             ],
             "3": [
-                573,
+                393,
                 [
                     [
                         "die",
@@ -6213,10 +6788,6 @@
                         "E/LE+GD/SMO/IN/DUSD/SMI"
                     ],
                     [
-                        "Auftaktspiel",
-                        "AUF/D+A+GD/SB+IL"
-                    ],
-                    [
                         "Biene",
                         "BI/NE"
                     ],
@@ -6287,10 +6858,6 @@
                     [
                         "Telefonie",
                         "D+E/LE/FO/NI"
-                    ],
-                    [
-                        "Auftaktsieg",
-                        "AUF/D+A+GD/SIG"
                     ],
                     [
                         "Astronomie",
@@ -6393,10 +6960,6 @@
                         "IN/DUSD/SMI/ʃGO/NE"
                     ],
                     [
-                        "Zielkonflikt",
-                        "ʃGIL/G+ON/FLI+GD"
-                    ],
-                    [
                         "Otfried",
                         "OD/FMID"
                     ],
@@ -6417,16 +6980,8 @@
                         "ʃGIL/B+UMND"
                     ],
                     [
-                        "Konfliktgebiet",
-                        "G+ON/FLI+GD/GE/BID"
-                    ],
-                    [
                         "Industriekaufmann",
                         "IN/DUSD/SMI/G+AUF/MAN"
-                    ],
-                    [
-                        "Konfliktgebieten",
-                        "G+ON/FLI+GD/GE/BI/D+EN"
                     ],
                     [
                         "Astrologie",
@@ -6473,20 +7028,8 @@
                         "IN/DUSD/SMI/G+AUF/FMAU"
                     ],
                     [
-                        "Regierungspakt",
-                        "SME/GI/SMUMGS/B+A+GD"
-                    ],
-                    [
                         "Fallbeispiel",
                         "FAL/BEI/SB+IL"
-                    ],
-                    [
-                        "Konfliktlinie",
-                        "G+ON/FLI+GD/LI/NI"
-                    ],
-                    [
-                        "Mietobjekt",
-                        "MID/OB/FNE+GD"
                     ],
                     [
                         "Manie",
@@ -6517,8 +7060,40 @@
                         "BAD/D+E/SMI/E/LE+GD/SMIʃ"
                     ],
                     [
-                        "Kontaktlinie",
-                        "G+ON/D+A+GD/LI/NI"
+                        "Indoktrinierung",
+                        "IN/DO+GD/SMI/NI/SMUMG"
+                    ],
+                    [
+                        "geriete",
+                        "GE/SMI/D+E"
+                    ],
+                    [
+                        "zufriedengestellt",
+                        "ʃGU/FMI/DEN/GE/DSELD"
+                    ],
+                    [
+                        "friedvoll",
+                        "FMID/FOL"
+                    ],
+                    [
+                        "Industriebau",
+                        "IN/DUSD/SMI/BAU"
+                    ],
+                    [
+                        "lieg",
+                        "LIG"
+                    ],
+                    [
+                        "Industrieanlage",
+                        "IN/DUSD/SMI/AN/LA/GE"
+                    ],
+                    [
+                        "Punktspielsaison",
+                        "B+UMND/SB+IL/SAI/SON"
+                    ],
+                    [
+                        "Holzbiene",
+                        "SNOLGʃ/BI/NE"
                     ]
                 ]
             ]
@@ -6528,7 +7103,7 @@
         "PatCodaR",
         {
             "0": [
-                395150,
+                396761,
                 [
                     [
                         "der",
@@ -6972,7 +7547,7 @@
         "PatCodaRR",
         {
             "0": [
-                2565,
+                2573,
                 [
                     [
                         "gesperrt",
@@ -7382,7 +7957,7 @@
         "PatCodaHR",
         {
             "0": [
-                18619,
+                18696,
                 [
                     [
                         "mehr",
@@ -7889,7 +8464,7 @@
                 ]
             ],
             "1": [
-                3180,
+                3184,
                 [
                     [
                         "Stadt",
@@ -8299,7 +8874,7 @@
         "PatDiphtong",
         {
             "0": [
-                2393,
+                2396,
                 [
                     [
                         "Weihnachten",
@@ -8704,7 +9279,7 @@
                 ]
             ],
             "4": [
-                1965,
+                1970,
                 [
                     [
                         "tue",
@@ -9109,7 +9684,7 @@
                 ]
             ],
             "5": [
-                2510,
+                2511,
                 [
                     [
                         "Beamten",
@@ -9924,7 +10499,7 @@
         "PatReplC",
         {
             "0": [
-                7883,
+                7901,
                 [
                     [
                         "Corona",
@@ -10334,7 +10909,7 @@
         "PatSZ",
         {
             "0": [
-                16302,
+                16473,
                 [
                     [
                         "große",
@@ -10383,6 +10958,10 @@
                     [
                         "großer",
                         "GM~O/S+EÜ"
+                    ],
+                    [
+                        "Fußball",
+                        "F~U+S/BAL"
                     ],
                     [
                         "regelmäßig",
@@ -10731,20 +11310,12 @@
                     [
                         "mutmaßlicher",
                         "MU+D/MAÜ+S/LI/ʃ+EÜ"
-                    ],
-                    [
-                        "Erschließung",
-                        "EÜ/ʃL~I/S+UMG"
                     ]
                 ]
             ],
             "1": [
-                427,
+                306,
                 [
-                    [
-                        "Fußball",
-                        "F~US/BAL"
-                    ],
                     [
                         "Großstadt",
                         "GM~OS/DSAD"
@@ -10756,10 +11327,6 @@
                     [
                         "Fußballspieler",
                         "F~US/BAL/SB+I/LEÜ"
-                    ],
-                    [
-                        "Marktstraße",
-                        "MAÜ+GD/DSMAÜ/SE"
                     ],
                     [
                         "Schnellstraße",
@@ -10792,10 +11359,6 @@
                     [
                         "Fußballfan",
                         "F~US/BAL/FAN"
-                    ],
-                    [
-                        "Großmarkt",
-                        "GM~OS/MAÜ+GD"
                     ],
                     [
                         "Fußballclub",
@@ -10858,10 +11421,6 @@
                         "DSAD/DSMAÜ/SE"
                     ],
                     [
-                        "Stoßdämpfer",
-                        "DS~OS/DÄMB/FEÜ"
-                    ],
-                    [
                         "Großindustrie",
                         "GM~OS/IN/DUSD/SMI"
                     ],
@@ -10886,20 +11445,12 @@
                         "SB+AÜS/GE/SEL/ʃAFD"
                     ],
                     [
-                        "Großmarkthalle",
-                        "GM~OS/MAÜ+GD/SNAL/LE"
-                    ],
-                    [
                         "Fußballtennis",
                         "F~US/BAL/D+EN/NIS"
                     ],
                     [
                         "Ausfallstraße",
                         "AUS/FAL/DSMAÜ/SE"
-                    ],
-                    [
-                        "Holzmarktstraße",
-                        "SNOLGʃ/MAÜ+GD/DSMAÜ/SE"
                     ],
                     [
                         "Großstadtdschungel",
@@ -10910,16 +11461,8 @@
                         "AN/DMEÜS/DSMAÜ/SE"
                     ],
                     [
-                        "Fußkontakt",
-                        "F~US/G+ON/D+A+GD"
-                    ],
-                    [
                         "Fußballspielerin",
                         "F~US/BAL/SB+I/LE/SMIN"
-                    ],
-                    [
-                        "Großhandelsmarkt",
-                        "GM~OS/SNAN/DELS/MAÜ+GD"
                     ],
                     [
                         "Großstadtreviers",
@@ -10950,20 +11493,8 @@
                         "BMAÜ/SMEI/DSMAÜ/SE"
                     ],
                     [
-                        "Fußballmarkt",
-                        "F~US/BAL/MAÜ+GD"
-                    ],
-                    [
                         "Weißpunkt",
                         "F+EIS/B+UMND"
-                    ],
-                    [
-                        "Stoßdämpfern",
-                        "DS~OS/DÄMB/FEÜN"
-                    ],
-                    [
-                        "Marktgröße",
-                        "MAÜ+GD/GMÄO/SE"
                     ],
                     [
                         "Reinhardtstraße",
@@ -11010,10 +11541,6 @@
                         "GM~OS/DSAD/LE/BENS"
                     ],
                     [
-                        "Markterschließung",
-                        "MAÜ+GD/EÜ/ʃL~I/SUMG"
-                    ],
-                    [
                         "maßgenaue",
                         "MAÜS/GE/NAÜ"
                     ],
@@ -11046,14 +11573,6 @@
                         "GM~OS/DSAD/MENʃ"
                     ],
                     [
-                        "Klumpfuß",
-                        "DGLUMB/F~US"
-                    ],
-                    [
-                        "respekteinflößend",
-                        "SME/SB+E+GD/EIN/FLÄO/SEND"
-                    ],
-                    [
                         "Großstadtkind",
                         "GM~OS/DSAD/G+IND"
                     ],
@@ -11062,16 +11581,8 @@
                         "GM~OS/DSAD/SMO/MAN"
                     ],
                     [
-                        "Stoßdämpfung",
-                        "DS~OS/DÄMB/FUMG"
-                    ],
-                    [
                         "Großstadtjunge",
                         "GM~OS/DSAD/FNUN/GE"
-                    ],
-                    [
-                        "Lebensmittelgroßmarkt",
-                        "LE/BENS/MID/D+EL/GM~OS/MAÜ+GD"
                     ],
                     [
                         "Stadtfeldstraße",
@@ -11080,14 +11591,6 @@
                     [
                         "Stadtholzstraße",
                         "DSAD/SNOLGʃ/DSMAÜ/SE"
-                    ],
-                    [
-                        "Erzeugergroßmarkt",
-                        "EÜ/ʃGEU/GEÜ/GM~OS/MAÜ+GD"
-                    ],
-                    [
-                        "Fleischgroßmarkt",
-                        "FLEIʃ/GM~OS/MAÜ+GD"
                     ],
                     [
                         "Großstadtluft",
@@ -11130,16 +11633,88 @@
                         "A+/DSAD/DSMAÜ/SE"
                     ],
                     [
-                        "Bußakt",
-                        "B~US/A+GD"
-                    ],
-                    [
                         "Dorferneuerungsmaßnahme",
                         "D~OF/EÜ/NEÜ/SMUMGS/MAÜS/NAÜ/ME"
                     ],
                     [
                         "Großstadtgeschichte",
                         "GM~OS/DSAD/GE/ʃI+ʃ/D+E"
+                    ],
+                    [
+                        "Großstadtstress",
+                        "GM~OS/DSAD/DSMESs"
+                    ],
+                    [
+                        "Großstadttrubels",
+                        "GM~OS/DSAD/DLU/BELS"
+                    ],
+                    [
+                        "Punktgröße",
+                        "B+UMND/GMÄO/SE"
+                    ],
+                    [
+                        "Standfußball",
+                        "DSAND/F~US/BAL"
+                    ],
+                    [
+                        "Fußfall",
+                        "F~US/FAL"
+                    ],
+                    [
+                        "Großstadthelden",
+                        "GM~OS/DSAD/SNEL/DEN"
+                    ],
+                    [
+                        "Großstadtlyrik",
+                        "GM~OS/DSAD/LÄI/SMI+G"
+                    ],
+                    [
+                        "Großstadtnähe",
+                        "GM~OS/DSAD/NÄ/SNE"
+                    ],
+                    [
+                        "Großstadtpolizei",
+                        "GM~OS/DSAD/B+O/LI/ʃGEI"
+                    ],
+                    [
+                        "Großstadtstraße",
+                        "GM~OS/DSAD/DSMAÜ/SE"
+                    ],
+                    [
+                        "elftgrößten",
+                        "ELFD/GMÄOS/D+EN"
+                    ],
+                    [
+                        "großindustriell",
+                        "GM~OS/IN/DUSD/SMI/EL"
+                    ],
+                    [
+                        "schweißgetränkt",
+                        "ʃBEIS/GE/DLÄMND"
+                    ],
+                    [
+                        "schwerpunktmäßiges",
+                        "ʃBEÜ/B+UMND/MÄÜ/SI/GES"
+                    ],
+                    [
+                        "Anstoßzeitpunkt",
+                        "AN/DS~OS/ʃGEID/B+UMND"
+                    ],
+                    [
+                        "Fußsteuerung",
+                        "F~US/DSEÜ/SMUMG"
+                    ],
+                    [
+                        "Großhirnareale",
+                        "GM~OS/SN~IN/A/SMEÜ/LE"
+                    ],
+                    [
+                        "Großstadtgebiete",
+                        "GM~OS/DSAD/GE/B~I/D+E"
+                    ],
+                    [
+                        "Großstadtgetriebe",
+                        "GM~OS/DSAD/GE/DL~I/BE"
                     ]
                 ]
             ]
@@ -11450,7 +12025,7 @@
                 ]
             ],
             "4": [
-                12426,
+                12443,
                 [
                     [
                         "Borussia",
@@ -11860,7 +12435,7 @@
         "PatSwapS",
         {
             "0": [
-                34425,
+                34771,
                 [
                     [
                         "Tests",
@@ -11929,6 +12504,10 @@
                     [
                         "Schiedsrichter",
                         "ʃ~ISD/SMI+ʃ/D+EÜ"
+                    ],
+                    [
+                        "Arbeitsmarkt",
+                        "AÜ/BEI+SD/MAÜ+GD"
                     ],
                     [
                         "Gesundheitssystem",
@@ -12257,15 +12836,11 @@
                     [
                         "Aufenthaltsort",
                         "AUF/E+ND/SNALSD/~O+D"
-                    ],
-                    [
-                        "Arbeitsminister",
-                        "AÜ/BEI+SD/MI/NIS/D+EÜ"
                     ]
                 ]
             ],
             "2": [
-                59074,
+                59284,
                 [
                     [
                         "ist",
@@ -12670,12 +13245,8 @@
                 ]
             ],
             "3": [
-                1622,
+                1380,
                 [
-                    [
-                        "Arbeitsmarkt",
-                        "AÜ/BEISD/MAÜ+GD"
-                    ],
                     [
                         "Arbeitsalltag",
                         "AÜ/BEISD/AL/D+AG"
@@ -12721,16 +13292,8 @@
                         "ʃGU/FAÜ+SD/DSMAÜ/SE"
                     ],
                     [
-                        "Arbeitsmarktdaten",
-                        "AÜ/BEISD/MAÜ+GD/DA/D+EN"
-                    ],
-                    [
                         "Wallfahrtskirche",
                         "F+AL/FAÜ+SD/G+~I/ʃ+E"
-                    ],
-                    [
-                        "Arbeitsmarktpolitik",
-                        "AÜ/BEISD/MAÜ+GD/B+O/LI/D+I+G"
                     ],
                     [
                         "Hochzeitsgesellschaft",
@@ -12739,10 +13302,6 @@
                     [
                         "realitätsfern",
                         "SMEÜ/LI/D+ÄSD/FEÜN"
-                    ],
-                    [
-                        "Adventsmarkt",
-                        "AD/FENSD/MAÜ+GD"
                     ],
                     [
                         "Bundesratsinitiative",
@@ -12761,10 +13320,6 @@
                         "NA/D+O/NAL/SMASD/SID/ʃGUMG"
                     ],
                     [
-                        "Freiheitskämpfer",
-                        "FMEI/SNEISD/G+ÄMB/FEÜ"
-                    ],
-                    [
                         "Sicherheitsbeamten",
                         "SI/ʃ+EÜ/SNEISD/BEÜM/D+EN"
                     ],
@@ -12773,16 +13328,8 @@
                         "SNIM/MEL/FAÜ+SD/D+AG"
                     ],
                     [
-                        "Marktforschungsinstituts",
-                        "MAÜ+GD/F~O/ʃUMGS/IN/DSI/D+USD"
-                    ],
-                    [
                         "Schifffahrtsamt",
                         "ʃIF/FAÜ+SD/AMD"
-                    ],
-                    [
-                        "arbeitsmarktpolitische",
-                        "AÜ/BEISD/MAÜ+GD/B+O/LI/D+I/ʃE"
                     ],
                     [
                         "Abfahrtszeiten",
@@ -12801,20 +13348,12 @@
                         "MIN/DEÜ/SNEISD/A+G/D+O/NÄ/SME"
                     ],
                     [
-                        "Stabilitätspakt",
-                        "DSA/BI/LI/D+ÄSD/B+A+GD"
-                    ],
-                    [
                         "Himmelfahrtskommando",
                         "SNIM/MEL/FAÜ+SD/G+OM/MAN/DO"
                     ],
                     [
                         "Freiheitsstatue",
                         "FMEI/SNEISD/DSA/D+Ü"
-                    ],
-                    [
-                        "Hochsicherheitstrakt",
-                        "SNO+ʃ/SI/ʃ+EÜ/SNEISD/DLA+GD"
                     ],
                     [
                         "realitätsnah",
@@ -12857,14 +13396,6 @@
                         "SNÄO/SNE/B+UMNSD"
                     ],
                     [
-                        "Gesundheitsmarkt",
-                        "GE/SUND/SNEISD/MAÜ+GD"
-                    ],
-                    [
-                        "Sicherheitsempfinden",
-                        "SI/ʃ+EÜ/SNEISD/EMB/FIN/DEN"
-                    ],
-                    [
                         "Zufahrtswege",
                         "ʃGU/FAÜ+SD/F+E/GE"
                     ],
@@ -12873,20 +13404,8 @@
                         "E/LE+GD/SMI/ʃGI/D+ÄSD/F+EÜ+G"
                     ],
                     [
-                        "Sicherheitsaspekt",
-                        "SI/ʃ+EÜ/SNEISD/AS/B+E+GD"
-                    ],
-                    [
-                        "Arbeitskämpfe",
-                        "AÜ/BEISD/G+ÄMB/FE"
-                    ],
-                    [
                         "Sicherheitsbeamter",
                         "SI/ʃ+EÜ/SNEISD/BEÜM/D+EÜ"
-                    ],
-                    [
-                        "Arbeitsmarktexperten",
-                        "AÜ/BEISD/MAÜ+GD/EGSD/B+EÜ/D+EN"
                     ],
                     [
                         "Abfahrtssieg",
@@ -12909,14 +13428,6 @@
                         "D+A/BLESD"
                     ],
                     [
-                        "Gerechtigkeitsempfinden",
-                        "GE/SME+ʃ/D+IG/G+EISD/EMB/FIN/DEN"
-                    ],
-                    [
-                        "Arbeitsmarktexperte",
-                        "AÜ/BEISD/MAÜ+GD/EGSD/B+EÜ/D+E"
-                    ],
-                    [
                         "Auswärtspunkt",
                         "AUS/F+ÄÜSD/B+UMND"
                     ],
@@ -12927,10 +13438,6 @@
                     [
                         "Realitätscheck",
                         "SMEÜ/LI/D+ÄSD/ʃ+E+G"
-                    ],
-                    [
-                        "Arbeitsmarktlage",
-                        "AÜ/BEISD/MAÜ+GD/LA/GE"
                     ],
                     [
                         "realitätsferne",
@@ -12961,10 +13468,6 @@
                         "SMA/DO/SB+OSD"
                     ],
                     [
-                        "Arbeitsmarktstatistik",
-                        "AÜ/BEISD/MAÜ+GD/DSA/D+IS/D+I+G"
-                    ],
-                    [
                         "Abfahrtszeit",
                         "AB/FAÜ+SD/ʃGEID"
                     ],
@@ -12985,14 +13488,6 @@
                         "F~O/FAÜ+SD/SME/GELN"
                     ],
                     [
-                        "Arbeitsmarktforscher",
-                        "AÜ/BEISD/MAÜ+GD/F~O/ʃEÜ"
-                    ],
-                    [
-                        "Heiratsmarkt",
-                        "SNEI/SMASD/MAÜ+GD"
-                    ],
-                    [
                         "Testamentsvollstrecker",
                         "D+ES/D+A/MENSD/FOL/DSME/G+EÜ"
                     ],
@@ -13001,16 +13496,8 @@
                         "GE/SUND/SNEISD/BE/DIMGD"
                     ],
                     [
-                        "Arbeitsmarktchancen",
-                        "AÜ/BEISD/MAÜ+GD/ʃ+AN/DʃGEN"
-                    ],
-                    [
                         "Regionalparlaments",
                         "SME/GO/NAL/B+AÜ/LA/MENSD"
-                    ],
-                    [
-                        "Arbeitsmarktentwicklung",
-                        "AÜ/BEISD/MAÜ+GD/END/F+I+G/LUMG"
                     ],
                     [
                         "Realitätsnähe",
@@ -13033,20 +13520,8 @@
                         "SI/ʃ+EÜ/SNEISD/SB+E/ʃGA/LIS/D+EN"
                     ],
                     [
-                        "Arbeitsmarktexpertin",
-                        "AÜ/BEISD/MAÜ+GD/EGSD/B+EÜ/D+IN"
-                    ],
-                    [
-                        "Gesundheitsaspekt",
-                        "GE/SUND/SNEISD/AS/B+E+GD"
-                    ],
-                    [
                         "Vorfahrtsregel",
                         "F~O/FAÜ+SD/SME/GEL"
-                    ],
-                    [
-                        "Arbeitskampfes",
-                        "AÜ/BEISD/G+AMB/FES"
                     ],
                     [
                         "Durchfahrtsstraße",
@@ -13065,12 +13540,112 @@
                         "AÜ/BEISD/SMEÜ/LI/D+ÄD"
                     ],
                     [
-                        "Freiheitskämpferin",
-                        "FMEI/SNEISD/G+ÄMB/FE/SMIN"
-                    ],
-                    [
                         "Auffahrtsrampe",
                         "AUF/FAÜ+SD/SMAM/B+E"
+                    ],
+                    [
+                        "Nationalratsmandat",
+                        "NA/D+O/NAL/SMASD/MAN/DAD"
+                    ],
+                    [
+                        "Anfahrtszeiten",
+                        "AN/FAÜ+SD/ʃGEI/D+EN"
+                    ],
+                    [
+                        "Punkts",
+                        "B+UMNSD"
+                    ],
+                    [
+                        "Spotts",
+                        "SB+OSD"
+                    ],
+                    [
+                        "Durchfahrtshöhe",
+                        "D~U+ʃ/FAÜ+SD/SNÄO/SNE"
+                    ],
+                    [
+                        "Realitätsflucht",
+                        "SMEÜ/LI/D+ÄSD/FLU+ʃD"
+                    ],
+                    [
+                        "realitätsgetreu",
+                        "SMEÜ/LI/D+ÄSD/GE/DLEU"
+                    ],
+                    [
+                        "Schifffahrtskanal",
+                        "ʃIF/FAÜ+SD/G+A/NAL"
+                    ],
+                    [
+                        "arbeitsbedingt",
+                        "AÜ/BEISD/BE/DIMGD"
+                    ],
+                    [
+                        "qualitätsvoll",
+                        "FG+A/LI/D+ÄSD/FOL"
+                    ],
+                    [
+                        "Nationaltorwarts",
+                        "NA/D+O/NAL/D+~O/F+AÜSD"
+                    ],
+                    [
+                        "öffentlichkeitsscheue",
+                        "ÄOF/FEND/LI+ʃ/G+EISD/ʃEÜ"
+                    ],
+                    [
+                        "Abstracts",
+                        "ABS/DLA+GSD"
+                    ],
+                    [
+                        "Schifffahrtsindustrie",
+                        "ʃIF/FAÜ+SD/IN/DUS/DLI"
+                    ],
+                    [
+                        "Wallfahrtsorte",
+                        "F+AL/FAÜ+SD/~O/D+E"
+                    ],
+                    [
+                        "Zufahrtstor",
+                        "ʃGU/FAÜ+SD/D+~O"
+                    ],
+                    [
+                        "realitätsnäher",
+                        "SMEÜ/LI/D+ÄSD/NÄ/SNEÜ"
+                    ],
+                    [
+                        "realitätsnahes",
+                        "SMEÜ/LI/D+ÄSD/NA/SNES"
+                    ],
+                    [
+                        "Zufahrtsrampe",
+                        "ʃGU/FAÜ+SD/SMAM/B+E"
+                    ],
+                    [
+                        "Anfahrtskosten",
+                        "AN/FAÜ+SD/G+OS/D+EN"
+                    ],
+                    [
+                        "Schifffahrtsamts",
+                        "ʃIF/FAÜ+SD/AMSD"
+                    ],
+                    [
+                        "Sicherheitsspezialist",
+                        "SI/ʃ+EÜ/SNEISD/SB+E/ʃGA/LIs"
+                    ],
+                    [
+                        "Tätigkeitsschwerpunkt",
+                        "D+Ä/D+IG/G+EISD/ʃBEÜ/B+UMND"
+                    ],
+                    [
+                        "Abfahrtsrampe",
+                        "AB/FAÜ+SD/SMAM/B+E"
+                    ],
+                    [
+                        "Abfahrtsstrecke",
+                        "AB/FAÜ+SD/DSME/G+E"
+                    ],
+                    [
+                        "Zufahrtsmöglichkeiten",
+                        "ʃGU/FAÜ+SD/MÄOG/LI+ʃ/G+EI/D+EN"
                     ]
                 ]
             ]
@@ -13485,7 +14060,7 @@
                 ]
             ],
             "2": [
-                7824,
+                7840,
                 [
                     [
                         "nichts",
@@ -13895,7 +14470,7 @@
         "PatSwapZ",
         {
             "0": [
-                25274,
+                25308,
                 [
                     [
                         "jetzt",
@@ -14305,7 +14880,7 @@
         "PatDiVowel",
         {
             "0": [
-                5218,
+                5274,
                 [
                     [
                         "Staaten",
@@ -14710,7 +15285,7 @@
                 ]
             ],
             "3": [
-                14187,
+                14213,
                 [
                     [
                         "paar",
@@ -15120,7 +15695,7 @@
         "PatReplH",
         {
             "0": [
-                9543,
+                9623,
                 [
                     [
                         "Thema",
@@ -15525,7 +16100,7 @@
                 ]
             ],
             "3": [
-                2747,
+                2689,
                 [
                     [
                         "Theater",
@@ -15594,10 +16169,6 @@
                     [
                         "Stadttheater",
                         "DSAD/D+EÜ/D+EÜ"
-                    ],
-                    [
-                        "Thompson",
-                        "D+OMB/SON"
                     ],
                     [
                         "Landestheater",
@@ -15926,6 +16497,10 @@
                     [
                         "Volkstheaters",
                         "FOLGS/D+EÜ/D+EÜS"
+                    ],
+                    [
+                        "Theaterchef",
+                        "D+EÜ/D+EÜ/ʃ+EF"
                     ]
                 ]
             ]
@@ -16345,23 +16920,15 @@
         "PatReplRare",
         {
             "0": [
-                44073,
+                39027,
                 [
                     [
                         "knapp",
                         "DGA+B"
                     ],
                     [
-                        "Kampf",
-                        "G+AMBF"
-                    ],
-                    [
                         "Kopf",
                         "G+OBF"
-                    ],
-                    [
-                        "Impfstoff",
-                        "IMBF/DSOF"
                     ],
                     [
                         "Szene",
@@ -16384,16 +16951,8 @@
                         "DSE/F+AN"
                     ],
                     [
-                        "Wahlkampf",
-                        "F+AÜL/G+AMBF"
-                    ],
-                    [
                         "Philipp",
                         "F+IL/I+B"
-                    ],
-                    [
-                        "kämpft",
-                        "G+ÄMBFD"
                     ],
                     [
                         "Text",
@@ -16420,20 +16979,12 @@
                         "DʃGE/NA/SMO"
                     ],
                     [
-                        "geimpft",
-                        "GEIMBFD"
-                    ],
-                    [
                         "Pfosten",
                         "FB+OS/D+EN"
                     ],
                     [
                         "skeptisch",
                         "SGE+B/D+Iʃ"
-                    ],
-                    [
-                        "Impfstoffe",
-                        "IMBF/DSOF/FE"
                     ],
                     [
                         "Skandal",
@@ -16488,10 +17039,6 @@
                         "SBÄI/ʃ+I/ʃE"
                     ],
                     [
-                        "gekämpft",
-                        "GE/G+ÄMBFD"
-                    ],
-                    [
                         "Pfleger",
                         "FBLE/GEÜ"
                     ],
@@ -16504,16 +17051,8 @@
                         "FB+EÜD"
                     ],
                     [
-                        "Impfstoffs",
-                        "IMBF/DSOFs"
-                    ],
-                    [
                         "Sophia",
                         "SO/F+I/A"
-                    ],
-                    [
-                        "Wettkampf",
-                        "F+E+D/G+AMBF"
                     ],
                     [
                         "Ralph",
@@ -16540,10 +17079,6 @@
                         "FB+EÜ/DE"
                     ],
                     [
-                        "Abstiegskampf",
-                        "AB/DS~IGS/G+AMBF"
-                    ],
-                    [
                         "Kopfball",
                         "G+OBF/BAL"
                     ],
@@ -16556,16 +17091,8 @@
                         "F+IL/I+B/B+E"
                     ],
                     [
-                        "Zweikampf",
-                        "ʃG+EI/G+AMBF"
-                    ],
-                    [
                         "Skepsis",
                         "SGE+B/SIS"
-                    ],
-                    [
-                        "kämpfte",
-                        "G+ÄMBF/D+E"
                     ],
                     [
                         "Doskozil",
@@ -16586,10 +17113,6 @@
                     [
                         "Switch",
                         "FGI+ʃD"
-                    ],
-                    [
-                        "Impfstoffen",
-                        "IMBF/DSOF/FEN"
                     ],
                     [
                         "inszeniert",
@@ -16708,32 +17231,12 @@
                         "AUS/GE/ʃÄOBFD"
                     ],
                     [
-                        "kämpften",
-                        "G+ÄMBF/D+EN"
-                    ],
-                    [
-                        "glimpflich",
-                        "GLIMBF/LI+ʃ"
-                    ],
-                    [
                         "Psychiatrie",
                         "SBÄI+ʃ/I/A+D/SM~I"
                     ],
                     [
-                        "umkämpften",
-                        "UM/G+ÄMBF/D+EN"
-                    ],
-                    [
                         "Swift",
                         "FGI+FD"
-                    ],
-                    [
-                        "Impfstoffes",
-                        "IMBF/DSOF/FES"
-                    ],
-                    [
-                        "Machtkampf",
-                        "MA+ʃD/G+AMBF"
                     ],
                     [
                         "geknüpft",
@@ -16746,11 +17249,83 @@
                     [
                         "Impfpflicht",
                         "IMBF/FBLI+ʃD"
+                    ],
+                    [
+                        "Kampagnen",
+                        "G+AM/B+A/GMEN"
+                    ],
+                    [
+                        "Skulptur",
+                        "SGULB/D+~U"
+                    ],
+                    [
+                        "Stephen",
+                        "DSE/F+EN"
+                    ],
+                    [
+                        "Tröpfchen",
+                        "DLÄOBF/ʃ+EN"
+                    ],
+                    [
+                        "Swisscom",
+                        "FGISs/DʃGOM"
+                    ],
+                    [
+                        "geknackt",
+                        "GE/DGA+GD"
+                    ],
+                    [
+                        "welch",
+                        "F+ELʃ"
+                    ],
+                    [
+                        "Swetlana",
+                        "FGE+D/LA/NA"
+                    ],
+                    [
+                        "Psyche",
+                        "SBÄI/ʃ+E"
+                    ],
+                    [
+                        "knapper",
+                        "DGA+B/B+EÜ"
+                    ],
+                    [
+                        "Oberpfalz",
+                        "O/BEÜ/FB+ALGʃ"
+                    ],
+                    [
+                        "Skype",
+                        "SGÄI/B+E"
+                    ],
+                    [
+                        "Hinterkopf",
+                        "SNIN/D+EÜ/G+OBF"
+                    ],
+                    [
+                        "Pforzheim",
+                        "FB+~OGʃ/SNEIM"
+                    ],
+                    [
+                        "psychologische",
+                        "SBÄI/ʃ+O/LO/GI/ʃE"
+                    ],
+                    [
+                        "Physik",
+                        "F+ÄI/SI+G"
+                    ],
+                    [
+                        "Pfanne",
+                        "FB+AN/NE"
+                    ],
+                    [
+                        "Knast",
+                        "DGAs"
                     ]
                 ]
             ],
             "3": [
-                765,
+                728,
                 [
                     [
                         "Katastrophe",
@@ -16961,10 +17536,6 @@
                         "BO/FI/SI/G+EÜ"
                     ],
                     [
-                        "Pharmamarkt",
-                        "FAÜ/MA/MAÜ+GD"
-                    ],
-                    [
                         "Anthroposophie",
                         "AND/SMO/B+O/SO/FI"
                     ],
@@ -17151,6 +17722,10 @@
                     [
                         "Ozeanographie",
                         "O/ʃGEÜ/NO/GMA/FI"
+                    ],
+                    [
+                        "Radiopharmazeutika",
+                        "SMA/DO/FAÜ/MA/ʃGEU/D+I/G+A"
                     ]
                 ]
             ]
@@ -17160,7 +17735,7 @@
         "PatSCStretch",
         {
             "0": [
-                13,
+                14,
                 [
                     [
                         "kam",
@@ -17185,6 +17760,10 @@
                     [
                         "nagt",
                         "NAÜ+GD"
+                    ],
+                    [
+                        "Ren",
+                        "SMEÜN"
                     ],
                     [
                         "Amman",
@@ -18181,7 +18760,7 @@
         "PatShortSyllable",
         {
             "5": [
-                112404,
+                112405,
                 [
                     [
                         "anderen",
@@ -18230,6 +18809,10 @@
                     [
                         "Gemeinde",
                         "GMEIN/DE"
+                    ],
+                    [
+                        "Studie",
+                        "DSU/DE"
                     ],
                     [
                         "Christian",
@@ -18578,15 +19161,11 @@
                     [
                         "Georg",
                         "G~OG"
-                    ],
-                    [
-                        "Nationalspieler",
-                        "NA/D+O/NAL/SB+I/LEÜ"
                     ]
                 ]
             ],
             "6": [
-                578372,
+                578380,
                 [
                     [
                         "den",
@@ -18996,7 +19575,7 @@
         "PatBrief",
         {
             "0": [
-                39666,
+                39669,
                 [
                     [
                         "zu",
@@ -19084,7 +19663,7 @@
                     ],
                     [
                         "Problem",
-                        "BOB/LEM"
+                        "BO/BLEM"
                     ],
                     [
                         "Probleme",
@@ -19352,7 +19931,7 @@
                     ],
                     [
                         "Pilotprojekt",
-                        "B+I/LOD/BO/FNE+GD"
+                        "B+I/LO+D/BO/FNE+GD"
                     ],
                     [
                         "Projektes",
@@ -19360,7 +19939,7 @@
                     ],
                     [
                         "Bruttoinlandsprodukt",
-                        "BMUD/D+O/IN/LANSD/BO/DU+GD"
+                        "BMU+D/D+O/IN/LANSD/BO/DU+GD"
                     ],
                     [
                         "probieren",
@@ -19406,7 +19985,7 @@
         "PatCommonPrefix",
         {
             "7": [
-                100758,
+                100757,
                 [
                     [
                         "vergangenen",
@@ -21871,7 +22450,7 @@
         "PatAnglEI",
         {
             "0": [
-                1299,
+                1304,
                 [
                     [
                         "online",
@@ -22276,7 +22855,7 @@
                 ]
             ],
             "3": [
-                45,
+                40,
                 [
                     [
                         "Vereinswebsite",
@@ -22291,10 +22870,6 @@
                         "GMEIN/DF+EB/SAID"
                     ],
                     [
-                        "Projektwebsite",
-                        "BO/FNE+GD/F+EB/SAID"
-                    ],
-                    [
                         "Verbandswebsite",
                         "vBANSD/F+EB/SAID"
                     ],
@@ -22305,10 +22880,6 @@
                     [
                         "Websitebesucher",
                         "F+EB/SAID/bSU/ʃ+EÜ"
-                    ],
-                    [
-                        "Produktwebsite",
-                        "BO/DU+GD/F+EB/SAID"
                     ],
                     [
                         "Veranstaltungswebsite",
@@ -22347,10 +22918,6 @@
                         "F+EB/SAID/bSU/ʃ+EÜN"
                     ],
                     [
-                        "Websiteprojekt",
-                        "F+EB/SAID/BO/FNE+GD"
-                    ],
-                    [
                         "Autorenwebsite",
                         "AU/D+On/F+EB/SAID"
                     ],
@@ -22365,14 +22932,6 @@
                     [
                         "Familienwebsites",
                         "FA/MI/LIn/F+EB/SAIs"
-                    ],
-                    [
-                        "Produktwebsites",
-                        "BO/DU+GD/F+EB/SAIs"
-                    ],
-                    [
-                        "Projektwebsites",
-                        "BO/FNE+GD/F+EB/SAIs"
                     ],
                     [
                         "Radiowebsite",
@@ -23407,7 +23966,7 @@
         "PatAnglO",
         {
             "0": [
-                957,
+                958,
                 [
                     [
                         "Coach",
@@ -23464,6 +24023,10 @@
                     [
                         "Quellcode",
                         "FG+EL/DʃGOD"
+                    ],
+                    [
+                        "Keynote",
+                        "G+ÄI/NOD"
                     ],
                     [
                         "Goal",
@@ -23804,10 +24367,6 @@
                     [
                         "Jugendcoaches",
                         "FNU/GEND/DʃGO/ʃ+ES"
-                    ],
-                    [
-                        "Unternehmenshomepage",
-                        "UN/D+EÜ/NEÜ/MENS/SNOM/B+ÄIʃ"
                     ]
                 ]
             ],
@@ -23902,7 +24461,7 @@
         "PatAnglStretchU",
         {
             "0": [
-                917,
+                919,
                 [
                     [
                         "Interview",
@@ -25220,7 +25779,7 @@
                     ],
                     [
                         "Projektmanagement",
-                        "BO/FNE+GD/MA/NÄʃD/MEND"
+                        "BO/FNE+GD/MA/NÄʃD/ME+ND"
                     ],
                     [
                         "Gebäudemanagement",
@@ -25300,7 +25859,7 @@
                     ],
                     [
                         "Produktmanagement",
-                        "BO/DU+GD/MA/NÄʃD/MEND"
+                        "BO/DU+GD/MA/NÄʃD/ME+ND"
                     ],
                     [
                         "Workstations",
@@ -25416,7 +25975,7 @@
                     ],
                     [
                         "Konfliktmanagement",
-                        "G+ON/FLI+GD/MA/NÄʃD/MEND"
+                        "G+ON/FLI+GD/MA/NÄʃD/ME+ND"
                     ],
                     [
                         "Actionserie",
@@ -25460,7 +26019,7 @@
                     ],
                     [
                         "Kontaktmanagement",
-                        "G+ON/D+A+GD/MA/NÄʃD/MEND"
+                        "G+ON/D+A+GD/MA/NÄʃD/ME+ND"
                     ],
                     [
                         "Risikomanagements",
@@ -25914,7 +26473,7 @@
                     ],
                     [
                         "Arbeitsmarktservice",
-                        "AÜ/BEISD/MAÜ+GD/SEÜ/FIS"
+                        "AÜ/BEI+SD/MAÜ+GD/SEÜ/FIS"
                     ],
                     [
                         "Dean",

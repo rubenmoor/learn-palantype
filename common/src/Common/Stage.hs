@@ -126,7 +126,8 @@ strsStage =
     , "stage_2-2"
     , "stage_2-3"
     , "stage_PatSimple_0" -- 2.4
-    , "stage_PatReplCommon_0" -- 3.1
+    , "stage_PatReplCommon1_0" -- 3.1
+    , "stage_PatReplCommon2_0" -- 3.2
     , "stage_PatCodaComboT_0"
     , "stage_PatOnsetR_0"
     , "stage_PatOnsetL_0"
@@ -147,7 +148,7 @@ strsStage =
     , "stage_PatDiVowel_0"
     , "stage_PatReplH_0"
     , "stage_PatCodaGK_3"
-    , "stage_PatSmallS_0"
+    , "stage_PatReplRare_0"  -- 3.23
     , "stage_ploverCommands" -- 4.1
     , "stage_fingerspelling"
     , "stage_numbermode"
@@ -188,27 +189,29 @@ stageMeta stage = if
     | $readLoc "stage_2-2"               == stage -> StageSubLevel 2 2 "Learn your first chords"
     | $readLoc "stage_2-3"               == stage -> StageSubLevel 2 3 "Onset, nucleus, and coda"
     | $readLoc "stage_PatSimple_0"       == stage -> StageSubLevel 2 4 "Syllables and word parts"
-    | $readLoc "stage_PatReplCommon_0"   == stage -> StageSubLevel 3 1  $ toDescription PatReplCommon
-    | $readLoc "stage_PatCodaComboT_0"   == stage -> StageSubLevel 3 2  $ toDescription PatCodaComboT
-    | $readLoc "stage_PatOnsetR_0"       == stage -> StageSubLevel 3 3  $ toDescription PatOnsetR
-    | $readLoc "stage_PatOnsetL_0"       == stage -> StageSubLevel 3 4  $ toDescription PatOnsetL
-    | $readLoc "stage_PatSmallS_0"       == stage -> StageSubLevel 3 5  $ toDescription PatSmallS
-    | $readLoc "stage_PatDiConsonant_0"  == stage -> StageSubLevel 3 6  $ toDescription PatDiConsonant
-    | $readLoc "stage_PatCodaH_0"        == stage -> StageSubLevel 3 7  $ toDescription PatCodaH
-    | $readLoc "stage_PatCodaR_0"        == stage -> StageSubLevel 3 8  $ toDescription PatCodaR
-    | $readLoc "stage_PatCodaRR_0"       == stage -> StageSubLevel 3 9  $ toDescription PatCodaRR
-    | $readLoc "stage_PatCodaHR_0"       == stage -> StageSubLevel 3 10 $ toDescription PatCodaHR
-    | $readLoc "stage_PatDt_0"           == stage -> StageSubLevel 3 11 $ toDescription PatDt
-    | $readLoc "stage_PatDiphtong_0"     == stage -> StageSubLevel 3 12 $ toDescription PatDiphtong
-    | $readLoc "stage_PatReplC_0"        == stage -> StageSubLevel 3 13 $ toDescription PatReplC
-    | $readLoc "stage_PatSZ_0"           == stage -> StageSubLevel 3 14 $ toDescription PatSZ
-    | $readLoc "stage_PatBreakUpI_0"     == stage -> StageSubLevel 3 15 $ toDescription PatBreakUpI
-    | $readLoc "stage_PatSwapS_0"        == stage -> StageSubLevel 3 16 $ toDescription PatSwapS
-    | $readLoc "stage_PatSwapSch_0"      == stage -> StageSubLevel 3 17 $ toDescription PatSwapSch
-    | $readLoc "stage_PatSwapZ_0"        == stage -> StageSubLevel 3 18 $ toDescription PatSwapZ
-    | $readLoc "stage_PatDiVowel_0"      == stage -> StageSubLevel 3 19 $ toDescription PatDiVowel
-    | $readLoc "stage_PatReplH_0"        == stage -> StageSubLevel 3 20 $ toDescription PatReplH
-    | $readLoc "stage_PatCodaGK_3"       == stage -> StageSubLevel 3 21 $ toDescription PatCodaGK
+    | $readLoc "stage_PatReplCommon1_0"  == stage -> StageSubLevel 3 1  $ toDescription PatReplCommon1
+    | $readLoc "stage_PatReplCommon2_0"  == stage -> StageSubLevel 3 2  $ toDescription PatReplCommon2
+    | $readLoc "stage_PatCodaComboT_0"   == stage -> StageSubLevel 3 3  $ toDescription PatCodaComboT
+    | $readLoc "stage_PatOnsetR_0"       == stage -> StageSubLevel 3 4  $ toDescription PatOnsetR
+    | $readLoc "stage_PatOnsetL_0"       == stage -> StageSubLevel 3 5  $ toDescription PatOnsetL
+    | $readLoc "stage_PatSmallS_0"       == stage -> StageSubLevel 3 6  $ toDescription PatSmallS
+    | $readLoc "stage_PatDiConsonant_0"  == stage -> StageSubLevel 3 7  $ toDescription PatDiConsonant
+    | $readLoc "stage_PatCodaH_0"        == stage -> StageSubLevel 3 8  $ toDescription PatCodaH
+    | $readLoc "stage_PatCodaR_0"        == stage -> StageSubLevel 3 9  $ toDescription PatCodaR
+    | $readLoc "stage_PatCodaRR_0"       == stage -> StageSubLevel 3 10  $ toDescription PatCodaRR
+    | $readLoc "stage_PatCodaHR_0"       == stage -> StageSubLevel 3 11 $ toDescription PatCodaHR
+    | $readLoc "stage_PatDt_0"           == stage -> StageSubLevel 3 12 $ toDescription PatDt
+    | $readLoc "stage_PatDiphtong_0"     == stage -> StageSubLevel 3 13 $ toDescription PatDiphtong
+    | $readLoc "stage_PatReplC_0"        == stage -> StageSubLevel 3 14 $ toDescription PatReplC
+    | $readLoc "stage_PatSZ_0"           == stage -> StageSubLevel 3 15 $ toDescription PatSZ
+    | $readLoc "stage_PatBreakUpI_0"     == stage -> StageSubLevel 3 16 $ toDescription PatBreakUpI
+    | $readLoc "stage_PatSwapS_0"        == stage -> StageSubLevel 3 17 $ toDescription PatSwapS
+    | $readLoc "stage_PatSwapSch_0"      == stage -> StageSubLevel 3 18 $ toDescription PatSwapSch
+    | $readLoc "stage_PatSwapZ_0"        == stage -> StageSubLevel 3 19 $ toDescription PatSwapZ
+    | $readLoc "stage_PatDiVowel_0"      == stage -> StageSubLevel 3 20 $ toDescription PatDiVowel
+    | $readLoc "stage_PatReplH_0"        == stage -> StageSubLevel 3 21 $ toDescription PatReplH
+    | $readLoc "stage_PatCodaGK_3"       == stage -> StageSubLevel 3 22 $ toDescription PatCodaGK
+    | $readLoc "stage_PatReplRare_0"     == stage -> StageSubLevel 3 23 $ toDescription PatReplRare
     | $readLoc "stage_ploverCommands"    == stage -> StageSubLevel 4 1 "Formatting input"
     | $readLoc "stage_fingerspelling"    == stage -> StageSubLevel 4 2 "Fingerspelling"
     | $readLoc "stage_numbermode"        == stage -> StageSubLevel 4 3 "Number input"

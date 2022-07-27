@@ -45,6 +45,7 @@ data AppState = AppState
     , stTOCShowStage3 :: Bool
     , stTOCShowStage4 :: Bool
     , stShowStats     :: ShowStats
+    , stSound         :: Bool
     }
     deriving (Eq, Generic, Show)
 
@@ -65,6 +66,7 @@ defaultAppState = AppState { stCleared            = Set.empty
                            , stTOCShowStage3      = False
                            , stTOCShowStage4      = False
                            , stShowStats          = ShowStatsHide
+                           , stSound              = False
                            }
 
 data Message = Message
