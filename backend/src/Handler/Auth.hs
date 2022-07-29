@@ -27,7 +27,7 @@ import           Control.Monad.Reader           ( asks )
 import           Data.Bool                      ( Bool(..) )
 import qualified Data.ByteString.Lazy.UTF8     as BSU
 import           Data.Char                      ( isAlphaNum )
-import           Data.Either                    ( either )
+import           Data.Either                    (fromRight,  either )
 import           Data.Function                  (($) )
 import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( null )
@@ -80,7 +80,7 @@ import           Common.Auth                    ( LoginData(..)
                                                 , UserNew(..)
                                                 )
 import           Database                       (blobDecode, blobEncode,  runDb )
-import           Common.Model                   (Rank (..), JournalEvent(..), EventUser(..), AppState,          )
+import           Common.Model                   (defaultAppState, Rank (..), JournalEvent(..), EventUser(..), AppState,          )
 import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Data.Functor (Functor(fmap))
@@ -128,7 +128,7 @@ handleGrantAuthPwd LoginData {..} =
                         sdUserName    = userName
                         sdAliasName   = Db.aliasName alias
                         sdAliasVisible = Db.aliasIsVisible alias
-                    appState <- blobDecode userBlobAppState
+                        appState = fromRight defaultAppState $ blobDecode userBlobAppState
 
                     DbJournal.insert (Just keyAlias) $ EventUser EventLogin
                     pure $ Just $ (SessionData { .. }, appState)

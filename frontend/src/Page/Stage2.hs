@@ -602,7 +602,7 @@ exercise2 = mdo
                     \output."
 
             -- TODO: punctuation
-            let raw = "MID DEM F+ISn F+Ä+Gʃs DEÜ ʃG+EI/FEL +-"
+            let raw = "MID DEM F+ISn F+Ä+GSD DEÜ ʃG+EI/FEL +-"
                 txt = "Mit dem Wissen wächst der Zwei fel ."
 
             evDone' <- walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw

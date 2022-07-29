@@ -62,6 +62,10 @@ import           Data.Int                       ( Int )
 import           Data.Text                      ( Text )
 import           GHC.Real                       ( fromIntegral )
 import           Database.Gerippe               ( isNothing )
+import Data.Either (Either(..))
+import qualified Data.Text.Lazy.Encoding as LazyText
+import qualified Data.Text.Lazy as LazyText
+import Data.Semigroup (Semigroup((<>)))
 
 handlers :: ServerT RoutesAdmin a Handler
 handlers = (handleJournalGetAll)
@@ -104,7 +108,12 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
             let journalVisitorId = keyToId journalFkVisitor
                 journalVisitorIp = visitorIpAddress
                 journalTime      = journalCreated
-            journalEvent      <- blobDecode journalBlob
+            journalEvent      <- case blobDecode journalBlob of
+              Left  strErr -> throwError $ err500
+                { errBody = "Could not decode journal blob: "
+                    <> LazyText.encodeUtf8 (LazyText.fromStrict strErr)
+                }
+              Right je     -> pure je
             journalMAliasUser <- case (ma, mu) of
                 (Nothing, Nothing) -> pure Nothing
                 (Just (Entity _ Db.Alias {..}), Just (Entity _ Db.User {..}))

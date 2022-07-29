@@ -31,6 +31,9 @@ import           Data.Aeson                     (FromJSON,  ToJSON )
 import           Data.ByteString.UTF8           ( ByteString )
 import qualified Data.Aeson                    as Aeson
 import           Control.Category               ( (<<<) )
+import Data.Text (Text)
+import qualified Data.Text as Text
+import Data.Either.Combinators (mapLeft)
 
 runDb :: DbAction a -> Handler a
 runDb action = do
@@ -47,9 +50,9 @@ runDb' pool action =
 blobEncode :: forall a . ToJSON a => a -> ByteString
 blobEncode = Lazy.toStrict <<< Aeson.encode
 
-blobDecode :: forall a . FromJSON a => ByteString -> Handler a
-blobDecode str = case Aeson.eitherDecodeStrict str of
-    Left  strErr -> throwError $ err500
-      { errBody = "Json decoding failed: " <> BSU.fromString strErr
-      }
-    Right appState -> pure appState
+blobDecode :: forall a . FromJSON a => ByteString -> Either Text a
+blobDecode str = mapLeft Text.pack $ Aeson.eitherDecodeStrict str
+    -- Left  strErr -> throwError $ err500
+    --   { errBody = "Json decoding failed: " <> BSU.fromString strErr
+    --   }
+    -- Right appState -> pure appState

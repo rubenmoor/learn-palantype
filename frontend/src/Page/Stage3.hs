@@ -314,13 +314,22 @@ exercise6 =
                   " key, the s in the coda is out of reach. Luckily we can use \
                   \the (small) "
               el "code" $ text "s"
-              text " key in that case."
+              text " key in that case. Most of the examples here deal \
+                   \with \"fs\". The other common case is \"schs\". Depending on \
+                   \your keyboard, that combination might be difficult to reach. \
+                   \You can try and put your hands on a hand rest. Typically, \
+                   \the higher the hand rest, the easier it is to reach the keys."
         )
         PatSmallS
         ( \_ -> el "p" $ do
               text
-                  "This extra key will give us some flexibility when dealing \
-                  \with "
+                  "You might notice that this exercise contains some words that \
+                  \are not terribly frequent. This just means that this basic use \
+                  \of the "
+              el "code" $ text "s"
+              text "-key does not affect a lot of words. Later, we will learn \
+                   \other uses. This extra key will give us some flexibility \
+                   \when dealing with "
               el "em" $ text "-st"
               text ", "
               el "em" $ text "-ds"

@@ -49,7 +49,7 @@ import           AppData                        ( Handler )
 import           Auth                           ( UserInfo(..) )
 import           Common.Api                     ( RoutesUser )
 import qualified DbAdapter                     as Db
-import           Common.Model                   (JournalEvent(EventUser)
+import           Common.Model                   (defaultAppState, JournalEvent(EventUser)
                                                 , EventUser(..)
                                                 , AppState(..)
                                                 )
@@ -63,6 +63,7 @@ import GHC.Num (fromInteger, Num((*)))
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Bool (Bool, (&&), not)
 import TextShow (TextShow(showt))
+import Data.Either (fromRight)
 
 default(Text)
 
@@ -133,7 +134,7 @@ handleGetAppState UserInfo {..} = do
     Db.User {..} <- runDb (getBy $ Db.UUserName uiUserName) >>= maybe
         (throwError $ err500 { errBody = "user not found" })
         (pure . entityVal)
-    blobDecode userBlobAppState
+    pure $ fromRight defaultAppState $ blobDecode userBlobAppState
 
 handlePutAppState :: UserInfo -> AppState -> Handler ()
 handlePutAppState UserInfo {..} appState = do
