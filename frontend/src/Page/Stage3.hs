@@ -24,6 +24,7 @@ import Reflex.Dom (blank, current, gate, TriggerEvent, DomBuilder, EventWriter, 
 import State (Env (..), Navigation (..), State, stageUrl)
 import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
+import Data.Maybe (isNothing)
 
 type Constraints key t m =
     ( DomBuilder t m
@@ -73,7 +74,7 @@ exercise iEx elIntro pat elExplication = mdo
 
     elExplication navLang
 
-    dynStats <- getStatsLocalAndRemote evDone
+    dynStatsAll <- getStatsLocalAndRemote evDone
     evEDict <- request $ getDictDE' pat 0 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
@@ -83,13 +84,14 @@ exercise iEx elIntro pat elExplication = mdo
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords dynStats (gate (not <$> current dynDone) envEChord) mSW mWSs
+              else taskWords dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
 exercise1 ::
@@ -384,15 +386,37 @@ exercise8 =
               el "code" $ text "~"
               text
                   " you can stretch any of the vowels of your right hand. In order to \
-                  \stretch the vowels of your right hand, you have "
+                  \stretch the vowels of your left hand, you have "
               el "code" $ text "Ü"
               text ", which doubles as a second stretch key."
         )
         PatCodaH
-        ( \_ -> el "p" $ do
-              text
-                  "Note that the stretch key isn't only for h, but it also turns i into ie. \
-                  \Another thing: "
+        ( \_ -> do
+            el "p" $ do
+              text "Note that the stretch key isn't only for h, but it also turns "
+              el "em" $ text "i"
+              text "into "
+              el "em" $ text "ie"
+              text ". There is something to say about "
+              el "em" $ text "ie"
+              text " in words like "
+              el "em" $ text "Linie"
+              text ", "
+              el "em" $ text "Serie"
+              text " oder "
+              el "em" $ text "Aktie"
+              text ". In these words, technically, the letters "
+              el "em" $ text "i"
+              text " and "
+              el "em" $ text "e"
+              text " do not have anything to do with vowel stretching. \
+                   \In order to learn how to type fast, this is of no concern. \
+                   \Just treat all cases of "
+              el "em" $ text "ie"
+              text " the same."
+
+            el "p" $ do
+              text "Another thing: "
               el "em" $ text "ö"
               text " is typed using two keys, already, and its stretched version "
               el "em" $ text "öh"
@@ -416,7 +440,8 @@ exercise9 =
                   \typed using the same stretch keys."
         )
         PatCodaR
-        ( \_ -> el "p" $ do
+        ( \_ -> do
+            el "p" $ do
               text "As in the previous exercise, "
               el "em" $ text "ö"
               text
@@ -424,6 +449,47 @@ exercise9 =
                   \look any different then the unstretched "
               el "em" $ text "ö"
               text "."
+            el "p" $ do
+              text "In case you wonder: This is the reason why the stretch key \
+                   \is not simply called H. Using one and the same key for \
+                   \several letters causes conflicts. Think of the words "
+              el "em" $ text "eh"
+              text " and "
+              el "em" $ text "er"
+              text ", "
+              el "em" $ text "Horn"
+              text " and "
+              el "em" $ text "Hohn"
+              text ", "
+              el "em" $ text "Sie"
+              text " and "
+              el "em" $ text "Sir"
+              text " … So, why going through all these troubles? Well, in German, \
+                   \the coda tends to get quite juicy, combining a lot of \
+                   \consonants, e.g. "
+              el "em" $ text "plantschst"
+              text ", "
+              el "em" $ text "seufzt"
+              text ", or "
+              el "em" $ text "knirschst"
+              text ". These latter words aren't specialties but rather regular \
+                   \features of the language—brought about by conjugation. \
+                   \In order to accommodate these, we need to shift some weight \
+                   \away from the four fingers of the right hand. The thumbs, \
+                   \which take care of vowels, can take over the responsibility for "
+              el "em" $ text "h"
+              text " and "
+              el "em" $ text "r"
+              text " just fine. And even though we don't adhere to \
+                   \the rules of linguistics in any strict sense, \
+                   \it is a welcome fact that, in German, "
+              el "em" $ text "r"
+              text " preceded by a vowel is not pronounced anything like "
+              el "em" $ text "r"
+              text " in the onset of a syllable. So all in all it is quite convenient \
+                   \to treat "
+              el "em" $ text "r"
+              text " in the coda as sort of a modifier to a vowel."
         )
 
 exercise10 ::
@@ -496,7 +562,7 @@ exercise11 =
               el "code" $ text "+"
               text " to reach "
               el "em" $ text "hr"
-              text "."
+              text " in the coda."
         )
 
 exercise12 ::
@@ -759,7 +825,7 @@ exercise22 = mdo
 
     el "p" $ text "explication"
 
-    dynStats <- getStatsLocalAndRemote evDone
+    dynStatsAll <- getStatsLocalAndRemote evDone
     evEDict <- request $ getDictDE' PatCodaGK 3 ePb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $
         evEDict <&> \case
@@ -769,13 +835,14 @@ exercise22 = mdo
                           \This is probably an error. \
                           \Skip this for now."
                       pure never
-              else taskWords dynStats (gate (not <$> current dynDone) envEChord) mSW mWSs
+              else taskWords dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
             Left str -> never <$ elClass
                         "div"
                         "paragraph small red"
                         (text $ "Could not load resource: dict: " <> str)
 
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
 exercise23 ::

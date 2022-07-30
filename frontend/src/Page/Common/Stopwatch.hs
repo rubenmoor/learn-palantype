@@ -8,6 +8,7 @@ module Page.Common.Stopwatch
     ( mkStopwatch
     , elStopwatch
     , elStatistics
+    , elStatisticsPersonalShort
     , StateStopwatch(..)
     , toMinutes
     , ElStatsFlag (..)
@@ -107,6 +108,7 @@ import Data.Foldable (Foldable(null))
 import Data.List (filter)
 import qualified Data.Witherable as Witherable
 import Data.Functor (void)
+import Data.List (take)
 
 data StateStopwatch
     = SWInitial
@@ -253,6 +255,30 @@ elStatistics flag ls = do
                 ElStatsPublic   -> elClass "td" "alias" $ case mAlias of
                     Just alias -> el "strong" $ text alias
                     Nothing    -> el "em" $ text "you"
+            elClass "td" "nMistakes" $ do
+                if statsNErrors == 0
+                    then elAttr "strong" ("title" =: "0 mistakes")
+                        $ text "flawless"
+                    else text $ showt statsNErrors <> " mistakes"
+            elClass "td" "wpm"
+                $  text
+                $  showt @Int
+                       (round $ fromIntegral statsLength / toMinutes statsTime)
+                <> " wpm"
+
+elStatisticsPersonalShort
+    :: forall t (m :: * -> *)
+     . (DomBuilder t m)
+    => [Stats]
+    -> m ()
+elStatisticsPersonalShort ls =
+  elClass "table" "statistics" $
+    for_ (take 3 ls) \Stats {..} -> el "tr" $ do
+            elClass "td" "date" $ text $ Text.pack $ Time.formatTime
+                defaultTimeLocale
+                "%F %R"
+                statsDate
+            elClass "td" "time" $ text $ formatTime statsTime
             elClass "td" "nMistakes" $ do
                 if statsNErrors == 0
                     then elAttr "strong" ("title" =: "0 mistakes")

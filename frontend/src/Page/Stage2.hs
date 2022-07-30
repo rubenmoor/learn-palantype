@@ -29,7 +29,7 @@ import           Control.Applicative            ((<*>),  (<$>)
 import           Control.Category               ( Category((.), id)
                                                 , (<<<)
                                                 )
-import           Control.Lens                   (preview, (^?),  (+~)
+import           Control.Lens                   (preview,  (+~)
                                                 , (?~)
                                                 , (%~)
                                                 , (.~)
@@ -70,7 +70,7 @@ import           Data.List                      ( (!!)
                                                 )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     (fromMaybe,  Maybe(..) )
+import           Data.Maybe                     (isNothing, fromMaybe,  Maybe(..) )
 import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( (<>)
                                                 , Endo
@@ -157,6 +157,7 @@ import           Data.Function                  ( (&) )
 import Common.Model (Stats)
 import Common.Stage (Stage)
 import GHC.Generics (Generic)
+import Data.Tuple (fst, snd)
 
 -- Ex. 2.1
 
@@ -432,9 +433,10 @@ exercise1 = mdo
       el "strong" $ text "D"
       text "ussel!"
 
-    dynStats <- getStatsLocalAndRemote evDone
-    evDone <- taskLetters dynStats (gate (not <$> current dynDone) envEChord)
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    dynStatsAll <- getStatsLocalAndRemote evDone
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
 -- Ex 2.2
@@ -928,10 +930,11 @@ exercise3 = mdo
                 $  "Could not load resource: "
                 <> str
 
-    dynStats <- getStatsLocalAndRemote evDone
-    evDone <- taskSingletons dynStats (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
+    dynStatsAll <- getStatsLocalAndRemote evDone
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    evDone <- taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
 
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
 -- Ex 2.4
@@ -1001,9 +1004,9 @@ exercise4 = mdo
     evEDict <- request $ getDictDE' PatSimpleMulti 0 ePb
     evEDoc  <- request $ getDocDEPattern' PatSimple 0 ePb
 
-    dynStats <- getStatsLocalAndRemote evDone
+    dynStatsAll <- getStatsLocalAndRemote evDone
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
-        Right (mST, mTSs) -> taskWords dynStats (gate (not <$> current dynDone) envEChord) mST mTSs
+        Right (mST, mTSs) -> taskWords dynStatsAll (gate (not <$> current dynDone) envEChord) mST mTSs
         Left  str         -> never <$ elClass
             "div"
             "paragraph small red"
@@ -1047,5 +1050,6 @@ exercise4 = mdo
         elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
         elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
 
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation

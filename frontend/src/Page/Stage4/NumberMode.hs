@@ -44,7 +44,7 @@ import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , repeat
                                                 )
-import           Data.Maybe                     ( maybe
+import           Data.Maybe                     (isNothing,  maybe
                                                 , Maybe(..)
                                                 )
 import           Data.Semigroup                 ( Endo
@@ -143,6 +143,8 @@ import qualified Data.Time                     as Time
 import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
 import Data.Bool (Bool, not)
+import Data.Tuple (fst, snd)
+import Data.List (filter)
 
 data StateDates k
     = StatePause Int
@@ -406,7 +408,7 @@ numberMode = mdo
              \Feel free to type digit by digit or use as many fingers as \
              \possible at once."
 
-    dynStats <- getStatsLocalAndRemote evDone
+    dynStatsAll <- getStatsLocalAndRemote evDone
     evPb <- postRender $ delay 0.1 =<< getPostBuild
     evEDict <- request $ getDictDENumbers evPb
     evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
@@ -414,7 +416,8 @@ numberMode = mdo
             "span"
             "red small"
             (text $ "Couldn't load resource: " <> str)
-        Right map -> taskDates dynStats (gate (not <$> current dynDone) envEChord) map
+        Right map -> taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map
 
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation

@@ -236,8 +236,8 @@ signup = elClass "div" "auth" $ mdo
     updateState $ evRespNew <&> \case
         Left errMsg ->
             [field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg]
-        Right user ->
-            [ field @"stSession" .~ SessionUser user
+        Right sessionData ->
+            [ field @"stSession" .~ SessionUser sessionData
             , field @"stApp" . field @"stMsg" ?~ Message
                 "Success"
                 "Your account was registered successfully."
@@ -327,9 +327,7 @@ login = elClass "div" "auth" $ mdo
     dyn_ $ dynState <&> \State {..} ->
         setRoute $ evLogin $> stRedirectUrl
 
-    el
-        "p"
-        do
+    el "p" do
             text "Don't have an account yet? "
             routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                 $ text "Sign up"

@@ -15,30 +15,23 @@ module Page.Stage4.PloverCommands
     ( ploverCommands
     ) where
 
-import Common.Route (FrontendRoute)
 import Control.Applicative (Applicative (pure))
 import Control.Monad (unless)
-import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Eq (Eq ((==)))
 import Data.Function (($))
 import Data.Semigroup ((<>))
-import Obelisk.Route.Frontend (R, RouteToUrl, SetRoute)
 import Page.Common (elNotImplemented)
 import Palantype.Common (Lang(DE))
-import Reflex.Dom ((=:), DomBuilder, MonadHold, PostBuild, Prerender, el, elAttr, elClass, text)
+import Reflex.Dom ((=:), DomBuilder, el, elAttr, elClass, text)
 import State (Env (..), Navigation (..))
 
 ploverCommands ::
     forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadFix m,
-      MonadHold t m,
-      MonadReader (Env t key) m,
-      PostBuild t m,
-      Prerender t m,
-      RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
+    ( DomBuilder t m
+    , MonadReader (Env t key) m
+      -- RouteToUrl (R FrontendRoute) m,
+      -- SetRoute t (R FrontendRoute) m
     ) =>
     m Navigation
 ploverCommands = do

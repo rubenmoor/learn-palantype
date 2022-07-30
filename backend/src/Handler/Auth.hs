@@ -172,7 +172,7 @@ handleUserNew UserNew {..} = do
     let sdClearances = if sdIsSiteAdmin then RankAdmin else RankMember
     runDb $ insert_ $ Db.Clearance keyAlias sdClearances
     let sdUserName = unUserName
-        sdAliasVisible = False
+        sdAliasVisible = unVisible
     pure SessionData { .. }
 
 handleDoesUserExist :: Text -> Handler Bool

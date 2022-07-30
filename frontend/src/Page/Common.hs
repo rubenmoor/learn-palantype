@@ -49,7 +49,7 @@ import           Data.Foldable                  ( for_
                                                 , traverse_
                                                 )
 import           Data.Foldable                  ( Foldable(null) )
-import           Data.Function                  (const,  ($) )
+import           Data.Function                  (flip, const,  ($) )
 import           Data.Functor                   ( ($>)
                                                 , void
                                                 , (<$>)
@@ -149,10 +149,10 @@ import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Foldable                  ( Foldable(elem) )
-import           Page.Common.Stopwatch          ( elStopwatch
+import           Page.Common.Stopwatch          (elStatisticsPersonalShort,  elStopwatch
                                                 , mkStopwatch
-                                                , elStatistics
-                                                , ElStatsFlag (..)
+
+
                                                 )
 import           Control.Monad                  ( when )
 import           Data.Foldable                  ( Foldable(minimum) )
@@ -165,7 +165,6 @@ import Data.Witherable (Filterable(catMaybes))
 import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
 import Language.Javascript.JSaddle (eval, liftJSM)
-import Data.Tuple (snd)
 import Data.Bifunctor (Bifunctor(second))
 import Obelisk.Generated.Static (static)
 import GHC.Generics (Generic)
@@ -211,7 +210,8 @@ elCongraz
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
-    -> Dynamic t [(Bool, (Maybe Text, Stats))]
+    -- list of personal stats
+    -> Dynamic t [Stats]
     -> Navigation
     -> m (Dynamic t Bool)
 elCongraz evDone dynStats Navigation {..} = mdo
@@ -247,18 +247,19 @@ elCongraz evDone dynStats Navigation {..} = mdo
 
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
-        Just mt ->
+        Just mNewStats ->
             elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
                 el "div" $ text "Task cleared!"
                 elClass "div" "check" $ iFa "fas fa-check-circle"
-                whenJust mt $ \stats -> dyn_ $ dynStats <&> \ls -> do
-                    when (null ls || statsTime stats == minimum (statsTime . snd . snd <$> ls))
+                whenJust mNewStats $ \newStats -> dyn_ $ dynStats <&> \lsStats -> do
+                    -- let lsStatsPersonal = filter (isNothing . fst . snd) lsStats
+                    when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats))
                         $ elClass "div" "paragraph newBest" $ do
                               iFa "fa-solid fa-star-sharp"
-                              el "strong" $ text $ "New best: " <> formatTime
-                                  (statsTime stats)
+                              el "strong" $ text $ "New personal best: " <> formatTime
+                                  (statsTime newStats)
                               iFa "fa-solid fa-star-sharp"
-                    elStatistics ElStatsPersonal $ take 3 ls
+                    elStatisticsPersonalShort lsStats
                     elClass "hr" "visibilityHidden" blank
                 whenJust navMNext $ \nxt -> do
                     elACont <- elClass "div" "anthrazit" $ do
@@ -584,7 +585,7 @@ getStatsLocalAndRemote evNewStats = do
   let evLSStats = attach (current dynStage) evLSMapStats <&> \(stage, map) ->
         (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
 
-  fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (<>) [] $ leftmost
+  fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (flip (<>)) [] $ leftmost
     [ evLSStats
     , fmap (True,) <$> evRespSucc
     , pure <$> evNewStats'

@@ -35,7 +35,7 @@ import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
                                                 , zip
                                                 )
-import           Data.Maybe                     ( Maybe(..) )
+import           Data.Maybe                     (isNothing,  Maybe(..) )
 import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
@@ -95,7 +95,7 @@ import qualified Data.Text                     as Text
 import           Palantype.Common               ( Lang(DE) )
 import           Data.Eq                        ( Eq((==)) )
 import           GHC.Num                        ( Num((-)) )
-import           Data.Tuple                     ( fst )
+import           Data.Tuple                     (snd,  fst )
 import qualified Palantype.Common.RawSteno     as Raw
 import qualified Palantype.Common.Indices      as KI
 import           Data.Foldable                  ( Foldable(length) )
@@ -114,6 +114,7 @@ import           Common.Model                   ( Stats )
 import GHC.Generics (Generic)
 import Data.Bool (Bool, not)
 import Data.Text (Text)
+import Data.List (filter)
 
 data StateLiterals k
     = StatePause Int
@@ -383,9 +384,10 @@ fingerspelling = mdo
                 elAttr "code" ("class" =: "steno") $ text steno
         elClass "br" "clearBoth" blank
 
-    dynStats <- getStatsLocalAndRemote evDone
-    evDone <- taskLiterals dynStats $ gate (not <$> current dynDone) envEChord
-    dynDone <- elCongraz (Just <$> evDone) dynStats envNavigation
+    dynStatsAll <- getStatsLocalAndRemote evDone
+    evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEChord
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
     el "h3" $ text "Beyond text transcription"
 
