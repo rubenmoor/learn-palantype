@@ -202,16 +202,32 @@ exercise3 = exercise
    )
    PatCodaComboT
    ( \_ -> el "p" $ do
-       text "Exceptions are needed for "
+       text "This is not the whole story, though. First, exceptions are needed for "
        el "em" $ text "mt"
        text " and "
        el "em" $ text "lt"
        text ", where the "
        el "code" $ text "+"
-       text " is omitted at the expense of specificity. Also, note that the coda \
-            \\"scht\" is simply typed by "
-       el "code" $ text "-ʃD"
-       text "."
+       text " cannot be reached. It turns out that the "
+       el "code" $ text "+"
+       text " isn't really necessary there, either. There are a couple of \
+            \ambiguities, e.g. "
+       el "em" $ text "holt"
+       text " and "
+       el "em" $ text "hold"
+       text ", but they can be dealt with as exceptions. You will notice quickly \
+            \that the "
+       el "code" $ text "+"
+       text " is omitted quite often—for a little bit increased typing efficiency."
+       text "In the case of "
+       el "em" $ text "scht"
+       text ", omitting the "
+       el "code" $ text "+"
+       text " has the additional advantage that "
+       el "code" $ text "-+ʃD"
+       text " now exclusively means "
+       el "em" $ text "cht"
+       text ", which keeps things nice and simple."
    )
 
 exercise4 ::
@@ -632,23 +648,26 @@ exercise14 =
     exercise
         14
         ( \_ -> el "p" $ do
-              text "You will learn an alternative to type "
+              text "Often, when the letter "
               el "em" $ text "c"
-              text " later. To help you memorize this rule, think of "
+              text " appears alone, it can be typed as "
+              el "code" $ text "G+-"
+              text " or "
+              el "code" $ text "-+G"
+              text ", respectively. However, sometimes there exist two spellings \
+                   \alongside, one with "
+              el "em" $ text "c"
+              text " and one with "
               el "em" $ text "k"
-              text ", which is typed "
-              el "code" $ text "GD-"
-              text " in the onset."
+              text " and to allow you to distinctly type the c-variant, we need \
+                   \a custom pattern."
         )
         PatReplC
         ( \_ -> el "p" $ do
-              text "Also, remember that you already learned "
-              el "em" $ text "ch"
-              text ", which is treated as an entirely different letter and typed "
-              el "code" $ text "SHJ"
-              text ", just like "
-              el "em" $ text "sch"
-              text "."
+              text "Also, not quite coincidentally, the code "
+              el "code" $ text "DʃG"
+              text " that you learn here will appear again in the fingerspelling \
+                   \lesson."
         )
 
 exercise15 ::
@@ -730,11 +749,32 @@ exercise17 =
     exercise
         17
         ( \_ -> el "p" $ do
-              text "intro"
+              text "There is really only one lessen in this exercise: "
+              el "em" $ text "st"
+              text " in the coda is typed using "
+              el "code" $ text " -DS"
+              text ". As a side note, an additional pattern is introduced to cover "
+              el "em" $ text "tst"
+              text " and "
+              el "em" $ text "sts"
+              text "."
         )
         PatSwapS
         ( \_ -> el "p" $ do
-              text "explication"
+              text "This is the first of three exercises that deal with the \
+                   \sometimes convoluted consonant situation in the coda of German \
+                   \syllables. There are a lot of legitimate combinations of "
+              el "em" $ text "t"
+              text " with "
+              el "em" $ text "s"
+              text ", "
+              el "em" $ text "sch"
+              text "/"
+              el "em" $ text "ch"
+              text " and "
+              el "em" $ text "z"
+              text ". You will notice similarities within these three exercises \
+                   \that hopefully help with learning."
         )
 
 exercise18 ::
