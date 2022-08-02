@@ -1,5 +1,8 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DoAndIfThenElse #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Handler.Stats
     ( handlers
     )
@@ -9,10 +12,10 @@ import           Palantype.Common               ( Lang )
 import           Common.Stage                   ( Stage )
 import           Common.Model                   ( JournalEvent (EventApp),  Stats(..), EventApp (..) )
 import           AppData                        ( Handler )
-import           Servant.Server                 ( HasServer(ServerT) )
+import           Servant.Server                 (err500, throwError,  ServantErr (errBody),  HasServer(ServerT) )
 import           Common.Api                     ( RoutesStats )
 import           Auth                           ( UserInfo(..) )
-import           Database.Gerippe               (deleteBy, delete, getBy, insert_,  Entity(..)
+import           Database.Gerippe               (deleteBy, getBy, insert_,  Entity(..)
                                                 , on
                                                 , where_
                                                 , val
@@ -34,7 +37,6 @@ import           Data.Text                      ( Text )
 import qualified DbJournal
 import Data.Time (diffUTCTime, getCurrentTime)
 import Control.Monad.IO.Class (MonadIO(liftIO))
-import Control.Monad (when)
 
 handlers :: ServerT RoutesStats a Handler
 handlers =
@@ -73,18 +75,18 @@ handleStatsCompleted mUi (lang, stage, stats@Stats{..}) = do
     EventStageCompleted lang stage stats
   whenJust mUi $ \UserInfo{..} -> do
     now <- liftIO getCurrentTime
-    mStart <- runDb $ getBy $ Db.UFkAlias uiKeyAlias
-    case mStart of
-      Nothing -> runDb $ deleteBy $ Db.UFkAlias uiKeyAlias
+    runDb (getBy $ Db.UFkAlias uiKeyAlias) >>= \case
+      Nothing -> throwError $ err500 { errBody = "could not store stats (1)" }
       Just (Entity _ (Db.StageBegin _ created)) -> do
-          when (abs (diffUTCTime now created - statsTime) < 5) $
-              runDb $ insert_ $ Db.Stats uiKeyAlias
-                                         statsDate
-                                         (realToFrac statsTime)
-                                         (toUrlPiece lang)
-                                         (Text.pack $ show stage)
-                                         statsLength
-                                         statsNErrors
+          if abs (diffUTCTime now created - statsTime) < 5
+          then runDb $ insert_ $ Db.Stats uiKeyAlias
+                                          statsDate
+                                          (realToFrac statsTime)
+                                          (toUrlPiece lang)
+                                          (Text.pack $ show stage)
+                                          statsLength
+                                          statsNErrors
+          else throwError $ err500 { errBody = "could not store stats (2)" }
           runDb $ deleteBy $ Db.UFkAlias uiKeyAlias
 
 whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()

@@ -77,9 +77,10 @@ import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
 import Data.Int (Int)
+import Control.Category ((<<<))
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
-postRender action = switchDyn <$> prerender (pure never) action
+postRender = fmap switchDyn <<< prerender (pure never)
 
 request
     :: forall t (m :: * -> *) a
@@ -87,7 +88,7 @@ request
     => Client m (Event t (ReqResult () a))
     -> m (Event t (Either Text a))
 request =
-    fmap (fmap resultToEither . switchDyn) . prerender (pure never)
+    fmap (fmap resultToEither <<< switchDyn) <<< prerender (pure never)
 
 resultToEither :: ReqResult () a -> Either Text a
 resultToEither = \case

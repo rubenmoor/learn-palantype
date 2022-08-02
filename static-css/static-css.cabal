@@ -31,5 +31,6 @@ executable static-css
     -- other-extensions:
     build-depends:    base
                     , clay
+                    , text-show
     hs-source-dirs:   app
     default-language: Haskell2010

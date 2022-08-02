@@ -216,6 +216,7 @@ import Clay (flexWrap)
 import Clay (wrap)
 import Clay.Flexbox (flexDirection)
 import Clay.Flexbox (SpaceAround(spaceAround))
+import TextShow (showt)
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -286,13 +287,12 @@ main = putCss $ do
     div # ".box" ? do
         display flex
         flexFlow column Flex.nowrap
-        height $ pct 96.5
+        height $ other "calc(100% - 47px)"
 
     header ? do
         flexGrow 0
         flexShrink 1
-        height $ pct 3.5
-      -- already the default? flexBasis auto
+        height $ px 47
 
     div # ".row" ? do
         display flex
@@ -332,8 +332,8 @@ main = putCss $ do
         width $ pct 80
         backgroundColor white
         position absolute
-        top $ px 2
-        height $ px 29
+        top $ px 1
+        height $ px 31
 
     section # "#content" |> div # ".scrollBottom" ? do
         width $ other "max-content"
