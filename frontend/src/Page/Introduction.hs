@@ -98,10 +98,18 @@ introduction = do
       \N-Key roll-over (NKRO) to type chords of up to ten keys. \
       \In addition, a ortho-linear layout as well as very sensitive keys \
       \are preferable."
+
     elClass "div" "paragraph"
         $ text
               "You can play around with the keyboard above to see how much keys \
       \register at the same time with your hardware."
+
+    elClass "p" "textAlign-center" $ elAttr "iframe"
+        (    "width"  =: "640"
+          <> "height" =: "480"
+          <> "src"    =: "https://www.youtube.com/embed/za1qxU4jdfg"
+        ) blank
+
 
     el "h3" $ text "Software"
 
@@ -154,12 +162,11 @@ introduction = do
              \quite straightforward."
             DE ->
                 text
-                    "Currently, the steno dictionary for German contains \
+                    "The steno dictionary for German contains \
              \1,945,685 words. Additional words are added regularly. \
-             \Basic quality-of-life features (commands, special characters) \
-             \are missing and will be added shortly. \
-             \The steno key layout is not expected to change at this stage, \
-             \anymore."
+             \Among the quality-of-life features are: command keys (Home, End, \
+             \Insert, Delete, ...), special characters, fingerspelling, and \
+             \plover commands for actual text formatting."
 
     let (rsStart, desc) = case navLang of
             EN -> ("START", "S-, T-, A, -R, and -T")

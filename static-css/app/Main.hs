@@ -88,6 +88,7 @@ import           Clay                           (dl, dt, p, label, type_, video,
                                                 , hr
                                                 , html
                                                 , i
+                                                , iframe
                                                 , img
                                                 , important
                                                 , infinite
@@ -309,6 +310,9 @@ main = putCss $ do
         width $ pct 100
         height $ pct 100
         position relative
+
+    iframe ?
+        border none (px 0) transparent
 
     -- section # "#content" # before ? do
         -- content $ stringContent "Up \\25B2  DMKSD" -- U+25B2
@@ -685,6 +689,7 @@ main = putCss $ do
     ".verySmall" ? fontSize (pt 10)
     ".anthrazit" ? color anthrazit
     ".darkgray" ? color darkgray
+    ".textAlign-center" ? textAlign center
 
     ".exerciseField" ? do
         backgroundColor myLightgray
@@ -720,7 +725,6 @@ main = putCss $ do
 
     div # ".start" ? do
         textAlign center
-        -- TODO
         margin (px 24) (px 24) (px 24) (px 24)
 
     hr ? do
