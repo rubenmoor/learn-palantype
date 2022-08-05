@@ -19,8 +19,8 @@ import           Control.Applicative            ( Applicative(pure)
 import           Control.Category               ( Category((.)) )
 import           Control.Lens                   ((.~) )
 import           Control.Monad                  ( (=<<) )
-import           Data.Function                  (flip,  ($) )
-import           Data.Functor                   (($>),  void )
+import           Data.Function                  (flip,  ($))
+import           Data.Functor                   (($>),  void, (<&>) )
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Monoid                    (Endo,  (<>) )
 import           Data.Text                      ( Text )
@@ -54,7 +54,6 @@ import           Reflex.Dom                     (leftmost, current, tag, EventWr
                                                 , elClass
                                                 , elClass'
                                                 , elementConfig_initialAttributes
-                                                , ffor
                                                 , inputElementConfig_elementConfig
                                                 , inputElementConfig_initialChecked
                                                 , switchHold
@@ -67,7 +66,6 @@ import           Control.Monad.Reader           (asks,  ask
                                                 , MonadReader
                                                 )
 import           State                          (updateState, Session (..),  State (..))
-import           Data.Functor                   ( (<&>) )
 import Data.Int (Int)
 import TextShow (TextShow(showt))
 import Control.Monad (unless)
@@ -115,7 +113,7 @@ elLabelInput conf label maxlength id = do
         .  elementConfig_initialAttributes
         .~ ("id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength)
     let dynStr  = _inputElement_value i
-        dynMStr = ffor dynStr $ \s -> if Text.null s then Nothing else Just s
+        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
     pure (dynMStr, i)
 
 elLabelPasswordInput
@@ -136,7 +134,7 @@ elLabelPasswordInput conf label id = do
         .  elementConfig_initialAttributes
         .~ ("id" =: id <> "type" =: "password" <> "maxlength" =: "64")
     let dynStr  = _inputElement_value i
-        dynMStr = ffor dynStr $ \s -> if Text.null s then Nothing else Just s
+        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
     pure (dynMStr, i)
 
 elButtonSubmit

@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -177,13 +178,64 @@ exercise2 ::
     m Navigation
 exercise2 = exercise
    2
-   ( \_ -> el "p" $ do
+   ( \_ -> el "p" do
        text "The rules for the replacement of common letters are somewhat \
             \arbitrarily split in two. This is the second half."
    )
    PatReplCommon2
-   ( \_ -> el "p" $ do
-       text ""
+   ( \lang -> do
+       el "p" do
+         text "The idea behind "
+         el "em" $ text "phr"
+         text " is to combine "
+         el "em" $ text "f"
+         text " (the pronounciation of "
+         el "em" $ text "ph"
+         text ") with "
+         el "em" $ text "r"
+         text ". The "
+         el "em" $ text "schw-"
+         text " rule is indeed arbitrary and results from the fact that "
+         el "code" $ text "ʃ"
+         text " and "
+         el "code" $ text "F"
+         text " cannot be reached at the same time. The same is true for "
+         el "em" $ text "zw-"
+         text "."
+
+       el "p" do
+         text "The "
+         el "em" $ text "sp"
+         text " rule is a simplification of "
+         el "code" $ text "SB+"
+         text ", which is possible because "
+         el "em" $ text "sb"
+         text " isn't really a thing in German. The "
+         el "em" $ text "st"
+         text " rule is the first example of a swap—in combination with the fact \
+              \that "
+         el "em" $ text "sd"
+         text " doesn't exist in German. The onset "
+         el "em" $ text "y"
+         text " is encoded in its use as a consonant here, like in "
+         el "em" $ text "Yoghurt"
+         text ". Note the different code for its vowel user in the nucleus. \
+              \This onset code is also used for "
+
+         let
+             stageFingerspelling = $readLoc "stage_fingerspelling"
+             (iS, iE) = case stageMeta stageFingerspelling of
+                 StageSubLevel jS jE _ -> (jS, jE)
+                 StageTopLevel {} -> $failure "StageSubLebel expected"
+         routeLink (stageUrl lang stageFingerspelling)
+             $ text $ "Exercise " <> showt iS <> "." <> showt iE <> ": Fingerspelling "
+
+         text ", i.e. to type just the letter Y."
+
+       el "p" do
+         text "For the coda, you find a lot of cases where somewhat arbitrary \
+              \rules follow from necessity. Consonant combinations in the coda \
+              \are just too plentiful in German."
    )
 
 exercise3 ::

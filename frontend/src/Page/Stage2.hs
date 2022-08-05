@@ -622,16 +622,10 @@ exercise2 = mdo
                 el "code" $ text "ʃG+EI/FEL"
                 text ", with a /."
 
-            el "p" $ do
-                text
-                    "You wonder why the steno code looks so weird? \
-                    \Some words are almost beyond recognition. \
-                    \No worries, we'll get to that."
-
             pure evDone'
 
     el "p" $ do
-        text "Let me introduce yet another useful chord: "
+        text "You will probably need an additional chord to clear this task: "
         el "code" $ text $ showt $ KI.toRaw @key kiBackUp
         text
             ". It is the homerow of your right hand and deletes your last \
