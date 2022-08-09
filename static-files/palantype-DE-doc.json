@@ -836,7 +836,7 @@
         "PatReplCommon1",
         {
             "0": [
-                121584,
+                121585,
                 [
                     [
                         "mit",
@@ -1241,7 +1241,7 @@
                 ]
             ],
             "4": [
-                54,
+                49,
                 [
                     [
                         "Symptom",
@@ -1400,26 +1400,6 @@
                         "UN/FALB/SNO/D+O/GMAM/ME/DLI"
                     ],
                     [
-                        "compliancerelevant",
-                        "G+OMB/LI/AN/G+E/SME/LE/FAND"
-                    ],
-                    [
-                        "compliancerelevante",
-                        "G+OMB/LI/AN/G+E/SME/LE/FAN/D+E"
-                    ],
-                    [
-                        "compliancerelevantem",
-                        "G+OMB/LI/AN/G+E/SME/LE/FAN/D+EM"
-                    ],
-                    [
-                        "compliancerelevanter",
-                        "G+OMB/LI/AN/G+E/SME/LE/FAN/D+EÜ"
-                    ],
-                    [
-                        "compliancerelevantes",
-                        "G+OMB/LI/AN/G+E/SME/LE/FAN/D+ES"
-                    ],
-                    [
                         "homoleptisch",
                         "SNO/MOLB/D+Iʃ"
                     ],
@@ -1462,7 +1442,7 @@
                 ]
             ],
             "3": [
-                1625,
+                1624,
                 [
                     [
                         "hat",
@@ -1479,10 +1459,6 @@
                     [
                         "Gastronomie",
                         "GASD/SMO/NO/MI"
-                    ],
-                    [
-                        "Industrie",
-                        "IN/DUSD/SMI"
                     ],
                     [
                         "ergänzt",
@@ -1863,6 +1839,10 @@
                     [
                         "Australierin",
                         "AUSD/SMA/LI/E/SMIN"
+                    ],
+                    [
+                        "Nachwuchsleistungszentrum",
+                        "NA+ʃ/F+U+GS/LEIS/D+UMGS/ʃGEND/SMUM"
                     ]
                 ]
             ]
@@ -1872,7 +1852,7 @@
         "PatReplCommon2",
         {
             "0": [
-                39925,
+                39972,
                 [
                     [
                         "zwei",
@@ -2277,7 +2257,7 @@
                 ]
             ],
             "3": [
-                88,
+                48,
                 [
                     [
                         "Typ",
@@ -2290,10 +2270,6 @@
                     [
                         "My",
                         "MI"
-                    ],
-                    [
-                        "Dylan",
-                        "DFNLAN"
                     ],
                     [
                         "Country",
@@ -2320,32 +2296,16 @@
                         "GU/DFNE/AÜ"
                     ],
                     [
-                        "Handyempfang",
-                        "SNAN/DFNEMB/FAMG"
-                    ],
-                    [
-                        "Dylans",
-                        "DFNLANS"
-                    ],
-                    [
-                        "Yorck",
-                        "FN~O+G"
-                    ],
-                    [
                         "Elektrolyt",
                         "E/LE+GD/SMO/LID"
                     ],
                     [
+                        "Rayon",
+                        "SMAI/ON"
+                    ],
+                    [
                         "Charley",
                         "ʃ+AÜ/LEI"
-                    ],
-                    [
-                        "Bodylotion",
-                        "BO/DFNLO/ʃEN"
-                    ],
-                    [
-                        "Handyakku",
-                        "SNAN/DFNA+G/G+U"
                     ],
                     [
                         "Systemadministrator",
@@ -2356,96 +2316,44 @@
                         "B+AND/SMI"
                     ],
                     [
-                        "Handyüberwachung",
-                        "SNAN/DFNÜ/BEÜ/F+A/ʃ+UMG"
-                    ],
-                    [
                         "Rileys",
                         "SMI/LEIS"
+                    ],
+                    [
+                        "Himalayas",
+                        "SNI/MA/LAI/AS"
                     ],
                     [
                         "Anthonys",
                         "AND/SNO/NIS"
                     ],
                     [
-                        "Handyanbieter",
-                        "SNAN/DFNAN/BI/D+EÜ"
-                    ],
-                    [
-                        "Handymodell",
-                        "SNAN/DFNMO/DEL"
-                    ],
-                    [
-                        "Rudyard",
-                        "SMU/DFNAÜD"
-                    ],
-                    [
-                        "Handymarkt",
-                        "SNAN/DFNMAÜ+GD"
-                    ],
-                    [
                         "Hypozentrum",
                         "SNI/B+O/ʃGEND/SMUM"
-                    ],
-                    [
-                        "Volodymyr",
-                        "FO/LO/DFNM~I"
                     ],
                     [
                         "Lysistrata",
                         "LI/SISD/SMA/D+A"
                     ],
                     [
-                        "ladylike",
-                        "LA/DFNLAI+G"
-                    ],
-                    [
-                        "Handymodelle",
-                        "SNAN/DFNMO/DEL/LE"
-                    ],
-                    [
-                        "Handyaufnahme",
-                        "SNAN/DFNAUF/NA/ME"
+                        "Crayon",
+                        "DʃGMAI/ON"
                     ],
                     [
                         "Baryzentrum",
                         "BA/SMI/ʃGEND/SMUM"
                     ],
                     [
-                        "Bodylotions",
-                        "BO/DFNLO/ʃENS"
-                    ],
-                    [
-                        "Handymast",
-                        "SNAN/DFNMAs"
-                    ],
-                    [
-                        "Handyakkus",
-                        "SNAN/DFNA+G/G+US"
-                    ],
-                    [
                         "Diskjockeys",
                         "DI+GS/FNO/G+EIS"
-                    ],
-                    [
-                        "Handyanbieters",
-                        "SNAN/DFNAN/BI/D+EÜS"
                     ],
                     [
                         "Diskjockey",
                         "DI+GS/FNO/G+EI"
                     ],
                     [
-                        "Handyanruf",
-                        "SNAN/DFNAN/SMUF"
-                    ],
-                    [
-                        "Spondylitis",
-                        "SBON/DFNLI/D+IS"
-                    ],
-                    [
-                        "Handyanrufe",
-                        "SNAN/DFNAN/SMU/FE"
+                        "Displayanzeige",
+                        "DIS/DBLAI/AN/ʃGEI/GE"
                     ],
                     [
                         "Modeltyp",
@@ -2456,16 +2364,8 @@
                         "SIS/D+EM/AD/MI/NISD/SMA/D+O/SMIN"
                     ],
                     [
-                        "Handylautsprecher",
-                        "SNAN/DFNLAUD/SBLE/ʃ+EÜ"
-                    ],
-                    [
                         "Panzertyp",
                         "B+AN/ʃGEÜ/D+I+B"
-                    ],
-                    [
-                        "Teddymantel",
-                        "D+ED/DFNMAN/D+EL"
                     ],
                     [
                         "Countrymusic",
@@ -2476,16 +2376,8 @@
                         "E/LE+GD/SMO/DI/NA/MI+G"
                     ],
                     [
-                        "Handyanbietern",
-                        "SNAN/DFNAN/BI/D+EÜN"
-                    ],
-                    [
-                        "Handymarktes",
-                        "SNAN/DFNMAÜ+G/D+ES"
-                    ],
-                    [
-                        "Handymelodie",
-                        "SNAN/DFNME/LO/DI"
+                        "Himalayagebiet",
+                        "SNI/MA/LAI/A/GE/BID"
                     ],
                     [
                         "Panzertyps",
@@ -2496,108 +2388,52 @@
                         "SB~OD/D+I+B"
                     ],
                     [
-                        "Teddymänteln",
-                        "D+ED/DFNMÄN/D+ELN"
-                    ],
-                    [
                         "lyncht",
                         "LI+NʃD"
-                    ],
-                    [
-                        "Condyloma",
-                        "G+ON/DFNLO/MA"
-                    ],
-                    [
-                        "Condylomata",
-                        "G+ON/DFNLO/MA/D+A"
-                    ],
-                    [
-                        "Dyarchie",
-                        "DFNAÜ/ʃ+I"
                     ],
                     [
                         "Dyopol",
                         "DFNO/B+OL"
                     ],
                     [
-                        "Handyanhänger",
-                        "SNAN/DFNAN/SNÄN/GEÜ"
+                        "Himalayagebietes",
+                        "SNI/MA/LAI/A/GE/BI/D+ES"
                     ],
                     [
-                        "Handyanhängern",
-                        "SNAN/DFNAN/SNÄN/GEÜN"
+                        "Himalayagebirge",
+                        "SNI/MA/LAI/A/GE/B~I/GE"
                     ],
                     [
-                        "Handyanhängers",
-                        "SNAN/DFNAN/SNÄN/GEÜS"
+                        "Himalayagebirges",
+                        "SNI/MA/LAI/A/GE/B~I/GES"
                     ],
                     [
-                        "Handyempfanges",
-                        "SNAN/DFNEMB/FAN/GES"
+                        "Himalayaraum",
+                        "SNI/MA/LAI/A/SMAUM"
                     ],
                     [
-                        "Handylautsprechers",
-                        "SNAN/DFNLAUD/SBLE/ʃ+EÜS"
+                        "Himalayaraumes",
+                        "SNI/MA/LAI/A/SMAU/MES"
                     ],
                     [
-                        "Handylizenz",
-                        "SNAN/DFNLI/ʃGEMGʃ"
+                        "Himalayaraums",
+                        "SNI/MA/LAI/A/SMAUMS"
                     ],
                     [
-                        "Handylogo",
-                        "SNAN/DFNLO/GO"
+                        "Krayon",
+                        "DGMAI/ON"
                     ],
                     [
-                        "Handylogos",
-                        "SNAN/DFNLO/GOS"
+                        "Malayas",
+                        "MA/LAI/AS"
                     ],
                     [
-                        "Handyläutens",
-                        "SNAN/DFNLÄU/D+ENS"
-                    ],
-                    [
-                        "Handymodells",
-                        "SNAN/DFNMO/DELS"
-                    ],
-                    [
-                        "Handymuffel",
-                        "SNAN/DFNMUF/FEL"
-                    ],
-                    [
-                        "Handymuffeln",
-                        "SNAN/DFNMUF/FELN"
-                    ],
-                    [
-                        "Handymuffels",
-                        "SNAN/DFNMUF/FELS"
-                    ],
-                    [
-                        "Handymärkte",
-                        "SNAN/DFNMÄÜ+G/D+E"
-                    ],
-                    [
-                        "Handyoberfläche",
-                        "SNAN/DFNO/BEÜ/FLÄ/ʃ+E"
-                    ],
-                    [
-                        "Handyuhr",
-                        "SNAN/DFN~U+"
-                    ],
-                    [
-                        "Kondylus",
-                        "G+ON/DFNLUS"
-                    ],
-                    [
-                        "Lustyacht",
-                        "LUSD/FNA+ʃD"
+                        "Osthimalayas",
+                        "Os/SNI/MA/LAI/AS"
                     ],
                     [
                         "PolyGram",
                         "B+O/LI/GMAM"
-                    ],
-                    [
-                        "Praseodymoxid",
-                        "DBMA/SEO/DFNMO/DSGID"
                     ],
                     [
                         "Schlüsseltransfersystem",
@@ -2612,24 +2448,8 @@
                         "ʃLÜS/SELD/SMANS/FEÜ/SIS/D+EMS"
                     ],
                     [
-                        "Spondylusmuschel",
-                        "SBON/DFNLUS/MU/ʃEL"
-                    ],
-                    [
-                        "Spondylusmuscheln",
-                        "SBON/DFNLUS/MU/ʃELN"
-                    ],
-                    [
                         "Sporttyps",
                         "SB~OD/D+I+BS"
-                    ],
-                    [
-                        "Teddymantels",
-                        "D+ED/DFNMAN/D+ELS"
-                    ],
-                    [
-                        "Teddymäntel",
-                        "D+ED/DFNMÄN/D+EL"
                     ]
                 ]
             ]
@@ -2639,7 +2459,7 @@
         "PatCodaComboT",
         {
             "0": [
-                22024,
+                21888,
                 [
                     [
                         "nicht",
@@ -3210,7 +3030,7 @@
         "PatOnsetR",
         {
             "0": [
-                58819,
+                58924,
                 [
                     [
                         "Prozent",
@@ -4845,7 +4665,7 @@
         "PatDiConsonant",
         {
             "0": [
-                35176,
+                35178,
                 [
                     [
                         "kann",
@@ -5370,7 +5190,7 @@
                     ],
                     [
                         "Profifußball",
-                        "BO/FI/F~US/BAL"
+                        "BO/FI/FU+S/BAL"
                     ],
                     [
                         "Kopfball",
@@ -5550,7 +5370,7 @@
                     ],
                     [
                         "Fußballspiel",
-                        "F~US/BAL/SBIL"
+                        "FU+S/BAL/SBIL"
                     ],
                     [
                         "Maxwell",
@@ -5594,7 +5414,7 @@
                     ],
                     [
                         "Amateurfußball",
-                        "A/MA/D+ÄO/F~US/BAL"
+                        "A/MA/D+ÄO/FU+S/BAL"
                     ],
                     [
                         "Stilllegung",
@@ -5602,7 +5422,7 @@
                     ],
                     [
                         "Fußballprofi",
-                        "F~US/BAL/BO/FI"
+                        "FU+S/BAL/BO/FI"
                     ],
                     [
                         "punktuell",
@@ -5630,7 +5450,7 @@
                     ],
                     [
                         "Fußballplatz",
-                        "F~US/BAL/DBLAGʃD"
+                        "FU+S/BAL/DBLAGʃD"
                     ],
                     [
                         "vollziehen",
@@ -5655,7 +5475,7 @@
                 ]
             ],
             "3": [
-                298,
+                296,
                 [
                     [
                         "gestoppt",
@@ -6065,7 +5885,7 @@
         "PatCodaH",
         {
             "0": [
-                60242,
+                60247,
                 [
                     [
                         "viele",
@@ -6436,6 +6256,10 @@
                         "F+ÄÜ/LEN"
                     ],
                     [
+                        "Industrie",
+                        "IN/DUS/DL~I"
+                    ],
+                    [
                         "Bahnhof",
                         "BAÜN/SNOF"
                     ],
@@ -6462,15 +6286,11 @@
                     [
                         "Teilnahme",
                         "D+EIL/NAÜ/ME"
-                    ],
-                    [
-                        "Aufnahme",
-                        "AUF/NAÜ/ME"
                     ]
                 ]
             ],
             "2": [
-                329,
+                325,
                 [
                     [
                         "die",
@@ -6635,10 +6455,6 @@
                     [
                         "Barbie",
                         "BAÜ/BI"
-                    ],
-                    [
-                        "Yahoo",
-                        "DFBAO/O"
                     ],
                     [
                         "ausgebuht",
@@ -6871,6 +6687,10 @@
                     [
                         "Miethaie",
                         "MI+D/SNAI"
+                    ],
+                    [
+                        "Junghaie",
+                        "FNUMG/SNAI"
                     ]
                 ]
             ]
@@ -6880,7 +6700,7 @@
         "PatCodaR",
         {
             "0": [
-                355680,
+                355667,
                 [
                     [
                         "der",
@@ -7746,7 +7566,7 @@
         "PatCodaHR",
         {
             "0": [
-                16386,
+                16387,
                 [
                     [
                         "mehr",
@@ -8281,7 +8101,7 @@
                 ]
             ],
             "1": [
-                3258,
+                3391,
                 [
                     [
                         "Stadt",
@@ -8342,6 +8162,10 @@
                     [
                         "Karstadt",
                         "G+AÜ/DSAD"
+                    ],
+                    [
+                        "Großstadt",
+                        "GMO+S/DSAD"
                     ],
                     [
                         "Kleinstadt",
@@ -8668,20 +8492,16 @@
                         "DSAD/DEÜ/BÄI"
                     ],
                     [
+                        "Großstadtrevier",
+                        "GMO+S/DSAD/SME/FBL~I"
+                    ],
+                    [
                         "Hammerschmidt",
                         "SNAM/MEÜ/ʃMID"
                     ],
                     [
                         "Grenzstadt",
                         "GMEMGʃ/DSAD"
-                    ],
-                    [
-                        "Radtke",
-                        "SMAD/G+E"
-                    ],
-                    [
-                        "Stadtgrenzen",
-                        "DSAD/GMEN/ʃGEN"
                     ]
                 ]
             ],
@@ -8720,7 +8540,7 @@
         "PatDiphtong",
         {
             "0": [
-                2212,
+                2208,
                 [
                     [
                         "Joe",
@@ -9059,10 +8879,6 @@
                         "N~O/DEÜ/NÄI"
                     ],
                     [
-                        "poetische",
-                        "B+EO/D+I/ʃE"
-                    ],
-                    [
                         "Steyrer",
                         "DSÄI/SMEÜ"
                     ],
@@ -9121,6 +8937,10 @@
                     [
                         "Marley",
                         "MAÜ/LÄI"
+                    ],
+                    [
+                        "Kirchweih",
+                        "G+~I+ʃ/F+EI+"
                     ]
                 ]
             ],
@@ -10345,7 +10165,7 @@
         "PatReplC",
         {
             "0": [
-                7326,
+                7329,
                 [
                     [
                         "Corona",
@@ -11160,11 +10980,11 @@
         "PatSZ",
         {
             "0": [
-                15631,
+                15506,
                 [
                     [
                         "große",
-                        "GM~O/S+E"
+                        "GMO/S+E"
                     ],
                     [
                         "heißt",
@@ -11172,7 +10992,7 @@
                     ],
                     [
                         "Straße",
-                        "DSMAÜ/S+E"
+                        "DSMA/S+E"
                     ],
                     [
                         "weiß",
@@ -11184,7 +11004,7 @@
                     ],
                     [
                         "groß",
-                        "GM~O+S"
+                        "GMO+S"
                     ],
                     [
                         "schließlich",
@@ -11208,19 +11028,19 @@
                     ],
                     [
                         "großer",
-                        "GM~O/S+EÜ"
+                        "GMO/S+EÜ"
                     ],
                     [
                         "Fußball",
-                        "F~U+S/BAL"
+                        "FU+S/BAL"
                     ],
                     [
                         "regelmäßig",
-                        "SME/GEL/MÄÜ/S+IG"
+                        "SME/GEL/MÄ/S+IG"
                     ],
                     [
                         "großes",
-                        "GM~O/S+ES"
+                        "GMO/S+ES"
                     ],
                     [
                         "anschließend",
@@ -11232,7 +11052,7 @@
                     ],
                     [
                         "Spaß",
-                        "SBAÜ+S"
+                        "SBA+S"
                     ],
                     [
                         "außer",
@@ -11248,7 +11068,7 @@
                     ],
                     [
                         "Fuß",
-                        "F~U+S"
+                        "FU+S"
                     ],
                     [
                         "ausschließlich",
@@ -11260,11 +11080,11 @@
                     ],
                     [
                         "Maßnahme",
-                        "MAÜ+S/NAÜ/ME"
+                        "MA+S/NAÜ/ME"
                     ],
                     [
                         "Großteil",
-                        "GM~O+S/D+EIL"
+                        "GMO+S/D+EIL"
                     ],
                     [
                         "schließt",
@@ -11288,11 +11108,7 @@
                     ],
                     [
                         "saß",
-                        "SAÜ+S"
-                    ],
-                    [
-                        "weißen",
-                        "F+EI/S+EN"
+                        "SA+S"
                     ],
                     [
                         "Verstöße",
@@ -11300,11 +11116,11 @@
                     ],
                     [
                         "großem",
-                        "GM~O/S+EM"
+                        "GMO/S+EM"
                     ],
                     [
                         "mutmaßliche",
-                        "MU+D/MAÜ+S/LI/ʃ+E"
+                        "MU+D/MA+S/LI/ʃ+E"
                     ],
                     [
                         "stieß",
@@ -11312,7 +11128,7 @@
                     ],
                     [
                         "Fußballer",
-                        "F~U+S/BAL/LEÜ"
+                        "FU+S/BAL/LEÜ"
                     ],
                     [
                         "heiß",
@@ -11328,7 +11144,7 @@
                     ],
                     [
                         "Fußgänger",
-                        "F~U+S/GÄN/GEÜ"
+                        "FU+S/GÄN/GEÜ"
                     ],
                     [
                         "äußert",
@@ -11336,15 +11152,15 @@
                     ],
                     [
                         "bloß",
-                        "BL~O+S"
+                        "BLO+S"
                     ],
                     [
                         "Bundesstraße",
-                        "BUN/DES/DSMAÜ/S+E"
+                        "BUN/DES/DSMA/S+E"
                     ],
                     [
                         "maßgeblich",
-                        "MAÜ+S/GEB/LI+ʃ"
+                        "MA+S/GEB/LI+ʃ"
                     ],
                     [
                         "größter",
@@ -11352,15 +11168,15 @@
                     ],
                     [
                         "mutmaßlich",
-                        "MU+D/MAÜ+S/LI+ʃ"
+                        "MU+D/MA+S/LI+ʃ"
                     ],
                     [
                         "Bußgeld",
-                        "B~U+S/GELD"
+                        "BU+S/GELD"
                     ],
                     [
                         "Vorstoß",
-                        "FBL~O/DS~O+S"
+                        "FBL~O/DSO+S"
                     ],
                     [
                         "abschließend",
@@ -11368,7 +11184,7 @@
                     ],
                     [
                         "Freistoß",
-                        "FMEI/DS~O+S"
+                        "FMEI/DSO+S"
                     ],
                     [
                         "heiße",
@@ -11380,15 +11196,15 @@
                     ],
                     [
                         "Hoeneß",
-                        "SNEO/NEÜ+S"
+                        "SNEO/NE+S"
                     ],
                     [
                         "Füße",
-                        "F~Ü/S+E"
+                        "FÜ/S+E"
                     ],
                     [
                         "Großeltern",
-                        "GM~O+S/EL/D+EÜN"
+                        "GMO+S/EL/D+EÜN"
                     ],
                     [
                         "genießt",
@@ -11396,7 +11212,7 @@
                     ],
                     [
                         "Landstraße",
-                        "LAND/DSMAÜ/S+E"
+                        "LAND/DSMA/S+E"
                     ],
                     [
                         "Weißrussland",
@@ -11408,15 +11224,15 @@
                     ],
                     [
                         "Hauptstraße",
-                        "SNAU+BD/DSMAÜ/S+E"
+                        "SNAU+BD/DSMA/S+E"
                     ],
                     [
                         "regelmäßige",
-                        "SME/GEL/MÄÜ/S+I/GE"
+                        "SME/GEL/MÄ/S+I/GE"
                     ],
                     [
                         "Fußgängerzone",
-                        "F~U+S/GÄN/GEÜ/ʃGO/NE"
+                        "FU+S/GÄN/GEÜ/ʃGO/NE"
                     ],
                     [
                         "fließt",
@@ -11428,7 +11244,7 @@
                     ],
                     [
                         "großartig",
-                        "GM~O+S/AÜ/D+IG"
+                        "GMO+S/AÜ/D+IG"
                     ],
                     [
                         "ließe",
@@ -11440,15 +11256,15 @@
                     ],
                     [
                         "großartige",
-                        "GM~O+S/AÜ/D+I/GE"
+                        "GMO+S/AÜ/D+I/GE"
                     ],
                     [
                         "Bußgelder",
-                        "B~U+S/GEL/DEÜ"
+                        "BU+S/GEL/DEÜ"
                     ],
                     [
                         "Verstoßes",
-                        "FBLEÜ/DS~O/S+ES"
+                        "FBLEÜ/DSO/S+ES"
                     ],
                     [
                         "größeres",
@@ -11456,35 +11272,31 @@
                     ],
                     [
                         "Großstädten",
-                        "GM~O+S/DSÄD/D+EN"
+                        "GMO+S/DSÄD/D+EN"
                     ],
                     [
                         "Bahnhofstraße",
-                        "BAÜN/SNOF/DSMAÜ/S+E"
+                        "BAÜN/SNOF/DSMA/S+E"
                     ],
                     [
                         "weißer",
                         "F+EI/S+EÜ"
                     ],
                     [
-                        "reißen",
-                        "SMEI/S+EN"
-                    ],
-                    [
                         "Großbritanniens",
-                        "GM~O+S/BMI/D+AN/NI/ENS"
+                        "GMO+S/BMI/D+AN/NI/ENS"
                     ],
                     [
                         "Landesstraße",
-                        "LAN/DES/DSMAÜ/S+E"
+                        "LAN/DES/DSMA/S+E"
                     ],
                     [
                         "Großmutter",
-                        "GM~O+S/MU+D/D+EÜ"
+                        "GMO+S/MU+D/D+EÜ"
                     ],
                     [
                         "Fußballs",
-                        "F~U+S/BALS"
+                        "FU+S/BALS"
                     ],
                     [
                         "außergewöhnlich",
@@ -11496,31 +11308,31 @@
                     ],
                     [
                         "Maßstab",
-                        "MAÜ+S/DSAB"
+                        "MA+S/DSAB"
                     ],
                     [
                         "Großbank",
-                        "GM~O+S/BAMN"
+                        "GMO+S/BAMN"
                     ],
                     [
                         "Kreisstraße",
-                        "DGMEIS/DSMAÜ/S+E"
+                        "DGMEIS/DSMA/S+E"
                     ],
                     [
                         "Großvater",
-                        "GM~O+S/FBLA/D+EÜ"
+                        "GMO+S/FBLA/D+EÜ"
                     ],
                     [
                         "großzügig",
-                        "GM~O+S/ʃGÜ/GIG"
+                        "GMO+S/ʃGÜ/GIG"
                     ],
                     [
                         "Anstoß",
-                        "AN/DS~O+S"
+                        "AN/DSO+S"
                     ],
                     [
                         "planmäßig",
-                        "DBLAN/MÄÜ/S+IG"
+                        "DBLAN/MÄ/S+IG"
                     ],
                     [
                         "Äußerung",
@@ -11528,7 +11340,7 @@
                     ],
                     [
                         "Großraum",
-                        "GM~O+S/SMAUM"
+                        "GMO+S/SMAUM"
                     ],
                     [
                         "verstößt",
@@ -11536,11 +11348,11 @@
                     ],
                     [
                         "Großaufgebot",
-                        "GM~O+S/AUF/GE/BO+D"
+                        "GMO+S/AUF/GE/BO+D"
                     ],
                     [
                         "Straßburg",
-                        "DSMAÜ+S/B~UG"
+                        "DSMA+S/B~UG"
                     ],
                     [
                         "zweitgrößte",
@@ -11552,7 +11364,7 @@
                     ],
                     [
                         "mutmaßlicher",
-                        "MU+D/MAÜ+S/LI/ʃ+EÜ"
+                        "MU+D/MA+S/LI/ʃ+EÜ"
                     ],
                     [
                         "Erschließung",
@@ -11561,411 +11373,14 @@
                     [
                         "hinterließ",
                         "SNIN/D+EÜ/L~I+S"
-                    ]
-                ]
-            ],
-            "1": [
-                134,
-                [
-                    [
-                        "Großstadt",
-                        "GM~OS/DSAD"
-                    ],
-                    [
-                        "Großstadtrevier",
-                        "GM~OS/DSAD/SME/FBL~I"
-                    ],
-                    [
-                        "Humboldtstraße",
-                        "SNUM/BOLD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großwallstadt",
-                        "GM~OS/F+AL/DSAD"
-                    ],
-                    [
-                        "Stadtstraße",
-                        "DSAD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großstadtdschungel",
-                        "GM~OS/DSAD/DʃUN/GEL"
-                    ],
-                    [
-                        "Großstadtreviers",
-                        "GM~OS/DSAD/SME/FBL~IS"
-                    ],
-                    [
-                        "Reinhardtstraße",
-                        "SMEIN/SNAÜD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Altstadtstraße",
-                        "ALD/DSAD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Vorstadtstraße",
-                        "FBL~O/DSAD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Fußballstadt",
-                        "F~US/BAL/DSAD"
-                    ],
-                    [
-                        "Großstadtflair",
-                        "GM~OS/DSAD/FLÄ"
-                    ],
-                    [
-                        "Großstadtlebens",
-                        "GM~OS/DSAD/LE/BENS"
-                    ],
-                    [
-                        "Großstadtkinder",
-                        "GM~OS/DSAD/G+IN/DEÜ"
-                    ],
-                    [
-                        "Stadtrandstraße",
-                        "DSAD/SMAND/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großstadtmensch",
-                        "GM~OS/DSAD/MENʃ"
-                    ],
-                    [
-                        "Großstadtkind",
-                        "GM~OS/DSAD/G+IND"
-                    ],
-                    [
-                        "Großstadtroman",
-                        "GM~OS/DSAD/SMO/MAN"
-                    ],
-                    [
-                        "Großstadtjunge",
-                        "GM~OS/DSAD/FNUN/GE"
-                    ],
-                    [
-                        "Stadtfeldstraße",
-                        "DSAD/FELD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Stadtholzstraße",
-                        "DSAD/SNOLGʃ/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großstadtluft",
-                        "GM~OS/DSAD/LUFD"
-                    ],
-                    [
-                        "Großstadtlärm",
-                        "GM~OS/DSAD/LÄÜM"
-                    ],
-                    [
-                        "Großstadtromane",
-                        "GM~OS/DSAD/SMO/MA/NE"
-                    ],
-                    [
-                        "Großstadtvierteln",
-                        "GM~OS/DSAD/FBL~I/D+ELN"
-                    ],
-                    [
-                        "Großstadtwohnung",
-                        "GM~OS/DSAD/F+~O/NUMG"
-                    ],
-                    [
-                        "Stadtgröße",
-                        "DSAD/GMÄO/SE"
-                    ],
-                    [
-                        "Almstadtstraße",
-                        "A+/DSAD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großstadtgeschichte",
-                        "GM~OS/DSAD/GE/ʃI+ʃ/D+E"
-                    ],
-                    [
-                        "Großstadtstress",
-                        "GM~OS/DSAD/DSMESs"
-                    ],
-                    [
-                        "Großstadttrubels",
-                        "GM~OS/DSAD/DLU/BELS"
-                    ],
-                    [
-                        "Großstadthelden",
-                        "GM~OS/DSAD/SNEL/DEN"
-                    ],
-                    [
-                        "Großstadtlyrik",
-                        "GM~OS/DSAD/LÄI/SMI+G"
-                    ],
-                    [
-                        "Großstadtmilieu",
-                        "GM~OS/DSAD/MI/LÄO"
-                    ],
-                    [
-                        "Großstadtnähe",
-                        "GM~OS/DSAD/NÄ/SNE"
-                    ],
-                    [
-                        "Großstadtpolizei",
-                        "GM~OS/DSAD/B+O/LI/ʃGEI"
-                    ],
-                    [
-                        "Großstadtstraße",
-                        "GM~OS/DSAD/DSMAÜ/SE"
-                    ],
-                    [
-                        "Großstadtblues",
-                        "GM~OS/DSAD/BLUS"
-                    ],
-                    [
-                        "Großstadtboulevard",
-                        "GM~OS/DSAD/BU/LE/FBLAÜD"
-                    ],
-                    [
-                        "Großstadtgebiete",
-                        "GM~OS/DSAD/GE/B~I/D+E"
-                    ],
-                    [
-                        "Großstadtgetriebe",
-                        "GM~OS/DSAD/GE/DL~I/BE"
-                    ],
-                    [
-                        "Großstadtgrenzen",
-                        "GM~OS/DSAD/GMEN/ʃGEN"
-                    ],
-                    [
-                        "Großstadtgröße",
-                        "GM~OS/DSAD/GMÄO/SE"
-                    ],
-                    [
-                        "Großstadtkultur",
-                        "GM~OS/DSAD/G+UL/D+~U"
-                    ],
-                    [
-                        "Großstadtmelodie",
-                        "GM~OS/DSAD/ME/LO/D~I"
-                    ],
-                    [
-                        "Großstadtmilieus",
-                        "GM~OS/DSAD/MI/LÄOS"
-                    ],
-                    [
-                        "Großstadtmädchen",
-                        "GM~OS/DSAD/MÄD/ʃ+EN"
-                    ],
-                    [
-                        "Großstadtstatus",
-                        "GM~OS/DSAD/DSA/D+US"
-                    ],
-                    [
-                        "Großstadtszene",
-                        "GM~OS/DSAD/DʃGE/NE"
-                    ],
-                    [
-                        "Großstadtviertel",
-                        "GM~OS/DSAD/FBL~I/D+EL"
-                    ],
-                    [
-                        "großstadtmüde",
-                        "GM~OS/DSAD/MÜ/DE"
-                    ],
-                    [
-                        "großstadtnahen",
-                        "GM~OS/DSAD/NA/SNEN"
-                    ],
-                    [
-                        "Großstadtarbeit",
-                        "GM~OS/DSAD/AÜ/BEI+D"
-                    ],
-                    [
-                        "Großstadtartikel",
-                        "GM~OS/DSAD/AÜ/D+I/G+EL"
-                    ],
-                    [
-                        "Großstadtartikeln",
-                        "GM~OS/DSAD/AÜ/D+I/G+ELN"
-                    ],
-                    [
-                        "Großstadtartikels",
-                        "GM~OS/DSAD/AÜ/D+I/G+ELS"
-                    ],
-                    [
-                        "Großstadtaufnahme",
-                        "GM~OS/DSAD/AUF/NAÜ/ME"
-                    ],
-                    [
-                        "Großstadtbindung",
-                        "GM~OS/DSAD/BIN/DUMG"
-                    ],
-                    [
-                        "Großstadtboulevards",
-                        "GM~OS/DSAD/BU/LE/FBLAÜSD"
-                    ],
-                    [
-                        "Großstadtcharme",
-                        "GM~OS/DSAD/ʃAÜM"
-                    ],
-                    [
-                        "Großstadtcharmes",
-                        "GM~OS/DSAD/ʃAÜMS"
-                    ],
-                    [
-                        "Großstadtcollage",
-                        "GM~OS/DSAD/DʃGOL/LA/GE"
-                    ],
-                    [
-                        "Großstadtdichtung",
-                        "GM~OS/DSAD/DI+ʃ/D+UMG"
-                    ],
-                    [
-                        "Großstadtelend",
-                        "GM~OS/DSAD/E/LEND"
-                    ],
-                    [
-                        "Großstadtelends",
-                        "GM~OS/DSAD/E/LENSD"
-                    ],
-                    [
-                        "Großstadtfeindlichkeit",
-                        "GM~OS/DSAD/FEIND/LI+ʃ/G+EI+D"
-                    ],
-                    [
-                        "Großstadtfilm",
-                        "GM~OS/DSAD/FI+"
-                    ],
-                    [
-                        "Großstadtfilmchen",
-                        "GM~OS/DSAD/FI+/ʃ+EN"
-                    ],
-                    [
-                        "Großstadtfilmchens",
-                        "GM~OS/DSAD/FI+/ʃ+ENS"
-                    ],
-                    [
-                        "Großstadtfilme",
-                        "GM~OS/DSAD/FIL/ME"
-                    ],
-                    [
-                        "Großstadtfilmen",
-                        "GM~OS/DSAD/FIL/MEN"
-                    ],
-                    [
-                        "Großstadtfilms",
-                        "GM~OS/DSAD/FI+S"
-                    ],
-                    [
-                        "Großstadtflairs",
-                        "GM~OS/DSAD/FLÄS"
-                    ],
-                    [
-                        "Großstadtfrühling",
-                        "GM~OS/DSAD/FM~Ü/LIMG"
-                    ],
-                    [
-                        "Großstadtfrühlings",
-                        "GM~OS/DSAD/FM~Ü/LIMGS"
-                    ],
-                    [
-                        "Großstadtgebiet",
-                        "GM~OS/DSAD/GE/B~I+D"
-                    ],
-                    [
-                        "Großstadtgebietes",
-                        "GM~OS/DSAD/GE/B~I/D+ES"
-                    ],
-                    [
-                        "Großstadtgetriebes",
-                        "GM~OS/DSAD/GE/DL~I/BES"
-                    ],
-                    [
-                        "Großstadtgetümmels",
-                        "GM~OS/DSAD/GE/D+ÜM/MELS"
-                    ],
-                    [
-                        "Großstadtgrenze",
-                        "GM~OS/DSAD/GMEN/ʃGE"
-                    ],
-                    [
-                        "Großstadtheimatkunde",
-                        "GM~OS/DSAD/SNEI/MA+D/G+UN/DE"
-                    ],
-                    [
-                        "Großstadthotel",
-                        "GM~OS/DSAD/SNO/D+EL"
-                    ],
-                    [
-                        "Großstadtjahr",
-                        "GM~OS/DSAD/FNAÜ+"
-                    ],
-                    [
-                        "Großstadtjahre",
-                        "GM~OS/DSAD/FNAÜ/SME"
-                    ],
-                    [
-                        "Großstadtjahres",
-                        "GM~OS/DSAD/FNAÜ/SMES"
-                    ],
-                    [
-                        "Großstadtjahrs",
-                        "GM~OS/DSAD/FNAÜ+S"
-                    ],
-                    [
-                        "Großstadtjugend",
-                        "GM~OS/DSAD/FNU/GEND"
-                    ],
-                    [
-                        "Großstadtjugendämter",
-                        "GM~OS/DSAD/FNU/GEND/ÄM/D+EÜ"
-                    ],
-                    [
-                        "Großstadtkindes",
-                        "GM~OS/DSAD/G+IN/DES"
-                    ],
-                    [
-                        "Großstadtkuli",
-                        "GM~OS/DSAD/G+U/LI"
-                    ],
-                    [
-                        "Großstadtkulis",
-                        "GM~OS/DSAD/G+U/LIS"
-                    ],
-                    [
-                        "Großstadtkunde",
-                        "GM~OS/DSAD/G+UN/DE"
-                    ],
-                    [
-                        "Großstadtkunden",
-                        "GM~OS/DSAD/G+UN/DEN"
-                    ],
-                    [
-                        "Großstadtlage",
-                        "GM~OS/DSAD/LA/GE"
-                    ],
-                    [
-                        "Großstadtleser",
-                        "GM~OS/DSAD/LE/SEÜ"
-                    ],
-                    [
-                        "Großstadtlesern",
-                        "GM~OS/DSAD/LE/SEÜN"
-                    ],
-                    [
-                        "Großstadtlesers",
-                        "GM~OS/DSAD/LE/SEÜS"
-                    ],
-                    [
-                        "Großstadtlichter",
-                        "GM~OS/DSAD/LI+ʃ/D+EÜ"
                     ],
                     [
-                        "Großstadtmorgens",
-                        "GM~OS/DSAD/M~O/GENS"
+                        "großteils",
+                        "GMO+S/D+EILS"
                     ],
                     [
-                        "Großstadtmythos",
-                        "GM~OS/DSAD/MÄI/DSNOS"
+                        "Maßstäbe",
+                        "MA+S/DSÄ/BE"
                     ]
                 ]
             ]
@@ -13159,7 +12574,7 @@
                 ]
             ],
             "2": [
-                52155,
+                52168,
                 [
                     [
                         "ist",
@@ -13271,7 +12686,7 @@
                     ],
                     [
                         "äußerst",
-                        "ÄU/SEÜs"
+                        "ÄU/S+EÜs"
                     ],
                     [
                         "Gastgeber",
@@ -13588,7 +13003,7 @@
                     ],
                     [
                         "Zufahrtsstraße",
-                        "ʃGU/FAÜ+SD/DSMAÜ/SE"
+                        "ʃGU/FAÜ+SD/DSMA/S+E"
                     ],
                     [
                         "Wohlfahrtspflege",
@@ -13680,7 +13095,7 @@
                     ],
                     [
                         "Vorfahrtsstraße",
-                        "F~O/FAÜ+SD/DSMAÜ/SE"
+                        "F~O/FAÜ+SD/DSMA/S+E"
                     ],
                     [
                         "realitätsnahen",
@@ -13697,6 +13112,10 @@
                     [
                         "Vorfahrtsregeln",
                         "F~O/FAÜ+SD/SME/GELN"
+                    ],
+                    [
+                        "Splits",
+                        "SBLISD"
                     ],
                     [
                         "Abfahrtsweltcup",
@@ -13720,7 +13139,7 @@
                     ],
                     [
                         "Durchfahrtsstraße",
-                        "D~U+ʃ/FAÜ+SD/DSMAÜ/SE"
+                        "D~U+ʃ/FAÜ+SD/DSMA/S+E"
                     ],
                     [
                         "Anfahrtszeit",
@@ -13817,10 +13236,6 @@
                     [
                         "Haltepunkts",
                         "SNAL/D+E/B+UMNSD"
-                    ],
-                    [
-                        "Sprits",
-                        "SBLISD"
                     ],
                     [
                         "realitätsfremden",
@@ -13948,11 +13363,11 @@
                     ],
                     [
                         "Hauptzufahrtsstraße",
-                        "SNAUBD/ʃGU/FAÜ+SD/DSMAÜ/SE"
+                        "SNAUBD/ʃGU/FAÜ+SD/DSMA/S+E"
                     ],
                     [
                         "Schifffahrtsstraße",
-                        "ʃIF/FAÜ+SD/DSMAÜ/SE"
+                        "ʃIF/FAÜ+SD/DSMA/S+E"
                     ],
                     [
                         "Realitätsgehalt",
@@ -14298,7 +13713,7 @@
                     ],
                     [
                         "Scratch",
-                        "DSGLA+ʃD"
+                        "DSGMA+ʃD"
                     ],
                     [
                         "ausrutschte",
@@ -14528,7 +13943,7 @@
                     ],
                     [
                         "Vorsichtsmaßnahme",
-                        "FBL~O/SI+ʃs/MAÜS/NA/ME"
+                        "FBL~O/SI+ʃs/MA+S/NA/ME"
                     ],
                     [
                         "Rechtssicherheit",
@@ -15397,7 +14812,7 @@
                     ],
                     [
                         "routinemäßig",
-                        "SMU/D+I/NE/MÄÜ/S+IG"
+                        "SMU/D+I/NE/MÄ/S+IG"
                     ],
                     [
                         "Hooligans",
@@ -15565,7 +14980,7 @@
                     ],
                     [
                         "routinemäßige",
-                        "SMU/D+I/NE/MÄÜ/S+I/GE"
+                        "SMU/D+I/NE/MÄ/S+I/GE"
                     ],
                     [
                         "boomte",
@@ -15666,7 +15081,7 @@
                 ]
             ],
             "4": [
-                260,
+                259,
                 [
                     [
                         "See",
@@ -16033,10 +15448,6 @@
                         "BO/G+AF/FEs"
                     ],
                     [
-                        "Hochseeyacht",
-                        "SNO+ʃ/SEs/FNA+ʃD"
-                    ],
-                    [
                         "Integrationsidee",
                         "IN/D+E/GMA/D+ONS/I/DEs"
                     ],
@@ -16067,11 +15478,15 @@
                     [
                         "Seefeldern",
                         "SEs/FEL/DEÜN"
+                    ],
+                    [
+                        "Seenation",
+                        "SEs/NA/D+ON"
                     ]
                 ]
             ],
             "3": [
-                14968,
+                14970,
                 [
                     [
                         "paar",
@@ -16403,7 +15818,7 @@
                     ],
                     [
                         "Staatsstraße",
-                        "DSAÜSD/DSMAÜ/SE"
+                        "DSAÜSD/DSMA/S+E"
                     ],
                     [
                         "Sitzungssaal",
@@ -17210,7 +16625,7 @@
                     ],
                     [
                         "Theaterstraße",
-                        "D+EÜ/D+EÜ/DSMAÜ/SE"
+                        "D+EÜ/D+EÜ/DSMA/S+E"
                     ],
                     [
                         "Theatererlebnis",
@@ -17702,7 +17117,7 @@
         "PatReplRare",
         {
             "0": [
-                29975,
+                29974,
                 [
                     [
                         "knapp",
@@ -17906,7 +17321,7 @@
                     ],
                     [
                         "verknüpft",
-                        "FBLEÜ/DGÜ+BFD"
+                        "FBLEÜ/DGÜBFD"
                     ],
                     [
                         "Stephanie",
@@ -17978,7 +17393,7 @@
                     ],
                     [
                         "geknüpft",
-                        "GE/DGÜ+BFD"
+                        "GE/DGÜBFD"
                     ],
                     [
                         "Pflichtspiel",
@@ -18107,7 +17522,7 @@
                 ]
             ],
             "3": [
-                215,
+                214,
                 [
                     [
                         "Katastrophe",
@@ -18335,7 +17750,7 @@
                     ],
                     [
                         "Lymphgefäße",
-                        "LIMF/GE/FÄÜ/SE"
+                        "LIMF/GE/FÄ/S+E"
                     ],
                     [
                         "Triumphkreuz",
@@ -18431,7 +17846,7 @@
                     ],
                     [
                         "Mammographiescreening",
-                        "MAM/MO/GMA/FI/DSGLEÜ/NIMG"
+                        "MAM/MO/GMA/FI/DSGMEÜ/NIMG"
                     ],
                     [
                         "Phalli",
@@ -18467,7 +17882,7 @@
                     ],
                     [
                         "Lymphgefäßsystem",
-                        "LIMF/GE/FÄÜS/SIS/D+EM"
+                        "LIMF/GE/FÄ+S/SIS/D+EM"
                     ],
                     [
                         "Lymphknotens",
@@ -19686,7 +19101,7 @@
                     ],
                     [
                         "geäußert",
-                        "GÄU/SEÜD"
+                        "GÄU/S+EÜD"
                     ],
                     [
                         "veröffentlichten",
@@ -19843,7 +19258,7 @@
                 ]
             ],
             "8": [
-                145116,
+                145124,
                 [
                     [
                         "ersten",
@@ -20248,7 +19663,7 @@
                 ]
             ],
             "6": [
-                562441,
+                562534,
                 [
                     [
                         "den",
@@ -20356,7 +19771,7 @@
                     ],
                     [
                         "großen",
-                        "GM~OSn"
+                        "GMO+Sn"
                     ],
                     [
                         "eigenen",
@@ -20388,7 +19803,7 @@
                     ],
                     [
                         "Maßnahmen",
-                        "MAÜS/NAMn"
+                        "MA+S/NAMn"
                     ],
                     [
                         "besser",
@@ -21030,7 +20445,7 @@
                     ],
                     [
                         "Großprojekt",
-                        "GM~O+S/BO/FNE+GD"
+                        "GMO+S/BO/FNE+GD"
                     ],
                     [
                         "provisorische",
@@ -21347,7 +20762,7 @@
                     ],
                     [
                         "Fußballabend",
-                        "F~US/BAL/BEND"
+                        "FU+S/BAL/BEND"
                     ],
                     [
                         "abendlicher",
@@ -21473,7 +20888,7 @@
         "PatCommonPrefix",
         {
             "7": [
-                109572,
+                109581,
                 [
                     [
                         "vergangenen",
@@ -22054,7 +21469,7 @@
                     ],
                     [
                         "Außenverteidiger",
-                        "AUSn/vEI/DGEÜ"
+                        "AU+Sn/vEI/DGEÜ"
                     ],
                     [
                         "vertiefen",
@@ -23764,7 +23179,7 @@
                     ],
                     [
                         "Screen",
-                        "SGLIN"
+                        "DSGMIN"
                     ],
                     [
                         "Topteams",
@@ -24259,7 +23674,7 @@
         "PatAnglEI",
         {
             "0": [
-                537,
+                538,
                 [
                     [
                         "online",
@@ -26032,7 +25447,7 @@
                     ],
                     [
                         "Downloadgröße",
-                        "DAUN/LOD/GMÄO/SE"
+                        "DAUN/LOD/GMÄO/S+E"
                     ],
                     [
                         "Bootloader",
@@ -26716,7 +26131,7 @@
         "PatAnglAU",
         {
             "0": [
-                307,
+                306,
                 [
                     [
                         "Cloud",
@@ -27044,7 +26459,7 @@
                     ],
                     [
                         "Foulstrafstoß",
-                        "FAU/EL/DSMAF/DS~O+S"
+                        "FAU/EL/DSMAF/DSO+S"
                     ],
                     [
                         "cloudbasiertes",
@@ -27531,7 +26946,7 @@
         "PatAnglSch",
         {
             "0": [
-                862,
+                864,
                 [
                     [
                         "George",
@@ -27842,6 +27257,10 @@
                         "D+EÜ/MIN/MA/NÄʃD/ME+ND"
                     ],
                     [
+                        "Bodylotion",
+                        "BO/DÄI/LO/ʃEN"
+                    ],
+                    [
                         "Gamification",
                         "GA/MI/FI/DʃGA/ʃEN"
                     ],
@@ -27928,10 +27347,6 @@
                     [
                         "Managementsysteme",
                         "MA/NÄʃD/ME+ND/SÄIS/D+E/ME"
-                    ],
-                    [
-                        "Talentmanagement",
-                        "D+A/LE+ND/MA/NÄʃD/ME+ND"
                     ]
                 ]
             ]
@@ -27941,7 +27356,7 @@
         "PatAnglOther",
         {
             "0": [
-                2353,
+                2348,
                 [
                     [
                         "Bayern",
@@ -28169,7 +27584,7 @@
                     ],
                     [
                         "Screenshots",
-                        "SGLIN/ʃO+SD"
+                        "DSGMIN/ʃO+SD"
                     ],
                     [
                         "Murray",
@@ -28177,7 +27592,7 @@
                     ],
                     [
                         "Screenshot",
-                        "SGLIN/ʃO+D"
+                        "DSGMIN/ʃO+D"
                     ],
                     [
                         "OnePlus",
@@ -28351,7 +27766,7 @@
         "PatFrankOther",
         {
             "0": [
-                6823,
+                6826,
                 [
                     [
                         "passiert",

@@ -730,33 +730,15 @@ exercise15 =
     exercise
         15
         ( \_ -> el "p" $ do
-              text "The main takeaway regarding the German letter "
-              el "em" $ text "ß"
-              text ": Use "
-              el "code" $ text "+S"
               text
-                  " in order to type it. There is another aspect you will \
-                  \note, however. Any vowel that is followed by "
-              el "em" $ text "ß"
-              text " is stretched, e.g. "
-              el "em" $ text "eß"
-              text " becomes "
-              el "code" $ text "EÜ+S"
-              text " in steno code."
+                  "This rule is here for compeleteness sake. Splitting up two \
+                  \letters into two chords is bad efficiency and will be dealt \
+                  \with by rules that follow in Stage 4. The list of words \
+                  \you have in this exercise is meant to shrink down and maybe \
+                  \can be optimized to nil."
         )
-        PatSZ
-        ( \_ -> el "p" $ do
-              text "Also, "
-              el "em" $ text "ß"
-              text " in the onset usually is simply "
-              el "code" $ text "S"
-              text ", without "
-              el "code" $ text "+"
-              text ", as you will learn later. The code "
-              el "code" $ text "GFW"
-              text
-                  " is there just in case. It is used in fingerspelling, for \
-                  \example."
+        PatBreakUpI
+        ( \_ -> el "p" $ blank
         )
 
 exercise16 ::
@@ -767,45 +749,11 @@ exercise16 =
     exercise
         16
         ( \_ -> el "p" $ do
-              text
-                  "This rule increase efficiency for vowel-heavy words. \
-                  \Using "
-              el "code" $ text "J"
-              text " for "
-              el "em" $ text "i"
-              text
-                  " saves you from breaking up a word and adding an extra chord \
-                  \just for one vowel."
-        )
-        PatBreakUpI
-        ( \_ -> el "p" $ do
-              text "In order to reach "
-              el "em" $ text "lio"
-              text " and "
-              el "em" $ text "lia"
-              text " you need to mentally swap the "
-              el "em" $ text "l"
-              text " and the "
-              el "em" $ text "i"
-              text
-                  ". Those swaps are used sometimes to increase efficiency. \
-                  \They are the explicit exceptions to what we called the \
-                  \\"Steno Order\" earlier."
-        )
-
-exercise17 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise17 =
-    exercise
-        17
-        ( \_ -> el "p" $ do
-              text "There is really only one lessen in this exercise: "
-              el "em" $ text "st"
+              text "There is one core lesson in this exercise: "
+              el "em" $ text "ts"
               text " in the coda is typed using "
-              el "code" $ text " -DS"
-              text ". As a side note, an additional pattern is introduced to cover "
+              el "code" $ text " -+SD"
+              text ". An additional pattern is introduced to cover "
               el "em" $ text "tst"
               text " and "
               el "em" $ text "sts"
@@ -829,6 +777,25 @@ exercise17 =
                    \that hopefully help with learning."
         )
 
+exercise17 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise17 =
+    exercise
+        17
+        ( \_ -> el "p" $ do
+          text "Similar to the last exercise, the core lesson here is: "
+          el "em" $ text "tsch"
+          text " is typed using "
+          el "code" $ text "+ʃD"
+          text "."
+        )
+        PatSwapSch
+        ( \_ -> el "p" $ do
+            blank
+        )
+
 exercise18 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
@@ -839,7 +806,7 @@ exercise18 =
         ( \_ -> el "p" $ do
               text "intro"
         )
-        PatSwapSch
+        PatSwapZ
         ( \_ -> el "p" $ do
               text "explication"
         )
@@ -854,7 +821,7 @@ exercise19 =
         ( \_ -> el "p" $ do
               text "intro"
         )
-        PatSwapZ
+        PatDiVowel
         ( \_ -> el "p" $ do
               text "explication"
         )
@@ -869,38 +836,23 @@ exercise20 =
         ( \_ -> el "p" $ do
               text "intro"
         )
-        PatDiVowel
-        ( \_ -> el "p" $ do
-              text "explication"
-        )
-
-exercise21 ::
-    forall key t (m :: * -> *).
-    Constraints key t m =>
-    m Navigation
-exercise21 =
-    exercise
-        21
-        ( \_ -> el "p" $ do
-              text "intro"
-        )
         PatReplH
         ( \_ -> el "p" $ do
               text "explication"
         )
 
-exercise22
+exercise21
   :: forall key t (m :: * -> *)
   .  Constraints key t m
   => m Navigation
-exercise22 = mdo
+exercise21 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
     unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Stage 3"
     el "h2" $ text $ toDescription PatCodaGK
-    el "h3" $ text $ "Exercise 22"
+    el "h3" $ text $ "Exercise 21"
 
     el "p" $ text "intro"
 
@@ -937,13 +889,13 @@ exercise22 = mdo
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
-exercise23 ::
+exercise22 ::
     forall key t (m :: * -> *).
     Constraints key t m =>
     m Navigation
-exercise23 =
+exercise22 =
     exercise
-        23
+        22
         ( \_ -> el "p" $ do
               text "intro"
         )

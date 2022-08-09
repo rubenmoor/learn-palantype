@@ -1022,7 +1022,6 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatDt_0"
                         elLi $ $readLoc "stage_PatDiphtong_0"
                         elLi $ $readLoc "stage_PatReplC_0"
-                        elLi $ $readLoc "stage_PatSZ_0"
                         elLi $ $readLoc "stage_PatBreakUpI_0"
                         elLi $ $readLoc "stage_PatSwapS_0"
                         elLi $ $readLoc "stage_PatSwapSch_0"
@@ -1307,15 +1306,14 @@ stages navLang toReady = do
                         | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
                         | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
                         | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
-                        | $readLoc "stage_PatSZ_0"          == stageCurrent -> Stage3.exercise15
-                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise16
-                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise17
-                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise18
-                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise19
-                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise20
-                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise21
-                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise22
-                        | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise23
+                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
+                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
+                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
+                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
+                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
+                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
+                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
+                        | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
                         | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
                         | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
                         | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
