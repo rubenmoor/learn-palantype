@@ -426,7 +426,7 @@
         "PatSimpleMulti",
         {
             "0": [
-                11937,
+                11938,
                 [
                     [
                         "einem",
@@ -836,7 +836,7 @@
         "PatReplCommon1",
         {
             "0": [
-                121585,
+                124136,
                 [
                     [
                         "mit",
@@ -1027,6 +1027,10 @@
                         "SNÄ+D/D+E"
                     ],
                     [
+                        "heißt",
+                        "SNEI+SD"
+                    ],
+                    [
                         "wenig",
                         "F+E/NIG"
                     ],
@@ -1191,6 +1195,10 @@
                         "GE/ʃI+ʃ/D+E"
                     ],
                     [
+                        "weiß",
+                        "F+EI+S"
+                    ],
+                    [
                         "richtig",
                         "SMI+ʃ/D+IG"
                     ],
@@ -1229,14 +1237,6 @@
                     [
                         "solche",
                         "SOL/ʃ+E"
-                    ],
-                    [
-                        "hoch",
-                        "SNO+ʃ"
-                    ],
-                    [
-                        "lang",
-                        "LAMG"
                     ]
                 ]
             ],
@@ -1442,7 +1442,7 @@
                 ]
             ],
             "3": [
-                1624,
+                1622,
                 [
                     [
                         "hat",
@@ -1852,7 +1852,7 @@
         "PatReplCommon2",
         {
             "0": [
-                39972,
+                41160,
                 [
                     [
                         "zwei",
@@ -1961,6 +1961,10 @@
                     [
                         "stehe",
                         "DSE/SNE"
+                    ],
+                    [
+                        "Spaß",
+                        "SBA+S"
                     ],
                     [
                         "manchmal",
@@ -2243,16 +2247,12 @@
                         "SÄIM/BOL/BILD"
                     ],
                     [
+                        "stößt",
+                        "DSÄO+SD"
+                    ],
+                    [
                         "zwingend",
                         "ʃG+IN/GEND"
-                    ],
-                    [
-                        "Spannung",
-                        "SBAN/NUMG"
-                    ],
-                    [
-                        "Ausstattung",
-                        "AUS/DSA+D/D+UMG"
                     ]
                 ]
             ],
@@ -2459,7 +2459,7 @@
         "PatCodaComboT",
         {
             "0": [
-                21888,
+                22172,
                 [
                     [
                         "nicht",
@@ -3030,7 +3030,7 @@
         "PatOnsetR",
         {
             "0": [
-                58924,
+                61352,
                 [
                     [
                         "Prozent",
@@ -3051,6 +3051,14 @@
                     [
                         "Trump",
                         "DLUMB"
+                    ],
+                    [
+                        "große",
+                        "GMO/S+E"
+                    ],
+                    [
+                        "Straße",
+                        "DSMA/S+E"
                     ],
                     [
                         "Grund",
@@ -3083,6 +3091,10 @@
                     [
                         "Krankenhaus",
                         "DGMAN/G+EN/SNAUS"
+                    ],
+                    [
+                        "groß",
+                        "GMO+S"
                     ],
                     [
                         "Gruppe",
@@ -3125,6 +3137,10 @@
                         "FMAMN/SMEI+ʃ"
                     ],
                     [
+                        "größten",
+                        "GMÄO+S/D+EN"
+                    ],
+                    [
                         "getroffen",
                         "GE/DLOF/FEN"
                     ],
@@ -3139,6 +3155,10 @@
                     [
                         "Kontrolle",
                         "G+ON/DLOL/LE"
+                    ],
+                    [
+                        "größte",
+                        "GMÄO+S/D+E"
                     ],
                     [
                         "Grad",
@@ -3187,6 +3207,10 @@
                     [
                         "extrem",
                         "EGSD/DLEM"
+                    ],
+                    [
+                        "großes",
+                        "GMO/S+ES"
                     ],
                     [
                         "gefragt",
@@ -3245,6 +3269,10 @@
                         "DLAF"
                     ],
                     [
+                        "größere",
+                        "GMÄO/S+E/SME"
+                    ],
+                    [
                         "Anspruch",
                         "AN/SBLU+ʃ"
                     ],
@@ -3283,6 +3311,10 @@
                     [
                         "brauche",
                         "BMAU/ʃ+E"
+                    ],
+                    [
+                        "Großteil",
+                        "GMO+S/D+EIL"
                     ],
                     [
                         "private",
@@ -3361,6 +3393,10 @@
                         "BE/DLEU+D"
                     ],
                     [
+                        "Größe",
+                        "GMÄO/S+E"
+                    ],
+                    [
                         "dran",
                         "DMAN"
                     ],
@@ -3395,42 +3431,6 @@
                     [
                         "Kräfte",
                         "DGMÄF/D+E"
-                    ],
-                    [
-                        "greift",
-                        "GMEIFD"
-                    ],
-                    [
-                        "Branchen",
-                        "BMAN/ʃ+EN"
-                    ],
-                    [
-                        "Traum",
-                        "DLAUM"
-                    ],
-                    [
-                        "Einbruch",
-                        "EIN/BMU+ʃ"
-                    ],
-                    [
-                        "freiwillig",
-                        "FMEI/F+IL/LIG"
-                    ],
-                    [
-                        "langfristig",
-                        "LAMG/FMIS/D+IG"
-                    ],
-                    [
-                        "Ehefrau",
-                        "E/SNE/FMAU"
-                    ],
-                    [
-                        "Anträge",
-                        "AN/DLÄ/GE"
-                    ],
-                    [
-                        "Pressemitteilung",
-                        "DBMES/SE/MI+D/D+EI/LUMG"
                     ]
                 ]
             ]
@@ -3440,7 +3440,7 @@
         "PatOnsetL",
         {
             "0": [
-                10124,
+                10290,
                 [
                     [
                         "geplant",
@@ -3537,6 +3537,10 @@
                     [
                         "Klima",
                         "DGLI/MA"
+                    ],
+                    [
+                        "Plätzen",
+                        "DBLÄ+D/ʃGEN"
                     ],
                     [
                         "Kleidung",
@@ -3695,6 +3699,10 @@
                         "DGLI/NI/G+UMS"
                     ],
                     [
+                        "planmäßig",
+                        "DBLAN/MÄ/S+IG"
+                    ],
+                    [
                         "klang",
                         "DGLAMG"
                     ],
@@ -3833,14 +3841,6 @@
                     [
                         "Pleitewelle",
                         "DBLEI/D+E/F+EL/LE"
-                    ],
-                    [
-                        "Anklagebank",
-                        "AN/DGLA/GE/BAMN"
-                    ],
-                    [
-                        "Abklärung",
-                        "AB/DGLÄ/SMUMG"
                     ]
                 ]
             ]
@@ -3850,7 +3850,7 @@
         "PatSmallS",
         {
             "0": [
-                2871,
+                2889,
                 [
                     [
                         "aufs",
@@ -3911,6 +3911,10 @@
                     [
                         "Hilfskräfte",
                         "SNILFs/DGMÄF/D+E"
+                    ],
+                    [
+                        "Einkaufsstraße",
+                        "EIN/G+AUFs/DSMA/S+E"
                     ],
                     [
                         "Hilfsmitteln",
@@ -4247,10 +4251,6 @@
                     [
                         "exklusivsten",
                         "EGSD/DGLU/SIFs/D+EN"
-                    ],
-                    [
-                        "Bangladeschs",
-                        "BAN/GLA/DEʃs"
                     ]
                 ]
             ],
@@ -4665,7 +4665,7 @@
         "PatDiConsonant",
         {
             "0": [
-                35178,
+                35976,
                 [
                     [
                         "kann",
@@ -4818,6 +4818,10 @@
                     [
                         "voll",
                         "FBLOL"
+                    ],
+                    [
+                        "Fußball",
+                        "FU+S/BAL"
                     ],
                     [
                         "Hoffnung",
@@ -5062,15 +5066,11 @@
                     [
                         "Ausschuss",
                         "AUS/ʃUSs"
-                    ],
-                    [
-                        "Stress",
-                        "DSMESs"
                     ]
                 ]
             ],
             "4": [
-                1493,
+                1495,
                 [
                     [
                         "offiziell",
@@ -5218,7 +5218,7 @@
                     ],
                     [
                         "Football",
-                        "FO/OD/BAL"
+                        "FU+D/BAL"
                     ],
                     [
                         "Stall",
@@ -5885,7 +5885,7 @@
         "PatCodaH",
         {
             "0": [
-                60247,
+                62362,
                 [
                     [
                         "viele",
@@ -6016,6 +6016,10 @@
                         "F+~IN"
                     ],
                     [
+                        "hieß",
+                        "SN~I+S"
+                    ],
+                    [
                         "Bundesregierung",
                         "BUN/DES/SME/G~I/SMUMG"
                     ],
@@ -6032,6 +6036,10 @@
                         "S~IG"
                     ],
                     [
+                        "schließlich",
+                        "ʃL~I+S/LI+ʃ"
+                    ],
+                    [
                         "schrieb",
                         "DʃM~IB"
                     ],
@@ -6042,6 +6050,10 @@
                     [
                         "Wohnung",
                         "F+~O/NUMG"
+                    ],
+                    [
+                        "ließ",
+                        "L~I+S"
                     ],
                     [
                         "ihres",
@@ -6188,6 +6200,10 @@
                         "ÄÜN/LI+ʃ"
                     ],
                     [
+                        "anschließend",
+                        "AN/ʃL~I/S+END"
+                    ],
+                    [
                         "hielt",
                         "SN~ILD"
                     ],
@@ -6204,6 +6220,10 @@
                         "MI+D/GL~ID"
                     ],
                     [
+                        "Schließung",
+                        "ʃL~I/S+UMG"
+                    ],
+                    [
                         "lief",
                         "L~IF"
                     ],
@@ -6212,12 +6232,20 @@
                         "DSMA/D+E/G~I"
                     ],
                     [
+                        "ausschließlich",
+                        "AUS/ʃL~I+S/LI+ʃ"
+                    ],
+                    [
                         "Johnson",
                         "FN~ON/SON"
                     ],
                     [
                         "zunehmend",
                         "ʃGU/NEÜ/MEND"
+                    ],
+                    [
+                        "Maßnahme",
+                        "MA+S/NAÜ/ME"
                     ],
                     [
                         "Brief",
@@ -6258,39 +6286,11 @@
                     [
                         "Industrie",
                         "IN/DUS/DL~I"
-                    ],
-                    [
-                        "Bahnhof",
-                        "BAÜN/SNOF"
-                    ],
-                    [
-                        "wies",
-                        "F+~IS"
-                    ],
-                    [
-                        "rief",
-                        "SM~IF"
-                    ],
-                    [
-                        "bedroht",
-                        "BE/DM~O+D"
-                    ],
-                    [
-                        "Sanierung",
-                        "SA/N~I/SMUMG"
-                    ],
-                    [
-                        "Autobahn",
-                        "AU/D+O/BAÜN"
-                    ],
-                    [
-                        "Teilnahme",
-                        "D+EIL/NAÜ/ME"
                     ]
                 ]
             ],
             "2": [
-                325,
+                326,
                 [
                     [
                         "die",
@@ -6700,7 +6700,7 @@
         "PatCodaR",
         {
             "0": [
-                355667,
+                361367,
                 [
                     [
                         "der",
@@ -7156,7 +7156,7 @@
         "PatCodaRR",
         {
             "0": [
-                2212,
+                2225,
                 [
                     [
                         "gesperrt",
@@ -7566,7 +7566,7 @@
         "PatCodaHR",
         {
             "0": [
-                16387,
+                16564,
                 [
                     [
                         "mehr",
@@ -8101,7 +8101,7 @@
                 ]
             ],
             "1": [
-                3391,
+                3390,
                 [
                     [
                         "Stadt",
@@ -8540,7 +8540,7 @@
         "PatDiphtong",
         {
             "0": [
-                2208,
+                2230,
                 [
                     [
                         "Joe",
@@ -8561,6 +8561,10 @@
                     [
                         "Duo",
                         "DU/O"
+                    ],
+                    [
+                        "Hoeneß",
+                        "SNEO/NE+S"
                     ],
                     [
                         "Eishockey",
@@ -8937,10 +8941,6 @@
                     [
                         "Marley",
                         "MAÜ/LÄI"
-                    ],
-                    [
-                        "Kirchweih",
-                        "G+~I+ʃ/F+EI+"
                     ]
                 ]
             ],
@@ -9350,7 +9350,7 @@
                 ]
             ],
             "5": [
-                2617,
+                2618,
                 [
                     [
                         "Beamten",
@@ -9899,7 +9899,7 @@
                     ],
                     [
                         "Threads",
-                        "DNLEÜSD"
+                        "DSNMEÜSD"
                     ],
                     [
                         "Xinhua",
@@ -10027,7 +10027,7 @@
                     ],
                     [
                         "Thread",
-                        "DNLEÜD"
+                        "DSNMEÜD"
                     ],
                     [
                         "Reader",
@@ -10165,7 +10165,7 @@
         "PatReplC",
         {
             "0": [
-                7329,
+                7377,
                 [
                     [
                         "Corona",
@@ -10570,7 +10570,7 @@
                 ]
             ],
             "2": [
-                109,
+                107,
                 [
                     [
                         "OECD",
@@ -10781,10 +10781,6 @@
                         "AUF/LI+ʃD/SG+AN/NEÜ"
                     ],
                     [
-                        "Bootscenters",
-                        "BO/O+D/SG+EN/D+EÜS"
-                    ],
-                    [
                         "Flachbettscannern",
                         "FLA+ʃ/BE+D/SG+AN/NEÜN"
                     ],
@@ -10855,10 +10851,6 @@
                     [
                         "Billigcomics",
                         "BIL/LIG/G+O/MI+GS"
-                    ],
-                    [
-                        "Bootscenter",
-                        "BO/O+D/SG+EN/D+EÜ"
                     ],
                     [
                         "Bürocomics",
@@ -10971,416 +10963,14 @@
                     [
                         "SCARA",
                         "NÜM/SG+A/SMA"
-                    ]
-                ]
-            ]
-        }
-    ],
-    [
-        "PatSZ",
-        {
-            "0": [
-                15506,
-                [
-                    [
-                        "große",
-                        "GMO/S+E"
-                    ],
-                    [
-                        "heißt",
-                        "SNEI+SD"
-                    ],
-                    [
-                        "Straße",
-                        "DSMA/S+E"
-                    ],
-                    [
-                        "weiß",
-                        "F+EI+S"
-                    ],
-                    [
-                        "hieß",
-                        "SN~I+S"
-                    ],
-                    [
-                        "groß",
-                        "GMO+S"
-                    ],
-                    [
-                        "schließlich",
-                        "ʃL~I+S/LI+ʃ"
-                    ],
-                    [
-                        "ließ",
-                        "L~I+S"
-                    ],
-                    [
-                        "außerdem",
-                        "AU/S+EÜ/DEM"
-                    ],
-                    [
-                        "größten",
-                        "GMÄO+S/D+EN"
-                    ],
-                    [
-                        "größte",
-                        "GMÄO+S/D+E"
-                    ],
-                    [
-                        "großer",
-                        "GMO/S+EÜ"
-                    ],
-                    [
-                        "Fußball",
-                        "FU+S/BAL"
-                    ],
-                    [
-                        "regelmäßig",
-                        "SME/GEL/MÄ/S+IG"
-                    ],
-                    [
-                        "großes",
-                        "GMO/S+ES"
-                    ],
-                    [
-                        "anschließend",
-                        "AN/ʃL~I/S+END"
-                    ],
-                    [
-                        "größere",
-                        "GMÄO/S+E/SME"
-                    ],
-                    [
-                        "Spaß",
-                        "SBA+S"
-                    ],
-                    [
-                        "außer",
-                        "AU/S+EÜ"
-                    ],
-                    [
-                        "außerhalb",
-                        "AU/S+EÜ/SNALB"
-                    ],
-                    [
-                        "Schließung",
-                        "ʃL~I/S+UMG"
-                    ],
-                    [
-                        "Fuß",
-                        "FU+S"
-                    ],
-                    [
-                        "ausschließlich",
-                        "AUS/ʃL~I+S/LI+ʃ"
-                    ],
-                    [
-                        "größer",
-                        "GMÄO/S+EÜ"
-                    ],
-                    [
-                        "Maßnahme",
-                        "MA+S/NAÜ/ME"
-                    ],
-                    [
-                        "Großteil",
-                        "GMO+S/D+EIL"
-                    ],
-                    [
-                        "schließt",
-                        "ʃL~I+SD"
-                    ],
-                    [
-                        "äußerte",
-                        "ÄU/S+EÜ/D+E"
-                    ],
-                    [
-                        "Größe",
-                        "GMÄO/S+E"
-                    ],
-                    [
-                        "äußern",
-                        "ÄU/S+EÜN"
-                    ],
-                    [
-                        "einschließlich",
-                        "EIN/ʃL~I+S/LI+ʃ"
-                    ],
-                    [
-                        "saß",
-                        "SA+S"
-                    ],
-                    [
-                        "Verstöße",
-                        "FBLEÜ/DSÄO/S+E"
-                    ],
-                    [
-                        "großem",
-                        "GMO/S+EM"
-                    ],
-                    [
-                        "mutmaßliche",
-                        "MU+D/MA+S/LI/ʃ+E"
-                    ],
-                    [
-                        "stieß",
-                        "DS~I+S"
-                    ],
-                    [
-                        "Fußballer",
-                        "FU+S/BAL/LEÜ"
-                    ],
-                    [
-                        "heiß",
-                        "SNEI+S"
-                    ],
-                    [
-                        "stößt",
-                        "DSÄO+SD"
-                    ],
-                    [
-                        "weiße",
-                        "F+EI/S+E"
-                    ],
-                    [
-                        "Fußgänger",
-                        "FU+S/GÄN/GEÜ"
-                    ],
-                    [
-                        "äußert",
-                        "ÄU/S+EÜ+D"
-                    ],
-                    [
-                        "bloß",
-                        "BLO+S"
-                    ],
-                    [
-                        "Bundesstraße",
-                        "BUN/DES/DSMA/S+E"
-                    ],
-                    [
-                        "maßgeblich",
-                        "MA+S/GEB/LI+ʃ"
-                    ],
-                    [
-                        "größter",
-                        "GMÄO+S/D+EÜ"
-                    ],
-                    [
-                        "mutmaßlich",
-                        "MU+D/MA+S/LI+ʃ"
-                    ],
-                    [
-                        "Bußgeld",
-                        "BU+S/GELD"
-                    ],
-                    [
-                        "Vorstoß",
-                        "FBL~O/DSO+S"
-                    ],
-                    [
-                        "abschließend",
-                        "AB/ʃL~I/S+END"
-                    ],
-                    [
-                        "Freistoß",
-                        "FMEI/DSO+S"
-                    ],
-                    [
-                        "heiße",
-                        "SNEI/S+E"
-                    ],
-                    [
-                        "schießt",
-                        "ʃ~I+SD"
-                    ],
-                    [
-                        "Hoeneß",
-                        "SNEO/NE+S"
-                    ],
-                    [
-                        "Füße",
-                        "FÜ/S+E"
-                    ],
-                    [
-                        "Großeltern",
-                        "GMO+S/EL/D+EÜN"
-                    ],
-                    [
-                        "genießt",
-                        "GE/N~I+SD"
-                    ],
-                    [
-                        "Landstraße",
-                        "LAND/DSMA/S+E"
-                    ],
-                    [
-                        "Weißrussland",
-                        "F+EI+S/SMUSs/LAND"
-                    ],
-                    [
-                        "fleißig",
-                        "FLEI/S+IG"
-                    ],
-                    [
-                        "Hauptstraße",
-                        "SNAU+BD/DSMA/S+E"
-                    ],
-                    [
-                        "regelmäßige",
-                        "SME/GEL/MÄ/S+I/GE"
-                    ],
-                    [
-                        "Fußgängerzone",
-                        "FU+S/GÄN/GEÜ/ʃGO/NE"
-                    ],
-                    [
-                        "fließt",
-                        "FL~I+SD"
-                    ],
-                    [
-                        "größerer",
-                        "GMÄO/S+E/SMEÜ"
-                    ],
-                    [
-                        "großartig",
-                        "GMO+S/AÜ/D+IG"
-                    ],
-                    [
-                        "ließe",
-                        "L~I/S+E"
-                    ],
-                    [
-                        "außergewöhnliche",
-                        "AU/S+EÜ/GE/F+ÄON/LI/ʃ+E"
-                    ],
-                    [
-                        "großartige",
-                        "GMO+S/AÜ/D+I/GE"
-                    ],
-                    [
-                        "Bußgelder",
-                        "BU+S/GEL/DEÜ"
-                    ],
-                    [
-                        "Verstoßes",
-                        "FBLEÜ/DSO/S+ES"
-                    ],
-                    [
-                        "größeres",
-                        "GMÄO/S+E/SMES"
-                    ],
-                    [
-                        "Großstädten",
-                        "GMO+S/DSÄD/D+EN"
-                    ],
-                    [
-                        "Bahnhofstraße",
-                        "BAÜN/SNOF/DSMA/S+E"
-                    ],
-                    [
-                        "weißer",
-                        "F+EI/S+EÜ"
-                    ],
-                    [
-                        "Großbritanniens",
-                        "GMO+S/BMI/D+AN/NI/ENS"
-                    ],
-                    [
-                        "Landesstraße",
-                        "LAN/DES/DSMA/S+E"
-                    ],
-                    [
-                        "Großmutter",
-                        "GMO+S/MU+D/D+EÜ"
-                    ],
-                    [
-                        "Fußballs",
-                        "FU+S/BALS"
-                    ],
-                    [
-                        "außergewöhnlich",
-                        "AU/S+EÜ/GE/F+ÄON/LI+ʃ"
-                    ],
-                    [
-                        "reißt",
-                        "SMEI+SD"
-                    ],
-                    [
-                        "Maßstab",
-                        "MA+S/DSAB"
-                    ],
-                    [
-                        "Großbank",
-                        "GMO+S/BAMN"
-                    ],
-                    [
-                        "Kreisstraße",
-                        "DGMEIS/DSMA/S+E"
-                    ],
-                    [
-                        "Großvater",
-                        "GMO+S/FBLA/D+EÜ"
-                    ],
-                    [
-                        "großzügig",
-                        "GMO+S/ʃGÜ/GIG"
-                    ],
-                    [
-                        "Anstoß",
-                        "AN/DSO+S"
-                    ],
-                    [
-                        "planmäßig",
-                        "DBLAN/MÄ/S+IG"
-                    ],
-                    [
-                        "Äußerung",
-                        "ÄU/S+E/SMUMG"
-                    ],
-                    [
-                        "Großraum",
-                        "GMO+S/SMAUM"
-                    ],
-                    [
-                        "verstößt",
-                        "FBLEÜ/DSÄO+SD"
-                    ],
-                    [
-                        "Großaufgebot",
-                        "GMO+S/AUF/GE/BO+D"
-                    ],
-                    [
-                        "Straßburg",
-                        "DSMA+S/B~UG"
-                    ],
-                    [
-                        "zweitgrößte",
-                        "ʃG+EI+D/GMÄO+S/D+E"
-                    ],
-                    [
-                        "größtes",
-                        "GMÄO+S/D+ES"
-                    ],
-                    [
-                        "mutmaßlicher",
-                        "MU+D/MA+S/LI/ʃ+EÜ"
-                    ],
-                    [
-                        "Erschließung",
-                        "EÜ/ʃL~I/S+UMG"
-                    ],
-                    [
-                        "hinterließ",
-                        "SNIN/D+EÜ/L~I+S"
                     ],
                     [
-                        "großteils",
-                        "GMO+S/D+EILS"
+                        "SCART",
+                        "NÜM/SG+A/SM+D"
                     ],
                     [
-                        "Maßstäbe",
-                        "MA+S/DSÄ/BE"
+                        "Sexmaniacs",
+                        "SEGSD/MA/NI/A+GS"
                     ]
                 ]
             ]
@@ -11390,7 +10980,7 @@
         "PatBreakUpI",
         {
             "0": [
-                91,
+                90,
                 [
                     [
                         "via",
@@ -11593,10 +11183,6 @@
                         "AU/DI/O/SME/DʃG~O/DEÜ"
                     ],
                     [
-                        "Audiobuchs",
-                        "AU/DI/O/BU+GS"
-                    ],
-                    [
                         "Biobetriebs",
                         "BI/O/BE/DL~IBS"
                     ],
@@ -11759,7 +11345,7 @@
                 ]
             ],
             "4": [
-                48669,
+                48679,
                 [
                     [
                         "Situation",
@@ -12574,7 +12160,7 @@
                 ]
             ],
             "2": [
-                52168,
+                52124,
                 [
                     [
                         "ist",
@@ -12979,7 +12565,7 @@
                 ]
             ],
             "3": [
-                849,
+                848,
                 [
                     [
                         "Accounts",
@@ -13389,15 +12975,11 @@
         "PatSwapSch",
         {
             "0": [
-                1650,
+                1452,
                 [
                     [
                         "Deutschlands",
                         "DEU+ʃD/LANSD"
-                    ],
-                    [
-                        "deutschlandweit",
-                        "DEU+ʃD/LAND/F+EI+D"
                     ],
                     [
                         "rutschte",
@@ -13406,10 +12988,6 @@
                     [
                         "Kretschmer",
                         "DGME+ʃD/MEÜ"
-                    ],
-                    [
-                        "Deutschlandfunk",
-                        "DEU+ʃD/LAND/FUMN"
                     ],
                     [
                         "rutscht",
@@ -13424,16 +13002,8 @@
                         "BAÜ+ʃD"
                     ],
                     [
-                        "Norddeutschland",
-                        "N~OD/DEU+ʃD/LAND"
-                    ],
-                    [
                         "Putsch",
                         "B+U+ʃD"
-                    ],
-                    [
-                        "Süddeutschland",
-                        "SÜD/DEU+ʃD/LAND"
                     ],
                     [
                         "deutschsprachige",
@@ -13454,10 +13024,6 @@
                     [
                         "Kursrutsch",
                         "G+~US/SMU+ʃD"
-                    ],
-                    [
-                        "Mitteldeutschland",
-                        "MI+D/D+EL/DEU+ʃD/LAND"
                     ],
                     [
                         "grätscht",
@@ -13492,10 +13058,6 @@
                         "DGLI+ʃD/G+O"
                     ],
                     [
-                        "deutschlandweite",
-                        "DEU+ʃD/LAND/F+EI/D+E"
-                    ],
-                    [
                         "Deutschlandsberg",
                         "DEU+ʃD/LANSD/BEÜG"
                     ],
@@ -13528,10 +13090,6 @@
                         "AUS/GE/SMU+ʃD/-+D"
                     ],
                     [
-                        "Deutschlandtrend",
-                        "DEU+ʃD/LAND/DLEND"
-                    ],
-                    [
                         "Bitch",
                         "BI+ʃD"
                     ],
@@ -13548,20 +13106,8 @@
                         "GMÄ+ʃD/D+E"
                     ],
                     [
-                        "Nazideutschland",
-                        "NA/ʃGI/DEU+ʃD/LAND"
-                    ],
-                    [
-                        "Deutschlandchef",
-                        "DEU+ʃD/LAND/ʃ+EF"
-                    ],
-                    [
                         "deutschsprachiger",
                         "DEU+ʃD/SBLA/ʃ+I/GEÜ"
-                    ],
-                    [
-                        "Deutschlandtakt",
-                        "DEU+ʃD/LAND/D+A+GD"
                     ],
                     [
                         "Norddeutschlands",
@@ -13600,10 +13146,6 @@
                         "SNI+ʃD/DʃGO+GS"
                     ],
                     [
-                        "Nachkriegsdeutschland",
-                        "NA+ʃ/DGM~IGS/DEU+ʃD/LAND"
-                    ],
-                    [
                         "Deutschkurs",
                         "DEU+ʃD/G+~US"
                     ],
@@ -13624,10 +13166,6 @@
                         "SNO+ʃ/DEU+ʃD"
                     ],
                     [
-                        "Deutschlandkarte",
-                        "DEU+ʃD/LAND/G+AÜ/D+E"
-                    ],
-                    [
                         "Deutschlehrerin",
                         "DEU+ʃD/LEÜ/SME/SMIN"
                     ],
@@ -13642,10 +13180,6 @@
                     [
                         "Kutschfahrt",
                         "G+U+ʃD/FAÜ+D"
-                    ],
-                    [
-                        "deutschlandweites",
-                        "DEU+ʃD/LAND/F+EI/D+ES"
                     ],
                     [
                         "quatscht",
@@ -13692,10 +13226,6 @@
                         "GE/FG+A+ʃD/-+D"
                     ],
                     [
-                        "Deutschlandfunks",
-                        "DEU+ʃD/LAND/FUMNS"
-                    ],
-                    [
                         "gepeitscht",
                         "GE/B+EI+ʃD/-+D"
                     ],
@@ -13736,10 +13266,6 @@
                         "IL/FNI+ʃD"
                     ],
                     [
-                        "Deutschlandfahne",
-                        "DEU+ʃD/LAND/FAÜ/NE"
-                    ],
-                    [
                         "Rutschpartie",
                         "SMU+ʃD/B+AÜ/D+~I"
                     ],
@@ -13748,20 +13274,8 @@
                         "GE/B+U+ʃD/-+D"
                     ],
                     [
-                        "Hitlerdeutschland",
-                        "SNI+D/LEÜ/DEU+ʃD/LAND"
-                    ],
-                    [
                         "quetscht",
                         "FG+E+ʃD/-+D"
-                    ],
-                    [
-                        "Deutschlandgeschäft",
-                        "DEU+ʃD/LAND/GE/ʃÄFD"
-                    ],
-                    [
-                        "Gesamtdeutschland",
-                        "GE/SAMD/DEU+ʃD/LAND"
                     ],
                     [
                         "Süddeutschlands",
@@ -13788,8 +13302,80 @@
                         "DSME+ʃD"
                     ],
                     [
-                        "Deutschlandstart",
-                        "DEU+ʃD/LAND/DSAÜ+D"
+                        "Klatschmohn",
+                        "DGLA+ʃD/M~ON"
+                    ],
+                    [
+                        "Rutschgefahr",
+                        "SMU+ʃD/GE/FAÜ+"
+                    ],
+                    [
+                        "ausrutscht",
+                        "AUS/SMU+ʃD/-+D"
+                    ],
+                    [
+                        "wegrutscht",
+                        "F+EG/SMU+ʃD/-+D"
+                    ],
+                    [
+                        "Mitteldeutschlands",
+                        "MI+D/D+EL/DEU+ʃD/LANSD"
+                    ],
+                    [
+                        "abgerutschten",
+                        "AB/GE/SMU+ʃD/D+EN"
+                    ],
+                    [
+                        "durchgerutscht",
+                        "D~U+ʃ/GE/SMU+ʃD/-+D"
+                    ],
+                    [
+                        "beklatschten",
+                        "BE/DGLA+ʃD/D+EN"
+                    ],
+                    [
+                        "Deutschsein",
+                        "DEU+ʃD/SEIN"
+                    ],
+                    [
+                        "deutschstämmige",
+                        "DEU+ʃD/DSÄM/MI/GE"
+                    ],
+                    [
+                        "wegrutschte",
+                        "F+EG/SMU+ʃD/D+E"
+                    ],
+                    [
+                        "putschte",
+                        "B+U+ʃD/D+E"
+                    ],
+                    [
+                        "Clutch",
+                        "DʃGLU+ʃD"
+                    ],
+                    [
+                        "Deutschstunde",
+                        "DEU+ʃD/DSUN/DE"
+                    ],
+                    [
+                        "ausgequetscht",
+                        "AUS/GE/FG+E+ʃD/-+D"
+                    ],
+                    [
+                        "abrutschten",
+                        "AB/SMU+ʃD/D+EN"
+                    ],
+                    [
+                        "quetschte",
+                        "FG+E+ʃD/D+E"
+                    ],
+                    [
+                        "rausgerutscht",
+                        "SMAUS/GE/SMU+ʃD/-+D"
+                    ],
+                    [
+                        "Deutschländer",
+                        "DEU+ʃD/LÄN/DEÜ"
                     ]
                 ]
             ],
@@ -13831,7 +13417,7 @@
                 ]
             ],
             "2": [
-                7724,
+                7722,
                 [
                     [
                         "nichts",
@@ -14241,7 +13827,7 @@
         "PatSwapZ",
         {
             "0": [
-                21883,
+                21880,
                 [
                     [
                         "jetzt",
@@ -14414,10 +14000,6 @@
                     [
                         "schätzt",
                         "ʃÄ+Gʃs"
-                    ],
-                    [
-                        "Plätzen",
-                        "DBLÄGʃD/EN"
                     ],
                     [
                         "letztes",
@@ -14642,6 +14224,10 @@
                     [
                         "Gesundheitsschutz",
                         "GE/SUND/SNEI+SD/ʃUGʃD"
+                    ],
+                    [
+                        "stützt",
+                        "DSÜ+Gʃs"
                     ]
                 ]
             ],
@@ -14676,7 +14262,7 @@
         "PatDiVowel",
         {
             "0": [
-                2907,
+                690,
                 [
                     [
                         "Staaten",
@@ -14699,24 +14285,8 @@
                         "BO/O+D"
                     ],
                     [
-                        "Zoo",
-                        "ʃGO/O"
-                    ],
-                    [
                         "Aachen",
                         "A/A/ʃ+EN"
-                    ],
-                    [
-                        "Look",
-                        "LO/O+G"
-                    ],
-                    [
-                        "Zoos",
-                        "ʃGO/OS"
-                    ],
-                    [
-                        "Boom",
-                        "BO/OM"
                     ],
                     [
                         "Routinier",
@@ -14727,40 +14297,12 @@
                         "SMU/D+I/NE"
                     ],
                     [
-                        "Food",
-                        "FO/OD"
-                    ],
-                    [
                         "Heer",
                         "SNE/EÜ"
                     ],
                     [
-                        "boomt",
-                        "BO/OMD"
-                    ],
-                    [
-                        "Tattoo",
-                        "D+A+D/D+O/O"
-                    ],
-                    [
-                        "Brooklyn",
-                        "BMO/O+G/LÄIN"
-                    ],
-                    [
                         "gepaart",
                         "GE/B+A/AÜ+D"
-                    ],
-                    [
-                        "Brooks",
-                        "BMO/O+GS"
-                    ],
-                    [
-                        "Woods",
-                        "F+O/OSD"
-                    ],
-                    [
-                        "Tattoos",
-                        "D+A+D/D+O/OS"
                     ],
                     [
                         "Staats",
@@ -14769,18 +14311,6 @@
                     [
                         "doof",
                         "DO/OF"
-                    ],
-                    [
-                        "Peer",
-                        "B+E/EÜ"
-                    ],
-                    [
-                        "Clooney",
-                        "DʃGLO/O/NÄI"
-                    ],
-                    [
-                        "Moos",
-                        "MO/OS"
                     ],
                     [
                         "Saar",
@@ -14795,40 +14325,12 @@
                         "SMU/D+I/N~IS"
                     ],
                     [
-                        "Rookie",
-                        "SMO/O/G+~I"
-                    ],
-                    [
-                        "Schlauchboot",
-                        "ʃLAU+ʃ/BO/O+D"
-                    ],
-                    [
-                        "Hollywoods",
-                        "SNOL/LÄI/F+O/OSD"
-                    ],
-                    [
-                        "Looks",
-                        "LO/O+GS"
-                    ],
-                    [
                         "routinemäßig",
                         "SMU/D+I/NE/MÄ/S+IG"
                     ],
                     [
-                        "Hooligans",
-                        "SNO/O/LI/GANS"
-                    ],
-                    [
-                        "Reboot",
-                        "SME/BO/O+D"
-                    ],
-                    [
                         "routiniert",
                         "SMU/D+I/N~I+D"
-                    ],
-                    [
-                        "Moosburg",
-                        "MO/OS/B~UG"
                     ],
                     [
                         "Aalener",
@@ -14839,64 +14341,16 @@
                         "MA/AÜ"
                     ],
                     [
-                        "Hood",
-                        "SNO/OD"
-                    ],
-                    [
                         "Seeufer",
                         "SE/EU/FEÜ"
-                    ],
-                    [
-                        "Segelboot",
-                        "SE/GEL/BO/O+D"
                     ],
                     [
                         "Boots",
                         "BO/O+SD"
                     ],
                     [
-                        "Bazooka",
-                        "BA/ʃGO/O/G+A"
-                    ],
-                    [
-                        "Motorboot",
-                        "MO/D+~O/BO/O+D"
-                    ],
-                    [
-                        "indoor",
-                        "IN/DO/~O"
-                    ],
-                    [
                         "Nordseeinsel",
                         "N~OD/SE/EIN/SEL"
-                    ],
-                    [
-                        "Cartoons",
-                        "DʃGAÜ/D+O/ONS"
-                    ],
-                    [
-                        "Ruderboot",
-                        "SMU/DEÜ/BO/O+D"
-                    ],
-                    [
-                        "Bootshaus",
-                        "BO/O+SD/SNAUS"
-                    ],
-                    [
-                        "Footballer",
-                        "FO/O+D/BAL/LEÜ"
-                    ],
-                    [
-                        "Bauboom",
-                        "BAU/BO/OM"
-                    ],
-                    [
-                        "Smoothies",
-                        "SMO/O+D/SN~IS"
-                    ],
-                    [
-                        "Babyboomer",
-                        "BA/BÄI/BO/O/MEÜ"
                     ],
                     [
                         "routinierte",
@@ -14907,100 +14361,24 @@
                         "A/AÜ/SNUS"
                     ],
                     [
-                        "Streichelzoo",
-                        "DSMEI/ʃ+EL/ʃGO/O"
-                    ],
-                    [
-                        "Moodle",
-                        "MO/OD/LE"
-                    ],
-                    [
                         "Staate",
                         "DSA/A/D+E"
-                    ],
-                    [
-                        "Rookies",
-                        "SMO/O/G+~IS"
-                    ],
-                    [
-                        "Superfood",
-                        "SU/B+EÜ/FO/OD"
-                    ],
-                    [
-                        "Booms",
-                        "BO/OMS"
-                    ],
-                    [
-                        "Booster",
-                        "BO/OS/D+EÜ"
                     ],
                     [
                         "Moors",
                         "MO/~OS"
                     ],
                     [
-                        "Ballmoos",
-                        "BAL/MO/OS"
-                    ],
-                    [
-                        "Waterloo",
-                        "F+A/D+EÜ/LO/O"
-                    ],
-                    [
                         "Kaffees",
                         "G+AF/FE/ES"
-                    ],
-                    [
-                        "Doodle",
-                        "DO/O/DLE"
                     ],
                     [
                         "Moorburg",
                         "MO/~O/B~UG"
                     ],
                     [
-                        "Wangerooge",
-                        "F+AN/GE/SMO/O/GE"
-                    ],
-                    [
-                        "Rettungsboot",
-                        "SME+D/D+UMGS/BO/O+D"
-                    ],
-                    [
-                        "Voodoo",
-                        "FBLO/O/DO/O"
-                    ],
-                    [
-                        "Foodtruck",
-                        "FO/OD/DLU+G"
-                    ],
-                    [
-                        "Lootboxen",
-                        "LO/O+D/BO/DSGEN"
-                    ],
-                    [
                         "routinemäßige",
                         "SMU/D+I/NE/MÄ/S+I/GE"
-                    ],
-                    [
-                        "boomte",
-                        "BO/OM/D+E"
-                    ],
-                    [
-                        "Schlauchboote",
-                        "ʃLAU+ʃ/BO/O/D+E"
-                    ],
-                    [
-                        "Hoodie",
-                        "SNO/O/D~I"
-                    ],
-                    [
-                        "Teenie",
-                        "D+E/E/N~I"
-                    ],
-                    [
-                        "Hausboot",
-                        "SNAUS/BO/O+D"
                     ],
                     [
                         "Hoorn",
@@ -15011,72 +14389,280 @@
                         "SMO/O+D"
                     ],
                     [
-                        "Doors",
-                        "DO/~OS"
-                    ],
-                    [
-                        "Ausbootung",
-                        "AUS/BO/O/D+UMG"
-                    ],
-                    [
-                        "Zoopark",
-                        "ʃGO/O/B+AÜ+G"
-                    ],
-                    [
-                        "Sportboot",
-                        "SB~O+D/BO/O+D"
-                    ],
-                    [
-                        "Bootsausflug",
-                        "BO/O+SD/AUS/FLUG"
-                    ],
-                    [
-                        "Hallbergmoos",
-                        "SNAL/BEÜG/MO/OS"
-                    ],
-                    [
-                        "Subwoofer",
-                        "SUB/F+O/O/FEÜ"
-                    ],
-                    [
-                        "Bootsflüchtlinge",
-                        "BO/O+SD/FLÜ+ʃD/LIN/GE"
-                    ],
-                    [
                         "Jugendhilfeeinrichtung",
                         "FNU/GEND/SNIL/FE/EIN/SMI+ʃ/D+UMG"
                     ],
                     [
-                        "Motorboote",
-                        "MO/D+~O/BO/O/D+E"
-                    ],
-                    [
-                        "Hoodies",
-                        "SNO/O/D~IS"
-                    ],
-                    [
-                        "Cartoon",
-                        "DʃGAÜ/D+O/ON"
-                    ],
-                    [
-                        "Fischerboot",
-                        "FI/ʃEÜ/BO/O+D"
-                    ],
-                    [
-                        "Langeoog",
-                        "LAN/GEO/OG"
-                    ],
-                    [
-                        "Moores",
-                        "MO/O/SMES"
+                        "Moose",
+                        "MO/O/SE"
                     ],
                     [
                         "Staaken",
                         "DSA/A/G+EN"
                     ],
                     [
-                        "Flüchtlingsboot",
-                        "FLÜ+ʃD/LIMGS/BO/O+D"
+                        "routinierter",
+                        "SMU/D+I/N~I/D+EÜ"
+                    ],
+                    [
+                        "Teer",
+                        "D+E/EÜ"
+                    ],
+                    [
+                        "Routineuntersuchung",
+                        "SMU/D+I/NEUN/D+EÜ/SU/ʃ+UMG"
+                    ],
+                    [
+                        "doofe",
+                        "DO/O/FE"
+                    ],
+                    [
+                        "Aas",
+                        "A/AS"
+                    ],
+                    [
+                        "paart",
+                        "B+A/AÜ+D"
+                    ],
+                    [
+                        "Moormerland",
+                        "MO/~O/MEÜ/LAND"
+                    ],
+                    [
+                        "Routing",
+                        "SMU/D+IMG"
+                    ],
+                    [
+                        "Kolbermoor",
+                        "G+OL/BEÜ/MO/~O"
+                    ],
+                    [
+                        "booten",
+                        "BO/O/D+EN"
+                    ],
+                    [
+                        "Floorball",
+                        "FLO/~O/BAL"
+                    ],
+                    [
+                        "Moorgebiet",
+                        "MO/~O/GE/B~I+D"
+                    ],
+                    [
+                        "Moormann",
+                        "MO/~O/MAN"
+                    ],
+                    [
+                        "Hochmoor",
+                        "SNO+ʃ/MO/~O"
+                    ],
+                    [
+                        "Moordeich",
+                        "MO/~O/DEI+ʃ"
+                    ],
+                    [
+                        "Spreeufer",
+                        "SBLE/EU/FEÜ"
+                    ],
+                    [
+                        "Teufelsmoor",
+                        "D+EU/FELS/MO/~O"
+                    ],
+                    [
+                        "Seeigel",
+                        "SE/EI/GEL"
+                    ],
+                    [
+                        "Bodenseeufer",
+                        "BO/DEN/SE/EU/FEÜ"
+                    ],
+                    [
+                        "Heerweg",
+                        "SNE/EÜ/F+EG"
+                    ],
+                    [
+                        "Routineeinsatz",
+                        "SMU/D+I/NE/EIN/SAGʃD"
+                    ],
+                    [
+                        "Haarriss",
+                        "SNA/AÜ/SMISs"
+                    ],
+                    [
+                        "Moorlandschaft",
+                        "MO/~O/LAND/ʃAFD"
+                    ],
+                    [
+                        "Moosen",
+                        "MO/O/SEN"
+                    ],
+                    [
+                        "Aalens",
+                        "A/A/LENS"
+                    ],
+                    [
+                        "Seeufers",
+                        "SE/EU/FEÜS"
+                    ],
+                    [
+                        "routinemäßiger",
+                        "SMU/D+I/NE/MÄ/S+I/GEÜ"
+                    ],
+                    [
+                        "Alltagsroutine",
+                        "AL/D+AGS/SMU/D+I/NE"
+                    ],
+                    [
+                        "Moorbrand",
+                        "MO/~O/BMAND"
+                    ],
+                    [
+                        "Heerwagen",
+                        "SNE/EÜ/F+A/GEN"
+                    ],
+                    [
+                        "Reet",
+                        "SME/E+D"
+                    ],
+                    [
+                        "Wiesmoor",
+                        "F+~IS/MO/~O"
+                    ],
+                    [
+                        "Routineeingriff",
+                        "SMU/D+I/NE/EIN/GMIF"
+                    ],
+                    [
+                        "Routinemaßnahme",
+                        "SMU/D+I/NE/MA+S/NAÜ/ME"
+                    ],
+                    [
+                        "Behaarung",
+                        "BE/SNA/A/SMUMG"
+                    ],
+                    [
+                        "Haarlem",
+                        "SNA/AÜ/LEM"
+                    ],
+                    [
+                        "Leeuwarden",
+                        "LE/EU/F+AÜ/DEN"
+                    ],
+                    [
+                        "Moorbad",
+                        "MO/~O/BAD"
+                    ],
+                    [
+                        "Seeufern",
+                        "SE/EU/FEÜN"
+                    ],
+                    [
+                        "Moorweg",
+                        "MO/~O/F+EG"
+                    ],
+                    [
+                        "Routinearbeit",
+                        "SMU/D+I/NE/AÜ/BEI+D"
+                    ],
+                    [
+                        "Moorleiche",
+                        "MO/~O/LEI/ʃ+E"
+                    ],
+                    [
+                        "Presseeinladung",
+                        "DBMES/SE/EIN/LA/DUMG"
+                    ],
+                    [
+                        "Seeotter",
+                        "SE/EO+D/D+EÜ"
+                    ],
+                    [
+                        "Victoriasee",
+                        "FBLIGʃD/D+O/SMI/A/SE/E"
+                    ],
+                    [
+                        "Routineflug",
+                        "SMU/D+I/NE/FLUG"
+                    ],
+                    [
+                        "routiniertes",
+                        "SMU/D+I/N~I/D+ES"
+                    ],
+                    [
+                        "Moorgrund",
+                        "MO/~O/GMUND"
+                    ],
+                    [
+                        "Moorfrosch",
+                        "MO/~O/FMOʃ"
+                    ],
+                    [
+                        "Seeuferweg",
+                        "SE/EUF/EÜ/F+EG"
+                    ],
+                    [
+                        "unterseeische",
+                        "UN/D+EÜ/SE/EI/ʃE"
+                    ],
+                    [
+                        "Himmelmoor",
+                        "SNIM/MEL/MO/~O"
+                    ],
+                    [
+                        "Maat",
+                        "MA/A+D"
+                    ],
+                    [
+                        "Moorfläche",
+                        "MO/~O/FLÄ/ʃ+E"
+                    ],
+                    [
+                        "Routinevorgang",
+                        "SMU/D+I/NE/FBL~O/GAMG"
+                    ],
+                    [
+                        "paarte",
+                        "B+A/AÜ/D+E"
+                    ],
+                    [
+                        "Langeoogs",
+                        "LAN/GEO/OGS"
+                    ],
+                    [
+                        "Seeunfalluntersuchung",
+                        "SE/EUN/FAL/UN/D+EÜ/SU/ʃ+UMG"
+                    ],
+                    [
+                        "Flachmoor",
+                        "FLA+ʃ/MO/~O"
+                    ],
+                    [
+                        "Einzelstaat",
+                        "EIN/ʃGEL/DSA/A+D"
+                    ],
+                    [
+                        "Moorböden",
+                        "MO/~O/BÄO/DEN"
+                    ],
+                    [
+                        "Torfmoor",
+                        "D+~OF/MO/~O"
+                    ],
+                    [
+                        "doofes",
+                        "DO/O/FES"
+                    ],
+                    [
+                        "Glasmoor",
+                        "GLAS/MO/~O"
+                    ],
+                    [
+                        "Routineübung",
+                        "SMU/D+I/NEÜ/BUMG"
+                    ],
+                    [
+                        "Arbeitsroutine",
+                        "AÜ/BEI+SD/SMU/D+I/NE"
                     ]
                 ]
             ],
@@ -15486,7 +15072,7 @@
                 ]
             ],
             "3": [
-                14970,
+                17062,
                 [
                     [
                         "paar",
@@ -15533,6 +15119,10 @@
                         "FMEI/DSAÜD"
                     ],
                     [
+                        "Zoo",
+                        "ʃG~O"
+                    ],
+                    [
                         "Ehepaar",
                         "E/SNE/B+AÜ"
                     ],
@@ -15567,6 +15157,10 @@
                     [
                         "Staatsanwalt",
                         "DSAÜSD/AN/F+ALD"
+                    ],
+                    [
+                        "Bloomberg",
+                        "BL~OM/BEÜG"
                     ],
                     [
                         "Haar",
@@ -15639,6 +15233,14 @@
                     [
                         "Bundesheer",
                         "BUN/DES/SNEÜ"
+                    ],
+                    [
+                        "Zoos",
+                        "ʃG~OS"
+                    ],
+                    [
+                        "Boom",
+                        "B~OM"
                     ],
                     [
                         "Staatsanwältin",
@@ -15777,6 +15379,10 @@
                         "SEÜS"
                     ],
                     [
+                        "Tattoo",
+                        "D+AD/D+~O"
+                    ],
+                    [
                         "Vierschanzentournee",
                         "F~I/ʃAN/ʃGEN/D+~U/NEÜ"
                     ],
@@ -15811,6 +15417,10 @@
                     [
                         "Staatsangehörige",
                         "DSAÜSD/AN/GE/SNÄO/SMI/GE"
+                    ],
+                    [
+                        "Tattoos",
+                        "D+AD/D+~OS"
                     ],
                     [
                         "Spree",
@@ -15849,6 +15459,10 @@
                         "FMEI/DSAÜSD"
                     ],
                     [
+                        "Wood",
+                        "F+~OD"
+                    ],
+                    [
                         "Bundesstaats",
                         "BUN/DES/DSAÜSD"
                     ],
@@ -15857,36 +15471,8 @@
                         "SME/FE/SMEÜ"
                     ],
                     [
-                        "Leeds",
-                        "LEÜSD"
-                    ],
-                    [
-                        "Generalstaatsanwalt",
-                        "GE/NE/SMAL/DSAÜSD/AN/F+ALD"
-                    ],
-                    [
-                        "Beeren",
-                        "BEÜ/SMEN"
-                    ],
-                    [
-                        "Seenotrettung",
-                        "SEÜ/NOD/SMED/D+UMG"
-                    ],
-                    [
-                        "Aarauer",
-                        "AÜ/SMAU/EÜ"
-                    ],
-                    [
-                        "seelische",
-                        "SEÜ/LI/ʃE"
-                    ],
-                    [
-                        "Kulturstaatsministerin",
-                        "G+UL/D+~U/DSAÜSD/MI/NIS/D+E/SMIN"
-                    ],
-                    [
-                        "Neuschnee",
-                        "NEU/ʃNEÜ"
+                        "Shooter",
+                        "ʃ~O/D+EÜ"
                     ]
                 ]
             ]
@@ -15896,7 +15482,7 @@
         "PatReplH",
         {
             "0": [
-                8621,
+                8610,
                 [
                     [
                         "Thema",
@@ -15988,7 +15574,7 @@
                     ],
                     [
                         "Elizabeth",
-                        "E/LIGʃ/A/BE+D"
+                        "E/LI/ʃGA/BE+D"
                     ],
                     [
                         "katholische",
@@ -16144,7 +15730,7 @@
                     ],
                     [
                         "Kathedrale",
-                        "G+A/DSNED/SMA/LE"
+                        "G+A/DSNE/DMA/LE"
                     ],
                     [
                         "Thiel",
@@ -16301,7 +15887,7 @@
                 ]
             ],
             "3": [
-                1745,
+                1761,
                 [
                     [
                         "Rhein",
@@ -16318,6 +15904,10 @@
                     [
                         "Kathrin",
                         "G+AD/SMIN"
+                    ],
+                    [
+                        "Bluetooth",
+                        "BLU/D+~OD"
                     ],
                     [
                         "Theaters",
@@ -16628,6 +16218,10 @@
                         "D+EÜ/D+EÜ/DSMA/S+E"
                     ],
                     [
+                        "Abendroth",
+                        "BEND/SMOD"
+                    ],
+                    [
                         "Theatererlebnis",
                         "D+EÜ/D+EÜ/EÜ/LEB/NIS"
                     ],
@@ -16694,14 +16288,6 @@
                     [
                         "Ethikkomitee",
                         "E/D+I+G/G+O/MI/D+EÜ"
-                    ],
-                    [
-                        "Theaterschaffende",
-                        "D+EÜ/D+EÜ/ʃAF/FEN/DE"
-                    ],
-                    [
-                        "Thiersee",
-                        "D+I/EÜ/SEÜ"
                     ]
                 ]
             ]
@@ -17117,7 +16703,7 @@
         "PatReplRare",
         {
             "0": [
-                29974,
+                29914,
                 [
                     [
                         "knapp",
@@ -17145,7 +16731,7 @@
                     ],
                     [
                         "Philipp",
-                        "F+IL/I+B"
+                        "F+I/LI+B"
                     ],
                     [
                         "Text",
@@ -17244,10 +16830,6 @@
                         "SMALBF"
                     ],
                     [
-                        "signalisiert",
-                        "SI/GMA/LI/S~I+D"
-                    ],
-                    [
                         "Joseph",
                         "FNO/SE+F"
                     ],
@@ -17278,10 +16860,6 @@
                     [
                         "Pflegeheime",
                         "FBLE/GE/SNEI/ME"
-                    ],
-                    [
-                        "Philip",
-                        "F+I/LI+B"
                     ],
                     [
                         "Philosophie",
@@ -17481,7 +17059,7 @@
                     ],
                     [
                         "Thriller",
-                        "DNLIL/LEÜ"
+                        "DSNMIL/LEÜ"
                     ],
                     [
                         "Psychologie",
@@ -17518,11 +17096,19 @@
                     [
                         "Krankheitssymptome",
                         "DGMAMN/SNEI+SD/SÄIM/DB+O/ME"
+                    ],
+                    [
+                        "Pfeffer",
+                        "FB+EF/FEÜ"
+                    ],
+                    [
+                        "Pflaster",
+                        "FBLAS/D+EÜ"
                     ]
                 ]
             ],
             "3": [
-                214,
+                241,
                 [
                     [
                         "Katastrophe",
@@ -17535,6 +17121,10 @@
                     [
                         "Triumph",
                         "DLI/UMF"
+                    ],
+                    [
+                        "Philip",
+                        "FI/LI+B"
                     ],
                     [
                         "katastrophal",
@@ -17733,6 +17323,10 @@
                         "LIMF/ÄO/DEM"
                     ],
                     [
+                        "Zoophilie",
+                        "ʃG~O/FI/LI"
+                    ],
+                    [
                         "phlegmatische",
                         "FLEG/MA/D+I/ʃE"
                     ],
@@ -17815,6 +17409,10 @@
                     [
                         "Lymphabfluss",
                         "LIMF/AB/FLUS"
+                    ],
+                    [
+                        "Oophorektomie",
+                        "~O/FO/SME+G/D+O/MI"
                     ],
                     [
                         "Philanthropismus",
@@ -17911,18 +17509,6 @@
                     [
                         "Phlogiston",
                         "FLO/GIS/D+ON"
-                    ],
-                    [
-                        "Propagandapamphlet",
-                        "BO/B+A/GAN/DA/B+AM/FLED"
-                    ],
-                    [
-                        "Theatertriumph",
-                        "D+EÜ/D+EÜ/DLI/UMF"
-                    ],
-                    [
-                        "Triumphgeheuls",
-                        "DLI/UMF/GE/SNEULS"
                     ]
                 ]
             ]
@@ -18006,7 +17592,7 @@
         "PatSCPlus",
         {
             "0": [
-                506,
+                505,
                 [
                     [
                         "Modell",
@@ -18853,7 +18439,7 @@
         "PatShortSyllable",
         {
             "5": [
-                79667,
+                79636,
                 [
                     [
                         "anderen",
@@ -19258,7 +18844,7 @@
                 ]
             ],
             "8": [
-                145124,
+                145121,
                 [
                     [
                         "ersten",
@@ -19663,7 +19249,7 @@
                 ]
             ],
             "6": [
-                562534,
+                562769,
                 [
                     [
                         "den",
@@ -20073,7 +19659,7 @@
         "PatBrief",
         {
             "0": [
-                17823,
+                18797,
                 [
                     [
                         "zu",
@@ -20176,6 +19762,10 @@
                         "BO/FNE+GD"
                     ],
                     [
+                        "Abend",
+                        "BEND"
+                    ],
+                    [
                         "Programm",
                         "BO/GMAM"
                     ],
@@ -20192,16 +19782,44 @@
                         "BO/FNE+G/D+E"
                     ],
                     [
+                        "Freitagabend",
+                        "FMEI/D+AG/BEND"
+                    ],
+                    [
+                        "Mittwochabend",
+                        "MI+D/F+O+ʃ/BEND"
+                    ],
+                    [
+                        "Montagabend",
+                        "MON/D+AG/BEND"
+                    ],
+                    [
                         "Proteste",
                         "BO/D+ES/D+E"
+                    ],
+                    [
+                        "Dienstagabend",
+                        "D~INS/D+AG/BEND"
                     ],
                     [
                         "Profis",
                         "BO/FIS"
                     ],
                     [
+                        "Donnerstagabend",
+                        "DON/NEÜS/D+AG/BEND"
+                    ],
+                    [
                         "produziert",
                         "BO/DU/ʃG~I+D"
+                    ],
+                    [
+                        "Samstagabend",
+                        "SAMS/D+AG/BEND"
+                    ],
+                    [
+                        "Sonntagabend",
+                        "SON/D+AG/BEND"
                     ],
                     [
                         "Produkt",
@@ -20218,6 +19836,10 @@
                     [
                         "profitiert",
                         "BO/FI/D+~I+D"
+                    ],
+                    [
+                        "Sonnabend",
+                        "SON/BEND"
                     ],
                     [
                         "wen",
@@ -20264,6 +19886,14 @@
                         "BO/MIS"
                     ],
                     [
+                        "Heiligabend",
+                        "SNEI/LIG/BEND"
+                    ],
+                    [
+                        "deutschlandweit",
+                        "ʃLAND/F+EI+D"
+                    ],
+                    [
                         "Profil",
                         "BO/FIL"
                     ],
@@ -20284,6 +19914,10 @@
                         "BO/BAN/DEN"
                     ],
                     [
+                        "Vorabend",
+                        "FBL~O/BEND"
+                    ],
+                    [
                         "Promi",
                         "BO/MI"
                     ],
@@ -20302,6 +19936,10 @@
                     [
                         "Problematik",
                         "BOB/LE/MA/D+I+G"
+                    ],
+                    [
+                        "Deutschlandfunk",
+                        "ʃLAND/FUMN"
                     ],
                     [
                         "Blutprobe",
@@ -20348,6 +19986,10 @@
                         "BO/FI/D+~I/D+E"
                     ],
                     [
+                        "Feierabend",
+                        "FEI/EÜ/BEND"
+                    ],
+                    [
                         "Profit",
                         "BO/FI+D"
                     ],
@@ -20366,6 +20008,10 @@
                     [
                         "Konjunkturprogramm",
                         "G+ON/FNUMN/D+~U/BO/GMAM"
+                    ],
+                    [
+                        "Abendstunden",
+                        "BEND/DSUN/DEN"
                     ],
                     [
                         "Prokop",
@@ -20412,473 +20058,8 @@
                         "BMU+D/D+O/IN/LANSD/BO/DU+GSD"
                     ],
                     [
-                        "Profisport",
-                        "BO/FI/SB~O+D"
-                    ],
-                    [
-                        "Profitabilität",
-                        "BO/FI/D+A/BI/LI/D+Ä+D"
-                    ],
-                    [
-                        "Prozentpunkt",
-                        "BO/ʃGE+ND/B+UMND"
-                    ],
-                    [
-                        "prophezeit",
-                        "BO/F+E/ʃGEI+D"
-                    ],
-                    [
-                        "prognostizierte",
-                        "BO/GMOS/D+I/ʃG~I/D+E"
-                    ],
-                    [
-                        "prominent",
-                        "BO/MI/NE+ND"
-                    ],
-                    [
-                        "Provider",
-                        "BO/FBLI/DEÜ"
-                    ],
-                    [
-                        "promovierte",
-                        "BO/MO/FBL~I/D+E"
-                    ],
-                    [
-                        "Großprojekt",
-                        "GMO+S/BO/FNE+GD"
-                    ],
-                    [
-                        "provisorische",
-                        "BO/FBLI/SO/SMI/ʃE"
-                    ],
-                    [
-                        "Prozentsatz",
-                        "BO/ʃGE+ND/SAGʃD"
-                    ],
-                    [
-                        "Hilfsprogramme",
-                        "SNILFs/BO/GMAM/ME"
-                    ],
-                    [
-                        "profitabel",
-                        "BO/FI/D+A/BEL"
-                    ],
-                    [
-                        "Prozessauftakt",
-                        "BO/ʃGESs/AUF/D+A+GD"
-                    ],
-                    [
-                        "Proteine",
-                        "BO/D+EI/NE"
-                    ],
-                    [
-                        "Sprockhövel",
-                        "SBO+G/SNÄO/FBLEL"
-                    ]
-                ]
-            ],
-            "6": [
-                1038,
-                [
-                    [
-                        "Abend",
-                        "BEND"
-                    ],
-                    [
-                        "Freitagabend",
-                        "FMEI/D+AG/BEND"
-                    ],
-                    [
-                        "Mittwochabend",
-                        "MID/F+O+ʃ/BEND"
-                    ],
-                    [
-                        "Montagabend",
-                        "MON/D+AG/BEND"
-                    ],
-                    [
-                        "Dienstagabend",
-                        "DINS/D+AG/BEND"
-                    ],
-                    [
-                        "Donnerstagabend",
-                        "DON/NEÜS/D+AG/BEND"
-                    ],
-                    [
-                        "Samstagabend",
-                        "SAMS/D+AG/BEND"
-                    ],
-                    [
-                        "Sonntagabend",
-                        "SON/D+AG/BEND"
-                    ],
-                    [
-                        "Sonnabend",
-                        "SON/BEND"
-                    ],
-                    [
-                        "Heiligabend",
-                        "SNEI/LIG/BEND"
-                    ],
-                    [
-                        "Vorabend",
-                        "F~O/BEND"
-                    ],
-                    [
-                        "Abendessen",
-                        "BEND/ESn"
-                    ],
-                    [
-                        "Abendstunden",
-                        "BEND/DSUN/Dn"
-                    ],
-                    [
-                        "Wahlabend",
-                        "F+AL/BEND"
-                    ],
-                    [
-                        "abendlichen",
-                        "BEND/LI+ʃn"
-                    ],
-                    [
-                        "Abendkasse",
-                        "BEND/G+AS/-Ss"
-                    ],
-                    [
-                        "Abendblatt",
-                        "BEND/BLAD"
-                    ],
-                    [
-                        "Silvesterabend",
-                        "SIL/FES/D+EÜ/BEND"
-                    ],
-                    [
-                        "abendliche",
-                        "BEND/LI/ʃ+E"
-                    ],
-                    [
-                        "Abendmahl",
-                        "BEND/MAL"
-                    ],
-                    [
-                        "Lebensabend",
-                        "LE/bN-S/BEND"
-                    ],
-                    [
-                        "Abendzeitung",
-                        "BEND/ʃGEI/D+UMG"
-                    ],
-                    [
-                        "Sommerabend",
-                        "SOM/MEÜ/BEND"
-                    ],
-                    [
-                        "Abendhimmel",
-                        "BEND/SNIM/MEL"
-                    ],
-                    [
-                        "Informationsabend",
-                        "IN/F~O/MA/D+ONS/BEND"
-                    ],
-                    [
-                        "Sonnabendnachmittag",
-                        "SON/BEND/NA+ʃ/MID/D+AG"
-                    ],
-                    [
-                        "Infoabend",
-                        "IN/FO/BEND"
-                    ],
-                    [
-                        "Konzertabend",
-                        "G+ON/ʃGEÜD/BEND"
-                    ],
-                    [
-                        "Abendprogramm",
-                        "BEND/BO/GMAM"
-                    ],
-                    [
-                        "Abendsonne",
-                        "BEND/SON/NE"
-                    ],
-                    [
-                        "Filmabend",
-                        "FI+/BEND"
-                    ],
-                    [
-                        "Abendschau",
-                        "BEND/ʃAU"
-                    ],
-                    [
-                        "Abendkleid",
-                        "BEND/DGLEID"
-                    ],
-                    [
-                        "Sonnabendabend",
-                        "SON/BEND/BEND"
-                    ],
-                    [
-                        "allabendlich",
-                        "AL/BEND/LI+ʃ"
-                    ],
-                    [
-                        "Abendbrot",
-                        "BEND/BMOD"
-                    ],
-                    [
-                        "Grillabend",
-                        "GMIL/BEND"
-                    ],
-                    [
-                        "Abenddämmerung",
-                        "BEND/DÄM/ME/SMUMG"
-                    ],
-                    [
-                        "Elternabend",
-                        "EL/D+EÜN/BEND"
-                    ],
-                    [
-                        "Theaterabend",
-                        "D+EÜ/D+EÜ/BEND"
-                    ],
-                    [
-                        "Sonnabendmorgen",
-                        "SON/BEND/M~OGn"
-                    ],
-                    [
-                        "Abendlandes",
-                        "BEND/LAN/DES"
-                    ],
-                    [
-                        "Abendveranstaltung",
-                        "BEND/FMAN/DSAL/D+UMG"
-                    ],
-                    [
-                        "Eröffnungsabend",
-                        "MÄOF/NUMGS/BEND"
-                    ],
-                    [
-                        "Abendland",
-                        "BEND/LAND"
-                    ],
-                    [
-                        "Tatabend",
-                        "D+AD/BEND"
-                    ],
-                    [
-                        "Weihnachtsabend",
-                        "F+EI/NA+ʃs/BEND"
-                    ],
-                    [
-                        "Fernsehabend",
-                        "FEÜN/SE/BEND"
-                    ],
-                    [
-                        "Kinoabend",
-                        "G+I/NO/BEND"
-                    ],
-                    [
-                        "Abendveranstaltungen",
-                        "BEND/FMAN/DSAL/D+UMGn"
-                    ],
-                    [
-                        "Themenabend",
-                        "D+EMn/BEND"
-                    ],
-                    [
-                        "Sonnabendvormittag",
-                        "SON/BEND/F~O/MID/D+AG"
-                    ],
-                    [
-                        "Abendspaziergang",
-                        "BEND/SBA/ʃG~I/GAMG"
-                    ],
-                    [
-                        "Vorabendserie",
-                        "F~O/BEND/-Ss/SMI"
-                    ],
-                    [
-                        "abendfüllende",
-                        "BEND/FÜLn/DE"
-                    ],
-                    [
-                        "Abendlicht",
-                        "BEND/LI+ʃD"
-                    ],
-                    [
-                        "Büttenabend",
-                        "BÜD/D+-n/BEND"
-                    ],
-                    [
-                        "Polterabend",
-                        "B+OL/D+EÜ/BEND"
-                    ],
-                    [
-                        "abendfüllenden",
-                        "BEND/FÜLn/Dn"
-                    ],
-                    [
-                        "Vorabendprogramm",
-                        "F~O/BEND/BO/GMAM"
-                    ],
-                    [
-                        "Abendgebet",
-                        "BEND/GE/bD"
-                    ],
-                    [
-                        "Abendrot",
-                        "BEND/SMOD"
-                    ],
-                    [
-                        "Sonnabendmittag",
-                        "SON/BEND/MID/D+AG"
-                    ],
-                    [
-                        "Hauptabend",
-                        "SNAUBD/BEND"
-                    ],
-                    [
-                        "Tanzabend",
-                        "D+AMGʃ/BEND"
-                    ],
-                    [
-                        "abendländischen",
-                        "BEND/LÄN/Dʃ-n"
-                    ],
-                    [
-                        "Abendgarderobe",
-                        "BEND/GAÜ/DSMO/b"
-                    ],
-                    [
-                        "allabendlichen",
-                        "AL/BEND/LI+ʃn"
-                    ],
-                    [
-                        "Abendblatts",
-                        "BEND/BLASD"
-                    ],
-                    [
-                        "Kampfabend",
-                        "G+AMBF/BEND"
-                    ],
-                    [
-                        "Fußballabend",
-                        "FU+S/BAL/BEND"
-                    ],
-                    [
-                        "abendlicher",
-                        "BEND/LI/ʃ+EÜ"
-                    ],
-                    [
-                        "Galaabend",
-                        "GA/LA/BEND"
-                    ],
-                    [
-                        "abendliches",
-                        "BEND/LI/ʃ+ES"
-                    ],
-                    [
-                        "Abendschule",
-                        "BEND/ʃU/LE"
-                    ],
-                    [
-                        "Abendunterhaltung",
-                        "BEND/UN/D+EÜ/SNAL/D+UMG"
-                    ],
-                    [
-                        "Abendmahls",
-                        "BEND/MALS"
-                    ],
-                    [
-                        "Samstagabendshow",
-                        "SAMS/D+AG/BEND/ʃOF"
-                    ],
-                    [
-                        "Abendessens",
-                        "BEND/ES/SENS"
-                    ],
-                    [
-                        "Hauptabendprogramm",
-                        "SNAUBD/BEND/BO/GMAM"
-                    ],
-                    [
-                        "Abendshow",
-                        "BEND/ʃOF"
-                    ],
-                    [
-                        "Ballettabend",
-                        "BAL/LED/BEND"
-                    ],
-                    [
-                        "Klavierabend",
-                        "DGLA/F~I/BEND"
-                    ],
-                    [
-                        "Abendstimmung",
-                        "BEND/DSIM/MUMG"
-                    ],
-                    [
-                        "Abendkleider",
-                        "BEND/DGLEI/DEÜ"
-                    ],
-                    [
-                        "abendfüllendes",
-                        "BEND/FÜLn/DES"
-                    ],
-                    [
-                        "allabendliche",
-                        "AL/BEND/LI/ʃ+E"
-                    ],
-                    [
-                        "Diskussionsabend",
-                        "DIS/G+US/SONS/BEND"
-                    ],
-                    [
-                        "Abendmusik",
-                        "BEND/MU/SI+G"
-                    ],
-                    [
-                        "Abendgeschäft",
-                        "BEND/GE/ʃÄFD"
-                    ],
-                    [
-                        "Neujahrsabend",
-                        "NEU/FNAÜ+S/BEND"
-                    ],
-                    [
-                        "Abendandacht",
-                        "BEND/AN/DA+ʃD"
-                    ],
-                    [
-                        "Samstagabendspiel",
-                        "SAMS/D+AG/BEND/SBIL"
-                    ],
-                    [
-                        "Ballabend",
-                        "BAL/BEND"
-                    ],
-                    [
-                        "Vortragsabend",
-                        "F~O/DLAGS/BEND"
-                    ],
-                    [
-                        "Festabend",
-                        "FEs/BEND"
-                    ],
-                    [
-                        "Abendgymnasium",
-                        "BEND/GIM/NA/SI/UM"
-                    ],
-                    [
-                        "Abschlussabend",
-                        "AB/ʃLUS/BEND"
-                    ],
-                    [
-                        "Vorabendmesse",
-                        "F~O/BEND/MES/-Ss"
-                    ],
-                    [
-                        "Abendtermine",
-                        "BEND/D+EÜ/MI/NE"
+                        "Norddeutschland",
+                        "N~OD/ʃLAND"
                     ]
                 ]
             ]
@@ -22151,7 +21332,7 @@
         "PatAnglAI",
         {
             "0": [
-                1738,
+                1733,
                 [
                     [
                         "Trainer",
@@ -22561,7 +21742,7 @@
         "PatAnglAE",
         {
             "0": [
-                2285,
+                2276,
                 [
                     [
                         "Gedanken",
@@ -22971,7 +22152,7 @@
         "PatAnglI",
         {
             "0": [
-                1315,
+                1383,
                 [
                     [
                         "Team",
@@ -23122,6 +22303,10 @@
                         "D~I/LEÜ"
                     ],
                     [
+                        "Peer",
+                        "B+~I"
+                    ],
+                    [
                         "Teaser",
                         "D+~I/SEÜ"
                     ],
@@ -23172,6 +22357,10 @@
                     [
                         "Kamerateam",
                         "G+A/ME/SMA/D+~IM"
+                    ],
+                    [
+                        "Speer",
+                        "SB+~I"
                     ],
                     [
                         "Springsteen",
@@ -23252,6 +22441,10 @@
                     [
                         "Topteam",
                         "D+O+B/D+~IM"
+                    ],
+                    [
+                        "Speerspitze",
+                        "SB+~I/SBI+D/ʃGE"
                     ],
                     [
                         "Teamleiter",
@@ -23360,18 +22553,6 @@
                     [
                         "Teammitglied",
                         "D+~IM/MI+D/GL~ID"
-                    ],
-                    [
-                        "McQueen",
-                        "NÜM/M-GʃD/FG+~IN"
-                    ],
-                    [
-                        "Repeater",
-                        "SME/B+~I/D+EÜ"
-                    ],
-                    [
-                        "Freaks",
-                        "FM~I+GS"
                     ]
                 ]
             ],
@@ -23674,7 +22855,7 @@
         "PatAnglEI",
         {
             "0": [
-                538,
+                534,
                 [
                     [
                         "online",
@@ -23909,10 +23090,6 @@
                         "LAIF/LI/NE"
                     ],
                     [
-                        "Highschool",
-                        "SNAI/ʃO/OL"
-                    ],
-                    [
                         "Files",
                         "FAILS"
                     ],
@@ -24009,10 +23186,6 @@
                         "ON/LAIN/SNÄND/LEÜN"
                     ],
                     [
-                        "Lightroom",
-                        "LAI+D/SMO/OM"
-                    ],
-                    [
                         "Onlinehändlers",
                         "ON/LAIN/SNÄND/LEÜS"
                     ],
@@ -24075,6 +23248,14 @@
                     [
                         "Slackline",
                         "SLA+G/LAIN"
+                    ],
+                    [
+                        "Fights",
+                        "FAI+SD"
+                    ],
+                    [
+                        "Onlinespiel",
+                        "ON/LAIN/SB~IL"
                     ]
                 ]
             ],
@@ -24159,7 +23340,7 @@
         "PatAnglU",
         {
             "0": [
-                944,
+                1180,
                 [
                     [
                         "Facebook",
@@ -24174,10 +23355,6 @@
                         "GMU+B"
                     ],
                     [
-                        "Bloomberg",
-                        "BLUM/BEÜG"
-                    ],
-                    [
                         "Hollywood",
                         "SNOL/LÄI/F+UD"
                     ],
@@ -24188,6 +23365,10 @@
                     [
                         "Hochtouren",
                         "SNO+ʃ/D+U/SMEN"
+                    ],
+                    [
+                        "Look",
+                        "LU+G"
                     ],
                     [
                         "Tool",
@@ -24202,16 +23383,16 @@
                         "D+U/SMIS/D+I/ʃE"
                     ],
                     [
-                        "Bluetooth",
-                        "BLU/D+O/O+D"
-                    ],
-                    [
                         "Blues",
                         "BLUS"
                     ],
                     [
                         "Tourismusbranche",
                         "D+U/SMIS/MUS/BMAN/ʃ+E"
+                    ],
+                    [
+                        "Food",
+                        "FUD"
                     ],
                     [
                         "Cook",
@@ -24226,20 +23407,28 @@
                         "DʃGU/LE"
                     ],
                     [
+                        "boomt",
+                        "BUMD"
+                    ],
+                    [
+                        "Brooklyn",
+                        "BMU+G/LIN"
+                    ],
+                    [
+                        "Brooks",
+                        "BMU+GS"
+                    ],
+                    [
                         "Ressource",
                         "SMES/S~U/DʃGE"
                     ],
                     [
+                        "Woods",
+                        "F+USD"
+                    ],
+                    [
                         "Cookies",
                         "DʃGU/G+~IS"
-                    ],
-                    [
-                        "Wood",
-                        "F+UD"
-                    ],
-                    [
-                        "coolen",
-                        "DʃGU/LEN"
                     ],
                     [
                         "Touristiker",
@@ -24248,6 +23437,10 @@
                     [
                         "Touristik",
                         "D+U/SMIS/D+I+G"
+                    ],
+                    [
+                        "Clooney",
+                        "DGLU/NÄI"
                     ],
                     [
                         "MacBook",
@@ -24274,6 +23467,10 @@
                         "F+UD/F+AÜD"
                     ],
                     [
+                        "Rookie",
+                        "SMU/G+~I"
+                    ],
+                    [
                         "Tourismusministerin",
                         "D+U/SMIS/MUS/MI/NIS/D+E/SMIN"
                     ],
@@ -24286,12 +23483,20 @@
                         "FÄIS/BU+GS"
                     ],
                     [
+                        "Hollywoods",
+                        "SNOL/LÄI/F+USD"
+                    ],
+                    [
                         "touristisch",
                         "D+U/SMIS/D+Iʃ"
                     ],
                     [
                         "Woody",
                         "F+U/DÄI"
+                    ],
+                    [
+                        "Hooligans",
+                        "SNU/LI/GANS"
                     ],
                     [
                         "Tourismuswirtschaft",
@@ -24324,6 +23529,10 @@
                     [
                         "Coolness",
                         "DʃGUL/NESs"
+                    ],
+                    [
+                        "Bazooka",
+                        "BA/ʃGU/G+A"
                     ],
                     [
                         "Tourismussektor",
@@ -24370,6 +23579,22 @@
                         "SME/D+U/SMEN"
                     ],
                     [
+                        "Cartoons",
+                        "DʃGAÜ/D+~UNS"
+                    ],
+                    [
+                        "Footballer",
+                        "FU+D/BAL/LEÜ"
+                    ],
+                    [
+                        "Bauboom",
+                        "BAU/BUM"
+                    ],
+                    [
+                        "Babyboomer",
+                        "BA/BÄI/BU/MEÜ"
+                    ],
+                    [
                         "Touran",
                         "D+U/SMAN"
                     ],
@@ -24390,6 +23615,14 @@
                         "GUD/MAN"
                     ],
                     [
+                        "Rookies",
+                        "SMU/G+~IS"
+                    ],
+                    [
+                        "Superfood",
+                        "SU/B+EÜ/FUD"
+                    ],
+                    [
                         "touristisches",
                         "D+U/SMIS/D+I/ʃES"
                     ],
@@ -24398,12 +23631,20 @@
                         "F+UD/DSO+G"
                     ],
                     [
+                        "Waterloo",
+                        "F+A/D+EÜ/LU"
+                    ],
+                    [
                         "MacBooks",
                         "NÜM/MAGʃD/BU+GS"
                     ],
                     [
                         "Skitouren",
                         "SGI/D+U/SMEN"
+                    ],
+                    [
+                        "Doodle",
+                        "DU/DLE"
                     ],
                     [
                         "Mineralressource",
@@ -24418,16 +23659,32 @@
                         "GE/GU/GELD"
                     ],
                     [
+                        "Voodoo",
+                        "FBLU/DU"
+                    ],
+                    [
                         "Sommertourismus",
                         "SOM/MEÜ/D+U/SMIS/MUS"
                     ],
                     [
-                        "Bloombergs",
-                        "BLUM/BEÜGS"
+                        "Foodtruck",
+                        "FUD/DLU+G"
+                    ],
+                    [
+                        "Lootboxen",
+                        "LU+D/BO/DSGEN"
+                    ],
+                    [
+                        "boomte",
+                        "BUM/D+E"
                     ],
                     [
                         "Touristikern",
                         "D+U/SMIS/D+I/G+EÜN"
+                    ],
+                    [
+                        "Hoodie",
+                        "SNU/D~I"
                     ],
                     [
                         "Inlandstourismus",
@@ -24458,6 +23715,18 @@
                         "GU/GLE"
                     ],
                     [
+                        "Subwoofer",
+                        "SUB/F+U/FEÜ"
+                    ],
+                    [
+                        "Hoodies",
+                        "SNU/D~IS"
+                    ],
+                    [
+                        "Cartoon",
+                        "DʃGAÜ/D+~UN"
+                    ],
+                    [
                         "Booklet",
                         "BU+G/LE+D"
                     ],
@@ -24472,94 +23741,6 @@
                     [
                         "googelt",
                         "GU/GELD"
-                    ],
-                    [
-                        "MateBook",
-                        "NÜM/MÄI+D/BU+G"
-                    ],
-                    [
-                        "Wandertouren",
-                        "F+AN/DEÜ/D+U/SMEN"
-                    ],
-                    [
-                        "Hyperloop",
-                        "SNÄI/B+EÜ/LUB"
-                    ],
-                    [
-                        "Facebookgruppe",
-                        "FÄIS/BU+G/GMU+B/B+E"
-                    ],
-                    [
-                        "Tourenplanung",
-                        "D+U/SMEN/DBLA/NUMG"
-                    ],
-                    [
-                        "Touristikkonzern",
-                        "D+U/SMIS/D+I+G/G+ON/ʃGEÜN"
-                    ],
-                    [
-                        "Tagestouren",
-                        "D+A/GES/D+U/SMEN"
-                    ],
-                    [
-                        "Toolkit",
-                        "D+UL/G+I+D"
-                    ],
-                    [
-                        "Goofy",
-                        "GU/FÄI"
-                    ],
-                    [
-                        "Touristikbranche",
-                        "D+U/SMIS/D+I+G/BMAN/ʃ+E"
-                    ],
-                    [
-                        "Toolbox",
-                        "D+UL/BOGSD"
-                    ],
-                    [
-                        "Tourismuskonzept",
-                        "D+U/SMIS/MUS/G+ON/ʃGE+BD"
-                    ],
-                    [
-                        "Tourismusministeriums",
-                        "D+U/SMIS/MUS/MI/NIS/D+E/SMI/UMS"
-                    ],
-                    [
-                        "Jukebox",
-                        "FNU+G/BOGSD"
-                    ],
-                    [
-                        "Tourismusabgabe",
-                        "D+U/SMIS/MUS/AB/GA/BE"
-                    ],
-                    [
-                        "googlen",
-                        "GUG/LEN"
-                    ],
-                    [
-                        "Winterblues",
-                        "F+IN/D+EÜ/BLUS"
-                    ],
-                    [
-                        "Einkaufstouren",
-                        "EIN/G+AUFs/D+U/SMEN"
-                    ],
-                    [
-                        "Radtourismus",
-                        "SMAD/D+U/SMIS/MUS"
-                    ],
-                    [
-                        "Tourismusgeschäft",
-                        "D+U/SMIS/MUS/GE/ʃÄFD"
-                    ],
-                    [
-                        "Tanktourismus",
-                        "D+AMN/D+U/SMIS/MUS"
-                    ],
-                    [
-                        "Hollywoodfilm",
-                        "SNOL/LÄI/F+UD/FI+"
                     ]
                 ]
             ],
@@ -24578,7 +23759,7 @@
         "PatAnglStretchO",
         {
             "0": [
-                257,
+                255,
                 [
                     [
                         "Store",
@@ -24877,10 +24058,6 @@
                         "LOMG/B~O+SD"
                     ],
                     [
-                        "Moodboard",
-                        "MO/OD/B~O+D"
-                    ],
-                    [
                         "Cardboard",
                         "DʃGAÜD/B~O+D"
                     ],
@@ -24941,10 +24118,6 @@
                         "FELD/D+~ON"
                     ],
                     [
-                        "Moodboards",
-                        "MO/OD/B~O+SD"
-                    ],
-                    [
                         "onshore",
                         "ONS/SN~O"
                     ],
@@ -24979,6 +24152,14 @@
                     [
                         "Snowboarders",
                         "SNOF/B~O+/DEÜS"
+                    ],
+                    [
+                        "Folkloremusik",
+                        "FOLG/L~O/MU/SI+G"
+                    ],
+                    [
+                        "Waveboard",
+                        "F+A/FBLE/B~O+D"
                     ]
                 ]
             ]
@@ -25006,7 +24187,7 @@
         "PatAnglO",
         {
             "0": [
-                626,
+                633,
                 [
                     [
                         "Coach",
@@ -25098,7 +24279,7 @@
                     ],
                     [
                         "Foodwatch",
-                        "FO/OD/F+O+ʃD"
+                        "FUD/F+O+ʃD"
                     ],
                     [
                         "Talks",
@@ -25115,6 +24296,10 @@
                     [
                         "Boeings",
                         "BO/IMGS"
+                    ],
+                    [
+                        "indoor",
+                        "IN/D~O"
                     ],
                     [
                         "Relaunch",
@@ -25167,6 +24352,10 @@
                     [
                         "Lovecraft",
                         "LOF/DʃGMAFD"
+                    ],
+                    [
+                        "Doors",
+                        "D~OS"
                     ],
                     [
                         "Homeland",
@@ -25257,6 +24446,18 @@
                         "S~OS/DʃGOD"
                     ],
                     [
+                        "Indoorspielplatz",
+                        "IN/D~O/SB~IL/DBLAGʃD"
+                    ],
+                    [
+                        "Backdoors",
+                        "BA+G/D~OS"
+                    ],
+                    [
+                        "Backdoor",
+                        "BA+G/D~O"
+                    ],
+                    [
                         "Talkgäste",
                         "D+O+G/GÄS/D+E"
                     ],
@@ -25279,6 +24480,10 @@
                     [
                         "Geheimcode",
                         "GE/SNEIM/DʃGOD"
+                    ],
+                    [
+                        "Indoorspielplätze",
+                        "IN/D~O/SB~IL/DBLÄ+D/ʃGE"
                     ],
                     [
                         "launchte",
@@ -25311,6 +24516,10 @@
                     [
                         "Codewörter",
                         "DʃGOD/F+ÄO/D+EÜ"
+                    ],
+                    [
+                        "Indooranlage",
+                        "IN/D~O/AN/LA/GE"
                     ],
                     [
                         "Bestätigungscode",
@@ -25379,34 +24588,6 @@
                     [
                         "Gencode",
                         "GEN/DʃGOD"
-                    ],
-                    [
-                        "Homebanking",
-                        "SNOM/BAN/G+IMG"
-                    ],
-                    [
-                        "Homelands",
-                        "SNOM/LANSD"
-                    ],
-                    [
-                        "Programmiercode",
-                        "BO/GMAM/M~I/DʃGOD"
-                    ],
-                    [
-                        "Squat",
-                        "SG+OD"
-                    ],
-                    [
-                        "Codequalität",
-                        "DʃGOD/FG+A/LI/D+Ä+D"
-                    ],
-                    [
-                        "Codeschnipsel",
-                        "DʃGOD/ʃNI+B/SEL"
-                    ],
-                    [
-                        "Launchpad",
-                        "LONʃ/B+ÄD"
                     ]
                 ]
             ],
@@ -25451,7 +24632,7 @@
                     ],
                     [
                         "Bootloader",
-                        "BO/OD/LO/DEÜ"
+                        "B~OD/LO/DEÜ"
                     ],
                     [
                         "Bloatware",
@@ -25483,7 +24664,7 @@
                     ],
                     [
                         "Bootloaders",
-                        "BO/OD/LO/DEÜS"
+                        "B~OD/LO/DEÜS"
                     ],
                     [
                         "Downloadlinks",
@@ -25721,7 +24902,7 @@
         "PatAnglStretchU",
         {
             "0": [
-                599,
+                602,
                 [
                     [
                         "Interview",
@@ -25884,10 +25065,6 @@
                         "SOM/MEÜ/D+~U"
                     ],
                     [
-                        "Newsroom",
-                        "N~US/SMO/OM"
-                    ],
-                    [
                         "Sommerinterview",
                         "SOM/MEÜ/IN/D+EÜ/F+~U"
                     ],
@@ -25912,12 +25089,20 @@
                         "D+E/LE/FON/IN/D+EÜ/F+~U"
                     ],
                     [
+                        "Booster",
+                        "B~US/D+EÜ"
+                    ],
+                    [
                         "Videointerview",
                         "FBLI/DEO/IN/D+EÜ/F+~U"
                     ],
                     [
                         "Skitour",
                         "SGI/D+~U"
+                    ],
+                    [
+                        "Smoothie",
+                        "SM~U/S~I"
                     ],
                     [
                         "Abschiedstour",
@@ -26000,10 +25185,6 @@
                         "N~US/F~ID"
                     ],
                     [
-                        "Bootstour",
-                        "BO/O+SD/D+~U"
-                    ],
-                    [
                         "Grapefruit",
                         "GMÄI+B/FM~UD"
                     ],
@@ -26041,7 +25222,7 @@
                     ],
                     [
                         "Deutschlandtour",
-                        "DEU+ʃD/LAND/D+~U"
+                        "ʃLAND/D+~U"
                     ],
                     [
                         "Ochsentour",
@@ -26315,7 +25496,7 @@
                     ],
                     [
                         "Boomtown",
-                        "BO/OM/D+AUN"
+                        "BUM/D+AUN"
                     ],
                     [
                         "Soundcheck",
@@ -26572,7 +25753,7 @@
                     ],
                     [
                         "Outlook",
-                        "AU+D/LO/O+G"
+                        "AU+D/LU+G"
                     ],
                     [
                         "Blackout",
@@ -26596,7 +25777,7 @@
                     ],
                     [
                         "Outdoor",
-                        "AU+D/DO/~O"
+                        "AU+D/D~O"
                     ],
                     [
                         "Output",
@@ -26800,7 +25981,7 @@
                     ],
                     [
                         "Outdoorjacke",
-                        "AU+D/DO/~O/FNA/G+E"
+                        "AU+D/D~O/FNA/G+E"
                     ],
                     [
                         "Tastaturlayout",
@@ -26840,7 +26021,7 @@
                     ],
                     [
                         "Outdoorjacken",
-                        "AU+D/DO/~O/FNA+Gn"
+                        "AU+D/D~O/FNA+Gn"
                     ],
                     [
                         "Soutane",
@@ -26864,11 +26045,11 @@
                     ],
                     [
                         "Outdoorbranche",
-                        "AU+D/DO/~O/BMAN/ʃ+E"
+                        "AU+D/D~O/BMAN/ʃ+E"
                     ],
                     [
                         "Outdoormarke",
-                        "AU+D/DO/~O/MAÜ/G+E"
+                        "AU+D/D~O/MAÜ/G+E"
                     ],
                     [
                         "Arbeitsoutfit",
@@ -27094,7 +26275,7 @@
                     ],
                     [
                         "Actionthriller",
-                        "AGʃD/ʃEN/DNLIL/LEÜ"
+                        "AGʃD/ʃEN/DSNMIL/LEÜ"
                     ],
                     [
                         "Sportmanagement",
@@ -27356,7 +26537,7 @@
         "PatAnglOther",
         {
             "0": [
-                2348,
+                2322,
                 [
                     [
                         "Bayern",
@@ -27639,14 +26820,6 @@
                         "MI/DS+U/BI/ʃI"
                     ],
                     [
-                        "Shooter",
-                        "ʃO/O/D+EÜ"
-                    ],
-                    [
-                        "Shooting",
-                        "ʃO/O/D+IMG"
-                    ],
-                    [
                         "Washingtons",
                         "F+A/ʃIMG/D+ONS"
                     ],
@@ -27757,6 +26930,14 @@
                     [
                         "Hiroshima",
                         "SNI/SMO/ʃI/MA"
+                    ],
+                    [
+                        "Onlineshops",
+                        "ON/LAIN/ʃO+BS"
+                    ],
+                    [
+                        "Berkshire",
+                        "BEÜ+G/ʃEÜ"
                     ]
                 ]
             ]
@@ -27766,7 +26947,7 @@
         "PatFrankOther",
         {
             "0": [
-                6826,
+                6809,
                 [
                     [
                         "passiert",
