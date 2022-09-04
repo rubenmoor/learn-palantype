@@ -158,6 +158,7 @@ import qualified Page.Patterns as Patterns
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
+import qualified Page.Stage5 as Stage5
 import Page.Stage4.PloverCommands (ploverCommands)
 import Page.Stage4.Fingerspelling (fingerspelling)
 import Page.Stage4.NumberMode (numberMode)
@@ -915,6 +916,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
         dynShowStage4 = stTOCShowStage4 <$> dynState
+        dynShowStage5 = stTOCShowStage5 <$> dynState
 
     -- button to toggle TOC
     dyn_ $ dynShowTOC <&> \showTOC -> do
@@ -1048,6 +1050,20 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_numbermode"
                         elLi $ $readLoc "stage_commandKeys"
                         elLi $ $readLoc "stage_specialCharacters"
+
+                    (s5, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage5
+                        elDynClass "i" dynClass blank
+                        text "Stage 5: Increasing efficiency"
+
+                    updateState $ domEvent Click s5 $>
+                        [field @"stApp" . field @"stTOCShowStage5" %~ not]
+
+                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage5
+                    elDynClass "ul" dynClassUl5 $ do
+                        elLi $ $readLoc "stage_PatBrief_0"
 
                     elLi $ $readLoc "patternoverview"
 
@@ -1319,6 +1335,7 @@ stages navLang toReady = do
                         | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
                         | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
                         | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
+                        | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage5.exercise1
                         | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $

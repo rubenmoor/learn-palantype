@@ -153,6 +153,7 @@ strsStage =
     , "stage_numbermode"
     , "stage_commandKeys"
     , "stage_specialCharacters"
+    , "stage_PatBrief_0"
     , "patternoverview"
     ]
 
@@ -215,6 +216,7 @@ stageMeta stage = if
     | $readLoc "stage_numbermode"        == stage -> StageSubLevel 4 3 "Number input"
     | $readLoc "stage_commandKeys"       == stage -> StageSubLevel 4 4 "Command keys"
     | $readLoc "stage_specialCharacters" == stage -> StageSubLevel 4 5 "Special characters"
+    | $readLoc "stage_PatBrief_0"        == stage -> StageSubLevel 5 1 "Briefs"
     | $readLoc "patternoverview" == stage -> StageTopLevel "Pattern overview"
     | otherwise -> error $ "stageMeta: pattern missing: " <> show stage
 
