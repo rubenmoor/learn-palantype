@@ -17,13 +17,10 @@
 
 module Page.Stage2 where
 
-import           Client                         ( getDictDE'
-                                                , getDocDEPattern'
-                                                , postRender
-                                                , request
+import           Client                         ( postRender
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Control.Applicative            ((<*>),  (<$>)
+import           Control.Applicative            ((<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.), id)
@@ -36,8 +33,7 @@ import           Control.Lens                   (preview,  (+~)
                                                 , (<&>)
                                                 )
 import Control.Lens.TH ( makePrisms, makeLenses )
-import           Control.Monad                  ( (=<<)
-                                                , unless
+import           Control.Monad                  ( unless
                                                 , when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
@@ -56,7 +52,6 @@ import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
                                                 , void
                                                 )
-import           Data.Functor                   ( Functor((<$)) )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Generics.Product          ( field )
 import Data.Generics.Sum (_As)
@@ -93,7 +88,7 @@ import           Page.Common                    (elBtnSound, getStatsLocalAndRem
                                                 , taskWords
                                                 )
 import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
-import           Palantype.Common               ( kiChordsStart
+import           Palantype.Common               (patternDoc,  kiChordsStart
                                                 , Chord(..)
                                                 , Lang(..)
                                                 , Palantype
@@ -122,21 +117,21 @@ import           Reflex.Dom                     (constDyn, Dynamic, current, gat
                                                 , Prerender
                                                 , Reflex(Event, never, updated)
                                                 , blank
-                                                , delay
+
                                                 , dyn_
                                                 , el
                                                 , elAttr
                                                 , elClass
                                                 , elClass'
                                                 , elDynClass
-                                                , filterRight
+
                                                 , foldDyn
                                                 , leftmost
                                                 , switchDyn
                                                 , text
                                                 , widgetHold
                                                 , widgetHold_
-                                                , zipDyn
+
                                                 )
 import           Shared                         (whenJust )
 import           State                          ( Env(..)
@@ -158,6 +153,7 @@ import Common.Model (Stats)
 import Common.Stage (Stage)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)
+import PloverDict (getMapsForExercise)
 
 -- Ex. 2.1
 
@@ -672,9 +668,10 @@ taskSingletons
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Chord key)
-    -> Event t (Map RawSteno Text, Map Text [RawSteno])
+    -> Map RawSteno Text
+    -> Map Text [RawSteno]
     -> m (Event t Stats)
-taskSingletons dynStats evChord eMaps = do
+taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
 
     Env{..} <- ask
     eStdGen <- postRender $ do
@@ -682,17 +679,12 @@ taskSingletons dynStats evChord eMaps = do
         performEvent $ ePb $> liftIO newStdGen
 
     dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
-    dynMMaps   <- holdDyn Nothing $ Just <$> eMaps
-    let evReady =
-            catMaybes
-                $   updated
-                $   zipDyn dynMStdGen dynMMaps
-                <&> \(mStdGen, mMaps) -> (,) <$> mStdGen <*> mMaps
+    let evReady = catMaybes $ updated dynMStdGen
 
     fmap switchDyn
         $   widgetHold (loading $> never)
         $   evReady
-        <&> \(stdGen, (mapStenoWord, mapWordStenos)) -> do
+        <&> \stdGen -> do
 
                 let
                     len = Map.size mapWordStenos
@@ -913,20 +905,15 @@ exercise3 = mdo
         el "code" $ text "n"
         text " are special keys. Don't use them yet."
 
-    ePb    <- postRender $ delay 0.1 =<< getPostBuild
-    eEDict <- request $ getDictDE' PatSimple 0 ePb
-
-    widgetHold_ loading $ eEDict <&> \case
-        Right _ -> blank
-        Left str ->
-            elClass "div" "paragraph small red"
-                $  text
-                $  "Could not load resource: "
-                <> str
-
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-    evDone <- taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) $ filterRight eEDict
+
+    evDone      <- case getMapsForExercise PatSimple 0 of
+        Left str -> do
+            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            pure never
+        Right (mSW, mWSs) ->
+            taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
@@ -994,17 +981,16 @@ exercise4 = mdo
               "Words that contain more than one syllable can be typed \
             \by typing the syllables separately, one after the other."
 
-    ePb     <- postRender $ delay 0.1 =<< getPostBuild
-    evEDict <- request $ getDictDE' PatSimpleMulti 0 ePb
-    evEDoc  <- request $ getDocDEPattern' PatSimple 0 ePb
-
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
-        Right (mST, mTSs) -> taskWords dynStatsAll (gate (not <$> current dynDone) envEChord) mST mTSs
-        Left  str         -> never <$ elClass
-            "div"
-            "paragraph small red"
-            (text $ "Could not load resource: dict: " <> str)
+    evDone      <- case getMapsForExercise PatSimpleMulti 0 of
+        Left str -> do
+            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            pure never
+        Right (mSW, mWSs) -> taskWords
+            dynStatsAll
+            (gate (not <$> current dynDone) envEChord)
+            mSW
+            mWSs
 
     el "h3" $ text "Simple substitution rules"
 
@@ -1024,13 +1010,10 @@ exercise4 = mdo
             \that have been applied so far. They look trivial still, but will \
             \more complicated soon enough."
 
-    widgetHold_ loading $ evEDoc <&> \case
-        Right doc -> elPatterns doc
-        Left str ->
-            elClass "div" "paragraph small red"
-                $  text
-                $  "Could not load resource: doc: "
-                <> str
+    elPatterns
+        $ Map.toList
+        $ Map.findWithDefault Map.empty 0
+        $ Map.findWithDefault Map.empty PatSimple patternDoc
 
     el "p"
         $ text

@@ -60,12 +60,9 @@ import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           GHC.Show                       ( Show(show) )
 import           Obelisk.Generated.Static       ( staticFilePath )
-import           Palantype.Common               ( MapStenoWordTake100
-                                                , PatternDoc
-                                                , KeyIndex
+import           Palantype.Common               ( KeyIndex
                                                 , keyIndex
                                                 , Lang(..)
-                                                , Greediness
                                                 )
 import           Palantype.Common               ( RawSteno
                                                 , parseStenoKey
@@ -88,67 +85,6 @@ import           Data.Tuple                     ( snd )
 handlers :: MonadSnap m => ServerT RoutesPalantype a m
 handlers =
          handleConfigNew
-    :<|> handleDocDEPatternAll
-    :<|> handleDocDEPattern
-    :<|> handleDictDE
-    :<|> handleDictDENumbers
-
--- handleDocDEPatternAll
-
-getDocMapDE :: MonadSnap m => m (MapStenoWordTake100 DE.Key)
-getDocMapDE = do
-  let
-      errCouldNotDecode = err500
-          { errBody = "Could not load map palantype-DE-doc"
-          }
-
-  mMap <- liftIO $ Json.decodeFileStrict' $(staticFilePath "palantype-DE-doc.json")
-  maybe (Snap.throwError errCouldNotDecode) pure mMap
-
-handleDocDEPatternAll
-  :: MonadSnap m => m (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
-handleDocDEPatternAll = do
-  map <- getDocMapDE
-  pure (patternDoc, map)
-
--- handleDocDEPattern
-
-handleDocDEPattern
-  :: MonadSnap m
-  => DE.Pattern
-  -> Greediness
-  -> m [(PatternPos, [(Text, RawSteno)])]
-handleDocDEPattern p g =
-  pure $ Map.findWithDefault [] g
-           $ Map.fromList
-           $ Map.findWithDefault [] p
-           $ Map.fromList patternDoc
-
--- handleDict
-
-handleDictDE :: MonadSnap m => DE.Pattern -> Greediness -> m (Map RawSteno Text, Map Text [RawSteno])
-handleDictDE p g = do
-  mapPG <- getDocMapDE
-  let
-      ls = snd $ Map.findWithDefault (0, []) g
-               $ Map.findWithDefault Map.empty p mapPG
-  pure $
-    foldl' (\(mSW, mWSs) (w, s) ->
-              ( Map.insert s w mSW
-              , Map.insertWith (<>) w [s] mWSs
-              )
-           ) (Map.empty, Map.empty) ls
-
-handleDictDENumbers :: MonadSnap m => m (Map RawSteno Text)
-handleDictDENumbers = do
-  let
-      errCouldNotDecode = err500
-          { errBody = "Could not load map palantype-DE-numbers"
-          }
-
-  mMap <- liftIO $ Json.decodeFileStrict'
-      $(staticFilePath "palantype-DE-numbers.json")
-  maybe (Snap.throwError errCouldNotDecode) pure mMap
 
 -- handleConfigNew
 

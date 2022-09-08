@@ -23,13 +23,10 @@ import           Data.Generics.Product          ( field )
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
                                                 )
-import           Client                         ( getDictDENumbers
-                                                , postRender
-                                                , request
+import           Client                         ( postRender
                                                 )
 import           Common.Route                   ( FrontendRoute )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Monad                  ( (=<<) )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.Reader.Class     ( MonadReader
                                                 , ask
@@ -57,7 +54,6 @@ import           Obelisk.Route.Frontend         (Routed,  R
                                                 )
 import           Page.Common                    (getStatsLocalAndRemote,  elNotImplemented
                                                 , elCongraz
-                                                , loading
                                                 )
 import           Palantype.Common               ( kiChordsStart
                                                 , Lang(DE)
@@ -73,8 +69,6 @@ import           Reflex.Dom                     (current, gate, Dynamic,  Perfor
                                                 , holdUniqDyn
                                                 , updated
                                                 , EventWriter
-                                                , switchDyn
-                                                , widgetHold
                                                 , holdDyn
                                                 , never
                                                 , performEvent
@@ -85,7 +79,7 @@ import           Reflex.Dom                     (current, gate, Dynamic,  Perfor
                                                 , PostBuild
                                                 , Prerender
                                                 , blank
-                                                , delay
+
                                                 , dyn_
                                                 , el
                                                 , elAttr
@@ -127,7 +121,6 @@ import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
 import           Data.Foldable                  ( Foldable(null) )
 import           Data.Functor                   ( Functor(fmap) )
-import           Data.Functor                   ( Functor((<$)) )
 import           Data.List                      ( take )
 import qualified Palantype.Common.RawSteno     as Raw
 import           Control.Monad                  ( unless )
@@ -145,6 +138,7 @@ import           GHC.Generics                   ( Generic )
 import Data.Bool (Bool, not)
 import Data.Tuple (fst, snd)
 import Data.List (filter)
+import PloverDict (eMapNumbersForExercise)
 
 data StateDates k
     = StatePause Int
@@ -409,14 +403,12 @@ numberMode = mdo
              \possible at once."
 
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evPb <- postRender $ delay 0.1 =<< getPostBuild
-    evEDict <- request $ getDictDENumbers evPb
-    evDone <- fmap switchDyn $ widgetHold (loading $> never) $ evEDict <&> \case
-        Left str -> never <$ elClass
-            "span"
-            "red small"
-            (text $ "Couldn't load resource: " <> str)
-        Right map -> taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map
+    evDone <- case eMapNumbersForExercise @key of
+        Left str  -> do
+          elClass "p" "small red" $ text $ "Couldn't load resource: " <> str
+          pure never
+        Right map ->
+          taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map
 
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation

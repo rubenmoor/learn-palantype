@@ -13,7 +13,7 @@ module AuthPages
     )
 where
 
-import           Reflex.Dom                     (inputElementConfig_initialChecked, tailE,  domEvent, EventName (Click), inputElementConfig_setChecked, tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
+import           Reflex.Dom                     (inputElementConfig_initialChecked,  domEvent, EventName (Click), tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
                                                 , dyn_
                                                 , widgetHold_
                                                 , PostBuild

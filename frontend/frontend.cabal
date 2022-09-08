@@ -60,6 +60,7 @@ library
     , Page.Stage4.CommandKeys
     , Page.Stage4.SpecialCharacters
     , Page.Stage5
+    , PloverDict
     , Shared
     , State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits

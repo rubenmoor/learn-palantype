@@ -16,7 +16,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Common.Stage
-    ( Stage()
+    ( Stage(..)
     , mPrev
     , mNext
     , stageMeta

@@ -85,8 +85,8 @@ in
       my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "my-palantype";
-        rev = "b829455c01ff57fa02486dfb84f0e8a64804ed8a";
-        sha256 = "1r7yiln5xig54m243440brh10v1d07nrixx1c5icfk6ish47y1l8";
+        rev = "9f0649b61390aacc7ef59d8bff252ef2c685a8d5";
+        sha256 = "1fzrapr6ihqvlyc3gqcp8xmmaywp58za5p0x0kr670968vwnqz56";
       }) {};
     };
   })

@@ -15,38 +15,29 @@ module Page.Stage4.CommandKeys
     ( commandKeys
     ) where
 
-import           Client (getDictDENumbers, postRender, request)
 import           Control.Applicative (Applicative (pure))
-import           Control.Monad (unless, (=<<))
 import           Control.Monad.Reader.Class (MonadReader, ask)
-import           Data.Either (Either (..))
-import           Data.Eq (Eq((==)))
 import           Data.Function (($))
-import           Data.Functor ((<&>))
 import           Data.Semigroup ((<>))
 import           Obelisk.Generated.Static (static)
-import           Page.Common (elNotImplemented, loading)
-import           Palantype.Common (Lang (DE))
-import           Reflex.Dom ((=:), DomBuilder, MonadHold, Prerender, blank, delay, el, elAttr, elClass, getPostBuild, text, widgetHold_)
+import           Page.Common (elNotImplemented)
+import           Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
 import           State (Env (..), Navigation (..))
 
 commandKeys ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
-      MonadHold t m,
-      MonadReader (Env t key) m,
-      Prerender t m
+      MonadReader (Env t key) m
     ) =>
     m Navigation
 commandKeys = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+
+    -- TODO
+    elNotImplemented
 
     el "h1" $ text "Typing numbers"
-
-    evPb <- postRender $ delay 0.1 =<< getPostBuild
-    evEDict <- request $ getDictDENumbers evPb
 
     el "h2" $ text "Palantype number mode"
 
@@ -104,9 +95,5 @@ commandKeys = do
 
     -- TODO: link to further special chars
     -- TODO: link to plover commands
-
-    widgetHold_ loading $ evEDict <&> \case
-        Left  str -> elClass "span" "red small" $ text $ "Couldn't load resource: " <> str
-        Right _ -> blank
 
     pure envNavigation

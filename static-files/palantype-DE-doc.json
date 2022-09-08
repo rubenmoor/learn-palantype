@@ -3,7 +3,7 @@
         "PatSimple",
         {
             "0": [
-                341,
+                343,
                 [
                     [
                         "und",
@@ -116,6 +116,14 @@
                     [
                         "ins",
                         "INS"
+                    ],
+                    [
+                        "allem",
+                        "AL/LEM"
+                    ],
+                    [
+                        "seinem",
+                        "SEI/NEM"
                     ],
                     [
                         "gab",
@@ -396,27 +404,6 @@
                     [
                         "Sun",
                         "SUN"
-                    ],
-                    [
-                        "Gmünd",
-                        "GMÜND"
-                    ],
-                    [
-                        "Maus",
-                        "MAUS"
-                    ]
-                ]
-            ],
-            "3": [
-                2,
-                [
-                    [
-                        "Pléiade",
-                        "DBLEI/A/DE"
-                    ],
-                    [
-                        "Léopoldville",
-                        "LEO/B+OLD/FIL"
                     ]
                 ]
             ]
@@ -426,27 +413,11 @@
         "PatSimpleMulti",
         {
             "0": [
-                11938,
+                11901,
                 [
                     [
-                        "einem",
-                        "EI/NEM"
-                    ],
-                    [
-                        "eines",
-                        "EI/NES"
-                    ],
-                    [
-                        "neue",
-                        "NEU/E"
-                    ],
-                    [
-                        "allem",
-                        "AL/LEM"
-                    ],
-                    [
-                        "seinem",
-                        "SEI/NEM"
+                        "seien",
+                        "SEI/EN"
                     ],
                     [
                         "beiden",
@@ -505,10 +476,6 @@
                         "BEI/DE"
                     ],
                     [
-                        "seines",
-                        "SEI/NES"
-                    ],
-                    [
                         "eigene",
                         "EI/GE/NE"
                     ],
@@ -531,10 +498,6 @@
                     [
                         "schaffen",
                         "ʃAF/FEN"
-                    ],
-                    [
-                        "neues",
-                        "NEU/ES"
                     ],
                     [
                         "genug",
@@ -827,6 +790,30 @@
                     [
                         "globale",
                         "GLO/BA/LE"
+                    ],
+                    [
+                        "Beine",
+                        "BEI/NE"
+                    ],
+                    [
+                        "Bündnis",
+                        "BÜND/NIS"
+                    ],
+                    [
+                        "infolge",
+                        "IN/FOL/GE"
+                    ],
+                    [
+                        "namens",
+                        "NA/MENS"
+                    ],
+                    [
+                        "landen",
+                        "LAN/DEN"
+                    ],
+                    [
+                        "genaue",
+                        "GEN/AU/E"
                     ]
                 ]
             ]
@@ -836,8 +823,12 @@
         "PatReplCommon1",
         {
             "0": [
-                124136,
+                123941,
                 [
+                    [
+                        "zu",
+                        "ʃGU"
+                    ],
                     [
                         "mit",
                         "MI+D"
@@ -871,24 +862,8 @@
                         "I+ʃ"
                     ],
                     [
-                        "habe",
-                        "SNA/BE"
-                    ],
-                    [
-                        "Euro",
-                        "EU/SMO"
-                    ],
-                    [
-                        "sagte",
-                        "SAG/D+E"
-                    ],
-                    [
                         "vom",
                         "FBLOM"
-                    ],
-                    [
-                        "keine",
-                        "G+EI/NE"
                     ],
                     [
                         "seit",
@@ -899,20 +874,8 @@
                         "F+AS"
                     ],
                     [
-                        "damit",
-                        "DA/MI+D"
-                    ],
-                    [
                         "rund",
                         "SMUND"
-                    ],
-                    [
-                        "etwa",
-                        "E+D/F+A"
-                    ],
-                    [
-                        "etwas",
-                        "E+D/F+AS"
                     ],
                     [
                         "weil",
@@ -1041,10 +1004,6 @@
                     [
                         "könne",
                         "G+ÄON/NE"
-                    ],
-                    [
-                        "Juni",
-                        "FNU/NI"
                     ],
                     [
                         "deutschen",
@@ -1237,6 +1196,34 @@
                     [
                         "solche",
                         "SOL/ʃ+E"
+                    ],
+                    [
+                        "hoch",
+                        "SNO+ʃ"
+                    ],
+                    [
+                        "lang",
+                        "LAMG"
+                    ],
+                    [
+                        "Hilfe",
+                        "SNIL/FE"
+                    ],
+                    [
+                        "getestet",
+                        "GE/D+ES/D+E+D"
+                    ],
+                    [
+                        "gelten",
+                        "GEL/D+EN"
+                    ],
+                    [
+                        "besten",
+                        "BES/D+EN"
+                    ],
+                    [
+                        "ganze",
+                        "GAN/ʃGE"
                     ]
                 ]
             ],
@@ -1442,7 +1429,7 @@
                 ]
             ],
             "3": [
-                1622,
+                1320,
                 [
                     [
                         "hat",
@@ -1453,16 +1440,16 @@
                         "GUD"
                     ],
                     [
+                        "vier",
+                        "F~I"
+                    ],
+                    [
                         "SV",
                         "NÜM/S-/F-"
                     ],
                     [
                         "Gastronomie",
                         "GASD/SMO/NO/MI"
-                    ],
-                    [
-                        "ergänzt",
-                        "EÜ/GÄMGʃD"
                     ],
                     [
                         "Erfurt",
@@ -1475,10 +1462,6 @@
                     [
                         "fit",
                         "FID"
-                    ],
-                    [
-                        "Papst",
-                        "B+A+BSD"
                     ],
                     [
                         "rot",
@@ -1513,10 +1496,6 @@
                         "A+G/DʃGAUND"
                     ],
                     [
-                        "gefilmt",
-                        "GE/FI+D"
-                    ],
-                    [
                         "SSV",
                         "NÜM/SS/F-"
                     ],
@@ -1529,14 +1508,6 @@
                         "EIN/G+AUFs/ʃGEND/SMUM"
                     ],
                     [
-                        "gepflanzt",
-                        "GE/FBLAMGʃD"
-                    ],
-                    [
-                        "Wurst",
-                        "F+~USD"
-                    ],
-                    [
                         "Australier",
                         "AUSD/SMA/LI/EÜ"
                     ],
@@ -1547,14 +1518,6 @@
                     [
                         "Gastronom",
                         "GASD/SMO/NOM"
-                    ],
-                    [
-                        "Kontrast",
-                        "G+OND/SMAs"
-                    ],
-                    [
-                        "tanzt",
-                        "D+AMGʃD"
                     ],
                     [
                         "konstruktiv",
@@ -1585,14 +1548,6 @@
                         "G+OND/SMA/BO/DU+G/D+IF"
                     ],
                     [
-                        "Mist",
-                        "MISD"
-                    ],
-                    [
-                        "grenzt",
-                        "GMEMGʃD"
-                    ],
-                    [
                         "kontrovers",
                         "G+OND/SMO/FEÜS"
                     ],
@@ -1601,16 +1556,8 @@
                         "MA/GISD/SMAD"
                     ],
                     [
-                        "glänzt",
-                        "GLÄMGʃD"
-                    ],
-                    [
                         "Industriegebiet",
                         "IN/DUSD/SMI/GE/BID"
-                    ],
-                    [
-                        "getanzt",
-                        "GE/D+AMGʃD"
                     ],
                     [
                         "Kulturzentrum",
@@ -1677,10 +1624,6 @@
                         "DʃGAUND/DAUN"
                     ],
                     [
-                        "filmt",
-                        "FI+D"
-                    ],
-                    [
                         "Kompetenzzentrum",
                         "G+OM/B+E/D+EMGʃ/ʃGEND/SMUM"
                     ],
@@ -1705,10 +1648,6 @@
                         "GE/B+UMBD"
                     ],
                     [
-                        "lest",
-                        "LESD"
-                    ],
-                    [
                         "versandt",
                         "FEÜ/SAND"
                     ],
@@ -1725,10 +1664,6 @@
                         "IN/DUSD/SMI/G+ON/ʃGEÜN"
                     ],
                     [
-                        "ausgegrenzt",
-                        "AUS/GE/GMEMGʃD"
-                    ],
-                    [
                         "gefoult",
                         "GE/FAU/ELD"
                     ],
@@ -1737,20 +1672,12 @@
                         "MAND/SMA"
                     ],
                     [
-                        "Vieh",
-                        "F~I"
-                    ],
-                    [
                         "Maestro",
                         "MA/ESD/SMO"
                     ],
                     [
                         "Orchestra",
                         "~O/ʃ+ESD/SMA"
-                    ],
-                    [
-                        "eingegrenzt",
-                        "EIN/GE/GMEMGʃD"
                     ],
                     [
                         "Elektriker",
@@ -1767,10 +1694,6 @@
                     [
                         "Gentleman",
                         "GEND/LE/MAN"
-                    ],
-                    [
-                        "speist",
-                        "SBEISD"
                     ],
                     [
                         "Industrialisierung",
@@ -1843,6 +1766,70 @@
                     [
                         "Nachwuchsleistungszentrum",
                         "NA+ʃ/F+U+GS/LEIS/D+UMGS/ʃGEND/SMUM"
+                    ],
+                    [
+                        "Rüstungsindustrie",
+                        "SMÜS/D+UMGS/IN/DUSD/SMI"
+                    ],
+                    [
+                        "Benedict",
+                        "BE/NE/DI+GD"
+                    ],
+                    [
+                        "pumpt",
+                        "B+UMBD"
+                    ],
+                    [
+                        "Intrige",
+                        "IND/SMI/GE"
+                    ],
+                    [
+                        "Filmindustrie",
+                        "FI+/IN/DUSD/SMI"
+                    ],
+                    [
+                        "Bauindustrie",
+                        "BAU/IN/DUSD/SMI"
+                    ],
+                    [
+                        "restriktiv",
+                        "SMESD/SMI+G/D+IF"
+                    ],
+                    [
+                        "Textilindustrie",
+                        "D+EGSD/D+IL/IN/DUSD/SMI"
+                    ],
+                    [
+                        "EVG",
+                        "NÜM/E/FG-"
+                    ],
+                    [
+                        "Kontrolleur",
+                        "G+OND/SMOL/LÄO"
+                    ],
+                    [
+                        "Administrator",
+                        "AD/MI/NISD/SMA/D+~O"
+                    ],
+                    [
+                        "Finanzkontrolle",
+                        "FI/NAMGʃ/G+OND/SMOL/LE"
+                    ],
+                    [
+                        "gepusht",
+                        "GE/B+UʃD"
+                    ],
+                    [
+                        "erhört",
+                        "EÜ/SNÄOD"
+                    ],
+                    [
+                        "Astronomie",
+                        "ASD/SMO/NO/MI"
+                    ],
+                    [
+                        "Gentrifizierung",
+                        "GEND/SMI/FI/ʃGI/SMUMG"
                     ]
                 ]
             ]
@@ -1852,7 +1839,7 @@
         "PatReplCommon2",
         {
             "0": [
-                41160,
+                41200,
                 [
                     [
                         "zwei",
@@ -2384,6 +2371,10 @@
                         "B+AN/ʃGEÜ/D+I+BS"
                     ],
                     [
+                        "Rheydts",
+                        "SMEISD"
+                    ],
+                    [
                         "Sporttyp",
                         "SB~OD/D+I+B"
                     ],
@@ -2428,10 +2419,6 @@
                         "MA/LAI/AS"
                     ],
                     [
-                        "Osthimalayas",
-                        "Os/SNI/MA/LAI/AS"
-                    ],
-                    [
                         "PolyGram",
                         "B+O/LI/GMAM"
                     ],
@@ -2459,7 +2446,7 @@
         "PatCodaComboT",
         {
             "0": [
-                22172,
+                22152,
                 [
                     [
                         "nicht",
@@ -3030,7 +3017,7 @@
         "PatOnsetR",
         {
             "0": [
-                61352,
+                61353,
                 [
                     [
                         "Prozent",
@@ -3440,7 +3427,7 @@
         "PatOnsetL",
         {
             "0": [
-                10290,
+                10285,
                 [
                     [
                         "geplant",
@@ -3611,10 +3598,6 @@
                         "EIN/DGLAMG"
                     ],
                     [
-                        "Uniklinik",
-                        "U/NI/DGLI/NI+G"
-                    ],
-                    [
                         "klagt",
                         "DGLAGD"
                     ],
@@ -3767,10 +3750,6 @@
                         "DGLAS/SIʃ"
                     ],
                     [
-                        "Uniklinikum",
-                        "U/NI/DGLI/NI/G+UM"
-                    ],
-                    [
                         "pleite",
                         "DBLEI/D+E"
                     ],
@@ -3841,6 +3820,14 @@
                     [
                         "Pleitewelle",
                         "DBLEI/D+E/F+EL/LE"
+                    ],
+                    [
+                        "Anklagebank",
+                        "AN/DGLA/GE/BAMN"
+                    ],
+                    [
+                        "Abklärung",
+                        "AB/DGLÄ/SMUMG"
                     ]
                 ]
             ]
@@ -3850,7 +3837,7 @@
         "PatSmallS",
         {
             "0": [
-                2889,
+                2947,
                 [
                     [
                         "aufs",
@@ -3861,8 +3848,8 @@
                         "F+IN/DOFs"
                     ],
                     [
-                        "West",
-                        "F+Es/-+D"
+                        "fasst",
+                        "FAs/-+D"
                     ],
                     [
                         "Chefs",
@@ -3877,6 +3864,14 @@
                         "EIN/G+AUFs/ʃGEN/DLEN"
                     ],
                     [
+                        "Nest",
+                        "NEs/-+D"
+                    ],
+                    [
+                        "isst",
+                        "Is/-+D"
+                    ],
+                    [
                         "Hilfsmittel",
                         "SNILFs/MI+D/D+EL"
                     ],
@@ -3889,20 +3884,28 @@
                         "GMEIFs/F+ALD"
                     ],
                     [
-                        "Hilfsangebote",
-                        "SNILFs/AN/GE/BO/D+E"
+                        "Mist",
+                        "MIs/-+D"
                     ],
                     [
-                        "List",
-                        "LIs/-+D"
+                        "Hilfsangebote",
+                        "SNILFs/AN/GE/BO/D+E"
                     ],
                     [
                         "Hilfspakete",
                         "SNILFs/B+A/G+E/D+E"
                     ],
                     [
-                        "wisst",
-                        "F+Is/+-D"
+                        "frisst",
+                        "FMIs/-+D"
+                    ],
+                    [
+                        "lest",
+                        "LEs/-+D"
+                    ],
+                    [
+                        "hasst",
+                        "SNAs/-+D"
                     ],
                     [
                         "Einkaufszentrums",
@@ -3915,6 +3918,10 @@
                     [
                         "Einkaufsstraße",
                         "EIN/G+AUFs/DSMA/S+E"
+                    ],
+                    [
+                        "sagst",
+                        "SAGs/-+D"
                     ],
                     [
                         "Hilfsmitteln",
@@ -4019,6 +4026,10 @@
                     [
                         "Hilfskredite",
                         "SNILFs/DGME/DI/D+E"
+                    ],
+                    [
+                        "last",
+                        "LAs/-+D"
                     ],
                     [
                         "Kollektivs",
@@ -4227,35 +4238,11 @@
                     [
                         "massivste",
                         "MAS/SIFs/D+E"
-                    ],
-                    [
-                        "Hilfseinsätze",
-                        "SNILFs/EIN/SÄ+D/ʃGE"
-                    ],
-                    [
-                        "Amoklaufs",
-                        "A/MO+G/LAUFs"
-                    ],
-                    [
-                        "Wolfsbrigade",
-                        "F+OLFs/BMI/GA/DE"
-                    ],
-                    [
-                        "Dostojewski",
-                        "DOS/D+O/FNEFs/G+I"
-                    ],
-                    [
-                        "Einkaufspolitik",
-                        "EIN/G+AUFs/B+O/LI/D+I+G"
-                    ],
-                    [
-                        "exklusivsten",
-                        "EGSD/DGLU/SIFs/D+EN"
                     ]
                 ]
             ],
             "6": [
-                553,
+                548,
                 [
                     [
                         "freie",
@@ -4450,10 +4437,6 @@
                         "FMEIs/SMES"
                     ],
                     [
-                        "widerspruchsfreie",
-                        "F+I/DEÜ/SBLU+GS/FMEIs"
-                    ],
-                    [
                         "bauchfreie",
                         "BAU+ʃ/FMEIs"
                     ],
@@ -4554,10 +4537,6 @@
                         "F+AÜN/DMEIs/G+E"
                     ],
                     [
-                        "prophezeie",
-                        "BO/FE/ʃGEIs"
-                    ],
-                    [
                         "anschreie",
                         "AN/DʃMEIs"
                     ],
@@ -4656,6 +4635,14 @@
                     [
                         "kinderfreie",
                         "G+IN/DEÜ/FMEIs"
+                    ],
+                    [
+                        "talentfreie",
+                        "D+A/LEND/FMEIs"
+                    ],
+                    [
+                        "Breie",
+                        "BMEIs"
                     ]
                 ]
             ]
@@ -4665,7 +4652,7 @@
         "PatDiConsonant",
         {
             "0": [
-                35976,
+                35971,
                 [
                     [
                         "kann",
@@ -5070,7 +5057,7 @@
                 ]
             ],
             "4": [
-                1495,
+                1493,
                 [
                     [
                         "offiziell",
@@ -5475,7 +5462,7 @@
                 ]
             ],
             "3": [
-                296,
+                284,
                 [
                     [
                         "gestoppt",
@@ -5488,10 +5475,6 @@
                     [
                         "klappt",
                         "DGLABD"
-                    ],
-                    [
-                        "fasst",
-                        "FASD"
                     ],
                     [
                         "geklappt",
@@ -5522,10 +5505,6 @@
                         "SMOS"
                     ],
                     [
-                        "isst",
-                        "ISD"
-                    ],
-                    [
                         "nass",
                         "NAS"
                     ],
@@ -5550,10 +5529,6 @@
                         "EÜ/D+ABD"
                     ],
                     [
-                        "frisst",
-                        "FMISD"
-                    ],
-                    [
                         "eingeschleppt",
                         "EIN/GE/ʃLEBD"
                     ],
@@ -5572,10 +5547,6 @@
                     [
                         "umgekippt",
                         "UM/GE/G+IBD"
-                    ],
-                    [
-                        "hasst",
-                        "SNASD"
                     ],
                     [
                         "tippt",
@@ -5738,10 +5709,6 @@
                         "B+OBD"
                     ],
                     [
-                        "Testesser",
-                        "D+Es/E/SEÜ"
-                    ],
-                    [
                         "Maybritt",
                         "MÄI/BMID"
                     ],
@@ -5876,6 +5843,26 @@
                     [
                         "antippt",
                         "AN/D+IBD"
+                    ],
+                    [
+                        "fass",
+                        "FAS"
+                    ],
+                    [
+                        "verklappt",
+                        "FEÜ/DGLABD"
+                    ],
+                    [
+                        "weggeschleppt",
+                        "F+EG/GE/ʃLEBD"
+                    ],
+                    [
+                        "zugeschnappt",
+                        "ʃGU/GE/ʃNABD"
+                    ],
+                    [
+                        "ausflippt",
+                        "AUS/FLIBD"
                     ]
                 ]
             ]
@@ -5885,7 +5872,7 @@
         "PatCodaH",
         {
             "0": [
-                62362,
+                62376,
                 [
                     [
                         "viele",
@@ -5908,10 +5895,6 @@
                         "SO/F+~I"
                     ],
                     [
-                        "ihren",
-                        "~I/SMEN"
-                    ],
-                    [
                         "steht",
                         "DSEÜ+D"
                     ],
@@ -5924,10 +5907,6 @@
                         "~IM"
                     ],
                     [
-                        "dieses",
-                        "D~I/SES"
-                    ],
-                    [
                         "diesen",
                         "D~I/SEN"
                     ],
@@ -5938,10 +5917,6 @@
                     [
                         "liegt",
                         "L~IGD"
-                    ],
-                    [
-                        "ihrem",
-                        "~I/SMEM"
                     ],
                     [
                         "sieht",
@@ -6054,10 +6029,6 @@
                     [
                         "ließ",
                         "L~I+S"
-                    ],
-                    [
-                        "ihres",
-                        "~I/SMES"
                     ],
                     [
                         "sowohl",
@@ -6286,11 +6257,27 @@
                     [
                         "Industrie",
                         "IN/DUS/DL~I"
+                    ],
+                    [
+                        "Bahnhof",
+                        "BAÜN/SNOF"
+                    ],
+                    [
+                        "wies",
+                        "F+~IS"
+                    ],
+                    [
+                        "rief",
+                        "SM~IF"
+                    ],
+                    [
+                        "bedroht",
+                        "BE/DM~O+D"
                     ]
                 ]
             ],
             "2": [
-                326,
+                329,
                 [
                     [
                         "die",
@@ -6307,10 +6294,6 @@
                     [
                         "geht",
                         "GE+D"
-                    ],
-                    [
-                        "ihrer",
-                        "I/SMEÜ"
                     ],
                     [
                         "Gebiet",
@@ -6661,6 +6644,10 @@
                         "EIN/F+EI+D"
                     ],
                     [
+                        "ahnst",
+                        "ANSD"
+                    ],
+                    [
                         "Finanzhaie",
                         "FI/NAMGʃ/SNAI"
                     ],
@@ -6681,16 +6668,16 @@
                         "BUL/LEN/SNAI"
                     ],
                     [
-                        "Ausgehuniform",
-                        "AUS/GEU/NI/F~OM"
-                    ],
-                    [
                         "Miethaie",
                         "MI+D/SNAI"
                     ],
                     [
                         "Junghaie",
                         "FNUMG/SNAI"
+                    ],
+                    [
+                        "stiebt",
+                        "DSIBD"
                     ]
                 ]
             ]
@@ -6700,7 +6687,7 @@
         "PatCodaR",
         {
             "0": [
-                361367,
+                359476,
                 [
                     [
                         "der",
@@ -6743,28 +6730,12 @@
                         "F+~I/DEÜ"
                     ],
                     [
+                        "zur",
+                        "ʃG~U"
+                    ],
+                    [
                         "durch",
                         "D~U+ʃ"
-                    ],
-                    [
-                        "wurden",
-                        "F+~U/DEN"
-                    ],
-                    [
-                        "worden",
-                        "F+~O/DEN"
-                    ],
-                    [
-                        "dieser",
-                        "D~I/SEÜ"
-                    ],
-                    [
-                        "seiner",
-                        "SEI/NEÜ"
-                    ],
-                    [
-                        "weiter",
-                        "F+EI/D+EÜ"
                     ],
                     [
                         "hier",
@@ -6789,10 +6760,6 @@
                     [
                         "allerdings",
                         "AL/LEÜ/DIMGS"
-                    ],
-                    [
-                        "vier",
-                        "FBL~I"
                     ],
                     [
                         "derzeit",
@@ -6865,10 +6832,6 @@
                     [
                         "Arbeit",
                         "AÜ/BEI+D"
-                    ],
-                    [
-                        "weiterhin",
-                        "F+EI/D+EÜ/SNIN"
                     ],
                     [
                         "klar",
@@ -6945,10 +6908,6 @@
                     [
                         "Österreich",
                         "ÄOS/D+EÜ/SMEI+ʃ"
-                    ],
-                    [
-                        "aller",
-                        "AL/LEÜ"
                     ],
                     [
                         "Januar",
@@ -7101,6 +7060,34 @@
                     [
                         "Merkel",
                         "MEÜ/G+EL"
+                    ],
+                    [
+                        "gerne",
+                        "GEÜ/NE"
+                    ],
+                    [
+                        "Markt",
+                        "MAÜ+GD"
+                    ],
+                    [
+                        "Sicherheit",
+                        "SI/ʃ+EÜ/SNEI+D"
+                    ],
+                    [
+                        "erreicht",
+                        "EÜ/SMEI+ʃD"
+                    ],
+                    [
+                        "Täter",
+                        "D+Ä/D+EÜ"
+                    ],
+                    [
+                        "Erfolg",
+                        "EÜ/FOLG"
+                    ],
+                    [
+                        "Kindern",
+                        "G+IN/DEÜN"
                     ]
                 ]
             ],
@@ -7156,7 +7143,7 @@
         "PatCodaRR",
         {
             "0": [
-                2225,
+                2222,
                 [
                     [
                         "gesperrt",
@@ -7566,7 +7553,7 @@
         "PatCodaHR",
         {
             "0": [
-                16564,
+                16533,
                 [
                     [
                         "mehr",
@@ -8101,7 +8088,7 @@
                 ]
             ],
             "1": [
-                3390,
+                3387,
                 [
                     [
                         "Stadt",
@@ -8540,7 +8527,7 @@
         "PatDiphtong",
         {
             "0": [
-                2230,
+                2239,
                 [
                     [
                         "Joe",
@@ -8923,6 +8910,10 @@
                         "SÜ/LÄI/MAN"
                     ],
                     [
+                        "Toast",
+                        "D+O/As/-+D"
+                    ],
+                    [
                         "scheue",
                         "ʃEU/E"
                     ],
@@ -8937,10 +8928,6 @@
                     [
                         "Buchloe",
                         "BU+ʃ/LEO"
-                    ],
-                    [
-                        "Marley",
-                        "MAÜ/LÄI"
                     ]
                 ]
             ],
@@ -9755,7 +9742,7 @@
                 ]
             ],
             "3": [
-                1534,
+                1430,
                 [
                     [
                         "Andrea",
@@ -9914,10 +9901,6 @@
                         "SNEÜ/G+EÜ"
                     ],
                     [
-                        "Eastwood",
-                        "EÜs/F+UD"
-                    ],
-                    [
                         "realistisches",
                         "SMEÜ/LIS/D+I/ʃES"
                     ],
@@ -10034,10 +10017,6 @@
                         "SMEÜ/DEÜ"
                     ],
                     [
-                        "least",
-                        "LEÜs"
-                    ],
-                    [
                         "Language",
                         "LAN/GAU/GE"
                     ],
@@ -10114,10 +10093,6 @@
                         "DEÜ/LEÜN"
                     ],
                     [
-                        "Videostreaming",
-                        "FI/DEOs/SMEÜM/IMG"
-                    ],
-                    [
                         "museale",
                         "MU/SEÜ/LE"
                     ],
@@ -10156,6 +10131,18 @@
                     [
                         "Hearings",
                         "SNEÜ/SMIMGS"
+                    ],
+                    [
+                        "Guadalajara",
+                        "GAU/DA/LA/FNA/SMA"
+                    ],
+                    [
+                        "Guatemalas",
+                        "GAU/D+E/MA/LAS"
+                    ],
+                    [
+                        "Rabea",
+                        "SMA/BEÜ"
                     ]
                 ]
             ]
@@ -10165,7 +10152,7 @@
         "PatReplC",
         {
             "0": [
-                7377,
+                7382,
                 [
                     [
                         "Corona",
@@ -10234,10 +10221,6 @@
                     [
                         "circa",
                         "DʃG~I/DʃGA"
-                    ],
-                    [
-                        "Community",
-                        "DʃGOM/MU/NI/D+ÄI"
                     ],
                     [
                         "Nico",
@@ -10558,6 +10541,10 @@
                     [
                         "Controller",
                         "DʃGON/DLOL/LEÜ"
+                    ],
+                    [
+                        "Contest",
+                        "DʃGON/D+Es/-+D"
                     ],
                     [
                         "Oscars",
@@ -11345,7 +11332,7 @@
                 ]
             ],
             "4": [
-                48679,
+                47482,
                 [
                     [
                         "Situation",
@@ -11422,10 +11409,6 @@
                     [
                         "Opposition",
                         "OB/B+O/SI/D+ON"
-                    ],
-                    [
-                        "Kommunikation",
-                        "G+OM/MU/NI/G+A/D+ON"
                     ],
                     [
                         "Option",
@@ -11746,6 +11729,10 @@
                     [
                         "emotionale",
                         "E/MO/D+O/NA/LE"
+                    ],
+                    [
+                        "Antonio",
+                        "AN/D+O/NO"
                     ]
                 ]
             ]
@@ -11755,7 +11742,7 @@
         "PatSwapS",
         {
             "0": [
-                31601,
+                31221,
                 [
                     [
                         "Tests",
@@ -12134,10 +12121,6 @@
                         "BUN/DES/AMSD"
                     ],
                     [
-                        "Widerstands",
-                        "F+I/DEÜ/DSANSD"
-                    ],
-                    [
                         "nirgends",
                         "N~I/GENSD"
                     ],
@@ -12156,11 +12139,15 @@
                     [
                         "Amts",
                         "AMSD"
+                    ],
+                    [
+                        "Gesundheitswesens",
+                        "GE/SUND/SNEI+SD/F+E/SENS"
                     ]
                 ]
             ],
-            "2": [
-                52124,
+            "3": [
+                52354,
                 [
                     [
                         "ist",
@@ -12212,7 +12199,7 @@
                     ],
                     [
                         "vorerst",
-                        "FBL~O/EÜs"
+                        "F~O/EÜs"
                     ],
                     [
                         "längst",
@@ -12264,7 +12251,7 @@
                     ],
                     [
                         "selbstverständlich",
-                        "SELBs/FBLEÜ/DSÄND/LI+ʃ"
+                        "SELBs/FEÜ/DSÄND/LI+ʃ"
                     ],
                     [
                         "Horst",
@@ -12296,7 +12283,7 @@
                     ],
                     [
                         "Analyst",
-                        "A/NA/LÄIs"
+                        "A/NA/LIs"
                     ],
                     [
                         "Protest",
@@ -12309,6 +12296,10 @@
                     [
                         "jüngst",
                         "FNÜMGs"
+                    ],
+                    [
+                        "West",
+                        "F+Es"
                     ],
                     [
                         "bist",
@@ -12348,7 +12339,7 @@
                     ],
                     [
                         "Wirtschaftsminister",
-                        "F+~I+D/ʃA+Fs/MI/NIS/D+EÜ"
+                        "F+~ID/ʃA+Fs/MI/NIS/D+EÜ"
                     ],
                     [
                         "höchst",
@@ -12357,10 +12348,6 @@
                     [
                         "Frist",
                         "FMIs"
-                    ],
-                    [
-                        "liest",
-                        "LIs"
                     ],
                     [
                         "festhalten",
@@ -12376,7 +12363,7 @@
                     ],
                     [
                         "Gaststätten",
-                        "GAs/DSÄ+D/D+EN"
+                        "GAs/DSÄD/D+EN"
                     ],
                     [
                         "gewusst",
@@ -12424,7 +12411,7 @@
                     ],
                     [
                         "Präsidentschaftswahl",
-                        "DBMÄ/SI/DE+ND/ʃA+Fs/F+AL"
+                        "DBMÄ/SI/DEND/ʃA+Fs/F+AL"
                     ],
                     [
                         "Testergebnisse",
@@ -12432,7 +12419,7 @@
                     ],
                     [
                         "Wirtschaftskammer",
-                        "F+~I+D/ʃA+Fs/G+AM/MEÜ"
+                        "F+~ID/ʃA+Fs/G+AM/MEÜ"
                     ],
                     [
                         "Ost",
@@ -12464,11 +12451,11 @@
                     ],
                     [
                         "Gaststätte",
-                        "GAs/DSÄ+D/D+E"
+                        "GAs/DSÄD/D+E"
                     ],
                     [
                         "Wirtschaftsleistung",
-                        "F+~I+D/ʃA+Fs/LEIS/D+UMG"
+                        "F+~ID/ʃA+Fs/LEIS/D+UMG"
                     ],
                     [
                         "müsst",
@@ -12512,7 +12499,7 @@
                     ],
                     [
                         "Investment",
-                        "IN/FBLEs/ME+ND"
+                        "IN/FEs/MEND"
                     ],
                     [
                         "Festland",
@@ -12528,7 +12515,7 @@
                     ],
                     [
                         "Bundeswirtschaftsminister",
-                        "BUN/DES/F+~I+D/ʃA+Fs/MI/NIS/D+EÜ"
+                        "BUN/DES/F+~ID/ʃA+Fs/MI/NIS/D+EÜ"
                     ],
                     [
                         "Osteuropa",
@@ -12551,421 +12538,16 @@
                         "F~Os"
                     ],
                     [
+                        "Weihnachtsfest",
+                        "F+EI/NA+ʃs/FEs"
+                    ],
+                    [
                         "Jurist",
                         "FNU/SMIs"
                     ],
                     [
                         "westliche",
                         "F+Es/LI/ʃ+E"
-                    ],
-                    [
-                        "erweist",
-                        "EÜ/F+EIs"
-                    ]
-                ]
-            ],
-            "3": [
-                848,
-                [
-                    [
-                        "Accounts",
-                        "A+G/DʃGAUNSD"
-                    ],
-                    [
-                        "Beats",
-                        "BEÜSD"
-                    ],
-                    [
-                        "Shirts",
-                        "ʃ~ISD"
-                    ],
-                    [
-                        "Geschwindigkeitskontrolle",
-                        "GE/ʃBIN/DIG/G+EISD/G+OND/SMOL/LE"
-                    ],
-                    [
-                        "Qualitätskontrolle",
-                        "FG+A/LI/D+ÄSD/G+OND/SMOL/LE"
-                    ],
-                    [
-                        "Zufahrtsstraße",
-                        "ʃGU/FAÜ+SD/DSMA/S+E"
-                    ],
-                    [
-                        "Wohlfahrtspflege",
-                        "F+OL/FAÜ+SD/FBLE/GE"
-                    ],
-                    [
-                        "Flirts",
-                        "FL~ISD"
-                    ],
-                    [
-                        "Himmelfahrtstag",
-                        "SNIM/MEL/FAÜ+SD/D+AG"
-                    ],
-                    [
-                        "Schifffahrtsamt",
-                        "ʃIF/FAÜ+SD/AMD"
-                    ],
-                    [
-                        "Anfahrtswege",
-                        "AN/FAÜ+SD/F+E/GE"
-                    ],
-                    [
-                        "Himmelfahrtskommando",
-                        "SNIM/MEL/FAÜ+SD/G+OM/MAN/DO"
-                    ],
-                    [
-                        "Cheats",
-                        "ʃ+EÜSD"
-                    ],
-                    [
-                        "Gefährts",
-                        "GE/FÄÜ+SD"
-                    ],
-                    [
-                        "Zeitpunkts",
-                        "ʃGEID/B+UMNSD"
-                    ],
-                    [
-                        "Anfahrtsweg",
-                        "AN/FAÜ+SD/F+EG"
-                    ],
-                    [
-                        "Höhepunkts",
-                        "SNÄO/SNE/B+UMNSD"
-                    ],
-                    [
-                        "Zufahrtswege",
-                        "ʃGU/FAÜ+SD/F+E/GE"
-                    ],
-                    [
-                        "Elektrizitätswerk",
-                        "E/LE+GD/SMI/ʃGI/D+ÄSD/F+EÜ+G"
-                    ],
-                    [
-                        "Abfahrtstraining",
-                        "AB/FAÜ+SD/DLÄI/NIMG"
-                    ],
-                    [
-                        "Abfahrtssieg",
-                        "AB/FAÜ+SD/SIG"
-                    ],
-                    [
-                        "Schönheitsideale",
-                        "ʃÄON/SNEISD/I/DEÜ/LE"
-                    ],
-                    [
-                        "realitätsnahe",
-                        "SMEÜ/LI/D+ÄSD/NA/SNE"
-                    ],
-                    [
-                        "Tabletts",
-                        "D+A/BLESD"
-                    ],
-                    [
-                        "Schwerpunkts",
-                        "ʃBEÜ/B+UMNSD"
-                    ],
-                    [
-                        "realitätsferne",
-                        "SMEÜ/LI/D+ÄSD/FEÜ/NE"
-                    ],
-                    [
-                        "Treffpunkts",
-                        "DLEF/B+UMNSD"
-                    ],
-                    [
-                        "Zufahrtsweg",
-                        "ʃGU/FAÜ+SD/F+EG"
-                    ],
-                    [
-                        "Vorfahrtsstraße",
-                        "F~O/FAÜ+SD/DSMA/S+E"
-                    ],
-                    [
-                        "realitätsnahen",
-                        "SMEÜ/LI/D+ÄSD/NA/SNEN"
-                    ],
-                    [
-                        "Abfahrtszeit",
-                        "AB/FAÜ+SD/ʃGEID"
-                    ],
-                    [
-                        "Schifffahrtsmuseum",
-                        "ʃIF/FAÜ+SD/MU/SEUM"
-                    ],
-                    [
-                        "Vorfahrtsregeln",
-                        "F~O/FAÜ+SD/SME/GELN"
-                    ],
-                    [
-                        "Splits",
-                        "SBLISD"
-                    ],
-                    [
-                        "Abfahrtsweltcup",
-                        "AB/FAÜ+SD/F+ELD/G+U+B"
-                    ],
-                    [
-                        "Wallfahrtskapelle",
-                        "F+AL/FAÜ+SD/G+A/B+EL/LE"
-                    ],
-                    [
-                        "Schifffahrtsamtes",
-                        "ʃIF/FAÜ+SD/AM/D+ES"
-                    ],
-                    [
-                        "Stützpunkts",
-                        "DSÜGʃD/B+UMNSD"
-                    ],
-                    [
-                        "Vorfahrtsregel",
-                        "F~O/FAÜ+SD/SME/GEL"
-                    ],
-                    [
-                        "Durchfahrtsstraße",
-                        "D~U+ʃ/FAÜ+SD/DSMA/S+E"
-                    ],
-                    [
-                        "Anfahrtszeit",
-                        "AN/FAÜ+SD/ʃGEID"
-                    ],
-                    [
-                        "Arbeitsrealität",
-                        "AÜ/BEISD/SMEÜ/LI/D+ÄD"
-                    ],
-                    [
-                        "Auffahrtsrampe",
-                        "AUF/FAÜ+SD/SMAM/B+E"
-                    ],
-                    [
-                        "Punkts",
-                        "B+UMNSD"
-                    ],
-                    [
-                        "Spotts",
-                        "SBOSD"
-                    ],
-                    [
-                        "Durchfahrtshöhe",
-                        "D~U+ʃ/FAÜ+SD/SNÄO/SNE"
-                    ],
-                    [
-                        "Realitätsflucht",
-                        "SMEÜ/LI/D+ÄSD/FLU+ʃD"
-                    ],
-                    [
-                        "realitätsgetreu",
-                        "SMEÜ/LI/D+ÄSD/GE/DLEU"
-                    ],
-                    [
-                        "Schifffahrtskanal",
-                        "ʃIF/FAÜ+SD/G+A/NAL"
-                    ],
-                    [
-                        "Schifffahrtsrouten",
-                        "ʃIF/FAÜ+SD/SM~U+/D+EN"
-                    ],
-                    [
-                        "Abstracts",
-                        "ABS/DLA+GSD"
-                    ],
-                    [
-                        "Schifffahrtsindustrie",
-                        "ʃIF/FAÜ+SD/IN/DUS/DLI"
-                    ],
-                    [
-                        "Wallfahrtsorte",
-                        "F+AL/FAÜ+SD/~O/D+E"
-                    ],
-                    [
-                        "Zufahrtstor",
-                        "ʃGU/FAÜ+SD/D+~O"
-                    ],
-                    [
-                        "realitätsnäher",
-                        "SMEÜ/LI/D+ÄSD/NÄ/SNEÜ"
-                    ],
-                    [
-                        "realitätsnahes",
-                        "SMEÜ/LI/D+ÄSD/NA/SNES"
-                    ],
-                    [
-                        "Zufahrtsrampe",
-                        "ʃGU/FAÜ+SD/SMAM/B+E"
-                    ],
-                    [
-                        "Schifffahrtsamts",
-                        "ʃIF/FAÜ+SD/AMSD"
-                    ],
-                    [
-                        "Abfahrtsrampe",
-                        "AB/FAÜ+SD/SMAM/B+E"
-                    ],
-                    [
-                        "Abfahrtsstrecke",
-                        "AB/FAÜ+SD/DSME/G+E"
-                    ],
-                    [
-                        "realitätsgerecht",
-                        "SMEÜ/LI/D+ÄSD/GE/SME+ʃD"
-                    ],
-                    [
-                        "Abfahrtswertung",
-                        "AB/FAÜ+SD/F+EÜ/D+UMG"
-                    ],
-                    [
-                        "Abfahrtsweltmeister",
-                        "AB/FAÜ+SD/F+ELD/MEIS/D+EÜ"
-                    ],
-                    [
-                        "Haltepunkts",
-                        "SNAL/D+E/B+UMNSD"
-                    ],
-                    [
-                        "realitätsfremden",
-                        "SMEÜ/LI/D+ÄSD/FMEM/DEN"
-                    ],
-                    [
-                        "Realitätstest",
-                        "SMEÜ/LI/D+ÄSD/D+Es"
-                    ],
-                    [
-                        "Auffahrtstag",
-                        "AUF/FAÜ+SD/D+AG"
-                    ],
-                    [
-                        "Realitätsschock",
-                        "SMEÜ/LI/D+ÄSD/ʃO+G"
-                    ],
-                    [
-                        "Standpunkts",
-                        "DSAND/B+UMNSD"
-                    ],
-                    [
-                        "Twitteraccounts",
-                        "DF+ID/D+EÜ/A+G/DʃGAUNSD"
-                    ],
-                    [
-                        "Abfahrtsort",
-                        "AB/FAÜ+SD/~OD"
-                    ],
-                    [
-                        "Wohlfahrtsfonds",
-                        "F+OL/FAÜ+SD/FONSD"
-                    ],
-                    [
-                        "Liveacts",
-                        "LI/FEÜ+GSD"
-                    ],
-                    [
-                        "realitätsferner",
-                        "SMEÜ/LI/D+ÄSD/FEÜ/NEÜ"
-                    ],
-                    [
-                        "Kents",
-                        "G+ENSD"
-                    ],
-                    [
-                        "Abfahrtssieger",
-                        "AB/FAÜ+SD/SI/GEÜ"
-                    ],
-                    [
-                        "Discounts",
-                        "DIS/DʃGAUNSD"
-                    ],
-                    [
-                        "Schifffahrtswege",
-                        "ʃIF/FAÜ+SD/F+E/GE"
-                    ],
-                    [
-                        "realitätsnaher",
-                        "SMEÜ/LI/D+ÄSD/NA/SNEÜ"
-                    ],
-                    [
-                        "realitätsnähere",
-                        "SMEÜ/LI/D+ÄSD/NÄ/SNE/SME"
-                    ],
-                    [
-                        "Abfahrtswege",
-                        "AB/FAÜ+SD/F+E/GE"
-                    ],
-                    [
-                        "Instinkts",
-                        "IN/DSIMNSD"
-                    ],
-                    [
-                        "Schifffahrtslinie",
-                        "ʃIF/FAÜ+SD/LI/NI"
-                    ],
-                    [
-                        "Abfahrtspiste",
-                        "AB/FAÜ+SD/B+IS/D+E"
-                    ],
-                    [
-                        "Elektrizitätswirtschaft",
-                        "E/LE+GD/SMI/ʃGI/D+ÄSD/F+~ID/ʃAFD"
-                    ],
-                    [
-                        "Endpunkts",
-                        "END/B+UMNSD"
-                    ],
-                    [
-                        "Hähnchenbrustfilets",
-                        "SNÄN/ʃ+EN/BMUs/FAILSD"
-                    ],
-                    [
-                        "Kreativitätsschub",
-                        "DGMEÜ/D+I/FI/D+ÄSD/ʃUB"
-                    ],
-                    [
-                        "realitätsfremde",
-                        "SMEÜ/LI/D+ÄSD/FMEM/DE"
-                    ],
-                    [
-                        "Abfahrtslauf",
-                        "AB/FAÜ+SD/LAUF"
-                    ],
-                    [
-                        "Abfahrtstrainings",
-                        "AB/FAÜ+SD/DLÄI/NIMGS"
-                    ],
-                    [
-                        "Schifffahrtsmuseums",
-                        "ʃIF/FAÜ+SD/MU/SEUMS"
-                    ],
-                    [
-                        "Zentralwohlfahrtsstelle",
-                        "ʃGEN/DLAL/F+OL/FAÜ+SD/DSEL/LE"
-                    ],
-                    [
-                        "realitätsfremder",
-                        "SMEÜ/LI/D+ÄSD/FMEM/DEÜ"
-                    ],
-                    [
-                        "Fahrsicherheitszentrum",
-                        "FAÜ+/SI/ʃ+EÜ/SNEISD/ʃGEND/SMUM"
-                    ],
-                    [
-                        "Hauptzufahrtsstraße",
-                        "SNAUBD/ʃGU/FAÜ+SD/DSMA/S+E"
-                    ],
-                    [
-                        "Schifffahrtsstraße",
-                        "ʃIF/FAÜ+SD/DSMA/S+E"
-                    ],
-                    [
-                        "Realitätsgehalt",
-                        "SMEÜ/LI/D+ÄSD/GE/SNALD"
-                    ],
-                    [
-                        "Realitätswahrnehmung",
-                        "SMEÜ/LI/D+ÄSD/F+AÜ+/NE/MUMG"
-                    ],
-                    [
-                        "Wallfahrtsortes",
-                        "F+AL/FAÜ+SD/~O/D+ES"
                     ]
                 ]
             ]
@@ -12975,7 +12557,7 @@
         "PatSwapSch",
         {
             "0": [
-                1452,
+                1433,
                 [
                     [
                         "Deutschlands",
@@ -13417,7 +12999,7 @@
                 ]
             ],
             "2": [
-                7722,
+                7514,
                 [
                     [
                         "nichts",
@@ -13478,10 +13060,6 @@
                     [
                         "Weihnachtszeit",
                         "F+EI/NA+ʃs/ʃGEI+D"
-                    ],
-                    [
-                        "Weihnachtsfest",
-                        "F+EI/NA+ʃs/FEs"
                     ],
                     [
                         "Verdachtsfall",
@@ -13704,10 +13282,6 @@
                         "AUF/SI+ʃs/SMA/D+ES"
                     ],
                     [
-                        "Rechtsextremist",
-                        "SME+ʃs/EGSD/D+-/SME/MIs"
-                    ],
-                    [
                         "aussichtsreiche",
                         "AUS/SI+ʃs/SMEI/ʃ+E"
                     ],
@@ -13818,6 +13392,14 @@
                     [
                         "Rechtsruck",
                         "SME+ʃs/SMU+G"
+                    ],
+                    [
+                        "rechtskonservative",
+                        "SME+ʃs/G+ON/SEÜ/FBLA/D+I/FBLE"
+                    ],
+                    [
+                        "Unterrichtsstunden",
+                        "UN/D+EÜ/SMI+ʃs/DSUN/DEN"
                     ]
                 ]
             ]
@@ -13827,7 +13409,7 @@
         "PatSwapZ",
         {
             "0": [
-                21880,
+                21826,
                 [
                     [
                         "jetzt",
@@ -14667,7 +14249,7 @@
                 ]
             ],
             "4": [
-                259,
+                257,
                 [
                     [
                         "See",
@@ -14922,10 +14504,6 @@
                         "Os/SEs/SME/GON"
                     ],
                     [
-                        "Heeresmunitionsanstalt",
-                        "SNEs/SMES/MU/NI/D+ONS/AN/DSALD"
-                    ],
-                    [
                         "Kaffeeproduktion",
                         "G+AF/FEs/BO/DU+G/D+ON"
                     ],
@@ -15018,10 +14596,6 @@
                         "DSEÜ/SMUMGS/G+O/MI/D+Es"
                     ],
                     [
-                        "Teeproduktion",
-                        "D+Es/BO/DU+G/D+ON"
-                    ],
-                    [
                         "Tiefseeexpedition",
                         "D+IF/SEs/EGSD/B+E/DI/D+ON"
                     ],
@@ -15068,11 +14642,19 @@
                     [
                         "Seenation",
                         "SEs/NA/D+ON"
+                    ],
+                    [
+                        "Seeraumes",
+                        "SEs/SMAU/MES"
+                    ],
+                    [
+                        "Seeraums",
+                        "SEs/SMAUMS"
                     ]
                 ]
             ],
             "3": [
-                17062,
+                17061,
                 [
                     [
                         "paar",
@@ -15482,7 +15064,7 @@
         "PatReplH",
         {
             "0": [
-                8610,
+                8600,
                 [
                     [
                         "Thema",
@@ -15887,7 +15469,7 @@
                 ]
             ],
             "3": [
-                1761,
+                2006,
                 [
                     [
                         "Rhein",
@@ -15970,6 +15552,10 @@
                         "DSAÜSD/D+EÜ/D+EÜS"
                     ],
                     [
+                        "Ostthüringer",
+                        "Os/D+Ü/SMIN/GEÜ"
+                    ],
+                    [
                         "Vlotho",
                         "FLO/D+O"
                     ],
@@ -16038,8 +15624,20 @@
                         "D+EÜ/D+EÜ/LEI/D+EÜ"
                     ],
                     [
+                        "Anästhesist",
+                        "AN/ÄS/D+E/SIs"
+                    ],
+                    [
+                        "Zukunftsthema",
+                        "ʃGU/G+U+NFs/D+E/MA"
+                    ],
+                    [
                         "Theaterstücks",
                         "D+EÜ/D+EÜ/DSÜ+GS"
+                    ],
+                    [
+                        "Whistleblowers",
+                        "F+Is/LEB/LO/F+EÜS"
                     ],
                     [
                         "Anthropozän",
@@ -16060,6 +15658,14 @@
                     [
                         "kHz",
                         "G+-Gʃ"
+                    ],
+                    [
+                        "Whistleblowern",
+                        "F+Is/LEB/LO/F+EÜN"
+                    ],
+                    [
+                        "Atheist",
+                        "A/D+EIs"
                     ],
                     [
                         "Theaterszene",
@@ -16116,6 +15722,10 @@
                     [
                         "Theaterwerkstatt",
                         "D+EÜ/D+EÜ/F+EÜ+G/DSAD"
+                    ],
+                    [
+                        "Testmethoden",
+                        "D+Es/ME/D+O/DEN"
                     ],
                     [
                         "Volkstheaters",
@@ -16198,6 +15808,10 @@
                         "SNLO/DEN"
                     ],
                     [
+                        "Testmethode",
+                        "D+Es/ME/D+O/DE"
+                    ],
+                    [
                         "Theatersanierung",
                         "D+EÜ/D+EÜ/SA/NI/SMUMG"
                     ],
@@ -16212,6 +15826,10 @@
                     [
                         "Rothsee",
                         "SMOD/SEÜ"
+                    ],
+                    [
+                        "Whitelist",
+                        "F+I/D+E/LIs"
                     ],
                     [
                         "Theaterstraße",
@@ -16234,6 +15852,10 @@
                         "MAIS/LA/BI/SMIND"
                     ],
                     [
+                        "Westthüringer",
+                        "F+Es/D+Ü/SMIN/GEÜ"
+                    ],
+                    [
                         "Korinth",
                         "G+O/SMIND"
                     ],
@@ -16248,46 +15870,6 @@
                     [
                         "Absinth",
                         "AB/SIND"
-                    ],
-                    [
-                        "Tanztheaters",
-                        "D+AMGʃ/D+EÜ/D+EÜS"
-                    ],
-                    [
-                        "Anthrax",
-                        "AND/SMAGSD"
-                    ],
-                    [
-                        "Wörthersees",
-                        "F+ÄO/D+EÜ/SEÜS"
-                    ],
-                    [
-                        "Amaranth",
-                        "A/MA/SMAND"
-                    ],
-                    [
-                        "Parktheaters",
-                        "B+AÜ+G/D+EÜ/D+EÜS"
-                    ],
-                    [
-                        "Theaterfest",
-                        "D+EÜ/D+EÜ/FEs"
-                    ],
-                    [
-                        "Theaterautor",
-                        "D+EÜ/D+EÜ/AU/D+~O"
-                    ],
-                    [
-                        "Filmkunsttheater",
-                        "FI+/G+UNs/D+EÜ/D+EÜ"
-                    ],
-                    [
-                        "Theaterlandschaft",
-                        "D+EÜ/D+EÜ/LAND/ʃAFD"
-                    ],
-                    [
-                        "Ethikkomitee",
-                        "E/D+I+G/G+O/MI/D+EÜ"
                     ]
                 ]
             ]
@@ -16297,7 +15879,7 @@
         "PatCodaGK",
         {
             "3": [
-                99,
+                93,
                 [
                     [
                         "Lake",
@@ -16492,10 +16074,6 @@
                         "SNAÜ/G+EN/DEÜ"
                     ],
                     [
-                        "hakst",
-                        "SNAÜ+Gs"
-                    ],
-                    [
                         "Aktinium",
                         "AÜ+G/D+I/NI/UM"
                     ],
@@ -16564,14 +16142,6 @@
                         "AB/SNAÜ/G+EN/DES"
                     ],
                     [
-                        "abhakst",
-                        "AB/SNAÜ+Gs"
-                    ],
-                    [
-                        "abhaktest",
-                        "AB/SNAÜ+G/D+Es"
-                    ],
-                    [
                         "aufgehakte",
                         "AUF/GE/SNAÜ+G/D+E"
                     ],
@@ -16624,20 +16194,12 @@
                         "AUF/SNAÜ/G+EN/DES"
                     ],
                     [
-                        "aufhakst",
-                        "AUF/SNAÜ+Gs"
-                    ],
-                    [
                         "aufhakte",
                         "AUF/SNAÜ+G/D+E"
                     ],
                     [
                         "aufhakten",
                         "AUF/SNAÜ+G/D+EN"
-                    ],
-                    [
-                        "aufhaktest",
-                        "AUF/SNAÜ+G/D+Es"
                     ],
                     [
                         "aufzuhaken",
@@ -16690,10 +16252,6 @@
                     [
                         "hakenschlagendes",
                         "SNAÜ/G+EN/ʃLA/GEN/DES"
-                    ],
-                    [
-                        "haktest",
-                        "SNAÜ+G/D+Es"
                     ]
                 ]
             ]
@@ -16703,7 +16261,7 @@
         "PatReplRare",
         {
             "0": [
-                29914,
+                30218,
                 [
                     [
                         "knapp",
@@ -16776,6 +16334,10 @@
                     [
                         "Björn",
                         "SB+ÄON"
+                    ],
+                    [
+                        "Papst",
+                        "B+A+BSD"
                     ],
                     [
                         "Christopher",
@@ -16928,6 +16490,10 @@
                     [
                         "Ski",
                         "SGI"
+                    ],
+                    [
+                        "gepflanzt",
+                        "GE/FBLAMGʃs"
                     ],
                     [
                         "physische",
@@ -17096,19 +16662,11 @@
                     [
                         "Krankheitssymptome",
                         "DGMAMN/SNEI+SD/SÄIM/DB+O/ME"
-                    ],
-                    [
-                        "Pfeffer",
-                        "FB+EF/FEÜ"
-                    ],
-                    [
-                        "Pflaster",
-                        "FBLAS/D+EÜ"
                     ]
                 ]
             ],
             "3": [
-                241,
+                359,
                 [
                     [
                         "Katastrophe",
@@ -17255,6 +16813,10 @@
                         "FLEG/MA/D+Iʃ"
                     ],
                     [
+                        "Festkörperphysik",
+                        "FEs/G+ÄO/B+EÜ/FI/SI+G"
+                    ],
+                    [
                         "Lymphsystem",
                         "LIMF/SIS/D+EM"
                     ],
@@ -17267,8 +16829,16 @@
                         "FLOGSD"
                     ],
                     [
+                        "Wirtschaftsphilosoph",
+                        "F+~ID/ʃA+Fs/FI/LO/SOF"
+                    ],
+                    [
                         "Physiksaal",
                         "FI/SI+G/SAÜL"
+                    ],
+                    [
+                        "Pharmageschäfts",
+                        "FAÜ/MA/GE/ʃÄ+Fs"
                     ],
                     [
                         "anthroposophisch",
@@ -17285,6 +16855,10 @@
                     [
                         "Phlegmatiker",
                         "FLEG/MA/D+I/G+EÜ"
+                    ],
+                    [
+                        "Schlepphorst",
+                        "ʃLE+B/F~Os"
                     ],
                     [
                         "Triumphmarsch",
@@ -17311,8 +16885,16 @@
                         "DSAÜSD/FI/LO/SO/FI"
                     ],
                     [
+                        "Wirtschaftskatastrophe",
+                        "F+~ID/ʃA+Fs/G+A/D+A/DSMO/FE"
+                    ],
+                    [
                         "Dürrekatastrophe",
                         "D~Ü/SME/G+A/D+ASD/SMO/FE"
+                    ],
+                    [
+                        "Philatelist",
+                        "FIL/A/D+E/LIs"
                     ],
                     [
                         "pH",
@@ -17321,6 +16903,10 @@
                     [
                         "Lymphödem",
                         "LIMF/ÄO/DEM"
+                    ],
+                    [
+                        "Vibraphonist",
+                        "FI/BMA/FO/NIs"
                     ],
                     [
                         "Zoophilie",
@@ -17339,8 +16925,20 @@
                         "DLI/UMF/GE/FÜL"
                     ],
                     [
+                        "Wirtschaftsphilosophie",
+                        "F+~ID/ʃA+Fs/FI/LO/SO/FI"
+                    ],
+                    [
                         "phil",
                         "FIL"
+                    ],
+                    [
+                        "Alphatest",
+                        "AL/FA/D+Es"
+                    ],
+                    [
+                        "Epiphaniasfest",
+                        "E/B+I/FA/NI/AS/FEs"
                     ],
                     [
                         "Lymphgefäße",
@@ -17371,6 +16969,10 @@
                         "DLI/UMF/GE/FÜ/LE"
                     ],
                     [
+                        "Wirtschaftsgeograph",
+                        "F+~ID/ʃA+Fs/GEO/GMAF"
+                    ],
+                    [
                         "katastrophisch",
                         "G+A/D+ASD/SMO/FIʃ"
                     ],
@@ -17395,6 +16997,10 @@
                         "DS+U/NA/MI/G+A/D+ASD/SMO/FE"
                     ],
                     [
+                        "Zukunftseuphorie",
+                        "ʃGU/G+U+NFs/EU/FO/SMI"
+                    ],
+                    [
                         "Anthroposoph",
                         "AND/SMO/B+O/SOF"
                     ],
@@ -17405,6 +17011,10 @@
                     [
                         "Doppeltriumph",
                         "DO+B/B+ELD/SMI/UMF"
+                    ],
+                    [
+                        "Festkörperphysiker",
+                        "FEs/G+ÄO/B+EÜ/FI/SI/G+EÜ"
                     ],
                     [
                         "Lymphabfluss",
@@ -17435,6 +17045,14 @@
                         "DʃMIS/D+O/FAL/LEÜ"
                     ],
                     [
+                        "Gesellschaftsphilosophie",
+                        "GE/SEL/ʃA+Fs/FI/LO/SO/FI"
+                    ],
+                    [
+                        "Jazzsaxophonist",
+                        "FNÄS/SA/DSGO/FO/NIs"
+                    ],
+                    [
                         "Lymphbahn",
                         "LIMF/BAN"
                     ],
@@ -17449,66 +17067,6 @@
                     [
                         "Phalli",
                         "FAL/LI"
-                    ],
-                    [
-                        "Pokaltriumphs",
-                        "B+O/G+AL/DLI/UMFs"
-                    ],
-                    [
-                        "anthropomorph",
-                        "AND/SMO/B+O/M~OF"
-                    ],
-                    [
-                        "astrophysikalisch",
-                        "ASD/SMO/FI/SI/G+A/LIʃ"
-                    ],
-                    [
-                        "phlegmatisches",
-                        "FLEG/MA/D+I/ʃES"
-                    ],
-                    [
-                        "Kreatinphosphat",
-                        "DGMEÜ/D+IN/FOS/FAD"
-                    ],
-                    [
-                        "Lymphabflusses",
-                        "LIMF/AB/FLUS/SES"
-                    ],
-                    [
-                        "Lymphflusses",
-                        "LIMF/FLUS/SES"
-                    ],
-                    [
-                        "Lymphgefäßsystem",
-                        "LIMF/GE/FÄ+S/SIS/D+EM"
-                    ],
-                    [
-                        "Lymphknotens",
-                        "LIMF/DGO/D+ENS"
-                    ],
-                    [
-                        "Meeresnymphe",
-                        "MEÜ/SMES/NIM/FE"
-                    ],
-                    [
-                        "Nymphchen",
-                        "NIMF/ʃ+EN"
-                    ],
-                    [
-                        "Phenolphthalein",
-                        "FE/NOLF/D+A/LEIN"
-                    ],
-                    [
-                        "Phlebitis",
-                        "FLE/BI/D+IS"
-                    ],
-                    [
-                        "Phlebographie",
-                        "FLE/BO/GMA/FI"
-                    ],
-                    [
-                        "Phlogiston",
-                        "FLO/GIS/D+ON"
                     ]
                 ]
             ]
@@ -17592,7 +17150,7 @@
         "PatSCPlus",
         {
             "0": [
-                505,
+                506,
                 [
                     [
                         "Modell",
@@ -17633,6 +17191,10 @@
                     [
                         "Inn",
                         "I+N"
+                    ],
+                    [
+                        "irren",
+                        "I+/MEN"
                     ],
                     [
                         "irreführend",
@@ -17989,10 +17551,6 @@
                     [
                         "Pilgerroute",
                         "B+IL/GEÜ/SM~U+/D+E"
-                    ],
-                    [
-                        "irreguläres",
-                        "I+/ME/GU/LÄ/SMES"
                     ]
                 ]
             ],
@@ -18439,7 +17997,7 @@
         "PatShortSyllable",
         {
             "5": [
-                79636,
+                79497,
                 [
                     [
                         "anderen",
@@ -18844,7 +18402,7 @@
                 ]
             ],
             "8": [
-                145121,
+                144668,
                 [
                     [
                         "ersten",
@@ -18893,6 +18451,10 @@
                     [
                         "betroffen",
                         "bSMOF/F-n"
+                    ],
+                    [
+                        "alten",
+                        "ALn"
                     ],
                     [
                         "guten",
@@ -19009,10 +18571,6 @@
                     [
                         "berichten",
                         "bSMI+ʃn"
-                    ],
-                    [
-                        "Worten",
-                        "F+~On"
                     ],
                     [
                         "Demokraten",
@@ -19249,7 +18807,7 @@
                 ]
             ],
             "6": [
-                562769,
+                560531,
                 [
                     [
                         "den",
@@ -19274,10 +18832,6 @@
                     [
                         "bereits",
                         "bSMEISD"
-                    ],
-                    [
-                        "diese",
-                        "DISs"
                     ],
                     [
                         "Jahren",
@@ -19306,10 +18860,6 @@
                     [
                         "zwischen",
                         "ʃG+Iʃn"
-                    ],
-                    [
-                        "seien",
-                        "SEIn"
                     ],
                     [
                         "Millionen",
@@ -19378,10 +18928,6 @@
                     [
                         "besonders",
                         "bSON/DEÜS"
-                    ],
-                    [
-                        "allen",
-                        "ALn"
                     ],
                     [
                         "keinen",
@@ -19650,6 +19196,18 @@
                     [
                         "Neuinfektionen",
                         "NEU/IN/FE+G/D+ONn"
+                    ],
+                    [
+                        "jungen",
+                        "FNUMGn"
+                    ],
+                    [
+                        "laufen",
+                        "LAUFn"
+                    ],
+                    [
+                        "Veranstaltungen",
+                        "FMAN/DSAL/D+UMGn"
                     ]
                 ]
             ]
@@ -19659,12 +19217,8 @@
         "PatBrief",
         {
             "0": [
-                18797,
+                18805,
                 [
-                    [
-                        "zu",
-                        "SU"
-                    ],
                     [
                         "eine",
                         "EIn"
@@ -19678,8 +19232,12 @@
                         "F+EÜND"
                     ],
                     [
+                        "einem",
+                        "EIM"
+                    ],
+                    [
                         "einer",
-                        "EINs"
+                        "EIs"
                     ],
                     [
                         "aber",
@@ -19691,11 +19249,7 @@
                     ],
                     [
                         "wurde",
-                        "F+~Us"
-                    ],
-                    [
-                        "zur",
-                        "S~U"
+                        "F+~UD"
                     ],
                     [
                         "hatte",
@@ -19706,8 +19260,24 @@
                         "G+ÄONn"
                     ],
                     [
+                        "habe",
+                        "SNAn"
+                    ],
+                    [
                         "unter",
                         "U+ND"
+                    ],
+                    [
+                        "Euro",
+                        "SMEU"
+                    ],
+                    [
+                        "sagte",
+                        "SAGs"
+                    ],
+                    [
+                        "keine",
+                        "G+EIn"
                     ],
                     [
                         "immer",
@@ -19715,19 +19285,55 @@
                     ],
                     [
                         "ihre",
-                        "~Is"
+                        "~In"
                     ],
                     [
                         "seine",
-                        "SEIs"
+                        "SEIn"
+                    ],
+                    [
+                        "diese",
+                        "D~In"
+                    ],
+                    [
+                        "wurden",
+                        "F+~Un"
                     ],
                     [
                         "alle",
                         "LAL"
                     ],
                     [
+                        "worden",
+                        "F+~On"
+                    ],
+                    [
+                        "dieser",
+                        "D~Is"
+                    ],
+                    [
+                        "eines",
+                        "EINs"
+                    ],
+                    [
+                        "neue",
+                        "NEn"
+                    ],
+                    [
+                        "damit",
+                        "DAMD"
+                    ],
+                    [
+                        "seiner",
+                        "SEIs"
+                    ],
+                    [
                         "Deutschland",
                         "ʃLAND"
+                    ],
+                    [
+                        "etwa",
+                        "DF+A"
                     ],
                     [
                         "ohne",
@@ -19738,12 +19344,40 @@
                         "DAB"
                     ],
                     [
+                        "ihren",
+                        "~I+n"
+                    ],
+                    [
+                        "etwas",
+                        "DF+AS"
+                    ],
+                    [
+                        "ihrer",
+                        "~Is"
+                    ],
+                    [
                         "alles",
                         "LALS"
                     ],
                     [
+                        "dieses",
+                        "D~ISs"
+                    ],
+                    [
+                        "ihrem",
+                        "+~IM"
+                    ],
+                    [
+                        "allen",
+                        "LALN"
+                    ],
+                    [
                         "pro",
                         "BO"
+                    ],
+                    [
+                        "aller",
+                        "LALs"
                     ],
                     [
                         "Problem",
@@ -19758,12 +19392,28 @@
                         "F+E"
                     ],
                     [
+                        "seines",
+                        "SEINs"
+                    ],
+                    [
                         "Projekt",
                         "BO/FNE+GD"
                     ],
                     [
+                        "neues",
+                        "NEs"
+                    ],
+                    [
                         "Abend",
                         "BEND"
+                    ],
+                    [
+                        "neuer",
+                        "NEUs"
+                    ],
+                    [
+                        "ihres",
+                        "~I+s"
                     ],
                     [
                         "Programm",
@@ -19772,6 +19422,10 @@
                     [
                         "Prozess",
                         "BO/ʃGESs"
+                    ],
+                    [
+                        "keiner",
+                        "G+EIs"
                     ],
                     [
                         "Produkte",
@@ -19878,6 +19532,10 @@
                         "BO/ʃGE+ND/B+UMN/D+E"
                     ],
                     [
+                        "neuem",
+                        "NEUM"
+                    ],
+                    [
                         "problematisch",
                         "BOB/LE/MA/D+Iʃ"
                     ],
@@ -19938,6 +19596,10 @@
                         "BOB/LE/MA/D+I+G"
                     ],
                     [
+                        "keines",
+                        "G+EINs"
+                    ],
+                    [
                         "Deutschlandfunk",
                         "ʃLAND/FUMN"
                     ],
@@ -19956,110 +19618,6 @@
                     [
                         "Pilotprojekt",
                         "B+I/LO+D/BO/FNE+GD"
-                    ],
-                    [
-                        "Projektes",
-                        "BO/FNE+G/D+ES"
-                    ],
-                    [
-                        "Bruttoinlandsprodukt",
-                        "BMU+D/D+O/IN/LANSD/BO/DU+GD"
-                    ],
-                    [
-                        "ausprobiert",
-                        "AUS/BO/B~I+D"
-                    ],
-                    [
-                        "Regierungsprogramm",
-                        "SME/G~I/SMUMGS/BO/GMAM"
-                    ],
-                    [
-                        "Kompromisse",
-                        "G+OM/BO/MIS/SE"
-                    ],
-                    [
-                        "produzierte",
-                        "BO/DU/ʃG~I/D+E"
-                    ],
-                    [
-                        "profitierte",
-                        "BO/FI/D+~I/D+E"
-                    ],
-                    [
-                        "Feierabend",
-                        "FEI/EÜ/BEND"
-                    ],
-                    [
-                        "Profit",
-                        "BO/FI+D"
-                    ],
-                    [
-                        "Projektleiter",
-                        "BO/FNE+GD/LEI/D+EÜ"
-                    ],
-                    [
-                        "Provinzen",
-                        "BO/FBLIN/ʃGEN"
-                    ],
-                    [
-                        "provoziert",
-                        "BO/FBLO/ʃG~I+D"
-                    ],
-                    [
-                        "Konjunkturprogramm",
-                        "G+ON/FNUMN/D+~U/BO/GMAM"
-                    ],
-                    [
-                        "Abendstunden",
-                        "BEND/DSUN/DEN"
-                    ],
-                    [
-                        "Prokop",
-                        "BO/G+O+B"
-                    ],
-                    [
-                        "Förderprogramm",
-                        "FÄO/DEÜ/BO/GMAM"
-                    ],
-                    [
-                        "Produktivität",
-                        "BO/DU+G/D+I/FBLI/D+Ä+D"
-                    ],
-                    [
-                        "Professorin",
-                        "BO/FES/SO/SMIN"
-                    ],
-                    [
-                        "erprobt",
-                        "EÜ/BOBD"
-                    ],
-                    [
-                        "Prototyp",
-                        "BO/D+O/D+ÄI+B"
-                    ],
-                    [
-                        "Generalprobe",
-                        "GE/NE/SMAL/BO/BE"
-                    ],
-                    [
-                        "Bauprojekt",
-                        "BAU/BO/FNE+GD"
-                    ],
-                    [
-                        "Prozessor",
-                        "BO/ʃGES/S~O"
-                    ],
-                    [
-                        "programmiert",
-                        "BO/GMAM/M~I+D"
-                    ],
-                    [
-                        "Bruttoinlandsprodukts",
-                        "BMU+D/D+O/IN/LANSD/BO/DU+GSD"
-                    ],
-                    [
-                        "Norddeutschland",
-                        "N~OD/ʃLAND"
                     ]
                 ]
             ]
@@ -20069,11 +19627,19 @@
         "PatCommonPrefix",
         {
             "7": [
-                109581,
+                111592,
                 [
+                    [
+                        "weiter",
+                        "F+EI"
+                    ],
                     [
                         "vergangenen",
                         "vGAN/GNn"
+                    ],
+                    [
+                        "weiterhin",
+                        "F+EI/SNIN"
                     ],
                     [
                         "gegenüber",
@@ -20174,10 +19740,6 @@
                     [
                         "entsprechende",
                         "DSBLE+ʃn/DE"
-                    ],
-                    [
-                        "Universität",
-                        "U/NI/vSI/D+ÄD"
                     ],
                     [
                         "entwickeln",
@@ -20424,12 +19986,16 @@
                         "vLEGʃD/D+E"
                     ],
                     [
+                        "erweitert",
+                        "EÜ/F+EID"
+                    ],
+                    [
                         "verkündet",
                         "vG+ÜN/DED"
                     ],
                     [
                         "wiederholt",
-                        "FI+/SNOLD"
+                        "F+~I/SNOLD"
                     ],
                     [
                         "zuversichtlich",
@@ -20462,20 +20028,20 @@
                     [
                         "verrät",
                         "vSMÄD"
-                    ],
-                    [
-                        "Verluste",
-                        "vLUS/D+E"
-                    ],
-                    [
-                        "Entwurf",
-                        "DF+~UF"
                     ]
                 ]
             ],
             "8": [
-                10005,
+                15127,
                 [
+                    [
+                        "Juni",
+                        "FNU"
+                    ],
+                    [
+                        "Universität",
+                        "U/vSI/D+ÄD"
+                    ],
                     [
                         "Vertreter",
                         "vSME/D+EÜ"
@@ -20489,12 +20055,20 @@
                         "vSMEn"
                     ],
                     [
+                        "Kommunikation",
+                        "G+OM/MU/G+A/D+ON"
+                    ],
+                    [
                         "Verteidiger",
                         "vEI/DGEÜ"
                     ],
                     [
                         "enttäuscht",
                         "DÄUʃD"
+                    ],
+                    [
+                        "United",
+                        "U/D+ED"
                     ],
                     [
                         "Verträge",
@@ -20521,6 +20095,18 @@
                         "vSME/D+EÜN"
                     ],
                     [
+                        "Community",
+                        "G+OM/MU/D+I"
+                    ],
+                    [
+                        "University",
+                        "U/vSI/D+I"
+                    ],
+                    [
+                        "Universitäten",
+                        "U/vSI/D+Än"
+                    ],
+                    [
                         "Enttäuschung",
                         "DÄU/ʃUMG"
                     ],
@@ -20533,8 +20119,20 @@
                         "INn/vEI/DGEÜ"
                     ],
                     [
+                        "beschleunigt",
+                        "bʃLEUGD"
+                    ],
+                    [
+                        "beschleunigen",
+                        "bʃLEUGn"
+                    ],
+                    [
                         "verteidigte",
                         "vEI/DIG/D+E"
+                    ],
+                    [
+                        "kommunizieren",
+                        "G+OM/MU/ʃGIn"
                     ],
                     [
                         "vertrauen",
@@ -20543,6 +20141,14 @@
                     [
                         "Stellvertreter",
                         "DSEL/vSME/D+EÜ"
+                    ],
+                    [
+                        "kommuniziert",
+                        "G+OM/MU/ʃG~ID"
+                    ],
+                    [
+                        "Immunität",
+                        "IM/MU/D+ÄD"
                     ],
                     [
                         "Selbstvertrauen",
@@ -20561,8 +20167,20 @@
                         "vEI/DGUMGS/MI/NIS/D+E/SMIN"
                     ],
                     [
+                        "Munition",
+                        "MU/D+ON"
+                    ],
+                    [
+                        "Uniklinik",
+                        "U/DGLI/NI+G"
+                    ],
+                    [
                         "Verteidigungsministerium",
                         "vEI/DGUMGS/MI/NIS/D+E/SMI/UM"
+                    ],
+                    [
+                        "Universitätsklinikum",
+                        "U/vSI/D+ÄSD/DGLI/NI/G+UM"
                     ],
                     [
                         "Vertragsverlängerung",
@@ -20579,6 +20197,10 @@
                     [
                         "vertagt",
                         "vAGD"
+                    ],
+                    [
+                        "Universum",
+                        "U/vSUM"
                     ],
                     [
                         "Vertretung",
@@ -20613,6 +20235,14 @@
                         "LIMNS/vEI/DGEÜ"
                     ],
                     [
+                        "Herdenimmunität",
+                        "SNEÜ/Dn/IM/MU/D+ÄD"
+                    ],
+                    [
+                        "Beschleunigung",
+                        "bʃLEU/GUMG"
+                    ],
+                    [
                         "stellvertretend",
                         "DSEL/vSME/D+END"
                     ],
@@ -20625,8 +20255,16 @@
                         "vSMAGS"
                     ],
                     [
+                        "beschleunigte",
+                        "bʃLEUG/D+E"
+                    ],
+                    [
                         "verteilte",
                         "vEIL/D+E"
+                    ],
+                    [
+                        "zunichte",
+                        "ʃGU+ʃ/D+E"
                     ],
                     [
                         "enttäuschenden",
@@ -20637,6 +20275,10 @@
                         "MID/vSMAG"
                     ],
                     [
+                        "Uniklinikum",
+                        "U/DGLI/NI/G+UM"
+                    ],
+                    [
                         "Tarifvertrag",
                         "D+A/SMIF/vSMAG"
                     ],
@@ -20645,8 +20287,24 @@
                         "INn/vEI/DGUMG"
                     ],
                     [
+                        "Unis",
+                        "US"
+                    ],
+                    [
+                        "Kommunisten",
+                        "G+OM/MUSn"
+                    ],
+                    [
                         "Vertrages",
                         "vSMA/GES"
+                    ],
+                    [
+                        "kommunistischen",
+                        "G+OM/MUS/D+-ʃn"
+                    ],
+                    [
+                        "Universitätsklinik",
+                        "U/vSI/D+ÄSD/DGLI/NI+G"
                     ],
                     [
                         "Außenverteidiger",
@@ -20663,6 +20321,10 @@
                     [
                         "Bezirksvertretung",
                         "bʃG~I+GS/vSME/D+UMG"
+                    ],
+                    [
+                        "zunimmt",
+                        "ʃGUMD"
                     ],
                     [
                         "Vertreterin",
@@ -20705,6 +20367,10 @@
                         "DÄUʃ/D+E"
                     ],
                     [
+                        "Kommunismus",
+                        "G+OM/MUS/MUS"
+                    ],
+                    [
                         "vertraue",
                         "vSMAÜ"
                     ],
@@ -20713,8 +20379,20 @@
                         "SME/GI/SMUMGS/vSME/D+EÜ"
                     ],
                     [
+                        "kommunistische",
+                        "G+OM/MUS/D+I/ʃE"
+                    ],
+                    [
+                        "unisono",
+                        "U/SO/NO"
+                    ],
+                    [
                         "vertraulichen",
                         "vSMAU/LI+ʃn"
+                    ],
+                    [
+                        "Universitätsklinikums",
+                        "U/vSI/D+ÄSD/DGLI/NI/G+UMS"
                     ],
                     [
                         "Kaufvertrag",
@@ -20729,6 +20407,10 @@
                         "vSME/D+E/SMINn"
                     ],
                     [
+                        "Entschleunigung",
+                        "DʃLEU/GUMG"
+                    ],
+                    [
                         "Vertragspartner",
                         "vSMAGS/B+AÜD/NEÜ"
                     ],
@@ -20741,140 +20423,16 @@
                         "vEI/DGE/SMIN"
                     ],
                     [
+                        "Unilever",
+                        "U/LE/v"
+                    ],
+                    [
+                        "Unit",
+                        "UD"
+                    ],
+                    [
                         "vertuschen",
                         "vUʃn"
-                    ],
-                    [
-                        "Werkverträge",
-                        "F+EÜ+G/vSMÄ/GE"
-                    ],
-                    [
-                        "Enttäuschungen",
-                        "DÄU/ʃUMGn"
-                    ],
-                    [
-                        "verteidigten",
-                        "vEI/DIGn"
-                    ],
-                    [
-                        "vertrauliche",
-                        "vSMAU/LI/ʃ+E"
-                    ],
-                    [
-                        "enttäuschen",
-                        "DÄUʃn"
-                    ],
-                    [
-                        "verteuerten",
-                        "vEU/M-n"
-                    ],
-                    [
-                        "Arbeitnehmervertreter",
-                        "AÜ/bID/NE/MEÜ/vSME/D+EÜ"
-                    ],
-                    [
-                        "Interessenvertretung",
-                        "IN/D+E/SMESn/vSME/D+UMG"
-                    ],
-                    [
-                        "vertraulich",
-                        "vSMAU/LI+ʃ"
-                    ],
-                    [
-                        "Staatsvertrag",
-                        "DSAÜSD/vSMAG"
-                    ],
-                    [
-                        "Titelverteidigung",
-                        "D+I/D+EL/vEI/DGUMG"
-                    ],
-                    [
-                        "verträglich",
-                        "vSMÄG/LI+ʃ"
-                    ],
-                    [
-                        "anvertraut",
-                        "AN/vSMAUD"
-                    ],
-                    [
-                        "Vertuschung",
-                        "vU/ʃUMG"
-                    ],
-                    [
-                        "enttäuschende",
-                        "DÄUʃn/DE"
-                    ],
-                    [
-                        "enttarnt",
-                        "DAÜND"
-                    ],
-                    [
-                        "Tarifverträge",
-                        "D+A/SMIF/vSMÄ/GE"
-                    ],
-                    [
-                        "Verteidigern",
-                        "vEI/DGEÜN"
-                    ],
-                    [
-                        "Pachtvertrag",
-                        "B+A+ʃD/vSMAG"
-                    ],
-                    [
-                        "vertuscht",
-                        "vUʃD"
-                    ],
-                    [
-                        "Vertrauensfrage",
-                        "vSMAU/ENS/FMA/GE"
-                    ],
-                    [
-                        "vertrauensvolle",
-                        "vSMAU/ENS/FOL/LE"
-                    ],
-                    [
-                        "Werkverträgen",
-                        "F+EÜ+G/vSMÄGn"
-                    ],
-                    [
-                        "Verteidigers",
-                        "vEI/DGEÜS"
-                    ],
-                    [
-                        "Volksvertreter",
-                        "FOLGS/vSME/D+EÜ"
-                    ],
-                    [
-                        "Verträglichkeit",
-                        "vSMÄG/LI+ʃ/G+EID"
-                    ],
-                    [
-                        "Vertiefung",
-                        "vI/FUMG"
-                    ],
-                    [
-                        "Zweijahresvertrag",
-                        "ʃG+EI/FNA/SMES/vSMAG"
-                    ],
-                    [
-                        "Selbstverteidigung",
-                        "SELBs/vEI/DGUMG"
-                    ],
-                    [
-                        "Verteidigungsausgaben",
-                        "vEI/DGUMGS/AUS/GABn"
-                    ],
-                    [
-                        "Mietverträge",
-                        "MID/vSMÄ/GE"
-                    ],
-                    [
-                        "Vertragsverhandlungen",
-                        "vSMAGS/vSNAND/LUMGn"
-                    ],
-                    [
-                        "vertrete",
-                        "vSME/D+E"
                     ]
                 ]
             ]
@@ -20884,7 +20442,7 @@
         "PatAcronym",
         {
             "0": [
-                1306,
+                1307,
                 [
                     [
                         "USA",
@@ -21332,7 +20890,7 @@
         "PatAnglAI",
         {
             "0": [
-                1733,
+                1730,
                 [
                     [
                         "Trainer",
@@ -21742,7 +21300,7 @@
         "PatAnglAE",
         {
             "0": [
-                2276,
+                2277,
                 [
                     [
                         "Gedanken",
@@ -21751,10 +21309,6 @@
                     [
                         "Software",
                         "SOFD/F+ÄÜ"
-                    ],
-                    [
-                        "Sex",
-                        "SÄ+GS"
                     ],
                     [
                         "Match",
@@ -22143,6 +21697,10 @@
                     [
                         "Gedankenexperiment",
                         "GE/DÄN/G+EN/EGSD/B+E/SMI/ME+ND"
+                    ],
+                    [
+                        "paddeln",
+                        "B+ÄD/DELN"
                     ]
                 ]
             ]
@@ -22152,7 +21710,7 @@
         "PatAnglI",
         {
             "0": [
-                1383,
+                1384,
                 [
                     [
                         "Team",
@@ -23340,7 +22898,7 @@
         "PatAnglU",
         {
             "0": [
-                1180,
+                1181,
                 [
                     [
                         "Facebook",
@@ -24187,7 +23745,7 @@
         "PatAnglO",
         {
             "0": [
-                633,
+                632,
                 [
                     [
                         "Coach",
@@ -24438,10 +23996,6 @@
                         "FNU/GEND/DʃGO+ʃ"
                     ],
                     [
-                        "Unicode",
-                        "U/NI/DʃGOD"
-                    ],
-                    [
                         "Sourcecode",
                         "S~OS/DʃGOD"
                     ],
@@ -24588,6 +24142,10 @@
                     [
                         "Gencode",
                         "GEN/DʃGOD"
+                    ],
+                    [
+                        "Homebanking",
+                        "SNOM/BAN/G+IMG"
                     ]
                 ]
             ],
@@ -24902,7 +24460,7 @@
         "PatAnglStretchU",
         {
             "0": [
-                602,
+                603,
                 [
                     [
                         "Interview",
@@ -26537,7 +26095,7 @@
         "PatAnglOther",
         {
             "0": [
-                2322,
+                2319,
                 [
                     [
                         "Bayern",
@@ -26947,7 +26505,7 @@
         "PatFrankOther",
         {
             "0": [
-                6809,
+                6800,
                 [
                     [
                         "passiert",

@@ -19,7 +19,7 @@
 
 module Frontend where
 
-import           Language.Javascript.JSaddle    (MonadJSM,  liftJSM )
+import           Language.Javascript.JSaddle    (liftJSM )
 import           State                          (Session(..)
                                                 , State(..)
                                                 , defaultState
@@ -62,7 +62,7 @@ import           Obelisk.Route.Frontend         (RoutedT
 import           Palantype.Common               ( Lang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (Performable, zipDyn, holdUniqDyn, fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
+import           Reflex.Dom                     (zipDyn, holdUniqDyn, fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
                                                 , holdDyn
                                                 , prerender
                                                 , PerformEvent(performEvent_)

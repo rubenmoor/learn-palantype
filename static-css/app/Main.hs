@@ -955,6 +955,9 @@ main = putCss $ do
         hr # ".OnsetAndCoda" ? do
           backgroundColor orange
           marginBottom $ px $ -20
+        hr # ".PPException" ? do
+          backgroundColor black
+          marginBottom $ px $ -20
         span # ".patternPosition" ? do
             float floatRight
             fontSize $ px 14
@@ -966,6 +969,7 @@ main = putCss $ do
         span # ".Coda" ? color myLightblue
         span # ".Multiple" ? color violet
         span # ".OnsetAndCoda" ? color orange
+        span # ".PPException" ? color black
 
     div # ".patternExamples" ? do
         backgroundColor myLightblue

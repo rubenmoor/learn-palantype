@@ -17,7 +17,6 @@ module Common.Api where
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
                                                 )
-import           Data.Map                       ( Map )
 import           Data.Text                      ( Text )
 import           Servant.API                    (Delete, QueryFlag, QueryParam,  Capture
                                                 , (:<|>)
@@ -29,15 +28,8 @@ import           Servant.API                    (Delete, QueryFlag, QueryParam, 
                                                 , ReqBody
                                                 )
 import           Web.KeyCode                    ( Key )
-import           Palantype.Common               ( MapStenoWordTake100
-                                                , PatternDoc
-                                                , PatternPos
-                                                , Greediness
-                                                , Lang(..)
+import           Palantype.Common               ( Lang(..)
                                                 )
-import qualified Palantype.DE                  as DE
-import           Palantype.Common               ( RawSteno )
-
 import           Common.PloverConfig            ( PloverSystemCfg )
 import           Common.Auth                    ( LoginData
                                                 , SessionData
@@ -74,15 +66,6 @@ type RoutesUser =
 
 type RoutesPalantype =
           "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
-     :<|> "doc"    :> "DE" :> "pattern" :> "all" :> Get '[JSON] (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)
-     :<|> "doc"    :> "DE" :> "pattern" :> Capture "pattern-group" DE.Pattern
-                                        :> Capture "greediness" Greediness
-                                        :> Get '[JSON] [(PatternPos, [(Text, RawSteno)])]
-     :<|> "dict"   :> "DE" :> Capture "pattern-group" DE.Pattern
-                           :> Capture "greediness" Greediness
-                           :> Get '[JSON] (Map RawSteno Text, Map Text [RawSteno])
-     :<|> "dict"   :> "DE" :> "Numbers"
-                           :> Get '[JSON] (Map RawSteno Text)
 
 type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()

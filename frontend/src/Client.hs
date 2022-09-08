@@ -26,7 +26,6 @@ import           Data.Generics.Product          ( field )
 import           Data.Either                    ( either
                                                 , Either(..)
                                                 )
-import           Data.Functor                   ((<$>) )
 import           Data.Proxy                     ( Proxy(Proxy) )
 import           Data.String                    ( String )
 import           Data.Text                      ( Text )
@@ -45,22 +44,13 @@ import           Servant.Reflex                 ( BaseUrl(BasePath)
 import           Data.Maybe                     ( fromMaybe
                                                 , Maybe(..)
                                                 )
-import           Data.Function                  ( (.)
-                                                , const
+import           Data.Function                  ( const
                                                 , ($)
                                                 )
 import           Data.Semigroup                 ( Semigroup((<>)) )
 import           Servant.API                    ( (:<|>)(..) )
-import           Palantype.Common               ( MapStenoWordTake100
-                                                , PatternDoc
-                                                , PatternPos
-                                                , RawSteno
+import           Palantype.Common               ( Lang
                                                 )
-import           Palantype.Common               ( Greediness
-                                                , Lang
-                                                )
-import           Data.Map.Strict                ( Map )
-import qualified Palantype.DE                  as DE
 import           State                          ( stSession
                                                 , State
                                                 , Session(..)
@@ -122,48 +112,6 @@ postConfigNew
     => Dynamic t (Either Text String)
     -> Event t ()
     -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
-
-getDocDEPatternAll
-    :: SupportsServantReflex t m
-    => Event t ()
-    -> m ( Event t ( ReqResult () (PatternDoc DE.Key, MapStenoWordTake100 DE.Key)))
-
-getDocDEPattern
-    :: SupportsServantReflex t m
-    => Dynamic t (Either Text DE.Pattern)
-    -> Dynamic t (Either Text Greediness)
-    -> Event t ()
-    -> m (Event t (ReqResult () [(PatternPos, [(Text, RawSteno)])]))
-
-getDocDEPattern'
-    :: SupportsServantReflex t m
-    => DE.Pattern
-    -> Greediness
-    -> Event t ()
-    -> m (Event t (ReqResult () [(PatternPos, [(Text, RawSteno)])]))
-
-getDocDEPattern' p g =
-    getDocDEPattern (constDyn $ Right p) (constDyn $ Right g)
-
-getDictDE
-    :: SupportsServantReflex t m
-    => Dynamic t (Either Text DE.Pattern)
-    -> Dynamic t (Either Text Greediness)
-    -> Event t ()
-    -> m ( Event t ( ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
-
-getDictDE'
-    :: SupportsServantReflex t m
-    => DE.Pattern
-    -> Greediness
-    -> Event t ()
-    -> m ( Event t ( ReqResult () (Map RawSteno Text, Map Text [RawSteno])))
-getDictDE' p g = getDictDE (constDyn $ Right p) (constDyn $ Right g)
-
-getDictDENumbers
-    :: SupportsServantReflex t m
-    => Event t ()
-    -> m (Event t (ReqResult () (Map RawSteno Text)))
 
 -- auth
 
@@ -280,7 +228,7 @@ postStatsStart
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-((postConfigNew :<|> getDocDEPatternAll :<|> getDocDEPattern :<|> getDictDE :<|> getDictDENumbers) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage) :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted))
+((postConfigNew) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage) :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

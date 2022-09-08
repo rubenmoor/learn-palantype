@@ -5,27 +5,24 @@
 
 module Page.Stage5 where
 
-import Client (getDictDE', getDocDEPattern', postRender, request)
 import Common.Route (FrontendRoute)
-import Common.Stage (Stage, StageMeta (..), stageMeta)
-import Control.Category ((<<<))
+import Common.Stage (Stage)
 import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader.Class (MonadReader, ask)
-import Data.Functor (($>), (<&>))
 import Data.Semigroup (Endo)
 import Obelisk.Route (R)
-import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute, routeLink)
-import Page.Common (getStatsLocalAndRemote, elCongraz, elNotImplemented, elPatterns, loading, taskWords)
-import Palantype.Common (Greediness, Lang (..), Palantype, toDescription)
-import Palantype.Common.TH (failure, readLoc)
+import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute)
+import Page.Common (getStatsLocalAndRemote, elCongraz, elNotImplemented, elPatterns, taskWords)
+import Palantype.Common (patternDoc, Greediness, Lang (..), Palantype, toDescription)
 import Palantype.DE (Pattern (..))
-import Reflex.Dom (blank, current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, delay, el, elClass, getPostBuild, never, switchDyn, text, widgetHold, widgetHold_)
-import State (Env (..), Navigation (..), State, stageUrl)
-import Text.Read (readMaybe)
+import Reflex.Dom (current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, el, elClass, never, text)
+import State (Env (..), Navigation (..), State)
 import TextShow (TextShow (showt))
 import Data.Maybe (isNothing)
+import qualified Data.Map.Strict as Map
+import PloverDict (getMapsForExercise)
 
 type Constraints key t m =
     ( DomBuilder t m
@@ -64,33 +61,24 @@ exercise iEx elIntro pat greediness elExplication = mdo
 
     elIntro navLang
 
-    ePb <- postRender $ delay 0.1 =<< getPostBuild
-    evEDoc <- request $ getDocDEPattern' pat 0 ePb
-    widgetHold_ loading $
-        evEDoc <&> \case
-            Right doc -> elPatterns doc
-            Left str ->
-                elClass "div" "paragraph small red"
-                    $ text
-                    $ "Could not load resource: docs: " <> str
+    elPatterns
+        $ Map.toList
+        $ Map.findWithDefault Map.empty greediness
+        $ Map.findWithDefault Map.empty pat patternDoc
 
     elExplication navLang
 
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evEDict <- request $ getDictDE' pat greediness ePb
-    evDone <- fmap switchDyn $ widgetHold (loading $> never) $
-        evEDict <&> \case
-            Right (mSW, mWSs) -> if null mSW
-              then do el "p" $
-                        text "There are no words in this exercise. \
-                          \This is probably an error. \
-                          \Skip this for now."
-                      pure never
-              else taskWords dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
-            Left str -> never <$ elClass
-                        "div"
-                        "paragraph small red"
-                        (text $ "Could not load resource: dict: " <> str)
+
+    evDone      <- case getMapsForExercise pat greediness of
+        Left str -> do
+            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            pure never
+        Right (mSW, mWSs) -> taskWords
+            dynStatsAll
+            (gate (not <$> current dynDone) envEChord)
+            mSW
+            mWSs
 
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
