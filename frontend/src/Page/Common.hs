@@ -104,7 +104,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
+import           Reflex.Dom                     (Client, elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -112,6 +112,7 @@ import           Reflex.Dom                     (elAttr', performEvent_, prerend
                                                 , holdUniqDyn
                                                 , (=:)
                                                 , DomBuilder
+                                                , Element (_element_raw)
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
@@ -164,10 +165,12 @@ import           Common.Model                   (AppState (stSound),  Message(..
 import Data.Witherable (Filterable(catMaybes))
 import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
-import Language.Javascript.JSaddle (eval, liftJSM)
+import Language.Javascript.JSaddle (liftJSM)
 import Data.Bifunctor (Bifunctor(second))
 import Obelisk.Generated.Static (static)
 import GHC.Generics (Generic)
+import GHCJS.DOM.Types (HTMLAudioElement(HTMLAudioElement), unElement)
+import GHCJS.DOM.HTMLMediaElement (play)
 
 elFooter
     :: forall t (m :: * -> *)
@@ -607,17 +610,14 @@ elBtnSound evTrigger = do
     let dynSound = stSound . stApp <$> envDynState
         evPlaySound = gate (current dynSound) evTrigger
 
-        jsPlaySound :: Text
-        jsPlaySound =
-          "let domAudio = document.getElementById(\"audio-tick\"); \
-          \domAudio.play()"
-    prerender_ blank $ do
-      elAttr "audio"
-           ("src"     =: $(static "tick.mp3")
+    prerender_ blank do
+      (domAudio, _) <- elAttr' "audio"
+         (  "src"     =: $(static "tick.mp3")
          <> "preload" =: "auto"
          <> "id"      =: "audio-tick"
-           ) blank
-      performEvent_ $ evPlaySound $> liftJSM (void $ eval jsPlaySound)
+         ) blank
+      let audioEl = HTMLAudioElement $ unElement $ _element_raw domAudio
+      performEvent_ $ evPlaySound $> play audioEl
 
     (domSound, _) <- elAttr' "span"
       (  "class" =: "floatRight icon-link"
@@ -625,4 +625,5 @@ elBtnSound evTrigger = do
       ) $ dyn_ $ dynSound <&> \case
         True  -> iFa "fas fa-volume-down"
         False -> iFa "fas fa-volume-mute"
+
     updateState $ domEvent Click domSound $> [field @"stApp" . field @"stSound" %~ not]
