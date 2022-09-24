@@ -107,7 +107,51 @@ exercise1 =
         )
         PatBrief
         0
-        ( \navLang -> do
+        ( \_ -> do
+              el "p" do
+                  text "Experienced stenotypists design briefs all the time, \
+                       \sometimes along the way as they type. Imagine you are \
+                       \transcribing an interview with the "
+                  el "em" $ text "Bundesgesundheitsministerin"
+                  text " and she keeps talking about the "
+                  el "em" $ text "Hackfleischverordnung"
+                  text ". Having those two words encoded as one or two chords \
+                       \, opposed to ten and five chords, respectively \
+                       \not only makes you quicker. Long words can be quite \
+                       \demanding to type, in general."
+              el "p" do
+                  text "Note, however, that the briefs you are learning here \
+                       \are less specific. Rather than cutting down very long \
+                       \words, you find the most common words of the German \
+                       \language here. Often the briefs just turn a two-chord \
+                       \code into a single chord. Sometimes the briefs aren't \
+                       \increasing efficiency but rather circumvent collisions."
+        )
+
+exercise2 ::
+    forall key t (m :: * -> *).
+    Constraints key t m =>
+    m Navigation
+exercise2 =
+    exercise
+        2
+        ( \_ ->
+              el "p" $
+                  text
+                      "One major reason why steno typing allows for such a high \
+                      \speed is the existence of briefs. A brief is a steno code \
+                      \that is used for one specific word or a syllable. \
+                      \Technically, every brief is an additional rule. Less \
+                      \technical, every brief is an exception to the rules that \
+                      \you learned so far. The steno code for briefs is meant to \
+                      \make very common words much quicker to type. And don't be \
+                      \scared: you will see that most briefs aren't that hard to \
+                      \memorize. While briefs ignore all the rules, usually they \
+                      \can be designed in ways that kind of make sense."
+        )
+        PatBrief
+        0
+        ( \_ -> do
               el "p" do
                   text "Experienced stenotypists design briefs all the time, \
                        \sometimes along the way as they type. Imagine you are \

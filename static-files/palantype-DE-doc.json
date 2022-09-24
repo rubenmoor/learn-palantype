@@ -413,7 +413,7 @@
         "PatSimpleMulti",
         {
             "0": [
-                10809,
+                10808,
                 [
                     [
                         "eine",
@@ -823,7 +823,7 @@
         "PatReplCommon1",
         {
             "0": [
-                119133,
+                119135,
                 [
                     [
                         "zu",
@@ -1437,7 +1437,7 @@
                 ]
             ],
             "3": [
-                1234,
+                1289,
                 [
                     [
                         "hat",
@@ -1470,6 +1470,14 @@
                     [
                         "fit",
                         "FID"
+                    ],
+                    [
+                        "Zentralbank",
+                        "ʃGEND/SMAL/BAMN"
+                    ],
+                    [
+                        "konzentriert",
+                        "G+ON/ʃGEND/SM~ID"
                     ],
                     [
                         "Katrin",
@@ -1512,6 +1520,10 @@
                         "FEÜ/F+AND"
                     ],
                     [
+                        "Zentralregierung",
+                        "ʃGEND/SMAL/SME/GI/SMUMG"
+                    ],
+                    [
                         "Antholz",
                         "AND/SNOLGʃ"
                     ],
@@ -1544,6 +1556,14 @@
                         "OD/MAÜ"
                     ],
                     [
+                        "Zentralschweiz",
+                        "ʃGEND/SMAL/ʃBEIGʃ"
+                    ],
+                    [
+                        "Zentralrat",
+                        "ʃGEND/SMAL/SMAD"
+                    ],
+                    [
                         "Flirt",
                         "FL~ID"
                     ],
@@ -1554,6 +1574,14 @@
                     [
                         "vgl",
                         "FGL-"
+                    ],
+                    [
+                        "Zentralstelle",
+                        "ʃGEND/SMAL/DSEL/LE"
+                    ],
+                    [
+                        "Zentrallager",
+                        "ʃGEND/SMAL/LA/GEÜ"
                     ],
                     [
                         "pumpt",
@@ -1614,6 +1642,10 @@
                     [
                         "Vlies",
                         "FLIS"
+                    ],
+                    [
+                        "Zentralisierung",
+                        "ʃGEND/SMA/LI/SI/SMUMG"
                     ],
                     [
                         "Gastronomin",
@@ -1696,6 +1728,10 @@
                         "MOND/SMEUGSD"
                     ],
                     [
+                        "Zentralmatura",
+                        "ʃGEND/SMAL/MA/D+U/SMA"
+                    ],
+                    [
                         "Notrufzentrale",
                         "NOD/SMUF/ʃGEND/SMA/LE"
                     ],
@@ -1740,6 +1776,10 @@
                         "IND/SMA/NED"
                     ],
                     [
+                        "unkonzentriert",
+                        "UN/G+ON/ʃGEND/SM~ID"
+                    ],
+                    [
                         "Kat",
                         "G+AD"
                     ],
@@ -1758,6 +1798,10 @@
                     [
                         "konträr",
                         "G+OND/SMÄÜ"
+                    ],
+                    [
+                        "Zentralamerika",
+                        "ʃGEND/SMAL/A/ME/SMI/G+A"
                     ],
                     [
                         "Grenzkontrolle",
@@ -1794,50 +1838,6 @@
                     [
                         "administrativ",
                         "AD/MI/NISD/SMA/D+IF"
-                    ],
-                    [
-                        "Astronom",
-                        "ASD/SMO/NOM"
-                    ],
-                    [
-                        "Watte",
-                        "F+AD/D+E"
-                    ],
-                    [
-                        "Industriemechaniker",
-                        "IN/DUSD/SMI/ME/ʃ+A/NI/G+EÜ"
-                    ],
-                    [
-                        "Konstrukteur",
-                        "G+ONSD/SMU+G/D+ÄO"
-                    ],
-                    [
-                        "Campact",
-                        "G+AM/B+A+GD"
-                    ],
-                    [
-                        "Marktrat",
-                        "MAÜ+GD/SMAD"
-                    ],
-                    [
-                        "ausgepumpt",
-                        "AUS/GE/B+UMBD"
-                    ],
-                    [
-                        "Kommandozentrale",
-                        "G+OM/MAN/DO/ʃGEND/SMA/LE"
-                    ],
-                    [
-                        "AVG",
-                        "NÜM/A/FG-"
-                    ],
-                    [
-                        "Elektrotechniker",
-                        "E/LE+GD/SMO/D+E+ʃ/NI/G+EÜ"
-                    ],
-                    [
-                        "Pontresina",
-                        "B+OND/SME/SI/NA"
                     ]
                 ]
             ]
@@ -2252,7 +2252,7 @@
                 ]
             ],
             "3": [
-                20,
+                21,
                 [
                     [
                         "Anthony",
@@ -2295,10 +2295,6 @@
                         "DIS/DBLAI/AN/ʃGEI/GE"
                     ],
                     [
-                        "Polygram",
-                        "B+O/LI/GMAM"
-                    ],
-                    [
                         "Modeltyp",
                         "MO/DEL/D+I+B"
                     ],
@@ -2331,8 +2327,16 @@
                         "SNI/MA/LAI/A/SMAU/MES"
                     ],
                     [
+                        "PolyGram",
+                        "B+O/LI/GMAM"
+                    ],
+                    [
                         "Sporttyps",
                         "SB~OD/D+I+BS"
+                    ],
+                    [
+                        "baryzentrisch",
+                        "BA/SMI/ʃGEND/SMIʃ"
                     ]
                 ]
             ]
@@ -2342,7 +2346,7 @@
         "PatCodaComboT",
         {
             "0": [
-                21646,
+                21647,
                 [
                     [
                         "nicht",
@@ -2809,7 +2813,7 @@
         "PatOnsetR",
         {
             "0": [
-                64879,
+                64844,
                 [
                     [
                         "Prozent",
@@ -3629,7 +3633,7 @@
         "PatSmallS",
         {
             "0": [
-                2965,
+                2966,
                 [
                     [
                         "ist",
@@ -3698,6 +3702,10 @@
                     [
                         "Mist",
                         "MIs/-+D"
+                    ],
+                    [
+                        "lasst",
+                        "LAs/-+D"
                     ],
                     [
                         "Hilfsangebote",
@@ -3850,10 +3858,6 @@
                     [
                         "Hilfskredite",
                         "SNILFs/DGME/DI/D+E"
-                    ],
-                    [
-                        "last",
-                        "LAs/-+D"
                     ],
                     [
                         "Kollektivs",
@@ -4034,7 +4038,7 @@
                 ]
             ],
             "6": [
-                573,
+                571,
                 [
                     [
                         "freie",
@@ -4341,10 +4345,6 @@
                         "F+AÜN/DMEIs/G+E"
                     ],
                     [
-                        "Kleie",
-                        "DGLEIs"
-                    ],
-                    [
                         "anschreie",
                         "AN/DʃMEIs"
                     ],
@@ -4435,6 +4435,10 @@
                     [
                         "Marktschreierei",
                         "MAÜ+GD/DʃMEIs/SMEI"
+                    ],
+                    [
+                        "bleifreie",
+                        "BLEI/FMEIs"
                     ]
                 ]
             ]
@@ -4444,7 +4448,7 @@
         "PatDiConsonant",
         {
             "0": [
-                37735,
+                37734,
                 [
                     [
                         "kann",
@@ -4849,7 +4853,7 @@
                 ]
             ],
             "4": [
-                1470,
+                1469,
                 [
                     [
                         "offiziell",
@@ -5609,6 +5613,10 @@
                         "B+EBD"
                     ],
                     [
+                        "Zentralausschuss",
+                        "ʃGEND/SMAL/AUS/ʃUS"
+                    ],
+                    [
                         "einschleppt",
                         "EIN/ʃLEBD"
                     ],
@@ -5651,10 +5659,6 @@
                     [
                         "pappt",
                         "B+ABD"
-                    ],
-                    [
-                        "kloppt",
-                        "DGLOBD"
                     ]
                 ]
             ]
@@ -5664,7 +5668,7 @@
         "PatCodaH",
         {
             "0": [
-                62423,
+                62418,
                 [
                     [
                         "wie",
@@ -6069,7 +6073,7 @@
                 ]
             ],
             "2": [
-                317,
+                318,
                 [
                     [
                         "die",
@@ -6452,6 +6456,10 @@
                         "FEÜN/SEIN/DUS/DLI"
                     ],
                     [
+                        "Kleie",
+                        "DGLEI"
+                    ],
+                    [
                         "Hohns",
                         "SNONS"
                     ],
@@ -6466,10 +6474,6 @@
                     [
                         "beleiht",
                         "BE/LEI+D"
-                    ],
-                    [
-                        "ziept",
-                        "ʃGI+BD"
                     ]
                 ]
             ]
@@ -6479,7 +6483,7 @@
         "PatCodaR",
         {
             "0": [
-                356802,
+                356791,
                 [
                     [
                         "der",
@@ -7755,7 +7759,7 @@
         "PatDt",
         {
             "0": [
-                29,
+                30,
                 [
                     [
                         "Stadt",
@@ -7806,6 +7810,10 @@
                         "E/BEÜ/SNAÜD/-D"
                     ],
                     [
+                        "Hammerschmidt",
+                        "SNAM/MEÜ/ʃMID/-D"
+                    ],
+                    [
                         "Erhardt",
                         "EÜ/SNAÜD/-D"
                     ],
@@ -7826,8 +7834,8 @@
                         "AB/GE/F+AND/-D"
                     ],
                     [
-                        "Kesselstadt",
-                        "G+ES/SEL/DSAD/-D"
+                        "Goldschmidt",
+                        "GOLD/ʃMID/-D"
                     ],
                     [
                         "Reinhardts",
@@ -7876,7 +7884,7 @@
                 ]
             ],
             "1": [
-                3337,
+                3336,
                 [
                     [
                         "Hauptstadt",
@@ -8271,12 +8279,12 @@
                         "GMO+S/DSAD/SME/FBL~I"
                     ],
                     [
-                        "Hammerschmidt",
-                        "SNAM/MEÜ/ʃMID"
-                    ],
-                    [
                         "Grenzstadt",
                         "GMEMGʃ/DSAD"
+                    ],
+                    [
+                        "Radtke",
+                        "SMAD/G+E"
                     ]
                 ]
             ],
@@ -8315,7 +8323,7 @@
         "PatDiphtong",
         {
             "0": [
-                2252,
+                2253,
                 [
                     [
                         "Joe",
@@ -9530,7 +9538,7 @@
                 ]
             ],
             "3": [
-                1429,
+                1428,
                 [
                     [
                         "Andrea",
@@ -9940,7 +9948,7 @@
         "PatReplC",
         {
             "0": [
-                7409,
+                7410,
                 [
                     [
                         "Corona",
@@ -10345,7 +10353,7 @@
                 ]
             ],
             "2": [
-                106,
+                107,
                 [
                     [
                         "OECD",
@@ -10382,10 +10390,6 @@
                     [
                         "Basics",
                         "BA/SI+GS"
-                    ],
-                    [
-                        "Canon",
-                        "G+A/NON"
                     ],
                     [
                         "WCs",
@@ -10560,6 +10564,10 @@
                         "FLA+ʃ/BE+D/SG+AN/NEÜN"
                     ],
                     [
+                        "Frederics",
+                        "FME/DE/SMI+GS"
+                    ],
+                    [
                         "Handscanners",
                         "SNAND/SG+AN/NEÜS"
                     ],
@@ -10634,6 +10642,10 @@
                     [
                         "Cardillacs",
                         "G+AÜ/DIL/LA+GS"
+                    ],
+                    [
+                        "Cañon",
+                        "G+A/NON"
                     ],
                     [
                         "Centronics",
@@ -10742,10 +10754,6 @@
                     [
                         "Sexmaniacs",
                         "SEGSD/MA/NI/A+GS"
-                    ],
-                    [
-                        "Spannungscomics",
-                        "SBAN/NUMGS/G+O/MI+GS"
                     ]
                 ]
             ]
@@ -10755,7 +10763,7 @@
         "PatBreakUpI",
         {
             "0": [
-                64,
+                65,
                 [
                     [
                         "via",
@@ -10876,6 +10884,10 @@
                     [
                         "Olympiastart",
                         "O/LÄIM/B+I/A/DSAÜ+D"
+                    ],
+                    [
+                        "Iod",
+                        "I/OD"
                     ],
                     [
                         "Nicosia",
@@ -11016,7 +11028,7 @@
                 ]
             ],
             "4": [
-                46225,
+                46226,
                 [
                     [
                         "Situation",
@@ -11831,7 +11843,7 @@
                 ]
             ],
             "3": [
-                51614,
+                51615,
                 [
                     [
                         "selbst",
@@ -15153,7 +15165,7 @@
                 ]
             ],
             "3": [
-                1966,
+                1967,
                 [
                     [
                         "Rhein",
@@ -15563,7 +15575,7 @@
         "PatCodaGK",
         {
             "3": [
-                100,
+                99,
                 [
                     [
                         "Jakob",
@@ -15788,10 +15800,6 @@
                     [
                         "Monakos",
                         "MO/NAÜ/G+OS"
-                    ],
-                    [
-                        "Steinlake",
-                        "DSEIN/LAÜ/G+E"
                     ],
                     [
                         "hakender",
@@ -16788,7 +16796,7 @@
         "PatSCStretch",
         {
             "0": [
-                24,
+                23,
                 [
                     [
                         "kam",
@@ -16869,10 +16877,6 @@
                     [
                         "Lek",
                         "S-/LEÜ+G"
-                    ],
-                    [
-                        "Iod",
-                        "I/OD"
                     ],
                     [
                         "Dike",
@@ -17346,12 +17350,12 @@
                         "SU/B+EÜ/MA+N"
                     ],
                     [
-                        "lernend",
-                        "LEÜ+/NEND"
+                        "Tillmanns",
+                        "D+IL/MA+NS"
                     ],
                     [
-                        "Tilmanns",
-                        "D+IL/MA+NS"
+                        "lernend",
+                        "LEÜ+/NEND"
                     ],
                     [
                         "Anlernens",
@@ -17762,7 +17766,7 @@
                 ]
             ],
             "5": [
-                77638,
+                77635,
                 [
                     [
                         "anderen",
@@ -18167,7 +18171,7 @@
                 ]
             ],
             "8": [
-                185911,
+                185908,
                 [
                     [
                         "werden",
@@ -18572,7 +18576,7 @@
                 ]
             ],
             "6": [
-                549639,
+                549630,
                 [
                     [
                         "den",
@@ -19016,7 +19020,7 @@
         "PatCommonPrefix",
         {
             "7": [
-                111084,
+                111085,
                 [
                     [
                         "Deutschland",
@@ -21061,7 +21065,7 @@
         "PatAnglAE",
         {
             "0": [
-                2243,
+                2242,
                 [
                     [
                         "Gedanken",
@@ -21284,10 +21288,6 @@
                         "DÄN/G+ES/SME/DE"
                     ],
                     [
-                        "Südsudan",
-                        "SÜD/SU/DÄN"
-                    ],
-                    [
                         "Headsets",
                         "SNÄD/SE+SD"
                     ],
@@ -21462,6 +21462,10 @@
                     [
                         "Gedankenexperiment",
                         "GE/DÄN/G+EN/EGSD/B+E/SMI/ME+ND"
+                    ],
+                    [
+                        "paddeln",
+                        "B+ÄD/DELN"
                     ]
                 ]
             ]
@@ -21876,7 +21880,7 @@
                 ]
             ],
             "3": [
-                73,
+                72,
                 [
                     [
                         "Research",
@@ -21917,10 +21921,6 @@
                     [
                         "Erntearbeitern",
                         "EÜN/D+~I/BEI/D+EÜN"
-                    ],
-                    [
-                        "Lears",
-                        "L~IS"
                     ],
                     [
                         "Linearantrieb",
@@ -25856,7 +25856,7 @@
         "PatAnglOther",
         {
             "0": [
-                2279,
+                2278,
                 [
                     [
                         "Bayern",
