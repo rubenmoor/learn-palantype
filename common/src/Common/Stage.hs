@@ -128,7 +128,11 @@ strsStage =
     , "stage_PatSimple_0" -- 2.4
     , "stage_PatReplCommon1_0" -- 3.1
     , "stage_PatReplCommon2_0" -- 3.2
-    , "stage_PatCodaComboT_0"
+    , "stage_PatCodaComboT_0"  -- 3.3
+    , "stage_PatReplCommon1_3" -- 4.1
+    , "stage_PatReplCommon1_4" -- 4.2
+    , "stage_PatReplCommon2_3" -- 4.3
+    , "stage_PatCodaComboT_3"  -- 4.4
     , "stage_PatOnsetR_0"
     , "stage_PatOnsetL_0"
     , "stage_PatSmallS_0"

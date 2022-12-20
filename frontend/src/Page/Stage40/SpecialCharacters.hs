@@ -11,31 +11,32 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage4.CommandKeys
-    ( commandKeys
+module Page.Stage40.SpecialCharacters
+    ( specialCharacters
     ) where
 
-import           Control.Applicative (Applicative (pure))
-import           Control.Monad.Reader.Class (MonadReader, ask)
-import           Data.Function (($))
-import           Data.Semigroup ((<>))
-import           Obelisk.Generated.Static (static)
-import           Page.Common (elNotImplemented)
-import           Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
-import           State (Env (..), Navigation (..))
+import Control.Applicative (Applicative (pure))
+import Control.Monad (unless)
+import Control.Monad.Reader.Class (MonadReader, ask)
+import Data.Function (($))
+import Data.Semigroup ((<>))
+import Page.Common (elNotImplemented)
+import Palantype.Common (Lang (DE))
+import Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
+import State (Env (..), Navigation (..))
+import Obelisk.Generated.Static (static)
+import Data.Eq (Eq((==)))
 
-commandKeys ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadReader (Env t key) m
-    ) =>
-    m Navigation
-commandKeys = do
+specialCharacters
+  :: forall key t (m :: * -> *)
+  . ( DomBuilder t m
+    , MonadReader (Env t key) m
+    )
+  => m Navigation
+specialCharacters = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-
-    -- TODO
-    elNotImplemented
+    unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Typing numbers"
 
@@ -95,5 +96,10 @@ commandKeys = do
 
     -- TODO: link to further special chars
     -- TODO: link to plover commands
+
+    elClass "blockquote" "warning" $ do
+        el "strong" $ text "Not implemented"
+        el "br" blank
+        text "There hasn't been any exercise implemented yet"
 
     pure envNavigation

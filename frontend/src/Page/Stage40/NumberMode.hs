@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage4.NumberMode
+module Page.Stage40.NumberMode
     ( numberMode
     )
 where

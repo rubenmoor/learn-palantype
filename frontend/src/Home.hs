@@ -159,11 +159,11 @@ import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
 import qualified Page.Stage5 as Stage5
-import Page.Stage4.PloverCommands (ploverCommands)
-import Page.Stage4.Fingerspelling (fingerspelling)
-import Page.Stage4.NumberMode (numberMode)
-import Page.Stage4.CommandKeys (commandKeys)
-import Page.Stage4.SpecialCharacters (specialCharacters)
+import Page.Stage40.PloverCommands (ploverCommands)
+import Page.Stage40.Fingerspelling (fingerspelling)
+import Page.Stage40.NumberMode (numberMode)
+import Page.Stage40.CommandKeys (commandKeys)
+import Page.Stage40.SpecialCharacters (specialCharacters)
 import Palantype.Common
     ( Chord (..),
       KeyIndex,
@@ -915,7 +915,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
         dynShowStage1 = stTOCShowStage1 <$> dynState
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
-        dynShowStage4 = stTOCShowStage4 <$> dynState
+        dynShowStage40 = stTOCShowStage40 <$> dynState
         dynShowStage5 = stTOCShowStage5 <$> dynState
 
     -- button to toggle TOC
@@ -1033,18 +1033,18 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatCodaGK_3"
                         elLi $ $readLoc "stage_PatReplRare_0"
 
-                    (s4, _) <- elClass' "li" "stage" $ do
+                    (s40, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage4
+                                    <$> dynShowStage40
                         elDynClass "i" dynClass blank
-                        text "Stage 4: Real-life text input"
+                        text "Stage 40: Real-life text input"
 
-                    updateState $ domEvent Click s4 $>
-                        [field @"stApp" . field @"stTOCShowStage4" %~ not]
+                    updateState $ domEvent Click s40 $>
+                        [field @"stApp" . field @"stTOCShowStage40" %~ not]
 
-                    let dynClassUl4 = bool "displayNone" "" <$> dynShowStage4
-                    elDynClass "ul" dynClassUl4 $ do
+                    let dynClassUl40 = bool "displayNone" "" <$> dynShowStage40
+                    elDynClass "ul" dynClassUl40 $ do
                         elLi $ $readLoc "stage_ploverCommands"
                         elLi $ $readLoc "stage_fingerspelling"
                         elLi $ $readLoc "stage_numbermode"
@@ -1311,31 +1311,31 @@ stages navLang toReady = do
                         | $readLoc "stage_PatReplCommon1_0" == stageCurrent -> Stage3.exercise1
                         | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
                         | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
-                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise4
-                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise5
-                        | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
-                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise7
-                        | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
-                        | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
-                        | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
-                        | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise11
-                        | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
-                        | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
-                        | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
-                        | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
-                        | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
-                        | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
-                        | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
-                        | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
-                        | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
-                        | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
-                        | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
-                        | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
-                        | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
-                        | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
-                        | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
-                        | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
-                        | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage5.exercise1
+                        ---- | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise4
+                        ---- | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise5
+                        ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
+                        ---- | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise7
+                        ---- | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
+                        ---- | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
+                        ---- | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
+                        ---- | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise11
+                        ---- | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
+                        ---- | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
+                        ---- | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
+                        ---- | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
+                        ---- | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
+                        ---- | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
+                        ---- | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
+                        ---- | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
+                        ---- | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
+                        ---- | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
+                        ---- | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
+                        ---- | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
+                        ---- | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
+                        ---- | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
+                        ---- | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
+                        ---- | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
+                        ---- | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage5.exercise1
                         | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $
