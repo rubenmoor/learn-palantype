@@ -129,10 +129,10 @@ strsStage =
     , "stage_PatReplCommon1_0" -- 3.1
     , "stage_PatReplCommon2_0" -- 3.2
     , "stage_PatCodaComboT_0"  -- 3.3
-    , "stage_PatReplCommon1_3" -- 4.1
-    , "stage_PatReplCommon1_4" -- 4.2
-    , "stage_PatReplCommon2_3" -- 4.3
-    , "stage_PatCodaComboT_3"  -- 4.4
+    , "stage_PatReplCommon1_2" -- 4.1
+    , "stage_PatCodaComboT_2"  -- 4.2
+    , "stage_PatReplCommon1_3" -- 4.3
+    , "stage_PatReplCommon2_4" -- 4.4
     , "stage_PatOnsetR_0"
     , "stage_PatOnsetL_0"
     , "stage_PatSmallS_0"
@@ -196,6 +196,10 @@ stageMeta stage = if
     | $readLoc "stage_PatReplCommon1_0"  == stage -> StageSubLevel 3 1  $ toDescription PatReplCommon1
     | $readLoc "stage_PatReplCommon2_0"  == stage -> StageSubLevel 3 2  $ toDescription PatReplCommon2
     | $readLoc "stage_PatCodaComboT_0"   == stage -> StageSubLevel 3 3  $ toDescription PatCodaComboT
+    | $readLoc "stage_PatReplCommon1_2"  == stage -> StageSubLevel 4 1  $ toDescription PatReplCommon1
+    | $readLoc "stage_PatCodaComboT_2"   == stage -> StageSubLevel 4 2  $ toDescription PatCodaComboT
+    | $readLoc "stage_PatReplCommon1_3"  == stage -> StageSubLevel 4 3  $ toDescription PatReplCommon1
+    | $readLoc "stage_PatReplCommon2_4"  == stage -> StageSubLevel 4 4  $ toDescription PatReplCommon2
     | $readLoc "stage_PatOnsetR_0"       == stage -> StageSubLevel 3 4  $ toDescription PatOnsetR
     | $readLoc "stage_PatOnsetL_0"       == stage -> StageSubLevel 3 5  $ toDescription PatOnsetL
     | $readLoc "stage_PatSmallS_0"       == stage -> StageSubLevel 3 6  $ toDescription PatSmallS

@@ -69,8 +69,7 @@ import           PloverDict                     ( getMapsForExercise )
 
 exercise1 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise1 = exercise
-    3
-    1
+    3 1
     (\_ ->
         el "p"
             $ text
@@ -78,8 +77,7 @@ exercise1 = exercise
                       \steno code based on a couple of straightforward substitutions. \
                       \In this exercise, we start with the most common ones."
     )
-    PatReplCommon1
-    0
+    PatReplCommon1 0
     (\navLang -> do
         el "p" $ do
             text
@@ -147,8 +145,7 @@ exercise1 = exercise
 
 exercise2 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise2 = exercise
-    3
-    2
+    3 2
     (\_ -> el
         "p"
         do
@@ -156,8 +153,7 @@ exercise2 = exercise
                 "The rules for the replacement of common letters are somewhat \
             \arbitrarily split in two. This is the second half."
     )
-    PatReplCommon2
-    0
+    PatReplCommon2 0
     (\lang -> do
         el
             "p"
@@ -229,8 +225,7 @@ exercise2 = exercise
 
 exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise3 = exercise
-    3
-    3
+    3 3
     (\_ -> el "p" $ do
         text "The new rules of this exercise all follow from one single rule: "
         el "em" $ text "t"
@@ -240,8 +235,7 @@ exercise3 = exercise
             ". But there is a lot space between those two keys to squeeze in \
             \another consonant when needed."
     )
-    PatCodaComboT
-    0
+    PatCodaComboT 0
     (\_ -> el "p" $ do
         text
             "This is not the whole story, though. First, exceptions are needed for "

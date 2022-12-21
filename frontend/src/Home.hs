@@ -158,6 +158,7 @@ import qualified Page.Patterns as Patterns
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
+import qualified Page.Stage4 as Stage4
 import qualified Page.Stage5 as Stage5
 import Page.Stage40.PloverCommands (ploverCommands)
 import Page.Stage40.Fingerspelling (fingerspelling)
@@ -915,6 +916,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
         dynShowStage1 = stTOCShowStage1 <$> dynState
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
+        dynShowStage4 = stTOCShowStage4 <$> dynState
         dynShowStage40 = stTOCShowStage40 <$> dynState
         dynShowStage5 = stTOCShowStage5 <$> dynState
 
@@ -1013,25 +1015,44 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatReplCommon1_0"
                         elLi $ $readLoc "stage_PatReplCommon2_0"
                         elLi $ $readLoc "stage_PatCodaComboT_0"
-                        elLi $ $readLoc "stage_PatOnsetR_0"
-                        elLi $ $readLoc "stage_PatOnsetL_0"
-                        elLi $ $readLoc "stage_PatSmallS_0"
-                        elLi $ $readLoc "stage_PatDiConsonant_0"
-                        elLi $ $readLoc "stage_PatCodaH_0"
-                        elLi $ $readLoc "stage_PatCodaR_0"
-                        elLi $ $readLoc "stage_PatCodaRR_0"
-                        elLi $ $readLoc "stage_PatCodaHR_0"
-                        elLi $ $readLoc "stage_PatDt_0"
-                        elLi $ $readLoc "stage_PatDiphtong_0"
-                        elLi $ $readLoc "stage_PatReplC_0"
-                        elLi $ $readLoc "stage_PatBreakUpI_0"
-                        elLi $ $readLoc "stage_PatSwapS_0"
-                        elLi $ $readLoc "stage_PatSwapSch_0"
-                        elLi $ $readLoc "stage_PatSwapZ_0"
-                        elLi $ $readLoc "stage_PatDiVowel_0"
-                        elLi $ $readLoc "stage_PatReplH_0"
-                        elLi $ $readLoc "stage_PatCodaGK_3"
-                        elLi $ $readLoc "stage_PatReplRare_0"
+
+                    (s4, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage4
+                        elDynClass "i" dynClass blank
+                        text "Stage 4: Being efficient"
+
+                    updateState $ domEvent Click s4 $>
+                        [field @"stApp" . field @"stTOCShowStage4" %~ not]
+
+                    let dynClassUl4 = bool "displayNone" "" <$> dynShowStage4
+
+                    elDynClass "ul" dynClassUl4 $ do
+                        elLi $ $readLoc "stage_PatReplCommon1_2" -- 4.1
+                        elLi $ $readLoc "stage_PatCodaComboT_2"  -- 4.2
+                        elLi $ $readLoc "stage_PatReplCommon1_3" -- 4.3
+                        elLi $ $readLoc "stage_PatReplCommon2_4" -- 4.4
+
+                        -- elLi $ $readLoc "stage_PatOnsetR_0"
+                        -- elLi $ $readLoc "stage_PatOnsetL_0"
+                        -- elLi $ $readLoc "stage_PatSmallS_0"
+                        -- elLi $ $readLoc "stage_PatDiConsonant_0"
+                        -- elLi $ $readLoc "stage_PatCodaH_0"
+                        -- elLi $ $readLoc "stage_PatCodaR_0"
+                        -- elLi $ $readLoc "stage_PatCodaRR_0"
+                        -- elLi $ $readLoc "stage_PatCodaHR_0"
+                        -- elLi $ $readLoc "stage_PatDt_0"
+                        -- elLi $ $readLoc "stage_PatDiphtong_0"
+                        -- elLi $ $readLoc "stage_PatReplC_0"
+                        -- elLi $ $readLoc "stage_PatBreakUpI_0"
+                        -- elLi $ $readLoc "stage_PatSwapS_0"
+                        -- elLi $ $readLoc "stage_PatSwapSch_0"
+                        -- elLi $ $readLoc "stage_PatSwapZ_0"
+                        -- elLi $ $readLoc "stage_PatDiVowel_0"
+                        -- elLi $ $readLoc "stage_PatReplH_0"
+                        -- elLi $ $readLoc "stage_PatCodaGK_3"
+                        -- elLi $ $readLoc "stage_PatReplRare_0"
 
                     (s40, _) <- elClass' "li" "stage" $ do
                         let dynClass =
@@ -1311,6 +1332,10 @@ stages navLang toReady = do
                         | $readLoc "stage_PatReplCommon1_0" == stageCurrent -> Stage3.exercise1
                         | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
                         | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
+                        | $readLoc "stage_PatReplCommon1_2" == stageCurrent -> Stage4.exercise1
+                        | $readLoc "stage_PatCodaComboT_2"  == stageCurrent -> Stage4.exercise2
+                        | $readLoc "stage_PatReplCommon1_3" == stageCurrent -> Stage4.exercise3
+                        | $readLoc "stage_PatReplCommon2_4" == stageCurrent -> Stage4.exercise4
                         ---- | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise4
                         ---- | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise5
                         ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
