@@ -76,7 +76,7 @@ import Data.Default (Default (def))
 import Data.Either (either, Either (..))
 import Data.Eq (Eq ((==)))
 import Data.Foldable
-    (Foldable (foldl, null),
+    (traverse_, Foldable (foldl, null),
       concat,
     )
 import Data.Function
@@ -96,7 +96,7 @@ import Data.Generics.Product (field)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe
-    (fromMaybe,  Maybe (..),
+    (maybe, fromMaybe,  Maybe (..),
       listToMaybe,
     )
 import Data.Monoid ((<>))
@@ -914,14 +914,7 @@ toc ::
 toc lang stageCurrent = elClass "section" "toc" $ do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
-        dynShowStage1 = stTOCShowStage1 <$> dynState
-        dynShowStage2 = stTOCShowStage2 <$> dynState
-        dynShowStage3 = stTOCShowStage3 <$> dynState
-        dynShowStage4 = stTOCShowStage4 <$> dynState
-        dynShowStage5 = stTOCShowStage5 <$> dynState
-        dynShowStage6 = stTOCShowStage5 <$> dynState
-        dynShowStage40 = stTOCShowStage40 <$> dynState
-        dynShowStage50 = stTOCShowStage50 <$> dynState
+        dynShowStage i = (Set.member i . stTOCShowStage) <$> dynState
 
     -- button to toggle TOC
     dyn_ $ dynShowTOC <&> \showTOC -> do
@@ -944,147 +937,89 @@ toc lang stageCurrent = elClass "section" "toc" $ do
         let dynCleared = stCleared <$> dynState
         dyn_ $
             dynCleared <&> \cleared -> do
-                let elLi stage = do
+                let elLi subStage = do
                         let cls =
-                                if stage == stageCurrent
+                                if subStage == stageCurrent
                                     then "bgLightgray"
                                     else ""
                         elClass "li" cls $ do
-                            if stage `Set.member` cleared
+                            if subStage `Set.member` cleared
                                 then iFa "fas fa-check"
                                 else el "span" $ text "○"
-                            routeLink (stageUrl lang stage) $ case stageMeta stage of
+                            routeLink (stageUrl lang subStage) $ case stageMeta subStage of
                                 StageTopLevel str -> text str
                                 StageSubLevel _ i str ->
                                     text $
                                         "Ex. " <> showt i <> ": " <> str
 
+                    elStage :: Int -> Text -> [String] -> m ()
+                    elStage i stageTitle subStageNames = do
+                        (s, _) <- elClass' "li" "stage" $ do
+                            let dynClass =
+                                    bool "fas fa-caret-right" "fas fa-caret-down"
+                                        <$> dynShowStage i
+                            elDynClass "i" dynClass blank
+                            text $ "Stage " <> showt i <> ": " <> stageTitle
+
+                        let eClickS = domEvent Click s
+                        updateState $ eClickS $>
+                            [ field @"stApp" . field @"stTOCShowStage" . at i %~
+                                maybe (Just ()) (\_ -> Nothing)
+                            ]
+
+                        let dynClassUl = bool "displayNone" "" <$> dynShowStage i
+
+                        elDynClass "ul" dynClassUl $
+                            traverse_ (elLi . $readLoc) subStageNames
+
                 el "ul" $ do
                     elLi $ $readLoc "introduction"
 
-                    -- Stage 1
+                    elStage 1 "The Palantype Alphabet"
+                        [ "stage_1-1"
+                        , "stage_1-2"
+                        , "stage_1-3"
+                        , "stage_1-4"
+                        , "stage_1-5"
+                        , "stage_1-6"
+                        , "stage_1-7"
+                        , "stage_1-8"
+                        ]
 
-                    (s1, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage1
-                        elDynClass "i" dynClass blank
-                        text "Stage 1: The Palantype Alphabet"
+                    elStage 2 "Syllables and chords"
+                        [ "stage_2-1"
+                        , "stage_2-2"
+                        , "stage_2-3"
+                        , "stage_PatSimple_0"
+                        ]
 
-                    let eClickS1 = domEvent Click s1
-                    updateState $ eClickS1 $> [field @"stApp" . field @"stTOCShowStage1" %~ not]
+                    elStage 3 "Common replacement rules"
+                        [ "stage_PatReplCommon1_0"
+                        , "stage_PatReplCommon2_0"
+                        , "stage_PatCodaComboT_0"
+                        ]
 
-                    let dynClassUl1 = bool "displayNone" "" <$> dynShowStage1
+                    elStage 4 "Be efficient, be greedy"
+                        [ "stage_PatReplCommon1_2"
+                        , "stage_PatReplCommon1_3"
+                        , "stage_PatReplCommon2_4"
+                        ]
 
-                    elDynClass "ul" dynClassUl1 $ do
-                        elLi $ $readLoc "stage_1-1"
-                        elLi $ $readLoc "stage_1-2"
-                        elLi $ $readLoc "stage_1-3"
-                        elLi $ $readLoc "stage_1-4"
-                        elLi $ $readLoc "stage_1-5"
-                        elLi $ $readLoc "stage_1-6"
-                        elLi $ $readLoc "stage_1-7"
-                        elLi $ $readLoc "stage_1-8"
+                    elStage 5 "R, L, and Diconsonants"
+                        [ "stage_PatOnsetR_0"
+                        , "stage_PatOnsetL_0"
+                        , "stage_PatDiConsonant_0"
+                        , "stage_PatDiConsonant_2"
+                        ]
 
-                    -- Stage 2
-
-                    (s2, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage2
-                        elDynClass "i" dynClass blank
-                        text "Stage 2: Syllables and chords"
-
-                    let eClickS2 = domEvent Click s2
-                    updateState $ eClickS2 $> [field @"stApp" . field @"stTOCShowStage2" %~ not]
-
-                    let dynClassUl2 = bool "displayNone" "" <$> dynShowStage2
-
-                    elDynClass "ul" dynClassUl2 $ do
-                        elLi $ $readLoc "stage_2-1"
-                        elLi $ $readLoc "stage_2-2"
-                        elLi $ $readLoc "stage_2-3"
-                        elLi $ $readLoc "stage_PatSimple_0"
-
-                    -- Stage 3
-
-                    (s3, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage3
-                        elDynClass "i" dynClass blank
-                        text "Stage 3: Common replacement rules"
-
-                    updateState $ domEvent Click s3 $>
-                        [field @"stApp" . field @"stTOCShowStage3" %~ not]
-
-                    let dynClassUl3 = bool "displayNone" "" <$> dynShowStage3
-
-                    elDynClass "ul" dynClassUl3 $ do
-                        elLi $ $readLoc "stage_PatReplCommon1_0"
-                        elLi $ $readLoc "stage_PatReplCommon2_0"
-                        elLi $ $readLoc "stage_PatCodaComboT_0"
-
-                    -- Stage 4
-
-                    (s4, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage4
-                        elDynClass "i" dynClass blank
-                        text "Stage 4: Being efficient"
-
-                    updateState $ domEvent Click s4 $>
-                        [field @"stApp" . field @"stTOCShowStage4" %~ not]
-
-                    let dynClassUl4 = bool "displayNone" "" <$> dynShowStage4
-
-                    elDynClass "ul" dynClassUl4 $ do
-                        elLi $ $readLoc "stage_PatReplCommon1_2" -- 4.1
-                        elLi $ $readLoc "stage_PatReplCommon1_3" -- 4.2
-                        elLi $ $readLoc "stage_PatReplCommon2_4" -- 4.3
-
-                    -- Stage 5
-
-                    (s5, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage5
-                        elDynClass "i" dynClass blank
-                        text "Stage 5: R, L, and Diconsonants"
-
-                    updateState $ domEvent Click s5 $>
-                        [field @"stApp" . field @"stTOCShowStage5" %~ not]
-
-                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage5
-
-                    elDynClass "ul" dynClassUl5 $ do
-                        elLi $ $readLoc "stage_PatOnsetR_0"      -- 5.1
-                        elLi $ $readLoc "stage_PatOnsetL_0"      -- 5.2
-                        elLi $ $readLoc "stage_PatDiConsonant_0" -- 5.3
-                        elLi $ $readLoc "stage_PatDiConsonant_2" -- 5.4
-
-                    -- Stage 6
-
-                    (s6, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage6
-                        elDynClass "i" dynClass blank
-                        text "Stage 6: Stretching vowels with H and R"
-
-                    updateState $ domEvent Click s6 $>
-                        [field @"stApp" . field @"stTOCShowStage6" %~ not]
-
-                    let dynClassUl6 = bool "displayNone" "" <$> dynShowStage6
-
-                    elDynClass "ul" dynClassUl6 $ do
-                        elLi $ $readLoc "stage_PatCodaH_0"       -- 6.1
-                        elLi $ $readLoc "stage_PatCodaH_1"       -- 6.2
-                        elLi $ $readLoc "stage_PatCodaR_0"       -- 6.3
-                        elLi $ $readLoc "stage_PatCodaR_4"       -- 6.4
-                        elLi $ $readLoc "stage_PatCodaRR_0"      -- 6.5
-                        elLi $ $readLoc "stage_PatCodaHR_0"      -- 6.6
+                    elStage 6 "Stretching vowels with H and R"
+                        [ "stage_PatCodaH_0"
+                        , "stage_PatCodaH_1"
+                        , "stage_PatCodaR_0"
+                        , "stage_PatCodaR_4"
+                        , "stage_PatCodaRR_0"
+                        , "stage_PatCodaHR_0"
+                        ]
 
                         -- elLi $ $readLoc "stage_PatCodaH_0"
                         -- elLi $ $readLoc "stage_PatCodaR_0"
@@ -1103,37 +1038,17 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         -- elLi $ $readLoc "stage_PatReplRare_0"
                         -- elLi $ $readLoc "stage_PatSmallS_0"
 
-                    (s40, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage40
-                        elDynClass "i" dynClass blank
-                        text "Stage 40: Real-life text input"
+                    elStage 40 "Real-life text input"
+                        [ "stage_ploverCommands"
+                        , "stage_fingerspelling"
+                        , "stage_numbermode"
+                        , "stage_commandKeys"
+                        , "stage_specialCharacters"
+                        ]
 
-                    updateState $ domEvent Click s40 $>
-                        [field @"stApp" . field @"stTOCShowStage40" %~ not]
-
-                    let dynClassUl40 = bool "displayNone" "" <$> dynShowStage40
-                    elDynClass "ul" dynClassUl40 $ do
-                        elLi $ $readLoc "stage_ploverCommands"
-                        elLi $ $readLoc "stage_fingerspelling"
-                        elLi $ $readLoc "stage_numbermode"
-                        elLi $ $readLoc "stage_commandKeys"
-                        elLi $ $readLoc "stage_specialCharacters"
-
-                    (s5, _) <- elClass' "li" "stage" $ do
-                        let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage50
-                        elDynClass "i" dynClass blank
-                        text "Stage 50: Increasing efficiency"
-
-                    updateState $ domEvent Click s5 $>
-                        [field @"stApp" . field @"stTOCShowStage50" %~ not]
-
-                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage50
-                    elDynClass "ul" dynClassUl5 $ do
-                        elLi $ $readLoc "stage_PatBrief_0"
+                    elStage 50 "Increasing efficiency"
+                        [ "stage_PatBrief_0"
+                        ]
 
                     elLi $ $readLoc "patternoverview"
 

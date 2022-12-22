@@ -132,8 +132,8 @@ exercise1 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 1"
+    el "h2" $ text "The Palantype Alphabet"
     el "p" $ text
       "Palantype relies on chords. A chord means: You press up to ten keys at \
       \the same time. The order in which you press down does not matter. \

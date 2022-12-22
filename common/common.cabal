@@ -23,7 +23,6 @@ library
     , text
     , text-show
     , time
-    , unordered-containers
   exposed-modules:
     Common.Api
     Common.Auth

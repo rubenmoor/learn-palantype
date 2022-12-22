@@ -260,7 +260,7 @@ main = putCss $ do
         height $ pct 100
         h2 ? do
             color darkblue
-            paddingTop $ px 60
+            paddingTop $ px 30
             a # link ? do
                 textDecoration none
                 color inherit

@@ -20,7 +20,6 @@ import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
 import           Control.Monad.Reader           ( MonadReader(ask) )
-import           Data.Bool                      ( Bool(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
@@ -180,7 +179,7 @@ introduction = do
             $  eStart
             $> [ field @"stApp" . field @"stProgress" %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
                , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-               , field @"stApp" . field @"stTOCShowStage1" .~ True
+               , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
                ]
         setRoute $ eStart $> stageUrl navLang ($readLoc "stage_1-1")
 

@@ -173,7 +173,9 @@ mNext (Stage s) = do
     i <- succ <$> elemIndex s strsStage
     Stage <$> strsStage `atMay` i
 
-data StageMeta = StageTopLevel Text | StageSubLevel Int Int Text
+data StageMeta
+  = StageTopLevel Text
+  | StageSubLevel Int Int Text
 
 instance TextShow StageMeta where
     showb (StageTopLevel str) = fromText str

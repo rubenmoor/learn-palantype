@@ -40,14 +40,7 @@ data AppState = AppState
     , stKeyboardShowQwerty :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map Lang Stage
-    , stTOCShowStage1 :: Bool
-    , stTOCShowStage2 :: Bool
-    , stTOCShowStage3 :: Bool
-    , stTOCShowStage4 :: Bool
-    , stTOCShowStage5 :: Bool
-    , stTOCShowStage6 :: Bool
-    , stTOCShowStage40 :: Bool
-    , stTOCShowStage50 :: Bool
+    , stTOCShowStage  :: Set Int
     , stShowStats     :: ShowStats
     , stSound         :: Bool
     }
@@ -61,18 +54,11 @@ defaultAppState = AppState { stCleared            = Set.empty
                            , stMLang              = Nothing
                            , stMsg                = Nothing
                            , stPloverCfg          = defaultPloverCfg
-                           , stProgress           = defaultProgress
                            , stShowKeyboard       = True
                            , stKeyboardShowQwerty = True
                            , stShowTOC            = False
-                           , stTOCShowStage1      = False
-                           , stTOCShowStage2      = False
-                           , stTOCShowStage3      = False
-                           , stTOCShowStage4      = False
-                           , stTOCShowStage5      = False
-                           , stTOCShowStage6      = False
-                           , stTOCShowStage40     = False
-                           , stTOCShowStage50     = False
+                           , stProgress           = defaultProgress
+                           , stTOCShowStage       = Set.empty
                            , stShowStats          = ShowStatsHide
                            , stSound              = False
                            }

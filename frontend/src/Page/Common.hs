@@ -22,7 +22,7 @@ module Page.Common where
 
 import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   (Stage,  stageMeta )
+import           Common.Stage                   (StageMeta(StageTopLevel, StageSubLevel), Stage,  stageMeta )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
@@ -40,7 +40,7 @@ import           Control.Monad.Random           ( evalRand
 import           Control.Monad.Reader           (ask,  MonadReader
 
                                                 )
-import           Data.Bool                      (not, otherwise,  (||)
+import           Data.Bool                      (not,  (||)
                                                 , Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
@@ -104,7 +104,7 @@ import           Palantype.Common               ( kiBackUp
                                                 , kiEnter
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (Client, elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
+import           Reflex.Dom                     (elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
                                                 , Performable
                                                 , PerformEvent
                                                 , widgetHold
@@ -145,7 +145,6 @@ import           State                          (Session (..),  State(..)
                                                 )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( showt )
-import           Text.Read                      (readMaybe )
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import           Data.Functor                   ( Functor(fmap) )
@@ -163,7 +162,6 @@ import           Common.Model                   (AppState (stSound),  Message(..
 
                                                 )
 import Data.Witherable (Filterable(catMaybes))
-import Palantype.Common.TH (readLoc)
 import qualified LocalStorage as LS
 import Language.Javascript.JSaddle (liftJSM)
 import Data.Bifunctor (Bifunctor(second))
@@ -265,6 +263,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     elStatisticsPersonalShort lsStats
                     elClass "hr" "visibilityHidden" blank
                 whenJust navMNext $ \nxt -> do
+                    let nxtMeta = stageMeta nxt
                     elACont <- elClass "div" "anthrazit" $ do
                         text "Type "
                         elClass "span" "btnSteno" $ do
@@ -272,33 +271,22 @@ elCongraz evDone dynStats Navigation {..} = mdo
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
                         elClass "div" "paragraph" $ do
-                            (e, _) <-
-                                elClass' "a" "normalLink"
-                                $ text
-                                $ showt
-                                $ stageMeta nxt
+                            (e, _) <- elClass' "a" "normalLink" $ text $ showt nxtMeta
                             text "."
                             pure e
                     let eContinue =
                             leftmost [eChordEnter, domEvent Click elACont]
+
                     updateState $ eContinue $>
                       [ field @"stApp" .  field @"stProgress" %~ Map.update
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
                       , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> if
-                        | nxt == $readLoc "stage_2-1" ->
-                          [ field @"stApp" . field @"stTOCShowStage2" .~ True
-                          ]
-                        | nxt == $readLoc "stage_PatReplCommon1_0" ->
-                          [ field @"stApp" . field @"stTOCShowStage2" .~ False
-                          , field @"stApp" . field @"stTOCShowStage3" .~ True
-                          ]
-                        | nxt == $readLoc "stage_ploverCommands" ->
-                          [ field @"stApp" . field @"stTOCShowStage3" .~ False
-                          , field @"stApp" . field @"stTOCShowStage2" .~ True
-                          ]
-                        | otherwise -> []
+                      ] <> case nxtMeta of
+                          StageTopLevel _ -> []
+                          StageSubLevel i _ _ ->
+                            [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton i
+                            ]
 
                     setRoute $ eContinue $> stageUrl navLang nxt
 
