@@ -45,7 +45,7 @@ import           Data.Text                      ( Text )
 import           Home                           ( message
 
                                                 , landingPage
-                                                , stages
+                                                , elStages
                                                 )
 import           Obelisk.Frontend               ( Frontend(..)
                                                 , ObeliskWidget
@@ -226,8 +226,8 @@ frontendBody = mdo
               toReady <$> getPostBuild >>=
                 requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
-            FrontendRoute_EN -> stages @EN.Key EN toReady
-            FrontendRoute_DE -> stages @DE.Key DE toReady
+            FrontendRoute_EN -> elStages @EN.Key EN toReady
+            FrontendRoute_DE -> elStages @DE.Key DE toReady
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
                   toReady <$> getPostBuild >>=

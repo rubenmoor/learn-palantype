@@ -1221,7 +1221,7 @@ landingPage = elClass "div" "landing" $ do
           text "."
 
 
-stages
+elStages
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
@@ -1238,7 +1238,7 @@ stages
     => Lang
     -> (Event t () -> Event t ())
     -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-stages navLang toReady = do
+elStages navLang toReady = do
     el "header" $ settings navLang
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'

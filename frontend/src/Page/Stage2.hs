@@ -304,8 +304,8 @@ exercise1 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
-    el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 1"
+    el "h2" $ text "Syllables and chords"
     el "p" $ do
         text
             "You probably have noticed that on the virtual keyboard some keys \
@@ -532,8 +532,8 @@ exercise2 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
-    el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 2"
+    el "h2" $ text "Syllables and chords"
 
     evDone <- case navLang of
         EN -> do
@@ -823,8 +823,8 @@ exercise3 = mdo
     unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Stage 2"
-    el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 3"
+    el "h2" $ text "Syllables and chords"
 
     el "p"
         $ text
@@ -944,8 +944,8 @@ exercise4 = mdo
     unless (navLang == DE) elNotImplemented
 
     el "h1" $ text "Stage 2"
-    el "h2" $ text "Syllables and chords"
     el "h3" $ text "Exercise 4"
+    el "h2" $ text "Syllables and chords"
 
     el "p"
         $ text
