@@ -60,9 +60,9 @@ exercise iStage iEx elIntro pat greediness elExplication = mdo
     unless (navLang == DE) elNotImplemented
 
     el "h1" $ text $ "Stage " <> showt iStage
+    el "h3" $ text $ "Exercise " <> showt iEx
     el "h2" $ text $ toDescription pat
-    el "h3" $ text $ "Greediness " <> showt greediness
-    el "h4" $ text $ "Exercise " <> showt iEx
+    el "h4" $ text $ "Greediness " <> showt greediness
 
     elIntro navLang
 

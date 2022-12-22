@@ -200,8 +200,8 @@ exercise2 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 2"
+    el "h2" $ text "The Palantype Alphabet"
     el "p" $ text
       "Again, type the letters in the Palantype Alphabet. \
       \But now, without seeing them. \
@@ -264,8 +264,8 @@ exercise3 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 3"
+    el "h2" $ text "The Palantype Alphabet"
     el "p"
         $ text
               "How about you type the letters in their proper order \
@@ -367,8 +367,8 @@ exercise4 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 4"
+    el "h2" $ text "The Palantype Alphabet"
     el "p"
         $ text
               "And for maximum difficulty, type the letters in their proper \
@@ -631,8 +631,8 @@ exercise5 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 5"
+    el "h2" $ text "The Palantype Alphabet"
     el "p" $ do
         text
             "You get the virtual keyboard back. Feel free, to toggle it anytime. \
@@ -726,8 +726,8 @@ exercise6 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 6"
+    el "h2" $ text "The Palantype Alphabet"
     el "p" $ do
         text
             "Switching hands now. The leading - symbol indicates that the letter \
@@ -816,8 +816,8 @@ exercise7 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
-    el "h2" $ text "The Palantype Alphabet"
     el "h3" $ text "Exercise 7"
+    el "h2" $ text "The Palantype Alphabet"
     el "p" $ do
         text
             "This one will be fun. You won't have to move your hands at all. \
@@ -895,8 +895,8 @@ exercise8 = mdo
     unless (navLang `elem` [DE, EN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
+    el "h3" $ text "Exercise 8"
     el "h2" $ text "The Palantype Alphabet"
-    el "h3" $ text "Exercise 7"
     el "p" $ do
         text
             "Before your continue with this last exercise of Stage 1: There is a \
