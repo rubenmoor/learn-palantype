@@ -56,12 +56,14 @@ library
     , Page.Stage2
     , Page.Stage3
     , Page.Stage4
+    , Page.Stage5
+    , Page.Stage6
     , Page.Stage40.PloverCommands
     , Page.Stage40.Fingerspelling
     , Page.Stage40.NumberMode
     , Page.Stage40.CommandKeys
     , Page.Stage40.SpecialCharacters
-    , Page.Stage5
+    , Page.Stage50
     , PloverDict
     , Shared
     , State

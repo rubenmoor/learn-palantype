@@ -160,6 +160,7 @@ import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
 import qualified Page.Stage4 as Stage4
 import qualified Page.Stage5 as Stage5
+import qualified Page.Stage50 as Stage50
 import Page.Stage40.PloverCommands (ploverCommands)
 import Page.Stage40.Fingerspelling (fingerspelling)
 import Page.Stage40.NumberMode (numberMode)
@@ -917,8 +918,10 @@ toc lang stageCurrent = elClass "section" "toc" $ do
         dynShowStage2 = stTOCShowStage2 <$> dynState
         dynShowStage3 = stTOCShowStage3 <$> dynState
         dynShowStage4 = stTOCShowStage4 <$> dynState
-        dynShowStage40 = stTOCShowStage40 <$> dynState
         dynShowStage5 = stTOCShowStage5 <$> dynState
+        dynShowStage6 = stTOCShowStage5 <$> dynState
+        dynShowStage40 = stTOCShowStage40 <$> dynState
+        dynShowStage50 = stTOCShowStage50 <$> dynState
 
     -- button to toggle TOC
     dyn_ $ dynShowTOC <&> \showTOC -> do
@@ -959,6 +962,8 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                 el "ul" $ do
                     elLi $ $readLoc "introduction"
 
+                    -- Stage 1
+
                     (s1, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
@@ -981,6 +986,8 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_1-7"
                         elLi $ $readLoc "stage_1-8"
 
+                    -- Stage 2
+
                     (s2, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
@@ -999,6 +1006,8 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_2-3"
                         elLi $ $readLoc "stage_PatSimple_0"
 
+                    -- Stage 3
+
                     (s3, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
@@ -1016,6 +1025,8 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         elLi $ $readLoc "stage_PatReplCommon2_0"
                         elLi $ $readLoc "stage_PatCodaComboT_0"
 
+                    -- Stage 4
+
                     (s4, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
@@ -1030,14 +1041,51 @@ toc lang stageCurrent = elClass "section" "toc" $ do
 
                     elDynClass "ul" dynClassUl4 $ do
                         elLi $ $readLoc "stage_PatReplCommon1_2" -- 4.1
-                        elLi $ $readLoc "stage_PatCodaComboT_2"  -- 4.2
-                        elLi $ $readLoc "stage_PatReplCommon1_3" -- 4.3
-                        elLi $ $readLoc "stage_PatReplCommon2_4" -- 4.4
+                        elLi $ $readLoc "stage_PatReplCommon1_3" -- 4.2
+                        elLi $ $readLoc "stage_PatReplCommon2_4" -- 4.3
 
-                        -- elLi $ $readLoc "stage_PatOnsetR_0"
-                        -- elLi $ $readLoc "stage_PatOnsetL_0"
-                        -- elLi $ $readLoc "stage_PatSmallS_0"
-                        -- elLi $ $readLoc "stage_PatDiConsonant_0"
+                    -- Stage 5
+
+                    (s5, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage5
+                        elDynClass "i" dynClass blank
+                        text "Stage 5: R, L, and Diconsonants"
+
+                    updateState $ domEvent Click s5 $>
+                        [field @"stApp" . field @"stTOCShowStage5" %~ not]
+
+                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage5
+
+                    elDynClass "ul" dynClassUl5 $ do
+                        elLi $ $readLoc "stage_PatOnsetR_0"      -- 5.1
+                        elLi $ $readLoc "stage_PatOnsetL_0"      -- 5.2
+                        elLi $ $readLoc "stage_PatDiConsonant_0" -- 5.3
+                        elLi $ $readLoc "stage_PatDiConsonant_2" -- 5.4
+
+                    -- Stage 6
+
+                    (s6, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage6
+                        elDynClass "i" dynClass blank
+                        text "Stage 6: Stretching vowels with H and R"
+
+                    updateState $ domEvent Click s6 $>
+                        [field @"stApp" . field @"stTOCShowStage6" %~ not]
+
+                    let dynClassUl6 = bool "displayNone" "" <$> dynShowStage6
+
+                    elDynClass "ul" dynClassUl6 $ do
+                        elLi $ $readLoc "stage_PatCodaH_0"       -- 6.1
+                        elLi $ $readLoc "stage_PatCodaH_1"       -- 6.2
+                        elLi $ $readLoc "stage_PatCodaR_0"       -- 6.3
+                        elLi $ $readLoc "stage_PatCodaR_4"       -- 6.4
+                        elLi $ $readLoc "stage_PatCodaRR_0"      -- 6.5
+                        elLi $ $readLoc "stage_PatCodaHR_0"      -- 6.6
+
                         -- elLi $ $readLoc "stage_PatCodaH_0"
                         -- elLi $ $readLoc "stage_PatCodaR_0"
                         -- elLi $ $readLoc "stage_PatCodaRR_0"
@@ -1053,6 +1101,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                         -- elLi $ $readLoc "stage_PatReplH_0"
                         -- elLi $ $readLoc "stage_PatCodaGK_3"
                         -- elLi $ $readLoc "stage_PatReplRare_0"
+                        -- elLi $ $readLoc "stage_PatSmallS_0"
 
                     (s40, _) <- elClass' "li" "stage" $ do
                         let dynClass =
@@ -1075,14 +1124,14 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                     (s5, _) <- elClass' "li" "stage" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage5
+                                    <$> dynShowStage50
                         elDynClass "i" dynClass blank
-                        text "Stage 5: Increasing efficiency"
+                        text "Stage 50: Increasing efficiency"
 
                     updateState $ domEvent Click s5 $>
-                        [field @"stApp" . field @"stTOCShowStage5" %~ not]
+                        [field @"stApp" . field @"stTOCShowStage50" %~ not]
 
-                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage5
+                    let dynClassUl5 = bool "displayNone" "" <$> dynShowStage50
                     elDynClass "ul" dynClassUl5 $ do
                         elLi $ $readLoc "stage_PatBrief_0"
 
@@ -1333,13 +1382,13 @@ stages navLang toReady = do
                         | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
                         | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
                         | $readLoc "stage_PatReplCommon1_2" == stageCurrent -> Stage4.exercise1
-                        | $readLoc "stage_PatCodaComboT_2"  == stageCurrent -> Stage4.exercise2
-                        | $readLoc "stage_PatReplCommon1_3" == stageCurrent -> Stage4.exercise3
-                        | $readLoc "stage_PatReplCommon2_4" == stageCurrent -> Stage4.exercise4
-                        ---- | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage3.exercise4
-                        ---- | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage3.exercise5
-                        ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
-                        ---- | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage3.exercise7
+                        | $readLoc "stage_PatReplCommon1_3" == stageCurrent -> Stage4.exercise2
+                        | $readLoc "stage_PatReplCommon2_4" == stageCurrent -> Stage4.exercise3
+                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage5.exercise1
+                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage5.exercise2
+                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage5.exercise3
+                        | $readLoc "stage_PatDiConsonant_2" == stageCurrent -> Stage5.exercise4
+
                         ---- | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
                         ---- | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
                         ---- | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
@@ -1355,12 +1404,13 @@ stages navLang toReady = do
                         ---- | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
                         ---- | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
                         ---- | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
+                        ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
                         ---- | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
                         ---- | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
                         ---- | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
                         ---- | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
                         ---- | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
-                        ---- | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage5.exercise1
+                        | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage50.exercise1
                         | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
                         | otherwise ->
                             elClass "div" "small anthrazit" $

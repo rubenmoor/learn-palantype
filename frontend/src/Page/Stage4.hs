@@ -142,20 +142,6 @@ exercise1 = exercise
 
 exercise2 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise2 = exercise
-    4 2
-    (\_ ->
-        el "p"
-            $ text
-                  "All the exercises in this stage are about greedy rules. \
-                  \This one is a logical addition to the rules of the last \
-                  \exercise."
-    )
-    PatCodaComboT 2
-    (\_ -> blank
-    )
-
-exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
-exercise3 = exercise
     4 3
     (\_ ->
         el "p" $ text
@@ -173,8 +159,8 @@ exercise3 = exercise
                 \code is already in use by some other, more frequent word."
     )
 
-exercise4 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
-exercise4 = exercise
+exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
+exercise3 = exercise
     4 4
     (\_ ->
         el "p" do

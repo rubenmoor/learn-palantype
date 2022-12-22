@@ -44,8 +44,10 @@ data AppState = AppState
     , stTOCShowStage2 :: Bool
     , stTOCShowStage3 :: Bool
     , stTOCShowStage4 :: Bool
-    , stTOCShowStage40 :: Bool
     , stTOCShowStage5 :: Bool
+    , stTOCShowStage6 :: Bool
+    , stTOCShowStage40 :: Bool
+    , stTOCShowStage50 :: Bool
     , stShowStats     :: ShowStats
     , stSound         :: Bool
     }
@@ -67,8 +69,10 @@ defaultAppState = AppState { stCleared            = Set.empty
                            , stTOCShowStage2      = False
                            , stTOCShowStage3      = False
                            , stTOCShowStage4      = False
-                           , stTOCShowStage40      = False
                            , stTOCShowStage5      = False
+                           , stTOCShowStage6      = False
+                           , stTOCShowStage40     = False
+                           , stTOCShowStage50     = False
                            , stShowStats          = ShowStatsHide
                            , stSound              = False
                            }
