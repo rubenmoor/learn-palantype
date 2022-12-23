@@ -94,13 +94,10 @@ import           State                          ( State
                                                 , stageUrl
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import           Text.Read                      ( readMaybe )
 import           Obelisk.Generated.Static       ( static )
-import           Palantype.Common.TH            ( readLoc )
-import           Control.Category               ( (<<<)
-                                                , (.)
+import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (Stage,  stageMeta )
+import           Common.Stage                   (StageSpecialGeneric (..), findStage, StageIndex )
 import           Data.Text                      ( Text )
 import           Data.Map.Strict                ( Map )
 import qualified Palantype.Common.Indices      as KI
@@ -139,6 +136,8 @@ import Data.Bool (Bool, not)
 import Data.Tuple (fst, snd)
 import Data.List (filter)
 import PloverDict (eMapNumbersForExercise)
+import Palantype.Common.TH (fromJust)
+import qualified Palantype.DE as DE
 
 data StateDates k
     = StatePause Int
@@ -289,7 +288,7 @@ numberMode
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -372,11 +371,10 @@ numberMode = mdo
              \Rather, consider them part of the \
              \extended finger spelling. \
              \For the usual formatting, the "
-        let stagePloverCommands = $readLoc "stage_ploverCommands"
-        routeLink (stageUrl navLang stagePloverCommands)
-            $  text
-            $  "Exercise "
-            <> showt (stageMeta stagePloverCommands)
+        let (iStage, iT, iS) =
+                $fromJust $ findStage @DE.Key DE $ StageSpecial "ploverCommands"
+        routeLink (stageUrl navLang iStage)
+            $  text $  "Exercise " <> showt iT <> "." <> showt iS
         text " should be all you ever need."
 
     elClass "div" "paragraph" $ do
@@ -385,11 +383,11 @@ numberMode = mdo
              \there are only those special characters that you reach via \
              \the Shift modifier plus some number. The remaining \
              \special characters can be found in "
-        let stageSpecialCharacters = $readLoc "stage_specialCharacters"
-        routeLink (stageUrl navLang stageSpecialCharacters)
+        let (iStage, iT, iS) = $fromJust $ findStage @DE.Key DE $ StageSpecial "specialCharacters"
+        routeLink (stageUrl navLang iStage)
             $  text
             $  "Exercise "
-            <> showt (stageMeta stageSpecialCharacters)
+            <> showt iT <> "." <> showt iS
         text "."
 
     el "h3" $ text "Practicing dates"

@@ -18,13 +18,22 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Common.Stage
-    ( Stage(..)
+    ( atStageIndex
+    , findStage
+    , getStageStr
+    , getStageStrPretty
+    , getStageGroupIndex
+    , Stage(..)
+    , StageSpecialGeneric (..)
+    , StageIndex
+    , stagesEN
+    , stagesDE
     , mPrev
     , mNext
     )
 where
 
-import           Control.Category               ( (<<<), Category ((.)))
+import           Control.Category               ( Category ((.)))
 import           Data.Aeson                     ( ToJSON )
 import           Data.Aeson                     ( FromJSON )
 import           Data.Char                      (isLetter, isDigit,  toUpper )
@@ -39,9 +48,7 @@ import           Data.Text                      ( Text
 import qualified Data.Text                     as Text
 import           Data.Text                      ( uncons )
 import           Data.Text                      ( cons )
-import           GHC.Base                       ( Maybe(..)
-                                                )
-import           GHC.Enum                       ( succ
+import           GHC.Enum                       (Enum,  succ
                                                 )
 import           GHC.Generics                   ( Generic )
 import           Safe                           (readMay,  atMay )
@@ -51,24 +58,35 @@ import           Text.Show                      ( show
 import           TextShow                       (showt, TextShow(showb)
                                                 , fromText
                                                 )
-import           Palantype.Common               (Greediness, PatternGroup )
+import           Palantype.Common               (Lang (..), Greediness, PatternGroup )
 import qualified Palantype.DE as DE
-import           Text.Read                      (readEither, read
+import           Text.Read                      (read
                                                 , Read(readPrec)
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Data.Eq                        ( Eq((==)) )
-import Web.HttpApiData (FromHttpApiData (parseUrlPiece), ToHttpApiData (toUrlPiece))
+import Web.HttpApiData (FromHttpApiData, ToHttpApiData)
 import qualified Palantype.EN.Keys as EN
+import qualified Palantype.DE.Keys as DE
 import Text.ParserCombinators.ReadPrec (lift)
 import Text.ParserCombinators.ReadP (option, sepBy1, munch1, char)
 import Text.ParserCombinators.ReadP (pfail)
 import Control.Monad (Monad((>>=)))
-import Data.Bool ((||))
+import Data.Bool (otherwise, (&&), (||))
 import Data.Eq (Eq((/=)))
-import Data.Maybe (maybe)
-import Data.Either.Combinators (mapLeft)
+import Data.Maybe (Maybe(Nothing, Just), maybe)
 import Palantype.Common.Class (Palantype)
+import GHC.Num (Num)
+import Data.Ord (Ord)
+import Data.List (zip)
+import Data.Tuple (snd)
+import Data.String (String)
+import Control.Lens.TH (makeWrapped)
+import Data.Proxy (Proxy(Proxy))
+import Data.Typeable (typeRep)
+import Data.Foldable (Foldable(foldl'))
+import Data.Proxied (dataTypeOfProxied)
+import Data.Data (dataTypeRep)
 
 data StageSpecialGeneric key
   = StageSpecial Text
@@ -144,9 +162,6 @@ instance Palantype key => Read (Stage key) where
     where
       isLetterOrHyphen l = l == '-' || isLetter l
 
-instance Default (Stage key) where
-    def = stages !! 0
-
 capitalize :: Text -> Text
 capitalize str = case uncons str of
     Nothing       -> ""
@@ -159,6 +174,9 @@ instance Palantype key => TextShow (Stage key) where
         StageSublevel t s -> " " <> showb t <> "." <> showb s
       StageGeneric pg g -> fromText (capitalize $ showt pg) <> "-" <> showb g
 
+newtype StageIndex = StageIndex { unStageIndex :: Int }
+  deriving stock (Eq, Generic, Ord)
+  deriving newtype (Enum, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData, Num, Read, Show)
 
 stages :: forall key. [Stage key]
 stages =
@@ -176,8 +194,8 @@ stages =
     , Stage (StageSpecial "stage"         ) (StageSublevel 2 3)
     ]
 
-stagesDE :: [Stage DE.Key]
-stagesDE = stages <>
+stagesDE :: [(StageIndex, Stage DE.Key)]
+stagesDE = zip [0 ..] $ stages <>
   [ Stage (StageGeneric DE.PatSimple      0) (StageSublevel 2 4)
 
   , Stage (StageGeneric DE.PatReplCommon1 0) (StageSublevel 3 1)
@@ -218,14 +236,20 @@ stagesDE = stages <>
   , Stage (StageSpecial "patternoverview") StageToplevel
   ]
 
-stagesEN :: [Stage EN.Key]
-stagesEN = stages <>
-  [ Stage (StageGeneric EN.PatSimple 0) (StageSublevel 2 4)
-  , Stage (StageGeneric EN.PatSimpleMulti 0) (StageSublevel 2 4)
+stagesEN :: [(StageIndex, Stage EN.Key)]
+stagesEN = zip [0 ..] $ stages <>
+  [ Stage (StageGeneric EN.PatSimple      0) (StageSublevel 2 4)
+  , Stage (StageGeneric EN.PatSimpleMulti 0) (StageSublevel 2 5)
   ]
 
-mPrev :: forall key. Palantype key => Stage key -> Maybe (Stage key)
-mPrev stage = Nothing
+instance Default (Stage key) where
+    def = stages !! 0
+
+mPrev :: forall key. Palantype key => Lang -> StageIndex -> Maybe (StageIndex, Stage key)
+mPrev lang i = Nothing
+  -- case lang of
+  -- EN -> stagesEN `atMay` unStageIndex (pred i)
+  -- DE -> stagesDE `atMay` unStageIndex (pred i)
     -- if
     --     | typeRep (Proxy :: Proxy key) == typeRep pDE -> do
     --         i <- elemIndex stage stagesDE
@@ -240,13 +264,46 @@ mNext stage = do
     i <- elemIndex stage stages
     stages `atMay` succ i
 
-instance Palantype key => ToHttpApiData (Stage key) where
-  toUrlPiece = Text.pack <<< show
+atStageIndex :: forall key. [(StageIndex, Stage key)] -> StageIndex -> Stage key
+atStageIndex ss i = snd $ ss !! unStageIndex i
 
-instance Palantype key => FromHttpApiData (Stage key) where
-  parseUrlPiece =
-    mapLeft Text.pack <<< readEither <<< Text.unpack
+getStageStr :: Lang -> StageIndex -> String
+getStageStr lang i = case lang of
+  EN -> show $ stagesEN `atStageIndex` i
+  DE -> show $ stagesDE `atStageIndex` i
 
-    -- if str `elem` strsStage
-    -- then Right $ Stage str
-    -- else Left $ "parseUrlPiece: " <> str <> ": no parse"
+getStageStrPretty :: Lang -> StageIndex -> Text
+getStageStrPretty lang i = case lang of
+  EN -> showt $ stagesEN `atStageIndex` i
+  DE -> showt $ stagesDE `atStageIndex` i
+
+getHierarchy :: forall key. Stage key -> StageHierarchy
+getHierarchy (Stage _ h) = h
+
+getStageGroupIndex :: Lang -> StageIndex -> Maybe Int
+getStageGroupIndex lang i =
+  let hierarchy = case lang of
+          EN -> getHierarchy $ stagesEN `atStageIndex` i
+          DE -> getHierarchy $ stagesDE `atStageIndex` i
+  in  case hierarchy of
+        StageToplevel -> Nothing
+        StageSublevel t _ -> Just t
+
+findStage :: forall key. Palantype key => Lang -> StageSpecialGeneric key -> Maybe (StageIndex, Int, Int)
+findStage lang ssg = case lang of
+    DE -> foldl' acc Nothing stagesDE
+    EN -> foldl' acc Nothing stagesEN
+  where
+    acc
+      :: forall key2
+      . Palantype key2
+      => Maybe (StageIndex, Int, Int)
+      -> (StageIndex, Stage key2)
+      -> Maybe (StageIndex, Int, Int)
+    acc r@(Just _) _                                               = r
+    acc Nothing    (_, Stage (StageSpecial _) _                  ) = Nothing
+    acc Nothing    (_, Stage _                StageToplevel      ) = Nothing
+    acc Nothing    (i, Stage ssg'             (StageSublevel t s)) =
+        if show ssg' == show ssg
+        then Just (i, t, s)
+        else Nothing

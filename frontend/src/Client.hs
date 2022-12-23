@@ -62,7 +62,7 @@ import           Common.Model                   ( Journal
                                                 , Stats
                                                 , AppState
                                                 )
-import           Common.Stage                   ( Stage )
+import           Common.Stage                   (StageIndex,  Stage )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
@@ -197,7 +197,7 @@ postEventViewPage
 postEventStageCompleted
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
-    -> Dynamic t (Either Text (Lang, Stage, Stats))
+    -> Dynamic t (Either Text (Lang, StageIndex, Stats))
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
@@ -217,8 +217,8 @@ getJournalAll
 getStats
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
-    -> Dynamic t (Either Text (Lang))
-    -> Dynamic t (Either Text (Stage))
+    -> Dynamic t (Either Text Lang)
+    -> Dynamic t (Either Text StageIndex)
     -> Event t ()
     -> m (Event t (ReqResult () [(Maybe Text, Stats)]))
 

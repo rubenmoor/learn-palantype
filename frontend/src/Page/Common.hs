@@ -22,7 +22,7 @@ module Page.Common where
 
 import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   (StageMeta(StageTopLevel, StageSubLevel), Stage,  stageMeta )
+import           Common.Stage                   (StageIndex,  Stage, getStageGroupIndex, getStageStrPretty )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
@@ -184,11 +184,11 @@ elFooter lang Navigation {..} = elClass "footer" "stage" $ do
     whenJust navMPrevious $ \prv -> do
         elClass "div" "floatLeft" $ do
             text "< "
-            routeLink (stageUrl lang prv) $ text $ showt $ stageMeta prv
-    text $ showt $ stageMeta navCurrent
+            routeLink (stageUrl lang prv) $ text $ getStageStrPretty lang prv
+    text $ getStageStrPretty lang navCurrent
     whenJust navMNext $ \nxt -> do
         elClass "div" "floatRight" $ do
-            routeLink (stageUrl lang nxt) $ text $ showt $ stageMeta nxt
+            routeLink (stageUrl lang nxt) $ text $ getStageStrPretty lang nxt
             text " >"
     elClass "br" "clearBoth" blank
 
@@ -207,7 +207,7 @@ elCongraz
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
@@ -240,11 +240,11 @@ elCongraz evDone dynStats Navigation {..} = mdo
         evLSPutStats =
           gate (not . isLoggedIn . stSession <$> current envDynState) evNewStats
 
-    dynStage <- askRoute
-    prerender_ blank $ performEvent_ $ attach (current dynStage) evLSPutStats <&> \(stage, stats) -> do
+    dynStageIndex <- askRoute
+    prerender_ blank $ performEvent_ $ attach (current dynStageIndex) evLSPutStats <&> \(iStage, stats) -> do
       mMap <- liftJSM $ LS.retrieve LS.KeyStats
       let oldStats = fromMaybe Map.empty mMap
-      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, stage) [stats] oldStats
+      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, iStage) [stats] oldStats
 
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
@@ -263,7 +263,6 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     elStatisticsPersonalShort lsStats
                     elClass "hr" "visibilityHidden" blank
                 whenJust navMNext $ \nxt -> do
-                    let nxtMeta = stageMeta nxt
                     elACont <- elClass "div" "anthrazit" $ do
                         text "Type "
                         elClass "span" "btnSteno" $ do
@@ -271,7 +270,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
                         elClass "div" "paragraph" $ do
-                            (e, _) <- elClass' "a" "normalLink" $ text $ showt nxtMeta
+                            (e, _) <- elClass' "a" "normalLink" $ text $ getStageStrPretty navLang nxt
                             text "."
                             pure e
                     let eContinue =
@@ -282,10 +281,10 @@ elCongraz evDone dynStats Navigation {..} = mdo
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
                       , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> case nxtMeta of
-                          StageTopLevel _ -> []
-                          StageSubLevel i _ _ ->
-                            [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton i
+                      ] <> case getStageGroupIndex navLang nxt of
+                          Nothing -> []
+                          Just  t ->
+                            [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t
                             ]
 
                     setRoute $ eContinue $> stageUrl navLang nxt
@@ -530,7 +529,7 @@ getStatsLocalAndRemote
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
-    , Routed t Stage m
+    , Routed t StageIndex m
     )
   => Event t Stats
   -> m (Dynamic t [(Bool, (Maybe Text, Stats))])

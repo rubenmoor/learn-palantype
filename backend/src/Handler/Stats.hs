@@ -9,7 +9,7 @@ module Handler.Stats
 where
 
 import           Palantype.Common               ( Lang )
-import           Common.Stage                   ( Stage )
+import           Common.Stage                   ( StageIndex, getStageStr )
 import           Common.Model                   ( JournalEvent (EventApp),  Stats(..), EventApp (..) )
 import           AppData                        ( Handler )
 import           Servant.Server                 (err500, throwError,  ServantErr (errBody),  HasServer(ServerT) )
@@ -45,13 +45,13 @@ handlers =
     :<|> handleStatsCompleted
 
 handleStatsGet
-    :: Maybe UserInfo -> Lang -> Stage -> Handler [(Maybe Text, Stats)]
-handleStatsGet mUi lang stage = do
+    :: Maybe UserInfo -> Lang -> StageIndex -> Handler [(Maybe Text, Stats)]
+handleStatsGet mUi lang iStage = do
     es <- runDb $ select $ from $ \(s `InnerJoin` a) -> do
         on $ s ^. Db.StatsFkAlias ==. a ^. Db.AliasId
         where_ $ a ^. Db.AliasIsVisible
              &&. s ^. Db.StatsLang      ==. val (toUrlPiece lang)
-             &&. s ^. Db.StatsStage     ==. val (Text.pack $ show stage)
+             &&. s ^. Db.StatsStage     ==. val (Text.pack $ getStageStr lang iStage)
         pure (s, a)
     pure $ es <&> \(Entity _ Db.Stats {..}, Entity _ Db.Alias {..}) ->
         ( case mUi of
@@ -69,10 +69,10 @@ handleStatsStart UserInfo {..} = do
     deleteBy $ Db.UFkAlias uiKeyAlias
     insert_ $ Db.StageBegin uiKeyAlias now
 
-handleStatsCompleted :: Maybe UserInfo -> (Lang, Stage, Stats) -> Handler ()
-handleStatsCompleted mUi (lang, stage, stats@Stats{..}) = do
+handleStatsCompleted :: Maybe UserInfo -> (Lang, StageIndex, Stats) -> Handler ()
+handleStatsCompleted mUi (lang, iStage, stats@Stats{..}) = do
   DbJournal.insert (uiKeyAlias <$> mUi) $ EventApp $
-    EventStageCompleted lang stage stats
+    EventStageCompleted lang iStage stats
   whenJust mUi $ \UserInfo{..} -> do
     now <- liftIO getCurrentTime
     runDb (getBy $ Db.UFkAlias uiKeyAlias) >>= \case
@@ -83,7 +83,7 @@ handleStatsCompleted mUi (lang, stage, stats@Stats{..}) = do
                                           statsDate
                                           (realToFrac statsTime)
                                           (toUrlPiece lang)
-                                          (Text.pack $ show stage)
+                                          (Text.pack $ getStageStr lang iStage)
                                           statsLength
                                           statsNErrors
           else throwError $ err500 { errBody = "could not store stats (2)" }

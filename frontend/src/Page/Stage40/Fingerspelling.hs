@@ -81,12 +81,9 @@ import           State                          ( State
                                                 , stageUrl
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import           Text.Read                      ( readMaybe )
-import           Palantype.Common.TH            ( readLoc )
-import           Control.Category               ( (<<<)
-                                                , (.)
+import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (Stage,  stageMeta )
+import           Common.Stage                   (StageSpecialGeneric(..), StageIndex, findStage)
 import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS
@@ -115,6 +112,8 @@ import GHC.Generics (Generic)
 import Data.Bool (Bool, not)
 import Data.Text (Text)
 import Data.List (filter)
+import Palantype.Common.TH (fromJust)
+import qualified Palantype.DE as DE
 
 data StateLiterals k
     = StatePause Int
@@ -245,7 +244,7 @@ fingerspelling
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -331,9 +330,10 @@ fingerspelling = mdo
         text " key, e.g. to open the Start menu, the "
         el "code" $ text "WIN"
         text " key shows up among the keys in "
-        let stageCommandKeys = $readLoc "stage_commandKeys"
-        routeLink (stageUrl navLang stageCommandKeys) $ text $ showt $ stageMeta
-            stageCommandKeys
+        let (iStage, iT, iS) =
+              $fromJust $ findStage @DE.Key DE $ StageSpecial "commandKeys"
+        routeLink (stageUrl navLang iStage) $
+          text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
 
     elClass "div" "paragraph" $ do
@@ -393,9 +393,10 @@ fingerspelling = mdo
 
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
-        let stageCommandKeys = $readLoc "stage_commandKeys"
-        routeLink (stageUrl navLang stageCommandKeys) $ text $ showt $ stageMeta
-            stageCommandKeys
+        let (iStage, iT, iS) =
+              $fromJust $ findStage @DE.Key DE $ StageSpecial "commandKeys"
+        routeLink (stageUrl navLang iStage) $
+          text $ "Ex. " <> showt iT <> "." <> showt iS
         text
             " you can utilize any conventional key binding in steno mode \
              \without any additional configuration."

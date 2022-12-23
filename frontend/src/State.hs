@@ -10,7 +10,7 @@
 module State where
 
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( Stage() )
+import           Common.Stage                   (atStageIndex, stagesEN, stagesDE, StageIndex )
 import           Common.Auth                    ( SessionData )
 import           Control.Applicative            ( (<$>)
                                                 )
@@ -47,9 +47,9 @@ data Env t key = Env
 
 data Navigation = Navigation
     { navLang      :: Lang
-    , navMPrevious :: Maybe Stage
-    , navCurrent   :: Stage
-    , navMNext     :: Maybe Stage
+    , navMPrevious :: Maybe StageIndex
+    , navCurrent   :: StageIndex
+    , navMNext     :: Maybe StageIndex
     }
 
 -- frontend application state
@@ -95,7 +95,7 @@ data Session
 instance FromJSON Session
 instance ToJSON Session
 
-stageUrl :: Lang -> Stage -> R FrontendRoute
-stageUrl lang stage = case lang of
-    EN -> FrontendRoute_EN :/ stage
-    DE -> FrontendRoute_DE :/ stage
+stageUrl :: Lang -> StageIndex -> R FrontendRoute
+stageUrl lang iStage = case lang of
+    EN -> FrontendRoute_EN :/ iStage
+    DE -> FrontendRoute_DE :/ iStage

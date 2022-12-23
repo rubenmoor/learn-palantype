@@ -150,7 +150,7 @@ import           Palantype.Common.TH            ( fromJust
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import Common.Model (Stats)
-import Common.Stage (Stage)
+import Common.Stage (StageIndex, Stage)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)
 import PloverDict (getMapsForExercise)
@@ -293,7 +293,7 @@ exercise1
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -522,7 +522,7 @@ exercise2
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -812,7 +812,7 @@ exercise3
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -932,7 +932,7 @@ exercise4
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m

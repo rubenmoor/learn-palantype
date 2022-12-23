@@ -100,7 +100,7 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import Common.Stage (Stage)
+import Common.Stage (StageIndex, Stage)
 import qualified Palantype.Common.Indices as KI
 
 -- exercise 1
@@ -121,7 +121,7 @@ exercise1
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -189,7 +189,7 @@ exercise2
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -253,7 +253,7 @@ exercise3
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -356,7 +356,7 @@ exercise4
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -620,7 +620,7 @@ exercise5
        , Palantype key
        , Prerender t m
        , PostBuild t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -715,7 +715,7 @@ exercise6
        , Palantype key
        , Prerender t m
        , PostBuild t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -805,7 +805,7 @@ exercise7
        , Palantype key
        , Prerender t m
        , PostBuild t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -884,7 +884,7 @@ exercise8
        , Palantype key
        , Prerender t m
        , PostBuild t m
-       , Routed t Stage m
+       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation

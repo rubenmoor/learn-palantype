@@ -23,13 +23,13 @@ import TextShow (TextShow (..), fromText)
 import Common.Model (Stats, AppState)
 import State (Session)
 import Data.Map.Strict (Map)
-import Common.Stage (Stage)
+import Common.Stage (StageIndex)
 import Palantype.Common (Lang)
 
 data Key a where
   KeyAppState :: Key AppState
   KeySession  :: Key Session
-  KeyStats    :: Key (Map (Lang, Stage) [Stats])
+  KeyStats    :: Key (Map (Lang, StageIndex) [Stats])
 
 instance TextShow (Key a) where
   showb = fromText. \case

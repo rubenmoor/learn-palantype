@@ -73,7 +73,7 @@ import           Text.Read                      ( readMaybe )
 import           Text.Show                      ( Show(show) )
 import           PloverDict                     ( eMapDictExamples )
 import Servant.API (ToHttpApiData(toUrlPiece))
-import Common.Stage (Stage (unStage))
+import qualified Data.Text as Text
 
 overview
     :: forall key t (m :: * -> *)
@@ -120,7 +120,7 @@ overview = do
             iPatternDoc
             \(i, (p, _)) -> do
                 el "li"
-                    $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> unStage navCurrent <> "#" <> showt p))
+                    $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
                     $  text
                     $  showt @Int i
                     <> " "
@@ -131,7 +131,7 @@ overview = do
         iPatternDoc
         \(i, (p, mapPattern)) -> do
             elAttr "h2" ("id" =: showt p)
-                $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> unStage navCurrent <> "#" <> showt p))
+                $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
                 $  text
                 $  showt i
                 <> " "

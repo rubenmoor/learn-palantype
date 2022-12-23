@@ -38,7 +38,7 @@ import           Common.Auth                    ( LoginData
                                                 , AuthOptional
                                                 )
 import           Common.Model (Journal, Stats, AppState)
-import Common.Stage (Stage)
+import Common.Stage (StageIndex)
 import Data.Time (UTCTime, Day)
 
 type RoutesAuth =
@@ -71,9 +71,9 @@ type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()
 
 type RoutesStats =
-       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" Stage :> Get '[JSON] [(Maybe Text, Stats)]
+       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" StageIndex :> Get '[JSON] [(Maybe Text, Stats)]
   :<|> AuthRequired "jwt" :> "start" :> Post '[JSON] ()
-  :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (Lang, Stage, Stats) :> Post '[JSON] ()
+  :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (Lang, StageIndex, Stats) :> Post '[JSON] ()
 
 type RouteStatsNew =
        AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()

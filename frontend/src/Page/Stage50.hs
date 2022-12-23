@@ -6,7 +6,7 @@
 module Page.Stage50 where
 
 import Common.Route (FrontendRoute)
-import Common.Stage (Stage)
+import Common.Stage (StageIndex, Stage)
 import Control.Monad (unless)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
@@ -35,7 +35,7 @@ type Constraints key t m =
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
-    , Routed t Stage m
+    , Routed t StageIndex m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
     , TriggerEvent t m

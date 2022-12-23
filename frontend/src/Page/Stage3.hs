@@ -2,18 +2,19 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Page.Stage3 where
 
-import           Common.Stage                   ( StageMeta(..)
-                                                , stageMeta
-                                                )
 import           Control.Category               ( (<<<) )
 import           Obelisk.Route.Frontend         ( routeLink
                                                 )
-import Page.Common.Exercise (Constraints, exercise)
+import           Page.Common.Exercise (Constraints, exercise)
+import           Palantype.Common (Lang (..))
+import qualified Palantype.DE as DE
 import           Palantype.Common.TH            ( failure
                                                 , readLoc
+                                                , fromJust
                                                 )
 import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     ( el
@@ -23,6 +24,7 @@ import           State                          (stageUrl,  Navigation(..)
                                                 )
 import           Text.Read                      ( readMaybe )
 import           TextShow                       ( TextShow(showt) )
+import Common.Stage (findStage, StageSpecialGeneric (..))
 
 exercise1 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise1 = exercise
@@ -40,16 +42,14 @@ exercise1 = exercise
             text
                 "First of all, note that these patterns are in addition to the \
                       \simple patterns of the previous "
-            let stageSimplePatterns = $readLoc "stage_PatSimple_0"
-                (iS, iE)            = case stageMeta stageSimplePatterns of
-                    StageSubLevel jS jE _ -> (jS, jE)
-                    StageTopLevel{}       -> $failure "StageSubLebel expected"
-            routeLink (stageUrl navLang stageSimplePatterns)
+            let (iStage, iT, iS) =
+                  $fromJust $ findStage DE $ StageGeneric PatSimple 0
+            routeLink (stageUrl navLang iStage)
                 $  text
                 $  "Exercise "
-                <> showt iS
+                <> showt iT
                 <> "."
-                <> showt iE
+                <> showt iS
             text
                 ". Thus, if you are missing a letter, it might be among the \
                       \simple patterns. Also, note that the minus sign, -, isn't an actual \
@@ -157,16 +157,14 @@ exercise2 = exercise
                     ". Note the different code for its vowel user in the nucleus. \
               \This onset code is also used for "
 
-                let stageFingerspelling = $readLoc "stage_fingerspelling"
-                    (iS, iE)            = case stageMeta stageFingerspelling of
-                        StageSubLevel jS jE _ -> (jS, jE)
-                        StageTopLevel{} -> $failure "StageSubLebel expected"
-                routeLink (stageUrl lang stageFingerspelling)
+                let (iStage, iT, iS) =
+                      $fromJust $ findStage @DE.Key lang $ StageSpecial "fingerspelling"
+                routeLink (stageUrl lang iStage)
                     $  text
                     $  "Exercise "
-                    <> showt iS
+                    <> showt iT
                     <> "."
-                    <> showt iE
+                    <> showt iS
                     <> ": Fingerspelling "
 
                 text ", i.e. to type just the letter Y."

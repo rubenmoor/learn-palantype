@@ -27,19 +27,19 @@ import           Data.Map.Strict                ( Map )
 import           Palantype.Common               (Lang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
-import           Common.Stage                   ( Stage )
+import           Common.Stage                   ( StageIndex )
 
 -- frontend/Localstorage
 
 data AppState = AppState
-    { stCleared       :: Set Stage
+    { stCleared       :: Set StageIndex
     , stMLang         :: Maybe Lang
     , stMsg           :: Maybe Message
     , stPloverCfg     :: PloverCfg
     , stShowKeyboard  :: Bool
     , stKeyboardShowQwerty :: Bool
     , stShowTOC       :: Bool
-    , stProgress      :: Map Lang Stage
+    , stProgress      :: Map Lang StageIndex
     , stTOCShowStage  :: Set Int
     , stShowStats     :: ShowStats
     , stSound         :: Bool
@@ -82,10 +82,8 @@ instance FromJSON ShowStats
 instance ToJSON ShowStats
 
 
-defaultProgress :: Map Lang Stage
-defaultProgress =
-    let stage_introduction = read "introduction"
-    in  Map.fromList [(EN, stage_introduction), (DE, stage_introduction)]
+defaultProgress :: Map Lang StageIndex
+defaultProgress = Map.fromList [(EN, 0), (DE, 0)]
 
 -- frontend and backend
 
@@ -145,7 +143,7 @@ instance FromJSON EventUser
 
 data EventApp
   = EventViewPage Text
-  | EventStageCompleted Lang Stage Stats
+  | EventStageCompleted Lang StageIndex Stats
   deriving (Generic)
 
 instance ToJSON EventApp

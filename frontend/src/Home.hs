@@ -35,7 +35,7 @@ import Common.Route
     (showRoute,  FrontendRoute (..)
     , FrontendRoute_AuthPages (..)
     )
-import Common.Stage (Stage (), StageMeta (..), mNext, mPrev, stageMeta)
+import Common.Stage (Stage (), mNext, mPrev)
 import Palantype.Common.TH (readLoc)
 import Control.Applicative (Applicative (..))
 import Control.Category
@@ -948,9 +948,7 @@ toc lang stageCurrent = elClass "section" "toc" $ do
                                 else el "span" $ text "○"
                             routeLink (stageUrl lang subStage) $ case stageMeta subStage of
                                 StageTopLevel str -> text str
-                                StageSubLevel _ i str ->
-                                    text $
-                                        "Ex. " <> showt i <> ": " <> str
+                                StageSubLevel _ i str -> text $ "Ex. " <> showt i <> ": " <> str
 
                     elStage :: Int -> Text -> [String] -> m ()
                     elStage i stageTitle subStageNames = do

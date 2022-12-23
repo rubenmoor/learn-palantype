@@ -8,6 +8,7 @@ library
   build-depends:
       base
     , aeson
+    , categories
     , containers
     , data-default
     , either
@@ -17,6 +18,7 @@ library
     , mtl
     , my-palantype
     , obelisk-route
+    , proxied
     , reflex-dom
     , safe
     , servant

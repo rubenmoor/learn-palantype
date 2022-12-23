@@ -25,8 +25,7 @@ import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( concat )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Traversable               ( mapM )
-import           Obelisk.Route                  (checkEncoder, renderFrontendRoute,  pathComponentEncoder
-                                                , unwrappedEncoder
+import           Obelisk.Route                  (unsafeTshowEncoder, integralEncoder, pathSegmentEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
                                                 , singlePathSegmentEncoder
                                                 , mkFullRouteEncoder
                                                 , pattern (:/)
@@ -41,11 +40,13 @@ import           Obelisk.Route                  (checkEncoder, renderFrontendRou
                                                 , unitEncoder
                                                 )
 import           Obelisk.Route.TH               ( deriveRouteComponent )
-import           Common.Stage                   ( Stage )
+import           Common.Stage                   (StageIndex )
 import           Control.Category               ( Category(id) )
 import Palantype.Common.TH (failure)
 import Data.Semigroup (Semigroup((<>)))
 import qualified Data.Text as Text
+import Palantype.Common.Internal (Lang)
+import Control.Categorical.Bifunctor (bimap)
 
 data FrontendRoute_AuthPages :: * -> * where
   AuthPage_SignUp   :: FrontendRoute_AuthPages ()
@@ -58,10 +59,10 @@ data BackendRoute :: * -> * where
   BackendRoute_Api     :: BackendRoute PageName
 
 data FrontendRoute :: * -> * where
-  FrontendRoute_Main :: FrontendRoute ()
-  FrontendRoute_EN   :: FrontendRoute Stage
-  FrontendRoute_DE   :: FrontendRoute Stage
-  FrontendRoute_Auth :: FrontendRoute (R FrontendRoute_AuthPages)
+  FrontendRoute_Main  :: FrontendRoute ()
+  FrontendRoute_DE    :: FrontendRoute StageIndex
+  FrontendRoute_EN    :: FrontendRoute StageIndex
+  FrontendRoute_Auth  :: FrontendRoute (R FrontendRoute_AuthPages)
   FrontendRoute_Admin :: FrontendRoute ()
 
 fullRouteEncoder
@@ -78,10 +79,8 @@ fullRouteEncoder = mkFullRouteEncoder
     )
     (\case
         FrontendRoute_Main -> PathEnd $ unitEncoder mempty
-        FrontendRoute_EN ->
-            PathSegment "EN" $ singlePathSegmentEncoder . unwrappedEncoder
-        FrontendRoute_DE ->
-            PathSegment "DE" $ singlePathSegmentEncoder . unwrappedEncoder
+        FrontendRoute_DE   -> PathSegment "DE" $ singlePathSegmentEncoder . unsafeTshowEncoder
+        FrontendRoute_EN   -> PathSegment "EN" $ singlePathSegmentEncoder . unsafeTshowEncoder
         FrontendRoute_Auth  -> PathSegment "auth" $ pathComponentEncoder \case
             AuthPage_SignUp   -> PathSegment "signup"   $ unitEncoder mempty
             AuthPage_Login    -> PathSegment "login"    $ unitEncoder mempty
