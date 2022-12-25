@@ -1,3 +1,8 @@
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric     #-}
@@ -10,7 +15,7 @@
 module State where
 
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   (atStageIndex, stagesEN, stagesDE, StageIndex )
+import           Common.Stage                   ( StageIndex )
 import           Common.Auth                    ( SessionData )
 import           Control.Applicative            ( (<$>)
                                                 )
@@ -25,13 +30,18 @@ import           GHC.Generics                   ( Generic )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Palantype.Common               ( Lang(..)
+import           Palantype.Common               (Palantype,  Lang(..)
                                                 , Chord
                                                 )
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
 import Common.Model (defaultAppState, AppState)
+import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
+import qualified Palantype.DE as DE
+import qualified Palantype.EN as EN
+import Palantype.Common.TH (failure)
+import Data.Bool (otherwise)
 
 -- environment for frontend pages
 
@@ -95,7 +105,8 @@ data Session
 instance FromJSON Session
 instance ToJSON Session
 
-stageUrl :: Lang -> StageIndex -> R FrontendRoute
-stageUrl lang iStage = case lang of
-    EN -> FrontendRoute_EN :/ iStage
-    DE -> FrontendRoute_DE :/ iStage
+stageUrl :: forall key. Palantype key => StageIndex -> R FrontendRoute
+stageUrl iStage
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key = FrontendRoute_DE :/ iStage
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key = FrontendRoute_EN :/ iStage
+    | otherwise = $failure "key not implemented"

@@ -6,15 +6,11 @@
 
 module Page.Stage3 where
 
-import           Control.Category               ( (<<<) )
 import           Obelisk.Route.Frontend         ( routeLink
                                                 )
 import           Page.Common.Exercise (Constraints, exercise)
-import           Palantype.Common (Lang (..))
 import qualified Palantype.DE as DE
-import           Palantype.Common.TH            ( failure
-                                                , readLoc
-                                                , fromJust
+import           Palantype.Common.TH            ( fromJust
                                                 )
 import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     ( el
@@ -22,29 +18,27 @@ import           Reflex.Dom                     ( el
                                                 )
 import           State                          (stageUrl,  Navigation(..)
                                                 )
-import           Text.Read                      ( readMaybe )
 import           TextShow                       ( TextShow(showt) )
 import Common.Stage (findStage, StageSpecialGeneric (..))
+import Stages (stages)
 
 exercise1 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise1 = exercise
     3 1
-    (\_ ->
-        el "p"
-            $ text
-                  "In general, any word in the natural language translates to some \
-                      \steno code based on a couple of straightforward substitutions. \
-                      \In this exercise, we start with the most common ones."
+    ( el "p" $ text
+          "In general, any word in the natural language translates to some \
+          \steno code based on a couple of straightforward substitutions. \
+          \In this exercise, we start with the most common ones."
     )
     PatReplCommon1 0
-    (\navLang -> do
+    ( do
         el "p" $ do
             text
                 "First of all, note that these patterns are in addition to the \
                       \simple patterns of the previous "
             let (iStage, iT, iS) =
-                  $fromJust $ findStage DE $ StageGeneric PatSimple 0
-            routeLink (stageUrl navLang iStage)
+                  $fromJust $ findStage stages $ StageGeneric PatSimple 0
+            routeLink (stageUrl @key iStage)
                 $  text
                 $  "Exercise "
                 <> showt iT
@@ -103,76 +97,64 @@ exercise1 = exercise
 exercise2 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise2 = exercise
     3 2
-    (\_ -> el
-        "p"
-        do
-            text
-                "The rules for the replacement of common letters are somewhat \
-            \arbitrarily split in two. This is the second half."
+    ( el "p" $ text
+          "The rules for the replacement of common letters are somewhat \
+          \arbitrarily split in two. This is the second half."
     )
     PatReplCommon2 0
-    (\lang -> do
-        el
-            "p"
-            do
-                text "The idea behind "
-                el "em" $ text "phr"
-                text " is to combine "
-                el "em" $ text "f"
-                text " (the pronounciation of "
-                el "em" $ text "ph"
-                text ") with "
-                el "em" $ text "r"
-                text ". The "
-                el "em" $ text "schw-"
-                text " rule is indeed arbitrary and results from the fact that "
-                el "code" $ text "ʃ"
-                text " and "
-                el "code" $ text "F"
-                text
-                    " cannot be reached at the same time. The same is true for "
-                el "em" $ text "zw-"
-                text "."
+    ( do
+        el "p" do
+            text "The idea behind "
+            el "em" $ text "phr"
+            text " is to combine "
+            el "em" $ text "f"
+            text " (the pronounciation of "
+            el "em" $ text "ph"
+            text ") with "
+            el "em" $ text "r"
+            text ". The "
+            el "em" $ text "schw-"
+            text " rule is indeed arbitrary and results from the fact that "
+            el "code" $ text "ʃ"
+            text " and "
+            el "code" $ text "F"
+            text
+                " cannot be reached at the same time. The same is true for "
+            el "em" $ text "zw-"
+            text "."
 
-        el
-            "p"
-            do
-                text "The "
-                el "em" $ text "sp"
-                text " rule is a simplification of "
-                el "code" $ text "SB+"
-                text ", which is possible because "
-                el "em" $ text "sb"
-                text " isn't really a thing in German. The "
-                el "em" $ text "st"
-                text
-                    " rule is the first example of a swap—in combination with the fact \
-              \that "
-                el "em" $ text "sd"
-                text " doesn't exist in German. The onset "
-                el "em" $ text "y"
-                text " is encoded in its use as a consonant here, like in "
-                el "em" $ text "Yoghurt"
-                text
-                    ". Note the different code for its vowel user in the nucleus. \
-              \This onset code is also used for "
+        el "p" do
+            text "The "
+            el "em" $ text "sp"
+            text " rule is a simplification of "
+            el "code" $ text "SB+"
+            text ", which is possible because "
+            el "em" $ text "sb"
+            text " isn't really a thing in German. The "
+            el "em" $ text "st"
+            text " rule is the first example of a swap—in combination with the \
+                 \fact that "
+            el "em" $ text "sd"
+            text " doesn't exist in German. The onset "
+            el "em" $ text "y"
+            text " is encoded in its use as a consonant here, like in "
+            el "em" $ text "Yoghurt"
+            text ". Note the different code for its vowel user in the nucleus. \
+                 \This onset code is also used for "
 
-                let (iStage, iT, iS) =
-                      $fromJust $ findStage @DE.Key lang $ StageSpecial "fingerspelling"
-                routeLink (stageUrl lang iStage)
-                    $  text
-                    $  "Exercise "
-                    <> showt iT
-                    <> "."
-                    <> showt iS
-                    <> ": Fingerspelling "
+            let (iStage, iT, iS) =
+                  $fromJust $ findStage stages $ StageSpecial @DE.Key "fingerspelling"
+            routeLink (stageUrl @key iStage)
+                $  text
+                $  "Exercise "
+                <> showt iT
+                <> "."
+                <> showt iS
+                <> ": Fingerspelling "
 
-                text ", i.e. to type just the letter Y."
+            text ", i.e. to type just the letter Y."
 
-        el
-            "p"
-            do
-                text
+        el "p" $ text
                     "For the coda, you find a lot of cases where somewhat arbitrary \
               \rules follow from necessity. Consonant combinations in the coda \
               \are just too plentiful in German."
@@ -181,7 +163,7 @@ exercise2 = exercise
 exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise3 = exercise
     3 3
-    (\_ -> el "p" $ do
+    (el "p" $ do
         text "The new rules of this exercise all follow from one single rule: "
         el "em" $ text "t"
         text " is typed by "
@@ -191,7 +173,7 @@ exercise3 = exercise
             \another consonant when needed."
     )
     PatCodaComboT 0
-    (\_ -> el "p" $ do
+    (el "p" $ do
         text
             "This is not the whole story, though. First, exceptions are needed for "
         el "em" $ text "mt"

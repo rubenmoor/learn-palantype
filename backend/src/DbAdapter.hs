@@ -26,6 +26,7 @@ import           Database.Persist.TH     (mkEntityDefList, mkPersist,
                                           persistLowerCase, share, sqlSettings)
 import DbAdapter.Instances ()
 import qualified Common.Model as Model
+import Common.Stage (StageIndex)
 
 share [mkPersist sqlSettings, mkEntityDefList "entities"] [persistLowerCase|
 User                             -- some real person
@@ -60,7 +61,7 @@ Stats
   created          UTCTime
   time             Double
   lang             Text
-  stage            Text
+  stageIndex       StageIndex
   length           Int
   nErrors          Int
 StageBegin

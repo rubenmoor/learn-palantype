@@ -49,10 +49,10 @@ exercise
   .  Constraints key t m
   => Int
   -> Int
-  -> (Lang -> m ())
+  -> m ()
   -> Pattern
   -> Greediness
-  -> (Lang -> m ())
+  -> m ()
   -> m Navigation
 exercise iStage iEx elIntro pat greediness elExplication = mdo
     Env {..} <- ask
@@ -64,14 +64,14 @@ exercise iStage iEx elIntro pat greediness elExplication = mdo
     el "h2" $ text $ toDescription pat
     el "h4" $ text $ "Greediness " <> showt greediness
 
-    elIntro navLang
+    elIntro
 
     elPatterns
         $ Map.toList
         $ Map.findWithDefault Map.empty greediness
         $ Map.findWithDefault Map.empty pat patternDoc
 
-    elExplication navLang
+    elExplication
 
     dynStatsAll <- getStatsLocalAndRemote evDone
 

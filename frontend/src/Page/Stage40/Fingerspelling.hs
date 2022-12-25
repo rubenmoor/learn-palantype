@@ -114,6 +114,7 @@ import Data.Text (Text)
 import Data.List (filter)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.DE as DE
+import Stages (stages)
 
 data StateLiterals k
     = StatePause Int
@@ -331,8 +332,8 @@ fingerspelling = mdo
         el "code" $ text "WIN"
         text " key shows up among the keys in "
         let (iStage, iT, iS) =
-              $fromJust $ findStage @DE.Key DE $ StageSpecial "commandKeys"
-        routeLink (stageUrl navLang iStage) $
+              $fromJust $ findStage stages $ StageSpecial @DE.Key "commandKeys"
+        routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
 
@@ -394,8 +395,8 @@ fingerspelling = mdo
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
         let (iStage, iT, iS) =
-              $fromJust $ findStage @DE.Key DE $ StageSpecial "commandKeys"
-        routeLink (stageUrl navLang iStage) $
+              $fromJust $ findStage (stages @DE.Key) $ StageSpecial "commandKeys"
+        routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text
             " you can utilize any conventional key binding in steno mode \

@@ -138,6 +138,7 @@ import Data.List (filter)
 import PloverDict (eMapNumbersForExercise)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.DE as DE
+import Stages (stages)
 
 data StateDates k
     = StatePause Int
@@ -372,8 +373,8 @@ numberMode = mdo
              \extended finger spelling. \
              \For the usual formatting, the "
         let (iStage, iT, iS) =
-                $fromJust $ findStage @DE.Key DE $ StageSpecial "ploverCommands"
-        routeLink (stageUrl navLang iStage)
+                $fromJust $ findStage stages $ StageSpecial @DE.Key "ploverCommands"
+        routeLink (stageUrl @key iStage)
             $  text $  "Exercise " <> showt iT <> "." <> showt iS
         text " should be all you ever need."
 
@@ -383,8 +384,8 @@ numberMode = mdo
              \there are only those special characters that you reach via \
              \the Shift modifier plus some number. The remaining \
              \special characters can be found in "
-        let (iStage, iT, iS) = $fromJust $ findStage @DE.Key DE $ StageSpecial "specialCharacters"
-        routeLink (stageUrl navLang iStage)
+        let (iStage, iT, iS) = $fromJust $ findStage stages $ StageSpecial @DE.Key "specialCharacters"
+        routeLink (stageUrl @key iStage)
             $  text
             $  "Exercise "
             <> showt iT <> "." <> showt iS

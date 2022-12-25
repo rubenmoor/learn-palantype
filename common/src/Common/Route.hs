@@ -25,7 +25,7 @@ import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( concat )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Traversable               ( mapM )
-import           Obelisk.Route                  (unsafeTshowEncoder, integralEncoder, pathSegmentEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
+import           Obelisk.Route                  (reviewEncoder, packTextEncoder, unsafeTshowEncoder, integralEncoder, pathSegmentEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
                                                 , singlePathSegmentEncoder
                                                 , mkFullRouteEncoder
                                                 , pattern (:/)
@@ -47,6 +47,13 @@ import Data.Semigroup (Semigroup((<>)))
 import qualified Data.Text as Text
 import Palantype.Common.Internal (Lang)
 import Control.Categorical.Bifunctor (bimap)
+import Numeric.Lens (integral, base)
+import Control.Applicative (Applicative)
+import Data.Text.Lens (IsText)
+import Data.String (String)
+import Control.Lens.Wrapped (Unwrapped, Wrapped)
+import Control.Monad.Except (MonadError)
+import GHC.Real (Integral)
 
 data FrontendRoute_AuthPages :: * -> * where
   AuthPage_SignUp   :: FrontendRoute_AuthPages ()
@@ -79,14 +86,25 @@ fullRouteEncoder = mkFullRouteEncoder
     )
     (\case
         FrontendRoute_Main -> PathEnd $ unitEncoder mempty
-        FrontendRoute_DE   -> PathSegment "DE" $ singlePathSegmentEncoder . unsafeTshowEncoder
-        FrontendRoute_EN   -> PathSegment "EN" $ singlePathSegmentEncoder . unsafeTshowEncoder
+        FrontendRoute_DE   -> PathSegment "DE" $ singlePathSegmentEncoder . wrappedIntEncoder
+        FrontendRoute_EN   -> PathSegment "EN" $ singlePathSegmentEncoder . wrappedIntEncoder
         FrontendRoute_Auth  -> PathSegment "auth" $ pathComponentEncoder \case
             AuthPage_SignUp   -> PathSegment "signup"   $ unitEncoder mempty
             AuthPage_Login    -> PathSegment "login"    $ unitEncoder mempty
             AuthPage_Settings -> PathSegment "settings" $ unitEncoder mempty
         FrontendRoute_Admin -> PathSegment "admin" $ unitEncoder mempty
     )
+  where
+    wrappedIntEncoder
+      :: forall (check :: * -> *) (parse :: * -> *) text a
+      . ( Applicative check
+        , IsText text
+        , Integral (Unwrapped a)
+        , MonadError Text parse
+        , Wrapped a
+        )
+      => Encoder check parse a text
+    wrappedIntEncoder = packTextEncoder . reviewEncoder (base 10) . unwrappedEncoder
 
 concat <$> mapM deriveRouteComponent
   [ ''BackendRoute

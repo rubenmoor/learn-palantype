@@ -150,7 +150,7 @@ import           Palantype.Common.TH            ( fromJust
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import Common.Model (Stats)
-import Common.Stage (StageIndex, Stage)
+import Common.Stage (StageIndex)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)
 import PloverDict (getMapsForExercise)
@@ -293,7 +293,6 @@ exercise1
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -337,8 +336,7 @@ exercise1 = mdo
         pure e
 
     let eBack = leftmost [eChordBackUp, domEvent Click elABack]
-
-    setRoute $ eBack $> stageUrl navLang ($readLoc "stage_1-1")
+    setRoute $ eBack $> stageUrl @key 1 -- Stage 1.1
     updateState
         $  eBack
         $> [ field @"stApp" . field @"stProgress"
@@ -522,7 +520,6 @@ exercise2
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
@@ -812,7 +809,6 @@ exercise3
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -932,7 +928,6 @@ exercise4
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -963,7 +958,7 @@ exercise4 = mdo
             \syllables, e.g. we saw «Zweifel» as "
         el "code" $ text "SWEI/FEL"
         text " in "
-        routeLink (stageUrl navLang $ $readLoc "stage_2-2")
+        routeLink (stageUrl @key 10) -- Stage 2.2
             $ text "Exercise 2.2"
         text ". In the same exercise we saw «Wissen» as "
         el "code" $ text "WISn"

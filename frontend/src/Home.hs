@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
@@ -35,8 +36,8 @@ import Common.Route
     (showRoute,  FrontendRoute (..)
     , FrontendRoute_AuthPages (..)
     )
-import Common.Stage (Stage (), mNext, mPrev)
-import Palantype.Common.TH (readLoc)
+import Common.Stage (unStageIndex, StageIndex, mNext, mPrev)
+import Palantype.Common.TH (readLoc, failure)
 import Control.Applicative (Applicative (..))
 import Control.Category
     ( (>>>), (<<<),
@@ -61,7 +62,7 @@ import Control.Monad
     )
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.Reader
-    (MonadIO, ask,  MonadReader,
+    (ask,  MonadReader,
       ReaderT,
       asks,
       withReaderT,
@@ -154,7 +155,6 @@ import Page.Common
     ( elFooter
     )
 import Page.Introduction (introduction)
-import qualified Page.Patterns as Patterns
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
 import qualified Page.Stage3 as Stage3
@@ -181,10 +181,10 @@ import Palantype.Common
       mkChord,
     )
 import qualified Palantype.Common.Indices as KI
-import qualified Palantype.DE.Keys as DE
-import qualified Palantype.EN.Keys as EN
+import qualified Palantype.DE as DE
+import qualified Palantype.EN as EN
 import Reflex.Dom
-    (Performable, current, tag, attachPromptlyDynWithMaybe, TriggerEvent, zipDyn, inputElementConfig_initialChecked, (=:),
+    (TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -254,6 +254,11 @@ import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
+import qualified Common.Stage as Stage
+import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
+import Control.Monad.IO.Class (MonadIO)
+import Data.Foldable (Foldable(length))
+import Stages (stages)
 
 default (Text)
 
@@ -292,21 +297,25 @@ message = do
                     el "span" $ text msgBody
 
 settings ::
-    forall t (m :: * -> *).
+    forall key t (m :: * -> *).
     ( DomBuilder t m,
       MonadHold t m,
+      Palantype key,
       PostBuild t m,
       Prerender t m,
       EventWriter t (Endo State) m,
       MonadReader (Dynamic t State) m,
-      Routed t Stage m,
+      Routed t StageIndex m,
       SetRoute t (R FrontendRoute) m
     ) =>
-    Lang ->
     m ()
-settings lang = elClass "div" "topmenu" do
+settings = elClass "div" "topmenu" do
     dynState <- ask
     let dynAppState = stApp <$> dynState
+        lang = if
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
+          | otherwise -> $failure "Key not implemented"
 
     elClass "div" "floatLeft" $ do
         -- button to show configuration dropdown
@@ -375,7 +384,7 @@ settings lang = elClass "div" "topmenu" do
                     (domSettings, _) <- elClass' "span" "entry" $ text "Go to settings"
                     let evGotoSettings = tag (current dynStage) $ domEvent Click domSettings
                     updateState $ evGotoSettings <&> \stage ->
-                      [ field @"stRedirectUrl" .~ stageUrl lang stage ]
+                      [ field @"stRedirectUrl" .~ (stageUrl @key) stage ]
                     setRoute $ evGotoSettings $> FrontendRoute_Auth :/ AuthPage_Settings :/ ()
 
                 pure eFile'
@@ -451,7 +460,7 @@ settings lang = elClass "div" "topmenu" do
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
-    dynRedirectRoute <- fmap (stageUrl lang) <$> askRoute
+    dynRedirectRoute <- fmap (stageUrl @key) <$> askRoute
     elLoginSignup dynRedirectRoute
 
     elClass "br" "clearBoth" blank
@@ -522,9 +531,12 @@ stenoInput
        , PostBuild t m
        , Prerender t m
        )
-    => Lang
-    -> m (Event t (Chord key))
-stenoInput lang = do
+    => m (Event t (Chord key))
+stenoInput = do
+    let lang = if
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+          | otherwise -> $failure "Key not implemented"
     dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
     dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
     dynShowKeyboard <- asks $ fmap $ stApp >>> stShowKeyboard
@@ -533,9 +545,9 @@ stenoInput lang = do
     dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
         \(pcfg, showQwerty) -> postRender
                      $ elClass "div" "stenoInput"
-                     $ stenoInput' pcfg showQwerty dynShowKeyboard
+                     $ stenoInput' lang pcfg showQwerty dynShowKeyboard
   where
-    stenoInput' PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
+    stenoInput' lang PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
         let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
                 [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
                 , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
@@ -899,19 +911,19 @@ elStenoOutput dynDownKeys = mdo
 -- Table of Contents
 
 toc ::
-    forall t (m :: * -> *).
+    forall key t (m :: * -> *).
     ( DomBuilder t m,
       EventWriter t (Endo State) m,
       MonadReader (Dynamic t State) m,
+      Palantype key,
       Prerender t m,
       PostBuild t m,
       RouteToUrl (R FrontendRoute) m,
       SetRoute t (R FrontendRoute) m
     ) =>
-    Lang ->
-    Stage ->
+    StageIndex ->
     m ()
-toc lang stageCurrent = elClass "section" "toc" $ do
+toc stageCurrent = elClass "section" "toc" $ do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
         dynShowStage i = (Set.member i . stTOCShowStage) <$> dynState
@@ -935,120 +947,78 @@ toc lang stageCurrent = elClass "section" "toc" $ do
     let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
     elDynClass "div" dynClassDisplay $ do
         let dynCleared = stCleared <$> dynState
-        dyn_ $
-            dynCleared <&> \cleared -> do
-                let elLi subStage = do
-                        let cls =
-                                if subStage == stageCurrent
-                                    then "bgLightgray"
-                                    else ""
-                        elClass "li" cls $ do
-                            if subStage `Set.member` cleared
-                                then iFa "fas fa-check"
-                                else el "span" $ text "○"
-                            routeLink (stageUrl lang subStage) $ case stageMeta subStage of
-                                StageTopLevel str -> text str
-                                StageSubLevel _ i str -> text $ "Ex. " <> showt i <> ": " <> str
+        dyn_ $ dynCleared <&> \cleared -> do
 
-                    elStage :: Int -> Text -> [String] -> m ()
-                    elStage i stageTitle subStageNames = do
-                        (s, _) <- elClass' "li" "stage" $ do
-                            let dynClass =
-                                    bool "fas fa-caret-right" "fas fa-caret-down"
-                                        <$> dynShowStage i
-                            elDynClass "i" dynClass blank
-                            text $ "Stage " <> showt i <> ": " <> stageTitle
+            let
+                elLi iSubstage = do
+                    let cls =
+                            if iSubstage == stageCurrent
+                                then "bgLightgray"
+                                else ""
+                    elClass "li" cls $ do
+                        if iSubstage `Set.member` cleared
+                            then iFa "fas fa-check"
+                            else el "span" $ text "○"
+                        routeLink (stageUrl @key iSubstage) $ do
+                            let (mg, str) = Stage.toTOCString $ Stage.fromIndex (stages @key) iSubstage
+                            whenJust mg \g -> el "code" $ text $ "G" <> showt g <> " "
+                            text str
 
-                        let eClickS = domEvent Click s
-                        updateState $ eClickS $>
-                            [ field @"stApp" . field @"stTOCShowStage" . at i %~
-                                maybe (Just ()) (\_ -> Nothing)
-                            ]
+                elStage :: Int -> Text -> [StageIndex] -> m ()
+                elStage i stageTitle iSubstages = do
+                    (s, _) <- elClass' "li" "stage" $ do
+                        let dynClass =
+                                bool "fas fa-caret-right" "fas fa-caret-down"
+                                    <$> dynShowStage i
+                        elDynClass "i" dynClass blank
+                        text $ "Stage " <> showt i <> ": " <> stageTitle
 
                         let dynClassUl = bool "displayNone" "" <$> dynShowStage i
+                        elDynClass "ul" dynClassUl $ traverse_ elLi iSubstages
 
-                        elDynClass "ul" dynClassUl $
-                            traverse_ (elLi . $readLoc) subStageNames
-
-                el "ul" $ do
-                    elLi $ $readLoc "introduction"
-
-                    elStage 1 "The Palantype Alphabet"
-                        [ "stage_1-1"
-                        , "stage_1-2"
-                        , "stage_1-3"
-                        , "stage_1-4"
-                        , "stage_1-5"
-                        , "stage_1-6"
-                        , "stage_1-7"
-                        , "stage_1-8"
+                    let eClickS = domEvent Click s
+                    updateState $ eClickS $>
+                        [ field @"stApp" . field @"stTOCShowStage" . at i %~
+                            maybe (Just ()) (\_ -> Nothing)
                         ]
 
-                    elStage 2 "Syllables and chords"
-                        [ "stage_2-1"
-                        , "stage_2-2"
-                        , "stage_2-3"
-                        , "stage_PatSimple_0"
-                        ]
+            el "ul" $ do
 
-                    elStage 3 "Common replacement rules"
-                        [ "stage_PatReplCommon1_0"
-                        , "stage_PatReplCommon2_0"
-                        , "stage_PatCodaComboT_0"
-                        ]
+                elLi 0
+                elStage 1 "The Palantype Alphabet"  [1 .. 8 ]
+                let lang = if
+                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
+                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+                      | otherwise -> $failure "Key not implemented"
+                case lang of
+                  EN -> elStage 2 "Syllables and chords"           [9  .. 10]
+                  DE -> do
+                      elStage 2 "Syllables and chords"           [9  .. 12]
+                      elStage 3 "Common replacement rules"       [13 .. 15]
+                      elStage 4 "Be efficient, be greedy"        [16 .. 18]
+                      elStage 5 "R, L, and Diconsonants"         [19 .. 23]
+                      elStage 6 "Stretching vowels with H and R" [24 .. 29]
 
-                    elStage 4 "Be efficient, be greedy"
-                        [ "stage_PatReplCommon1_2"
-                        , "stage_PatReplCommon1_3"
-                        , "stage_PatReplCommon2_4"
-                        ]
+                          -- elLi $ $readLoc "stage_PatCodaH_0"
+                          -- elLi $ $readLoc "stage_PatCodaR_0"
+                          -- elLi $ $readLoc "stage_PatCodaRR_0"
+                          -- elLi $ $readLoc "stage_PatCodaHR_0"
+                          -- elLi $ $readLoc "stage_PatDt_0"
+                          -- elLi $ $readLoc "stage_PatDiphtong_0"
+                          -- elLi $ $readLoc "stage_PatReplC_0"
+                          -- elLi $ $readLoc "stage_PatBreakUpI_0"
+                          -- elLi $ $readLoc "stage_PatSwapS_0"
+                          -- elLi $ $readLoc "stage_PatSwapSch_0"
+                          -- elLi $ $readLoc "stage_PatSwapZ_0"
+                          -- elLi $ $readLoc "stage_PatDiVowel_0"
+                          -- elLi $ $readLoc "stage_PatReplH_0"
+                          -- elLi $ $readLoc "stage_PatCodaGK_3"
+                          -- elLi $ $readLoc "stage_PatReplRare_0"
+                          -- elLi $ $readLoc "stage_PatSmallS_0"
 
-                    elStage 5 "R, L, and Diconsonants"
-                        [ "stage_PatOnsetR_0"
-                        , "stage_PatOnsetL_0"
-                        , "stage_PatDiConsonant_0"
-                        , "stage_PatDiConsonant_2"
-                        ]
-
-                    elStage 6 "Stretching vowels with H and R"
-                        [ "stage_PatCodaH_0"
-                        , "stage_PatCodaH_1"
-                        , "stage_PatCodaR_0"
-                        , "stage_PatCodaR_4"
-                        , "stage_PatCodaRR_0"
-                        , "stage_PatCodaHR_0"
-                        ]
-
-                        -- elLi $ $readLoc "stage_PatCodaH_0"
-                        -- elLi $ $readLoc "stage_PatCodaR_0"
-                        -- elLi $ $readLoc "stage_PatCodaRR_0"
-                        -- elLi $ $readLoc "stage_PatCodaHR_0"
-                        -- elLi $ $readLoc "stage_PatDt_0"
-                        -- elLi $ $readLoc "stage_PatDiphtong_0"
-                        -- elLi $ $readLoc "stage_PatReplC_0"
-                        -- elLi $ $readLoc "stage_PatBreakUpI_0"
-                        -- elLi $ $readLoc "stage_PatSwapS_0"
-                        -- elLi $ $readLoc "stage_PatSwapSch_0"
-                        -- elLi $ $readLoc "stage_PatSwapZ_0"
-                        -- elLi $ $readLoc "stage_PatDiVowel_0"
-                        -- elLi $ $readLoc "stage_PatReplH_0"
-                        -- elLi $ $readLoc "stage_PatCodaGK_3"
-                        -- elLi $ $readLoc "stage_PatReplRare_0"
-                        -- elLi $ $readLoc "stage_PatSmallS_0"
-
-                    elStage 40 "Real-life text input"
-                        [ "stage_ploverCommands"
-                        , "stage_fingerspelling"
-                        , "stage_numbermode"
-                        , "stage_commandKeys"
-                        , "stage_specialCharacters"
-                        ]
-
-                    elStage 50 "Increasing efficiency"
-                        [ "stage_PatBrief_0"
-                        ]
-
-                    elLi $ $readLoc "patternoverview"
+                      elStage 40 "Real-life text input"  [30 .. 34]
+                      elStage 50 "Increasing efficiency" [35]
+                      elLi 36
 
 landingPage
   :: forall t (m :: * -> *)
@@ -1126,9 +1096,11 @@ landingPage = elClass "div" "landing" $ do
                             ]
                     dynState <- ask
                     let toMNewRoute st _ = do
-                        lang <- st ^. field @"stApp" . field @"stMLang"
-                        stage <- st ^. field @"stApp" . field @"stProgress" . at lang
-                        pure $ stageUrl lang stage
+                          lang <- st ^. field @"stApp" . field @"stMLang"
+                          stage <- st ^. field @"stApp" . field @"stProgress" . at lang
+                          pure $ case lang of
+                            DE -> stageUrl @DE.Key stage
+                            EN -> stageUrl @EN.Key stage
                     setRoute $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
 
     elClass "div" "info-columns" $ do
@@ -1223,8 +1195,8 @@ elStages
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
-       , MonadFix m
        , MonadIO (Performable m)
+       , MonadFix m
        , Palantype key
        , PerformEvent t m
        , PostBuild t m
@@ -1235,25 +1207,30 @@ elStages
        )
     => Lang
     -> (Event t () -> Event t ())
-    -> RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
 elStages navLang toReady = do
-    el "header" $ settings navLang
+    el "header" $ settings @key
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
   where
     stages' ::
-        Stage ->
-        RoutedT t Stage (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-    stages' stageCurrent = elClass "div" "box" $ do
-        eChord <- stenoInput @key navLang
+        StageIndex ->
+        RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    stages' iCurrent = elClass "div" "box" $ do
+
+        let elPageNotImplemented i =
+              elClass "div" "small anthrazit" $
+                text ("Page not implemented: StageIndex " <> showt i)
+                  $> Navigation navLang Nothing 0 Nothing
+        eChord <- stenoInput @key
 
         navigation <- elClass "div" "row" $ mdo
-            toc navLang stageCurrent
+            toc @key iCurrent
 
             let setEnv page =
-                    let navMPrevious = mPrev stageCurrent
-                        navCurrent = stageCurrent
-                        navMNext = mNext stageCurrent
+                    let navMPrevious = mPrev iCurrent
+                        navCurrent = iCurrent
+                        navMNext = mNext (stages @key) iCurrent
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
@@ -1268,7 +1245,7 @@ elStages navLang toReady = do
                               Env{..} <- ask
                               void $ request $ postEventViewPage
                                 (getMaybeAuthData <$> envDynState)
-                                (Right . showRoute . stageUrl navLang <$> dynRoute)
+                                (Right . showRoute . stageUrl @key <$> dynRoute)
                                 evReady
                               page
             navigation <- elAttr "section" ("id" =: "content") $ do
@@ -1276,59 +1253,56 @@ elStages navLang toReady = do
                     $  "▲ "
                     <> showt (KI.toRaw @key kiUp)
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
-                nav <- elClass "div" "content" $ setEnv $
-                    if
-                        | $readLoc "introduction" == stageCurrent -> introduction
-                        | $readLoc "stage_1-1" == stageCurrent -> Stage1.exercise1
-                        | $readLoc "stage_1-2" == stageCurrent -> Stage1.exercise2
-                        | $readLoc "stage_1-3" == stageCurrent -> Stage1.exercise3
-                        | $readLoc "stage_1-4" == stageCurrent -> Stage1.exercise4
-                        | $readLoc "stage_1-5" == stageCurrent -> Stage1.exercise5
-                        | $readLoc "stage_1-6" == stageCurrent -> Stage1.exercise6
-                        | $readLoc "stage_1-7" == stageCurrent -> Stage1.exercise7
-                        | $readLoc "stage_1-8" == stageCurrent -> Stage1.exercise8
-                        | $readLoc "stage_2-1" == stageCurrent -> Stage2.exercise1
-                        | $readLoc "stage_2-2" == stageCurrent -> Stage2.exercise2
-                        | $readLoc "stage_2-3" == stageCurrent -> Stage2.exercise3
-                        | $readLoc "stage_PatSimple_0"      == stageCurrent -> Stage2.exercise4
-                        | $readLoc "stage_PatReplCommon1_0" == stageCurrent -> Stage3.exercise1
-                        | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
-                        | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
-                        | $readLoc "stage_PatReplCommon1_2" == stageCurrent -> Stage4.exercise1
-                        | $readLoc "stage_PatReplCommon1_3" == stageCurrent -> Stage4.exercise2
-                        | $readLoc "stage_PatReplCommon2_4" == stageCurrent -> Stage4.exercise3
-                        | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage5.exercise1
-                        | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage5.exercise2
-                        | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage5.exercise3
-                        | $readLoc "stage_PatDiConsonant_2" == stageCurrent -> Stage5.exercise4
+                nav <- if unStageIndex iCurrent >= length (stagesInfo @key)
+                       then elPageNotImplemented iCurrent
+                       else elClass "div" "content" $ setEnv $ case iCurrent of
+                                0  -> introduction
+                                1  -> Stage1.exercise1
+                                2  -> Stage1.exercise2
+                                3  -> Stage1.exercise3
+                                4  -> Stage1.exercise4
+                                5  -> Stage1.exercise5
+                                6  -> Stage1.exercise6
+                                7  -> Stage1.exercise7
+                                8  -> Stage1.exercise8
+                                9  -> Stage2.exercise1
+                                10 -> Stage2.exercise2
+                                11 -> Stage2.exercise3
+                                12 -> Stage2.exercise4
+                    --    | $readLoc "stage_PatReplCommon1_0" == stageCurrent -> Stage3.exercise1
+                    --    | $readLoc "stage_PatReplCommon2_0" == stageCurrent -> Stage3.exercise2
+                    --    | $readLoc "stage_PatCodaComboT_0"  == stageCurrent -> Stage3.exercise3
+                    --    | $readLoc "stage_PatReplCommon1_2" == stageCurrent -> Stage4.exercise1
+                    --    | $readLoc "stage_PatReplCommon1_3" == stageCurrent -> Stage4.exercise2
+                    --    | $readLoc "stage_PatReplCommon2_4" == stageCurrent -> Stage4.exercise3
+                    --    | $readLoc "stage_PatOnsetR_0"      == stageCurrent -> Stage5.exercise1
+                    --    | $readLoc "stage_PatOnsetL_0"      == stageCurrent -> Stage5.exercise2
+                    --    | $readLoc "stage_PatDiConsonant_0" == stageCurrent -> Stage5.exercise3
+                    --    | $readLoc "stage_PatDiConsonant_2" == stageCurrent -> Stage5.exercise4
 
-                        ---- | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
-                        ---- | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
-                        ---- | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
-                        ---- | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise11
-                        ---- | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
-                        ---- | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
-                        ---- | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
-                        ---- | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
-                        ---- | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
-                        ---- | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
-                        ---- | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
-                        ---- | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
-                        ---- | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
-                        ---- | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
-                        ---- | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
-                        ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
-                        ---- | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
-                        ---- | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
-                        ---- | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
-                        ---- | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
-                        ---- | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
-                        | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage50.exercise1
-                        | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
-                        | otherwise ->
-                            elClass "div" "small anthrazit" $
-                                text ("Page not implemented: " <> showt stageCurrent)
-                                    $> Navigation navLang Nothing ($readLoc "introduction") Nothing
+                    --    ---- | $readLoc "stage_PatCodaH_0"       == stageCurrent -> Stage3.exercise8
+                    --    ---- | $readLoc "stage_PatCodaR_0"       == stageCurrent -> Stage3.exercise9
+                    --    ---- | $readLoc "stage_PatCodaRR_0"      == stageCurrent -> Stage3.exercise10
+                    --    ---- | $readLoc "stage_PatCodaHR_0"      == stageCurrent -> Stage3.exercise11
+                    --    ---- | $readLoc "stage_PatDt_0"          == stageCurrent -> Stage3.exercise12
+                    --    ---- | $readLoc "stage_PatDiphtong_0"    == stageCurrent -> Stage3.exercise13
+                    --    ---- | $readLoc "stage_PatReplC_0"       == stageCurrent -> Stage3.exercise14
+                    --    ---- | $readLoc "stage_PatBreakUpI_0"    == stageCurrent -> Stage3.exercise15
+                    --    ---- | $readLoc "stage_PatSwapS_0"       == stageCurrent -> Stage3.exercise16
+                    --    ---- | $readLoc "stage_PatSwapSch_0"     == stageCurrent -> Stage3.exercise17
+                    --    ---- | $readLoc "stage_PatSwapZ_0"       == stageCurrent -> Stage3.exercise18
+                    --    ---- | $readLoc "stage_PatDiVowel_0"     == stageCurrent -> Stage3.exercise19
+                    --    ---- | $readLoc "stage_PatReplH_0"       == stageCurrent -> Stage3.exercise20
+                    --    ---- | $readLoc "stage_PatCodaGK_3"      == stageCurrent -> Stage3.exercise21
+                    --    ---- | $readLoc "stage_PatReplRare_0"    == stageCurrent -> Stage3.exercise22
+                    --    ---- | $readLoc "stage_PatSmallS_0"      == stageCurrent -> Stage3.exercise6
+                    --    ---- | $readLoc "stage_ploverCommands"   == stageCurrent -> ploverCommands
+                    --    ---- | $readLoc "stage_fingerspelling"   == stageCurrent -> fingerspelling
+                    --    ---- | $readLoc "stage_numbermode"       == stageCurrent -> numberMode
+                    --    ---- | $readLoc "stage_commandKeys"      == stageCurrent -> commandKeys
+                    --    ---- | $readLoc "stage_specialCharacters"== stageCurrent -> specialCharacters
+                    --    | $readLoc "stage_PatBrief_0"       == stageCurrent -> Stage50.exercise1
+                    --    | $readLoc "patternoverview" == stageCurrent -> Patterns.overview
 
                 elClass "div" "scrollBottom"
                     $ text
@@ -1338,4 +1312,4 @@ elStages navLang toReady = do
                     <> showt (KI.toRaw @key kiPageDown)
                 pure nav
             pure navigation
-        elFooter navLang navigation
+        elFooter @key navigation

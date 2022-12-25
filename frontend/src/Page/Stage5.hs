@@ -17,7 +17,7 @@ import           State                          ( Navigation(..)
 exercise1 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise1 = exercise
     5 1
-    (\_ -> el "p" $ do
+    (el "p" $ do
         el "em" $ text "R"
         text
             " is quite a common letter in German, still it is missing from the \
@@ -73,7 +73,7 @@ exercise1 = exercise
         text " in a couple of cases. "
     )
     PatOnsetR 0
-    (\_ -> el "p" $ do
+    (el "p" $ do
         text "And don't forget: The "
         el "em" $ text "r"
         text " without any other consonants exists, too."
@@ -82,7 +82,7 @@ exercise1 = exercise
 exercise2 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise2 = exercise
     5 2
-    (\_ -> el "p" $ do
+    (el "p" $ do
         text "The keys "
         el "code" $ text "+"
         text " and "
@@ -94,22 +94,19 @@ exercise2 = exercise
         text " sometimes. Note that we did the same in the last exercise."
     )
     PatOnsetL 0
-    (\_ -> blank)
+    blank
 
 
 exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise3 = exercise
     5 3
-    (\_ ->
-        el "p"
-            $ text
-                  "Now you'll learn a nice simplification. When you encounter one of the \
-                      \double consonants of the table below in the coda, you will only need one \
-                      \steno key to type them."
+    ( el "p" $ text
+          "Now you'll learn a nice simplification. When you encounter one of the \
+          \double consonants of the table below in the coda, you will only need one \
+          \steno key to type them."
     )
     PatDiConsonant 0
-    (\_ ->
-        el "p" $ text
+    ( el "p" $ text
             "This rule only is about double consonants in the coda. \
             \Quite often, a double consonant is devided by an ortographic syllable \
             \and this rule doesn't apply. In case you wonder what german syllable \
@@ -119,8 +116,7 @@ exercise3 = exercise
 exercise4 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 exercise4 = exercise
     5 4
-    (\_ ->
-        el "p" do
+    ( el "p" do
             text "In this stage, this is the only exercise that has a greediness \
                  \bigger then 0 and thus introduces additional efficiency. \
                  \No surprises here: When "
@@ -132,11 +128,10 @@ exercise4 = exercise
                  \the idea of the various rules."
     )
     PatDiConsonant 2
-    (\_ -> do
-        el "p" $ do
-            text "And you will find a lot of anglicisms in this exercise. \
-                 \Those are generally quite a challenge for a German steno \
-                 \system and are the cause for inconsistencies and quirks \
-                 \in the rules. There are steno rules that try to tackle \
-                 \anglicisms in particular in later stages."
+    (el "p" $ text
+         "And you will find a lot of anglicisms in this exercise. \
+         \Those are generally quite a challenge for a German steno \
+         \system and are the cause for inconsistencies and quirks \
+         \in the rules. There are steno rules that try to tackle \
+         \anglicisms in particular in later stages."
     )

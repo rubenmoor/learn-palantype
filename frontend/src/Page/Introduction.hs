@@ -15,7 +15,9 @@ module Page.Introduction where
 
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
-import Control.Category ((<<<), (.))
+import           Control.Category               ( (<<<)
+                                                , (.)
+                                                )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
@@ -36,9 +38,12 @@ import           Data.Witherable                ( Filterable(filter) )
 import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute(setRoute)
                                                 )
-import           Palantype.Common               (Lang(..),  Palantype )
+import           Palantype.Common               ( Lang(..)
+                                                , Palantype
+                                                )
 import           Palantype.Common.RawSteno      ( parseChordMaybe )
-import           Reflex.Dom                     (elClass',  (=:)
+import           Reflex.Dom                     ( elClass'
+                                                , (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
                                                 , EventWriter
@@ -50,15 +55,16 @@ import           Reflex.Dom                     (elClass',  (=:)
                                                 , leftmost
                                                 , text
                                                 )
-import           State                          (stageUrl,  Env(..)
+import           State                          ( stageUrl
+                                                , Env(..)
                                                 , Navigation(..)
                                                 , State
                                                 , updateState
                                                 )
-import Text.Read (readMaybe)
+import           Text.Read                      ( readMaybe )
 import           TextShow                       ( TextShow(showt) )
-import Palantype.Common.TH (readLoc)
-import Palantype.Common.TH (fromJust)
+import           Palantype.Common.TH            ( readLoc )
+import           Palantype.Common.TH            ( fromJust )
 
 introduction
     :: forall key t (m :: * -> *)
@@ -103,11 +109,16 @@ introduction = do
               "You can play around with the keyboard above to see how much keys \
       \register at the same time with your hardware."
 
-    elClass "p" "textAlign-center" $ elAttr "iframe"
-        (    "width"  =: "640"
-          <> "height" =: "480"
-          <> "src"    =: "https://www.youtube.com/embed/za1qxU4jdfg"
-        ) blank
+    elClass "p" "textAlign-center" $ elAttr
+        "iframe"
+        (  "width"
+        =: "640"
+        <> "height"
+        =: "480"
+        <> "src"
+        =: "https://www.youtube.com/embed/za1qxU4jdfg"
+        )
+        blank
 
 
     el "h3" $ text "Software"
@@ -170,18 +181,21 @@ introduction = do
     let (rsStart, desc) = case navLang of
             EN -> ("START", "S-, T-, A, -R, and -T")
             DE -> ("DSAÜD", "D-, S-, A-, -Ü, -D")
-        eChordSTART = void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
+        eChordSTART =
+            void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
 
     elClass "div" "start" $ do
         (btn, _) <- elClass' "button" "small" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stApp" . field @"stProgress" %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
+            $> [ field @"stApp"
+               .  field @"stProgress"
+               %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
                , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
                , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
                ]
-        setRoute $ eStart $> stageUrl navLang ($readLoc "stage_1-1")
+        setRoute $ eStart $> stageUrl @key 1
 
     elClass "div" "paragraph" $ do
         text "Instead of clicking the button, try to input "

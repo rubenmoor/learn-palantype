@@ -1,7 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DoAndIfThenElse #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Handler.Stats
     ( handlers
@@ -9,7 +12,7 @@ module Handler.Stats
 where
 
 import           Palantype.Common               ( Lang )
-import           Common.Stage                   ( StageIndex, getStageStr )
+import           Common.Stage                   ( StageIndex )
 import           Common.Model                   ( JournalEvent (EventApp),  Stats(..), EventApp (..) )
 import           AppData                        ( Handler )
 import           Servant.Server                 (err500, throwError,  ServantErr (errBody),  HasServer(ServerT) )
@@ -37,6 +40,12 @@ import           Data.Text                      ( Text )
 import qualified DbJournal
 import Data.Time (diffUTCTime, getCurrentTime)
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import qualified Palantype.DE as DE
+import qualified Palantype.EN as EN
+import Palantype.Common (Palantype, Lang (..))
+import qualified Common.Stage as Stage
+import Common.Stage (Stage, StageIndex)
+
 
 handlers :: ServerT RoutesStats a Handler
 handlers =
@@ -50,8 +59,8 @@ handleStatsGet mUi lang iStage = do
     es <- runDb $ select $ from $ \(s `InnerJoin` a) -> do
         on $ s ^. Db.StatsFkAlias ==. a ^. Db.AliasId
         where_ $ a ^. Db.AliasIsVisible
-             &&. s ^. Db.StatsLang      ==. val (toUrlPiece lang)
-             &&. s ^. Db.StatsStage     ==. val (Text.pack $ getStageStr lang iStage)
+             &&. s ^. Db.StatsLang       ==. val (toUrlPiece lang)
+             &&. s ^. Db.StatsStageIndex ==. val iStage
         pure (s, a)
     pure $ es <&> \(Entity _ Db.Stats {..}, Entity _ Db.Alias {..}) ->
         ( case mUi of
@@ -83,7 +92,7 @@ handleStatsCompleted mUi (lang, iStage, stats@Stats{..}) = do
                                           statsDate
                                           (realToFrac statsTime)
                                           (toUrlPiece lang)
-                                          (Text.pack $ getStageStr lang iStage)
+                                          iStage
                                           statsLength
                                           statsNErrors
           else throwError $ err500 { errBody = "could not store stats (2)" }

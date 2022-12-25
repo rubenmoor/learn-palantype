@@ -22,7 +22,7 @@ module Page.Common where
 
 import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   (StageIndex,  Stage, getStageGroupIndex, getStageStrPretty )
+import qualified Common.Stage as Stage
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
@@ -84,14 +84,13 @@ import           GHC.Num                        ( Num((+)) )
 import           GHC.Real                       ( (/)
                                                 , fromIntegral
                                                 )
-import           Obelisk.Route.Frontend         (Routed, askRoute,  R
+import           Obelisk.Route.Frontend         (R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
 import           Palantype.Common               ( kiChordsStart
                                                 , Chord
-                                                , Lang(..)
                                                 , Palantype
                                                 , PatternPos
                                                 , unparts
@@ -169,26 +168,27 @@ import Obelisk.Generated.Static (static)
 import GHC.Generics (Generic)
 import GHCJS.DOM.Types (HTMLAudioElement(HTMLAudioElement), unElement)
 import GHCJS.DOM.HTMLMediaElement (play)
+import {-# SOURCE #-}Stages (stages)
 
 elFooter
-    :: forall t (m :: * -> *)
+    :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , Palantype key
        , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )
-    => Lang
-    -> Navigation
+    => Navigation
     -> m ()
-elFooter lang Navigation {..} = elClass "footer" "stage" $ do
+elFooter Navigation {..} = elClass "footer" "stage" $ do
     whenJust navMPrevious $ \prv -> do
         elClass "div" "floatLeft" $ do
             text "< "
-            routeLink (stageUrl lang prv) $ text $ getStageStrPretty lang prv
-    text $ getStageStrPretty lang navCurrent
+            routeLink (stageUrl @key prv) $ text $ showt $ Stage.fromIndex (stages @key) prv
+    text $ showt $ Stage.fromIndex (stages @key) navCurrent
     whenJust navMNext $ \nxt -> do
         elClass "div" "floatRight" $ do
-            routeLink (stageUrl lang nxt) $ text $ getStageStrPretty lang nxt
+            routeLink (stageUrl @key nxt) $ text $ showt $ Stage.fromIndex (stages @key) nxt
             text " >"
     elClass "br" "clearBoth" blank
 
@@ -207,7 +207,6 @@ elCongraz
        , Palantype key
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , SetRoute t (R FrontendRoute) m
        )
     => Event t (Maybe Stats)
@@ -240,11 +239,10 @@ elCongraz evDone dynStats Navigation {..} = mdo
         evLSPutStats =
           gate (not . isLoggedIn . stSession <$> current envDynState) evNewStats
 
-    dynStageIndex <- askRoute
-    prerender_ blank $ performEvent_ $ attach (current dynStageIndex) evLSPutStats <&> \(iStage, stats) -> do
+    prerender_ blank $ performEvent_ $ evLSPutStats <&> \stats -> do
       mMap <- liftJSM $ LS.retrieve LS.KeyStats
       let oldStats = fromMaybe Map.empty mMap
-      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, iStage) [stats] oldStats
+      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, navCurrent) [stats] oldStats
 
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
@@ -270,7 +268,8 @@ elCongraz evDone dynStats Navigation {..} = mdo
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
                         elClass "div" "paragraph" $ do
-                            (e, _) <- elClass' "a" "normalLink" $ text $ getStageStrPretty navLang nxt
+                            (e, _) <- elClass' "a" "normalLink" $
+                                text $ showt $ Stage.fromIndex (stages @key) nxt
                             text "."
                             pure e
                     let eContinue =
@@ -281,13 +280,13 @@ elCongraz evDone dynStats Navigation {..} = mdo
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
                       , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> case getStageGroupIndex navLang nxt of
+                      ] <> case Stage.getGroupIndex $ Stage.fromIndex (stages @key) nxt of
                           Nothing -> []
                           Just  t ->
                             [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t
                             ]
 
-                    setRoute $ eContinue $> stageUrl navLang nxt
+                    setRoute $ eContinue $> stageUrl @key nxt
 
                 el "div" $ do
                     el "span" $ text "("
@@ -529,7 +528,6 @@ getStatsLocalAndRemote
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
-    , Routed t StageIndex m
     )
   => Event t Stats
   -> m (Dynamic t [(Bool, (Maybe Text, Stats))])
@@ -537,12 +535,11 @@ getStatsLocalAndRemote evNewStats = do
   Env{..} <- ask
   let Navigation{..} = envNavigation
   evReady <- fmap envToReady $ getPostBuild
-  dynStage <- askRoute
 
   (evRespFail, evRespSucc) <- fmap fanEither $ request $
       getStats (getMaybeAuthData <$> envDynState)
                (constDyn $ Right navLang)
-               (Right <$> dynStage)
+               (constDyn $ Right navCurrent)
                evReady
 
   updateState $ evRespFail $> [ field @"stApp" . field @"stMsg" ?~
@@ -572,8 +569,8 @@ getStatsLocalAndRemote evNewStats = do
   evLSMapStats <- fmap updated $ prerender (pure Map.empty) $
     fromMaybe Map.empty <$> liftJSM (LS.retrieve LS.KeyStats)
 
-  let evLSStats = attach (current dynStage) evLSMapStats <&> \(stage, map) ->
-        (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, stage) map
+  let evLSStats = evLSMapStats <&> \map ->
+        (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, navCurrent) map
 
   fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (flip (<>)) [] $ leftmost
     [ evLSStats

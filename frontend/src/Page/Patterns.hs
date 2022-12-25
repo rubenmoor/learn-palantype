@@ -143,7 +143,7 @@ overview = do
                 el "h3" $ do
                     text $ "Greediness " <> showt g
                     case readMaybe $ "stage_" <> show p <> "_" <> show g of
-                        Just stage -> routeLink (stageUrl navLang stage)
+                        Just stage -> routeLink (stageUrl @key stage)
                             $ iFa "fas fa-book-open"
                         Nothing ->
                             elClass "span" "lightgray" $ iFa "fas fa-book-open"

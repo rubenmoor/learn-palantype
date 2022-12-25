@@ -71,7 +71,7 @@ type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()
 
 type RoutesStats =
-       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stage" StageIndex :> Get '[JSON] [(Maybe Text, Stats)]
+       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stageIndex" StageIndex :> Get '[JSON] [(Maybe Text, Stats)]
   :<|> AuthRequired "jwt" :> "start" :> Post '[JSON] ()
   :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (Lang, StageIndex, Stats) :> Post '[JSON] ()
 

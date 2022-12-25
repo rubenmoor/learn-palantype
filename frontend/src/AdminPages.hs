@@ -71,7 +71,7 @@ import           Common.Model                   ( JournalEvent(..)
                                                 , EventUser(..)
                                                 , EventApp(..)
                                                 )
-import           Common.Route                   (showRoute,  FrontendRoute
+import           Common.Route                   (FrontendRoute
                                                     ( FrontendRoute_Admin
                                                     )
                                                 )
@@ -99,6 +99,11 @@ import GHC.Real (fromIntegral)
 import Data.Foldable (Foldable(null))
 import Data.Traversable (Traversable(sequence))
 import Data.Witherable (mapMaybe)
+import Palantype.Common (Lang(..))
+import qualified Palantype.EN as EN
+import qualified Palantype.DE as DE
+import qualified Common.Stage as Stage
+import Stages (stages)
 
 data JournalReqConfig = JournalReqConfig
   { jrcExcludeAdmin :: Bool
@@ -280,10 +285,13 @@ showEvent = \case
           text "page view "
           elAttr "a" ("href" =: path) $ text path
 
-        EventStageCompleted lang stage Stats {..} -> do
+        EventStageCompleted lang iStage Stats {..} -> do
             text "stage completed "
-            let r = stageUrl lang stage
-            routeLink r $ text $ showRoute r
+            let
+                (r, str) = case lang of
+                  EN -> (stageUrl @EN.Key iStage, showt $ Stage.fromIndex @EN.Key stages iStage)
+                  DE -> (stageUrl @DE.Key iStage, showt $ Stage.fromIndex @DE.Key stages iStage)
+            routeLink r $ text str
             text $ " " <> formatTime statsTime
 
 elLabelInputDate

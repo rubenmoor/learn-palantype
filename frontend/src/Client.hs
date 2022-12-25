@@ -62,7 +62,7 @@ import           Common.Model                   ( Journal
                                                 , Stats
                                                 , AppState
                                                 )
-import           Common.Stage                   (StageIndex,  Stage )
+import           Common.Stage                   (StageIndex )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
