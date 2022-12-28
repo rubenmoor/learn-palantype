@@ -20,7 +20,7 @@ import           Database.Gerippe               ( (||.)
                                                 , just
                                                 , (?.)
                                                 , valkey
-
+                                                , delete
                                                 , desc
                                                 , orderBy
                                                 , (&&.)
@@ -44,6 +44,7 @@ import           Database                       ( blobDecode
                                                 )
 import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
+                                                , catMaybes
                                                 )
 import           Control.Monad                  ( when
                                                 )
@@ -62,6 +63,7 @@ import           Data.Int                       ( Int )
 import           Data.Text                      ( Text )
 import           GHC.Real                       ( fromIntegral )
 import           Database.Gerippe               ( isNothing )
+import Data.Functor ((<$>), ($>))
 import Data.Either (Either(..))
 import qualified Data.Text.Lazy.Encoding as LazyText
 import qualified Data.Text.Lazy as LazyText
@@ -104,16 +106,12 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
                 where_ $ isNothing $ j ^. Db.JournalFkMAlias
               orderBy [desc $ j ^. Db.JournalCreated]
               pure (j, v, ma, mu)
-    for es \(Entity _ Db.Journal{..}, Entity _ Db.Visitor{..}, ma, mu) -> do
-            let journalVisitorId = keyToId journalFkVisitor
+    catMaybes <$> for es \(Entity key Db.Journal{..}, Entity _ Db.Visitor{..}, ma, mu) -> do
+            let
+                journalVisitorId = keyToId journalFkVisitor
                 journalVisitorIp = visitorIpAddress
                 journalTime      = journalCreated
-            journalEvent      <- case blobDecode journalBlob of
-              Left  strErr -> throwError $ err500
-                { errBody = "Could not decode journal blob: "
-                    <> LazyText.encodeUtf8 (LazyText.fromStrict strErr)
-                }
-              Right je     -> pure je
+
             journalMAliasUser <- case (ma, mu) of
                 (Nothing, Nothing) -> pure Nothing
                 (Just (Entity _ Db.Alias {..}), Just (Entity _ Db.User {..}))
@@ -121,7 +119,13 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
                 _ -> throwError $ err500
                     { errBody = "handleJournalGetAll: expected single entry"
                     }
-            pure $ Journal { .. }
+            case blobDecode journalBlob of
+              Nothing -> runDb (delete key) $> Nothing -- instead of migration
+                -- throwError $ err500
+                -- { errBody = "Could not decode journal blob: "
+                --     <> LazyText.encodeUtf8 (LazyText.fromStrict strErr)
+                -- }
+              Just journalEvent     -> pure $ Just $ Journal { .. }
 
 whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 whenJust m f = case m of

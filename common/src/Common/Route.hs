@@ -25,7 +25,7 @@ import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( concat )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Traversable               ( mapM )
-import           Obelisk.Route                  (reviewEncoder, packTextEncoder, unsafeTshowEncoder, integralEncoder, pathSegmentEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
+import           Obelisk.Route                  (reviewEncoder, packTextEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
                                                 , singlePathSegmentEncoder
                                                 , mkFullRouteEncoder
                                                 , pattern (:/)
@@ -45,12 +45,9 @@ import           Control.Category               ( Category(id) )
 import Palantype.Common.TH (failure)
 import Data.Semigroup (Semigroup((<>)))
 import qualified Data.Text as Text
-import Palantype.Common.Internal (Lang)
-import Control.Categorical.Bifunctor (bimap)
-import Numeric.Lens (integral, base)
+import Numeric.Lens (base)
 import Control.Applicative (Applicative)
 import Data.Text.Lens (IsText)
-import Data.String (String)
 import Control.Lens.Wrapped (Unwrapped, Wrapped)
 import Control.Monad.Except (MonadError)
 import GHC.Real (Integral)

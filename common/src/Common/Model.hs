@@ -27,7 +27,7 @@ import           Data.Map.Strict                ( Map )
 import           Palantype.Common               (Lang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
-import           Common.Stage                   ( StageIndex )
+import           Common.Stage                   (StageRepr,  StageIndex )
 
 -- frontend/Localstorage
 
@@ -143,7 +143,7 @@ instance FromJSON EventUser
 
 data EventApp
   = EventViewPage Text
-  | EventStageCompleted Lang StageIndex Stats
+  | EventStageCompleted Lang StageRepr Stats
   deriving (Generic)
 
 instance ToJSON EventApp

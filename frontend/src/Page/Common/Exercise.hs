@@ -9,16 +9,15 @@ module Page.Common.Exercise
     ) where
 
 import Common.Route (FrontendRoute)
-import Common.Stage (StageIndex)
-import Control.Monad (unless)
+import Common.Stage (StageHierarchy (..), StageIndex)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Semigroup (Endo)
 import Obelisk.Route (R)
 import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute)
-import Page.Common (getStatsLocalAndRemote, elCongraz, elNotImplemented, elPatterns, taskWords)
-import Palantype.Common (patternDoc, Greediness, Lang (..), Palantype, toDescription)
+import Page.Common (getStatsLocalAndRemote, elCongraz, elPatterns, taskWords)
+import Palantype.Common (patternDoc, Greediness, Palantype, toDescription)
 import Palantype.DE (Pattern (..))
 import Reflex.Dom (current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, el, elClass, never, text)
 import State (Env (..), Navigation (..), State)
@@ -47,20 +46,21 @@ type Constraints key t m =
 exercise
   :: forall key t (m :: * -> *)
   .  Constraints key t m
-  => Int
-  -> Int
+  => StageHierarchy
   -> m ()
-  -> Pattern
-  -> Greediness
+  -> (Pattern, Greediness)
   -> m ()
   -> m Navigation
-exercise iStage iEx elIntro pat greediness elExplication = mdo
+exercise hierarchy elIntro (pat, greediness) elExplication = mdo
     Env {..} <- ask
-    let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    let
+        Navigation {..} = envNavigation
+        (strStage, strSubStage) = case hierarchy of
+            StageToplevel -> ("", "")
+            StageSublevel t s -> (showt t, showt s)
 
-    el "h1" $ text $ "Stage " <> showt iStage
-    el "h3" $ text $ "Exercise " <> showt iEx
+    el "h1" $ text $ "Stage " <> strStage
+    el "h3" $ text $ "Exercise " <> strSubStage
     el "h2" $ text $ toDescription pat
     el "h4" $ text $ "Greediness " <> showt greediness
 

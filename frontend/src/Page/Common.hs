@@ -168,7 +168,7 @@ import Obelisk.Generated.Static (static)
 import GHC.Generics (Generic)
 import GHCJS.DOM.Types (HTMLAudioElement(HTMLAudioElement), unElement)
 import GHCJS.DOM.HTMLMediaElement (play)
-import {-# SOURCE #-}Stages (stages)
+import Control.Monad ((=<<))
 
 elFooter
     :: forall key t (m :: * -> *)
@@ -184,11 +184,13 @@ elFooter Navigation {..} = elClass "footer" "stage" $ do
     whenJust navMPrevious $ \prv -> do
         elClass "div" "floatLeft" $ do
             text "< "
-            routeLink (stageUrl @key prv) $ text $ showt $ Stage.fromIndex (stages @key) prv
-    text $ showt $ Stage.fromIndex (stages @key) navCurrent
+            routeLink (stageUrl @key prv) $
+              text $ fromMaybe "" $ showt <$> Stage.fromIndex @key prv
+    text $ fromMaybe "" $ showt <$> Stage.fromIndex @key navCurrent
     whenJust navMNext $ \nxt -> do
         elClass "div" "floatRight" $ do
-            routeLink (stageUrl @key nxt) $ text $ showt $ Stage.fromIndex (stages @key) nxt
+            routeLink (stageUrl @key nxt) $
+              text $ fromMaybe "" $ showt <$> Stage.fromIndex @key nxt
             text " >"
     elClass "br" "clearBoth" blank
 
@@ -269,7 +271,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                         text " to continue to "
                         elClass "div" "paragraph" $ do
                             (e, _) <- elClass' "a" "normalLink" $
-                                text $ showt $ Stage.fromIndex (stages @key) nxt
+                                text $ showt $ Stage.fromIndex @key nxt
                             text "."
                             pure e
                     let eContinue =
@@ -280,7 +282,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                                   (\s -> if nxt > s then Just nxt else Just s)
                                   navLang
                       , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> case Stage.getGroupIndex $ Stage.fromIndex (stages @key) nxt of
+                      ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
                           Nothing -> []
                           Just  t ->
                             [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t

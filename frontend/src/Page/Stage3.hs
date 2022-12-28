@@ -8,7 +8,7 @@ module Page.Stage3 where
 
 import           Obelisk.Route.Frontend         ( routeLink
                                                 )
-import           Page.Common.Exercise (Constraints, exercise)
+import           Page.Common.Exercise (Constraints)
 import qualified Palantype.DE as DE
 import           Palantype.Common.TH            ( fromJust
                                                 )
@@ -16,195 +16,191 @@ import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     ( el
                                                 , text
                                                 )
-import           State                          (stageUrl,  Navigation(..)
-                                                )
+import           State                          (stageUrl)
 import           TextShow                       ( TextShow(showt) )
 import Common.Stage (findStage, StageSpecialGeneric (..))
-import Stages (stages)
+import Data.Map.Strict (Map)
+import Palantype.Common (Greediness)
+import qualified Data.Map.Strict as Map
 
-exercise1 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
-exercise1 = exercise
-    3 1
-    ( el "p" $ text
+exercises
+  :: forall key t (m :: * -> *)
+  . Constraints key t m
+  => Map (DE.Pattern, Greediness) (m (), m ())
+exercises = Map.fromList
+  [ ( (PatReplCommon1, 0),
+      ( el "p" $ text
           "In general, any word in the natural language translates to some \
           \steno code based on a couple of straightforward substitutions. \
           \In this exercise, we start with the most common ones."
-    )
-    PatReplCommon1 0
-    ( do
-        el "p" $ do
-            text
-                "First of all, note that these patterns are in addition to the \
-                      \simple patterns of the previous "
-            let (iStage, iT, iS) =
-                  $fromJust $ findStage stages $ StageGeneric PatSimple 0
-            routeLink (stageUrl @key iStage)
-                $  text
-                $  "Exercise "
-                <> showt iT
-                <> "."
-                <> showt iS
-            text
-                ". Thus, if you are missing a letter, it might be among the \
-                      \simple patterns. Also, note that the minus sign, -, isn't an actual \
-                      \steno key. Instead, it's used to distinguish between the left-hand and \
-                      \right-hand version of keys that appear twice on the steno keyboard."
-            el "code" $ text "-LS"
-            text " simply refers to "
-            el "code" $ text "L"
-            text " and "
-            el "code" $ text "S"
-            text " of your right hand. "
-            el "code" $ text "L-S"
-            text " would refer to the "
-            el "code" $ text "L"
-            text " of your left hand and the "
-            el "code" $ text "S"
-            text " of your right hand. Finally, in order to refer to "
-            el "code" $ text "S"
-            text " and "
-            el "code" $ text "L"
-            text " of your left hand, the code would look like this: "
-            el "code" $ text "SL-"
-            text ", always obeying the proper order of steno keys."
+      , do
+          el "p" $ do
+              text
+                  "First of all, note that these patterns are in addition to the \
+                        \simple patterns of the previous "
+              let (iStage, iT, iS) =
+                    $fromJust $ findStage $ StageSpecial @key "Onset, nucleus, and coda"
+              routeLink (stageUrl @key iStage)
+                  $  text
+                  $  "Exercise "
+                  <> showt iT
+                  <> "."
+                  <> showt iS
+              text
+                  ". Thus, if you are missing a letter, it might be among the \
+                        \simple patterns. Also, note that the minus sign, -, isn't an actual \
+                        \steno key. Instead, it's used to distinguish between the left-hand and \
+                        \right-hand version of keys that appear twice on the steno keyboard."
+              el "code" $ text "-LS"
+              text " simply refers to "
+              el "code" $ text "L"
+              text " and "
+              el "code" $ text "S"
+              text " of your right hand. "
+              el "code" $ text "L-S"
+              text " would refer to the "
+              el "code" $ text "L"
+              text " of your left hand and the "
+              el "code" $ text "S"
+              text " of your right hand. Finally, in order to refer to "
+              el "code" $ text "S"
+              text " and "
+              el "code" $ text "L"
+              text " of your left hand, the code would look like this: "
+              el "code" $ text "SL-"
+              text ", always obeying the proper order of steno keys."
 
-        el "p" $ do
-            text
-                "This is a lot to memorize, right from the start. Take your \
-                      \time to discover some regularities. E.g. the "
-            el "code" $ text "+"
-            text " turns "
-            el "em" $ text "g"
-            text ", "
-            el "em" $ text "d"
-            text ", and"
-            el "em" $ text "b"
-            text " into "
-            el "em" $ text "k"
-            text ", "
-            el "em" $ text "t"
-            text ", and"
-            el "em" $ text "p"
-            text ", respectively. The "
-            el "em" $ text "x"
-            text " looks weird but it really is simply typed by "
-            el "code" $ text "DSG"
-            text " with the left hand, which becomes "
-            el "code" $ text "GSD"
-            text " with the right hand."
+          el "p" $ do
+              text
+                  "This is a lot to memorize, right from the start. Take your \
+                        \time to discover some regularities. E.g. the "
+              el "code" $ text "+"
+              text " turns "
+              el "em" $ text "g"
+              text ", "
+              el "em" $ text "d"
+              text ", and"
+              el "em" $ text "b"
+              text " into "
+              el "em" $ text "k"
+              text ", "
+              el "em" $ text "t"
+              text ", and"
+              el "em" $ text "p"
+              text ", respectively. The "
+              el "em" $ text "x"
+              text " looks weird but it really is simply typed by "
+              el "code" $ text "DSG"
+              text " with the left hand, which becomes "
+              el "code" $ text "GSD"
+              text " with the right hand."
+      )
     )
-
-exercise2 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
-exercise2 = exercise
-    3 2
-    ( el "p" $ text
+  , ( (PatReplCommon2, 0)
+    , ( el "p" $ text
           "The rules for the replacement of common letters are somewhat \
           \arbitrarily split in two. This is the second half."
+      , do
+          el "p" do
+              text "The idea behind "
+              el "em" $ text "phr"
+              text " is to combine "
+              el "em" $ text "f"
+              text " (the pronounciation of "
+              el "em" $ text "ph"
+              text ") with "
+              el "em" $ text "r"
+              text ". The "
+              el "em" $ text "schw-"
+              text " rule is indeed arbitrary and results from the fact that "
+              el "code" $ text "ʃ"
+              text " and "
+              el "code" $ text "F"
+              text
+                  " cannot be reached at the same time. The same is true for "
+              el "em" $ text "zw-"
+              text "."
+
+          el "p" do
+              text "The "
+              el "em" $ text "sp"
+              text " rule is a simplification of "
+              el "code" $ text "SB+"
+              text ", which is possible because "
+              el "em" $ text "sb"
+              text " isn't really a thing in German. The "
+              el "em" $ text "st"
+              text " rule is the first example of a swap—in combination with the \
+                   \fact that "
+              el "em" $ text "sd"
+              text " doesn't exist in German. The onset "
+              el "em" $ text "y"
+              text " is encoded in its use as a consonant here, like in "
+              el "em" $ text "Yoghurt"
+              text ". Note the different code for its vowel user in the nucleus. \
+                   \This onset code is also used for "
+
+              let (iStage, iT, iS) =
+                    $fromJust $ findStage $ StageSpecial @DE.Key "Fingerspelling"
+              routeLink (stageUrl @key iStage)
+                  $  text
+                  $  "Exercise "
+                  <> showt iT
+                  <> "."
+                  <> showt iS
+                  <> ": Fingerspelling "
+
+              text ", i.e. to type just the letter Y."
+
+          el "p" $ text
+                      "For the coda, you find a lot of cases where somewhat arbitrary \
+                \rules follow from necessity. Consonant combinations in the coda \
+                \are just too plentiful in German."
+      )
     )
-    PatReplCommon2 0
-    ( do
-        el "p" do
-            text "The idea behind "
-            el "em" $ text "phr"
-            text " is to combine "
-            el "em" $ text "f"
-            text " (the pronounciation of "
-            el "em" $ text "ph"
-            text ") with "
-            el "em" $ text "r"
-            text ". The "
-            el "em" $ text "schw-"
-            text " rule is indeed arbitrary and results from the fact that "
-            el "code" $ text "ʃ"
-            text " and "
-            el "code" $ text "F"
-            text
-                " cannot be reached at the same time. The same is true for "
-            el "em" $ text "zw-"
-            text "."
-
-        el "p" do
-            text "The "
-            el "em" $ text "sp"
-            text " rule is a simplification of "
-            el "code" $ text "SB+"
-            text ", which is possible because "
-            el "em" $ text "sb"
-            text " isn't really a thing in German. The "
-            el "em" $ text "st"
-            text " rule is the first example of a swap—in combination with the \
-                 \fact that "
-            el "em" $ text "sd"
-            text " doesn't exist in German. The onset "
-            el "em" $ text "y"
-            text " is encoded in its use as a consonant here, like in "
-            el "em" $ text "Yoghurt"
-            text ". Note the different code for its vowel user in the nucleus. \
-                 \This onset code is also used for "
-
-            let (iStage, iT, iS) =
-                  $fromJust $ findStage stages $ StageSpecial @DE.Key "fingerspelling"
-            routeLink (stageUrl @key iStage)
-                $  text
-                $  "Exercise "
-                <> showt iT
-                <> "."
-                <> showt iS
-                <> ": Fingerspelling "
-
-            text ", i.e. to type just the letter Y."
-
-        el "p" $ text
-                    "For the coda, you find a lot of cases where somewhat arbitrary \
-              \rules follow from necessity. Consonant combinations in the coda \
-              \are just too plentiful in German."
+  , ( (PatCodaComboT, 0)
+    , ( el "p" $ do
+          text "The new rules of this exercise all follow from one single rule: "
+          el "em" $ text "t"
+          text " is typed by "
+          el "code" $ text "+D"
+          text
+              ". But there is a lot space between those two keys to squeeze in \
+              \another consonant when needed."
+      , el "p" $ do
+          text
+              "This is not the whole story, though. First, exceptions are needed for "
+          el "em" $ text "mt"
+          text " and "
+          el "em" $ text "lt"
+          text ", where the "
+          el "code" $ text "+"
+          text " cannot be reached. It turns out that the "
+          el "code" $ text "+"
+          text
+              " isn't really necessary there, either. There are a couple of \
+              \ambiguities, e.g. "
+          el "em" $ text "holt"
+          text " and "
+          el "em" $ text "hold"
+          text
+              ", but they can be dealt with as exceptions. You will notice quickly \
+              \that the "
+          el "code" $ text "+"
+          text
+              " is omitted quite often—for a little bit increased typing efficiency."
+          text "In the case of "
+          el "em" $ text "scht"
+          text ", omitting the "
+          el "code" $ text "+"
+          text " has the additional advantage that "
+          el "code" $ text "-+ʃD"
+          text " now exclusively means "
+          el "em" $ text "cht"
+          text ", which keeps things nice and simple."
+      )
     )
-
-exercise3 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
-exercise3 = exercise
-    3 3
-    (el "p" $ do
-        text "The new rules of this exercise all follow from one single rule: "
-        el "em" $ text "t"
-        text " is typed by "
-        el "code" $ text "+D"
-        text
-            ". But there is a lot space between those two keys to squeeze in \
-            \another consonant when needed."
-    )
-    PatCodaComboT 0
-    (el "p" $ do
-        text
-            "This is not the whole story, though. First, exceptions are needed for "
-        el "em" $ text "mt"
-        text " and "
-        el "em" $ text "lt"
-        text ", where the "
-        el "code" $ text "+"
-        text " cannot be reached. It turns out that the "
-        el "code" $ text "+"
-        text
-            " isn't really necessary there, either. There are a couple of \
-            \ambiguities, e.g. "
-        el "em" $ text "holt"
-        text " and "
-        el "em" $ text "hold"
-        text
-            ", but they can be dealt with as exceptions. You will notice quickly \
-            \that the "
-        el "code" $ text "+"
-        text
-            " is omitted quite often—for a little bit increased typing efficiency."
-        text "In the case of "
-        el "em" $ text "scht"
-        text ", omitting the "
-        el "code" $ text "+"
-        text " has the additional advantage that "
-        el "code" $ text "-+ʃD"
-        text " now exclusively means "
-        el "em" $ text "cht"
-        text ", which keeps things nice and simple."
-    )
+  ]
 
 -- exercise6 :: forall key t (m :: * -> *) . Constraints key t m => m Navigation
 -- exercise6 = exercise

@@ -5,202 +5,219 @@
 
 module Main where
 
-import           Clay                           (dl, dt, p, label, type_, video, h1, cursive, firstChild, caption, textShadow,  (#)
-                                                , (&)
-                                                , (-:)
-                                                , (?)
-                                                , All(all)
-                                                , Auto(auto)
-                                                , Center(center)
-                                                , Color
-                                                , Css
-                                                , Cursor(cursor)
-                                                , Initial(initial)
-                                                , None(none)
-                                                , Normal(normal)
-                                                , Other(other)
-                                                , (^=)
-                                                , a
-                                                , absolute
-                                                , after
-                                                , alignItems
-                                                , alignSide
-                                                , animation
-                                                , background
-                                                , backgroundColor
-                                                , before
-                                                , black
-                                                , block
-                                                , blockquote
-                                                , blue
-                                                , body
-                                                , bold
-                                                , border
-                                                , borderBox
-                                                , borderRadius
-                                                , borderSpacing
-                                                , both
-                                                , bottom
-                                                , boxShadow
-                                                , boxSizing
-                                                , br
-                                                , breakWord
-                                                , bsColor
-                                                , bsInset
-                                                , button
-                                                , clear
-                                                , code
-                                                , collapse
-                                                , color
-                                                , column
-                                                , content
-                                                , darkblue
-                                                , display
-                                                , displayTable
-                                                , div
-                                                , ease
-                                                , easeInOut
-                                                , em
-                                                , fixed
-                                                , flex
-                                                , flexBasis
-                                                , flexFlow
-                                                , flexGrow
-                                                , flexShrink
-                                                , float
-                                                , floatLeft
-                                                , floatRight
-                                                , focus
-                                                , fontFamily
-                                                , fontSize
-                                                , fontSizeCustom
-                                                , fontStyle
-                                                , fontWeight
-                                                , footer
-                                                , gray
-                                                , green
-                                                , h2
-                                                , h3
-                                                , header
-                                                , height
-                                                , hidden
-                                                , hover
-                                                , hr
-                                                , html
-                                                , i
-                                                , iframe
-                                                , img
-                                                , important
-                                                , infinite
-                                                , inherit
-                                                , inline
-                                                , inlineBlock
-                                                , inlineFlex
-                                                , input
-                                                , italic
-                                                , justifyContent
-                                                , keyframes
-                                                , left
-                                                , li
-                                                , lightgray
-                                                , lightgreen
-                                                , lineHeight
-                                                , linear
-                                                , link
-                                                , listStyleType
-                                                , margin
-                                                , marginBottom
-                                                , marginLeft
-                                                , marginRight
-                                                , marginTop
-                                                , maxWidth
-                                                , middle
-                                                , minHeight
-                                                , minWidth
-                                                , monospace
-                                                , nthChild
-                                                , opacity
-                                                , orange
-                                                , outline
-                                                , overflow
-                                                , overflowClip
-                                                , overflowEllipsis
-                                                , overflowWrap
-                                                , overflowY
-                                                , padding
-                                                , paddingBottom
-                                                , paddingLeft
-                                                , paddingRight
-                                                , paddingTop
-                                                , pct
-                                                , pink
-                                                , pointer
-                                                , position
-                                                , preWrap
-                                                , pt
-                                                , putCss
-                                                , px
-                                                , queryOnly
-                                                , red
-                                                , relative
-                                                , rem
-                                                , rgb
-                                                , rgba
-                                                , right
-                                                , sansSerif
-                                                , sec
-                                                , section
-                                                , shadowWithBlur
-                                                , shadowWithSpread
-                                                , sideCenter
-                                                , sideLeft
-                                                , sideRight
-                                                , small
-                                                , smaller
-                                                , solid
-                                                , span
-                                                , star
-                                                , sticky
-                                                , stringContent
-                                                , strong
-                                                , table
-                                                , td
-                                                , textAlign
-                                                , textDecoration
-                                                , textOverflow
-                                                , th
-                                                , top
-                                                , tr
-                                                , transform
-                                                , transition
-                                                , translate
-                                                , transparent
-                                                , ul
-                                                , underline
-                                                , vAlignBottom
-                                                , verticalAlign
-                                                , violet
-                                                , visibility
-                                                , visited
-                                                , white
-                                                , whiteSpace
-                                                , width
-                                                , yellow
-                                                , zIndex
-                                                , (|>)
-                                                )
-import           Clay                           ( borderTopColor )
-import           Clay                           ( borderTopStyle )
-import           Clay                           ( borderTopWidth )
-import           Clay                           ( nowrap )
-import           Clay                           ( borderColor )
-import           Clay                           ( borderCollapse )
+import Clay
+    ( dl,
+      dt,
+      p,
+      label,
+      type_,
+      video,
+      h1,
+      cursive,
+      firstChild,
+      caption,
+      textShadow,
+      (#),
+      (&),
+      (-:),
+      (?),
+      All(all),
+      Auto(auto),
+      Center(center),
+      Color,
+      Css,
+      Cursor(cursor),
+      Initial(initial),
+      None(none),
+      Normal(normal),
+      Other(other),
+      (^=),
+      a,
+      absolute,
+      after,
+      alignItems,
+      alignSide,
+      animation,
+      background,
+      backgroundColor,
+      before,
+      black,
+      block,
+      blockquote,
+      blue,
+      body,
+      bold,
+      border,
+      borderBox,
+      borderRadius,
+      borderSpacing,
+      both,
+      bottom,
+      boxShadow,
+      boxSizing,
+      br,
+      breakWord,
+      bsColor,
+      bsInset,
+      button,
+      clear,
+      code,
+      collapse,
+      color,
+      column,
+      content,
+      darkblue,
+      display,
+      displayTable,
+      div,
+      ease,
+      easeInOut,
+      em,
+      fixed,
+      flex,
+      flexBasis,
+      flexFlow,
+      flexGrow,
+      flexShrink,
+      float,
+      floatLeft,
+      floatRight,
+      focus,
+      fontFamily,
+      fontSize,
+      fontSizeCustom,
+      fontStyle,
+      fontWeight,
+      footer,
+      gray,
+      green,
+      h2,
+      h3,
+      header,
+      height,
+      hidden,
+      hover,
+      hr,
+      html,
+      i,
+      iframe,
+      img,
+      important,
+      infinite,
+      inherit,
+      inline,
+      inlineBlock,
+      inlineFlex,
+      input,
+      italic,
+      justifyContent,
+      keyframes,
+      left,
+      li,
+      lightgray,
+      lightgreen,
+      lineHeight,
+      linear,
+      link,
+      listStyleType,
+      margin,
+      marginBottom,
+      marginLeft,
+      marginRight,
+      marginTop,
+      maxWidth,
+      middle,
+      minHeight,
+      minWidth,
+      monospace,
+      nthChild,
+      opacity,
+      orange,
+      outline,
+      overflow,
+      overflowClip,
+      overflowEllipsis,
+      overflowWrap,
+      overflowY,
+      padding,
+      paddingBottom,
+      paddingLeft,
+      paddingRight,
+      paddingTop,
+      pct,
+      pink,
+      pointer,
+      position,
+      preWrap,
+      pt,
+      putCss,
+      px,
+      queryOnly,
+      red,
+      relative,
+      rem,
+      rgb,
+      rgba,
+      right,
+      sansSerif,
+      sec,
+      section,
+      shadowWithBlur,
+      shadowWithSpread,
+      sideCenter,
+      sideLeft,
+      sideRight,
+      small,
+      smaller,
+      solid,
+      span,
+      star,
+      sticky,
+      stringContent,
+      strong,
+      table,
+      td,
+      textAlign,
+      textDecoration,
+      textOverflow,
+      th,
+      top,
+      tr,
+      transform,
+      transition,
+      translate,
+      transparent,
+      ul,
+      underline,
+      vAlignBottom,
+      verticalAlign,
+      violet,
+      visibility,
+      visited,
+      white,
+      whiteSpace,
+      width,
+      yellow,
+      zIndex,
+      (|>),
+      borderTopColor,
+      borderTopStyle,
+      borderTopWidth,
+      nowrap,
+      borderColor,
+      borderCollapse,
+      borderLeft,
+      borderRight,
+      lightyellow,
+      flexWrap,
+      wrap )
 import           Clay.Border                    ( borderBottom
                                                 , borderTop
                                                 , dotted
                                                 )
 import           Clay.Color                     ( darkgray )
-import           Clay.Flexbox                   ( row )
+import Clay.Flexbox
+    ( row, flexDirection, SpaceAround(spaceAround) )
 import qualified Clay.Flexbox                  as Flex
 import qualified Clay.Media                    as Media
 import           Control.Applicative            ( Applicative(pure) )
@@ -210,14 +227,8 @@ import           Data.Semigroup                 ( Semigroup((<>)) )
 import           GHC.IO                         ( IO )
 import           GHC.Num                        ( Num((*), (+), (-), negate) )
 import           System.IO                      ( putStrLn )
-import Clay (borderLeft)
-import Clay (borderRight)
-import Clay (lightyellow)
-import Clay (flexWrap)
-import Clay (wrap)
-import Clay.Flexbox (flexDirection)
-import Clay.Flexbox (SpaceAround(spaceAround))
 import TextShow (showt)
+import qualified Clay.Elements as Element
 
 anthrazit :: Color
 anthrazit = rgb 8 20 48 -- #081430;
@@ -690,6 +701,7 @@ main = putCss $ do
     ".anthrazit" ? color anthrazit
     ".darkgray" ? color darkgray
     ".textAlign-center" ? textAlign center
+    ".bold" ? fontWeight bold
 
     ".exerciseField" ? do
         backgroundColor myLightgray

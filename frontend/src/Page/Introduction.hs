@@ -15,8 +15,7 @@ module Page.Introduction where
 
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ( (<<<)
-                                                , (.)
+import           Control.Category               ( (.)
                                                 )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
@@ -29,7 +28,6 @@ import           Data.Functor                   ( ($>)
                                                 )
 import           Data.Generics.Product          ( field )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( Maybe(Just) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
@@ -61,9 +59,7 @@ import           State                          ( stageUrl
                                                 , State
                                                 , updateState
                                                 )
-import           Text.Read                      ( readMaybe )
 import           TextShow                       ( TextShow(showt) )
-import           Palantype.Common.TH            ( readLoc )
 import           Palantype.Common.TH            ( fromJust )
 
 introduction
@@ -189,9 +185,7 @@ introduction = do
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState
             $  eStart
-            $> [ field @"stApp"
-               .  field @"stProgress"
-               %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
+            $> [ field @"stApp" . field @"stProgress" %~ Map.insert navLang ($fromJust navMNext)
                , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
                , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
                ]

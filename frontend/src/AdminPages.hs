@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE DataKinds #-}
@@ -99,11 +101,11 @@ import GHC.Real (fromIntegral)
 import Data.Foldable (Foldable(null))
 import Data.Traversable (Traversable(sequence))
 import Data.Witherable (mapMaybe)
-import Palantype.Common (Lang(..))
+import Palantype.Common (Palantype, Lang(..))
 import qualified Palantype.EN as EN
 import qualified Palantype.DE as DE
 import qualified Common.Stage as Stage
-import Stages (stages)
+import Palantype.Common.TH (fromJust)
 
 data JournalReqConfig = JournalReqConfig
   { jrcExcludeAdmin :: Bool
@@ -285,13 +287,21 @@ showEvent = \case
           text "page view "
           elAttr "a" ("href" =: path) $ text path
 
-        EventStageCompleted lang iStage Stats {..} -> do
+        EventStageCompleted lang stageRepr Stats {..} -> do
             text "stage completed "
             let
-                (r, str) = case lang of
-                  EN -> (stageUrl @EN.Key iStage, showt $ Stage.fromIndex @EN.Key stages iStage)
-                  DE -> (stageUrl @DE.Key iStage, showt $ Stage.fromIndex @DE.Key stages iStage)
-            routeLink r $ text str
+                mkRouteLink :: forall key. Palantype key => m ()
+                mkRouteLink = do
+                    let (r, str) = $fromJust $ do
+                          index <- Stage.findStageIndex stageRepr
+                          stage <- Stage.fromIndex @key index
+                          pure $ (stageUrl @key index, showt stage)
+                    routeLink r $ text str
+
+            case lang of
+                EN -> mkRouteLink @EN.Key
+                DE -> mkRouteLink @DE.Key
+
             text $ " " <> formatTime statsTime
 
 elLabelInputDate

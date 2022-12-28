@@ -134,7 +134,7 @@ handleGetAppState UserInfo {..} = do
     Db.User {..} <- runDb (getBy $ Db.UUserName uiUserName) >>= maybe
         (throwError $ err500 { errBody = "user not found" })
         (pure . entityVal)
-    pure $ fromRight defaultAppState $ blobDecode userBlobAppState
+    pure $ fromMaybe defaultAppState $ blobDecode userBlobAppState
 
 handlePutAppState :: UserInfo -> AppState -> Handler ()
 handlePutAppState UserInfo {..} appState = do

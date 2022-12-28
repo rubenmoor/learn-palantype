@@ -64,9 +64,9 @@ library
     , Page.Stage40.CommandKeys
     , Page.Stage40.SpecialCharacters
     , Page.Stage50
+    , Page.StageGeneric
     , PloverDict
     , Shared
-    , Stages
     , State
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
   default-extensions:

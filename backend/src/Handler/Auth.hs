@@ -128,7 +128,7 @@ handleGrantAuthPwd LoginData {..} =
                         sdUserName    = userName
                         sdAliasName   = Db.aliasName alias
                         sdAliasVisible = Db.aliasIsVisible alias
-                        appState = fromRight defaultAppState $ blobDecode userBlobAppState
+                        appState = fromMaybe defaultAppState $ blobDecode userBlobAppState
 
                     DbJournal.insert (Just keyAlias) $ EventUser EventLogin
                     pure $ Just $ (SessionData { .. }, appState)

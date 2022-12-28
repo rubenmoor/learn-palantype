@@ -50,8 +50,8 @@ runDb' pool action =
 blobEncode :: forall a . ToJSON a => a -> ByteString
 blobEncode = Lazy.toStrict <<< Aeson.encode
 
-blobDecode :: forall a . FromJSON a => ByteString -> Either Text a
-blobDecode str = mapLeft Text.pack $ Aeson.eitherDecodeStrict str
+blobDecode :: forall a . FromJSON a => ByteString -> Maybe a
+blobDecode str = Aeson.decodeStrict str
     -- Left  strErr -> throwError $ err500
     --   { errBody = "Json decoding failed: " <> BSU.fromString strErr
     --   }

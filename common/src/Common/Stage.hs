@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -21,15 +23,17 @@
 module Common.Stage
     ( fromIndex
     , findStage
+    , getLang
     , toTOCString
     , getGroupIndex
     , Stage(..)
+    , StageRepr ()
     , StageSpecialGeneric (..)
     , StageHierarchy (..)
-    , StageIndex (..)
+    , StageIndex
     , mPrev
     , mNext
-    )
+    ,isValidIndex,findStageIndex,toStageRepr)
 where
 
 import           Control.Category               ((<<<),  Category ((.)))
@@ -40,7 +44,6 @@ import           Data.Default                   ( Default(def) )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ((<&>), (<$>) )
 import           Data.Int                       ( Int )
-import           Data.List                      ((!!) )
 import           Data.Monoid                    ( (<>) )
 import           Data.Text                      ( Text
                                                 )
@@ -50,14 +53,14 @@ import           Data.Text                      ( cons )
 import           GHC.Enum                       (pred, Enum,  succ
                                                 )
 import           GHC.Generics                   ( Generic )
-import           Safe                           (readMay )
+import           Safe                           (atMay, readMay )
 import           Text.Show                      ( show
                                                 , Show
                                                 )
 import           TextShow                       (showt, TextShow(showb)
                                                 , fromText
                                                 )
-import           Palantype.Common               (Greediness, PatternGroup )
+import           Palantype.Common               (Lang (..), Greediness, PatternGroup )
 import           Text.Read                      (read
                                                 , Read(readPrec)
                                                 )
@@ -68,16 +71,22 @@ import Text.ParserCombinators.ReadPrec (lift)
 import Text.ParserCombinators.ReadP (option, sepBy1, munch1, char)
 import Text.ParserCombinators.ReadP (pfail)
 import Control.Monad (Monad((>>=)))
-import Data.Bool ((||))
+import Data.Bool (Bool, otherwise, (||), (&&))
 import Data.Eq (Eq((/=)))
 import Data.Maybe (Maybe(Nothing, Just), maybe)
 import Palantype.Common.Class (Palantype)
 import GHC.Num ((+), (-), Num)
-import Data.Ord ((>), Ord)
+import Data.Ord ((<), (>), Ord)
 import Data.Foldable (Foldable(foldl'))
 import Control.Lens.Wrapped (Wrapped)
 import Palantype.Common (Palantype(toDescription))
 import Data.Foldable (Foldable(length))
+import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
+import qualified Palantype.DE as DE
+import qualified Palantype.EN as EN
+import Data.Tuple (snd)
+import Palantype.Common.TH (failure)
+import Data.List ((!!))
 
 data StageSpecialGeneric key
   = StageSpecial Text
@@ -111,7 +120,7 @@ deriving instance Palantype key => Eq (StageSpecialGeneric key)
 data StageHierarchy
   = StageToplevel
   | StageSublevel Int Int
-  deriving stock (Generic, Eq)
+  deriving stock (Generic, Eq, Ord)
 
 instance Show StageHierarchy where
   show StageToplevel = "-"
@@ -165,6 +174,12 @@ instance Palantype key => TextShow (Stage key) where
         StageSublevel t s -> " " <> showb t <> "." <> showb s
       StageGeneric pg g -> fromText (capitalize $ showt pg) <> "-G" <> showb g
 
+-- stage index
+
+-- | allow to identify a stage by some integer number
+-- | This number changes when stages are reordered
+-- | Thus it can be used routes but shouldn't be stored in the database
+-- | For long-term storage, there is 'StageRepr'
 newtype StageIndex = StageIndex { unStageIndex :: Int }
   deriving stock (Eq, Generic, Ord)
   deriving newtype (Enum, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData, Num, Read, Show)
@@ -174,34 +189,130 @@ instance Wrapped StageIndex
 instance TextShow StageIndex where
   showb = showb <<< unStageIndex
 
+-- stage representation
 
-instance Default (Stage key) where
-    def = Stage (StageSpecial "introduction") StageToplevel
+data StageSpecialGenericRepr
+  = StageReprSpecial Text
+  | StageReprGeneric Text Greediness
+  deriving stock (Eq, Generic, Ord)
+
+instance ToJSON StageSpecialGenericRepr
+instance FromJSON StageSpecialGenericRepr
+
+-- | Use the 'TextShow'
+-- | instance of 'PatternGroup key' to convert a 'Stage key' in a one-way
+-- | manner into a legible representation of a stage
+data StageRepr = StageRepr
+    { srLang :: Lang
+    , srStageSpecialGeneric :: StageSpecialGenericRepr
+    , srStageHierarchy :: StageHierarchy
+    }
+    deriving stock (Eq, Generic, Ord)
+
+instance TextShow StageRepr where
+  showb (StageRepr lang sg h) = showb lang <> "/" <> case sg of
+         StageReprSpecial str -> fromText (capitalize str) <> case h of
+            StageToplevel -> ""
+            StageSublevel t s -> " " <> showb t <> "." <> showb s
+         StageReprGeneric str g -> fromText str <> "-G" <> showb g
+
+instance ToJSON StageRepr
+instance FromJSON StageRepr
+
+-- stages
+
+stages
+  :: forall key
+  . ( Palantype key
+    ) => [Stage key]
+stages =
+    [ Stage (StageSpecial "Introduction"            ) StageToplevel
+    , Stage (StageSpecial "Type the letters"        ) (StageSublevel 1 1)
+    , Stage (StageSpecial "Memorize the order"      ) (StageSublevel 1 2)
+    , Stage (StageSpecial "Type the letters blindly") (StageSublevel 1 3)
+    , Stage (StageSpecial "Memorize the order blindly") (StageSublevel 1 4)
+    , Stage (StageSpecial "Memorize the left hand"  ) (StageSublevel 1 5)
+    , Stage (StageSpecial "Memorize the right hand" ) (StageSublevel 1 6)
+    , Stage (StageSpecial "Memorize home row"       ) (StageSublevel 1 7)
+    , Stage (StageSpecial "Memorize them all"       ) (StageSublevel 1 8)
+    , Stage (StageSpecial "Building muscle memory"  ) (StageSublevel 2 1)
+    , Stage (StageSpecial "Learn your first chords" ) (StageSublevel 2 2)
+    ] <> if
+        | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> stagesDE
+        | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> [] -- TODO
+        | otherwise -> []
+
+stagesDE
+  :: [Stage DE.Key]
+stagesDE =
+    [ Stage (StageSpecial "Onset, nucleus, and coda") (StageSublevel 2 3)
+    , Stage (StageSpecial "Syllabes and word parts" ) (StageSublevel 2 4)
+    , Stage (StageGeneric DE.PatReplCommon1 0) (StageSublevel 3 1)
+    , Stage (StageGeneric DE.PatReplCommon2 0) (StageSublevel 3 2)
+    , Stage (StageGeneric DE.PatCodaComboT  0) (StageSublevel 3 3)
+    , Stage (StageGeneric DE.PatReplCommon1 2) (StageSublevel 4 1)
+    , Stage (StageGeneric DE.PatReplCommon1 3) (StageSublevel 4 2)
+    , Stage (StageGeneric DE.PatReplCommon2 4) (StageSublevel 4 3)
+    , Stage (StageGeneric DE.PatOnsetR      0) (StageSublevel 5 1)
+    , Stage (StageGeneric DE.PatOnsetL      0) (StageSublevel 5 2)
+    , Stage (StageGeneric DE.PatDiConsonant 0) (StageSublevel 5 3)
+    , Stage (StageGeneric DE.PatDiConsonant 2) (StageSublevel 5 4)
+    , Stage (StageGeneric DE.PatCodaH       0) (StageSublevel 6 1)
+    , Stage (StageGeneric DE.PatCodaH       1) (StageSublevel 6 2)
+    , Stage (StageGeneric DE.PatCodaR       0) (StageSublevel 6 3)
+    , Stage (StageGeneric DE.PatCodaR       4) (StageSublevel 6 4)
+    , Stage (StageGeneric DE.PatCodaRR      0) (StageSublevel 6 5)
+    , Stage (StageGeneric DE.PatCodaHR      0) (StageSublevel 6 6)
+    -- , Stage (StageGeneric PatDt          0)
+    -- , Stage (StageGeneric PatDiphtong    0)
+    -- , Stage (StageGeneric PatReplC       0)
+    -- , Stage (StageGeneric PatBreakUpI    0)
+    -- , Stage (StageGeneric PatSwapS       0)
+    -- , Stage (StageGeneric PatSwapSch     0)
+    -- , Stage (StageGeneric PatSwapZ       0)
+    -- , Stage (StageGeneric PatDiVowel     0)
+    -- , Stage (StageGeneric PatReplH       0)
+    -- , Stage (StageGeneric PatCodaGK      3)
+    -- , Stage (StageGeneric PatReplRare    0)  -- 3.23
+    -- , Stage (StageGeneric PatSmallS      0)
+    , Stage (StageSpecial "Plover Commands"   ) (StageSublevel 40 1)
+    , Stage (StageSpecial "Fingerspelling"    ) (StageSublevel 40 2)
+    , Stage (StageSpecial "Number Mode"       ) (StageSublevel 40 3)
+    , Stage (StageSpecial "Command Keys"      ) (StageSublevel 40 4)
+    , Stage (StageSpecial "Special Characters") (StageSublevel 40 5)
+    , Stage (StageGeneric DE.PatBrief 0       ) (StageSublevel 50 1)
+    , Stage (StageSpecial "Pattern Overview"  ) StageToplevel
+    ]
+
+instance Palantype key => Default (Stage key) where
+    def = stages !! 0
+
+-- functions
 
 mPrev :: StageIndex -> Maybe StageIndex
 mPrev i =
     if i == 0 then Nothing else Just $ pred i
 
-mNext :: forall key. [Stage key] -> StageIndex -> Maybe StageIndex
-mNext stages i =
-    let max = length stages
+mNext :: forall key. Palantype key => StageIndex -> Maybe StageIndex
+mNext i =
+    let max = length $ stages @key
     in  if unStageIndex i == max - 1 then Nothing else Just $ succ i
 
-fromIndex :: forall key. [Stage key] -> StageIndex -> Stage key
-fromIndex stages i = stages !! unStageIndex i
+fromIndex :: forall key. Palantype key => StageIndex -> Maybe (Stage key)
+fromIndex i = stages `atMay` unStageIndex i
 
 -- | create a link text for entries in the table-of-contents
 --   if the greediness is bigger than 1, it is provided, too
-toTOCString :: forall key. Palantype key => Stage key -> (Maybe Greediness, Text)
+toTOCString :: forall key. Palantype key => Stage key -> (Text, Maybe Greediness, Text)
 toTOCString (Stage sg h) = case sg of
         StageSpecial str -> case h of
-            StageToplevel     -> (Nothing, str)
-            StageSublevel _ s -> (Nothing, "Ex. " <> showt s <> ": " <> str)
+          StageToplevel -> ("", Nothing, str)
+          StageSublevel _ s -> ("Ex. " <> showt s <> ": ", Nothing, str)
         StageGeneric pg g -> case h of
-            StageToplevel     -> (Nothing, "Error: generic stage on top level")
+            StageToplevel     -> $failure "Error: generic stage on top level"
             StageSublevel _ s ->
                 let mg = if g > 0 then Just g else Nothing
-                in  (mg, "Ex. " <> showt s <> ": " <> toDescription pg)
+                in  ("Ex. " <> showt s <> ": ", mg, toDescription pg)
 
 getGroupIndex :: forall key. Stage key -> Maybe Int
 getGroupIndex (Stage _ h) = case h of
@@ -211,10 +322,9 @@ getGroupIndex (Stage _ h) = case h of
 findStage
   :: forall key
   . Palantype key
-  => [Stage key]
-  -> StageSpecialGeneric key
+  => StageSpecialGeneric key
   -> Maybe (StageIndex, Int, Int)
-findStage stages ssg =
+findStage ssg =
     let (i, mResult) = foldl' acc (0, Nothing) stages
     in  mResult <&> \(t, s) -> (StageIndex i, t, s)
   where
@@ -223,9 +333,39 @@ findStage stages ssg =
       -> Stage key
       -> (Int, Maybe (Int, Int))
     acc r@(_, Just _) _                                           = r
-    acc (n, Nothing) (Stage (StageSpecial _) _                  ) = (n + 1, Nothing)
-    acc (n, Nothing) (Stage _                StageToplevel      ) = (n + 1, Nothing)
-    acc (n, Nothing) (Stage ssg'             (StageSublevel t s)) =
-        if show ssg' == show ssg
-        then (n, Just (t, s))
-        else (n + 1, Nothing)
+    acc (n, Nothing) (Stage ssg' (StageSublevel t s)) | ssg' == ssg = (n, Just (t, s))
+    acc (n, Nothing) _ = (n + 1, Nothing)
+
+
+findStageIndex :: StageRepr -> Maybe StageIndex
+findStageIndex (StageRepr lang sg h) =
+    case lang of
+      EN -> snd $ foldl' acc (0, Nothing) $ stages @EN.Key
+      DE -> snd $ foldl' acc (0, Nothing) $ stages @DE.Key
+  where
+    acc :: forall key. Palantype key => (Int, Maybe StageIndex) -> Stage key -> (Int, Maybe StageIndex)
+    acc r@(_, Just _)  _ = r
+    acc (i, Nothing ) (Stage (StageSpecial str') h') =
+      case sg of
+        StageReprSpecial str | str == str' && h == h' -> (i, Just $ StageIndex i)
+        _ -> (i + 1, Nothing)
+    acc (i, Nothing ) (Stage (StageGeneric pg' g') _) =
+      case sg of
+        StageReprGeneric str g | str == showt pg' && g == g' -> (i, Just $ StageIndex i)
+        _ -> (i + 1, Nothing)
+
+isValidIndex :: forall key. Palantype key => StageIndex -> Bool
+isValidIndex (StageIndex i) = i > 0 && i < length (stages @key)
+
+getLang :: forall key. Palantype key => Lang
+getLang = if
+  | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
+  | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+  | otherwise -> $failure "key not implemented"
+
+toStageRepr :: forall key. Palantype key => Stage key -> StageRepr
+toStageRepr (Stage sg h) =
+    StageRepr (getLang @key) (toRepr sg) h
+  where
+    toRepr (StageSpecial str ) = StageReprSpecial str
+    toRepr (StageGeneric pg g) = StageReprGeneric (showt pg) g

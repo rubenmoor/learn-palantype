@@ -5,8 +5,8 @@
 module DbAdapter.Instances where
 
 import Common.Model (Rank)
-import Common.Stage (StageIndex)
+import Common.Stage (StageRepr)
 import Database.Persist.TH (derivePersistFieldJSON)
 
 derivePersistFieldJSON "Rank"
-derivePersistFieldJSON "StageIndex"
+derivePersistFieldJSON "StageRepr"

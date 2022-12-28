@@ -39,7 +39,7 @@ import           Data.Maybe                     (isNothing,  Maybe(..) )
 import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
-import           Obelisk.Route.Frontend         (Routed,  R
+import           Obelisk.Route.Frontend         (R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
@@ -83,7 +83,7 @@ import           State                          ( State
 import           TextShow                       ( TextShow(showt) )
 import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (StageSpecialGeneric(..), StageIndex, findStage)
+import           Common.Stage                   (StageSpecialGeneric(..), findStage)
 import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS
@@ -114,7 +114,6 @@ import Data.Text (Text)
 import Data.List (filter)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.DE as DE
-import Stages (stages)
 
 data StateLiterals k
     = StatePause Int
@@ -245,7 +244,6 @@ fingerspelling
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
@@ -332,7 +330,7 @@ fingerspelling = mdo
         el "code" $ text "WIN"
         text " key shows up among the keys in "
         let (iStage, iT, iS) =
-              $fromJust $ findStage stages $ StageSpecial @DE.Key "commandKeys"
+              $fromJust $ findStage $ StageSpecial @DE.Key "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
@@ -395,7 +393,7 @@ fingerspelling = mdo
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
         let (iStage, iT, iS) =
-              $fromJust $ findStage (stages @DE.Key) $ StageSpecial "commandKeys"
+              $fromJust $ findStage @DE.Key $ StageSpecial "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text

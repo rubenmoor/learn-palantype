@@ -75,8 +75,7 @@ import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         (Routed, R
-                                                , RouteToUrl
+import           Obelisk.Route.Frontend         (R , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
@@ -150,7 +149,6 @@ import           Palantype.Common.TH            ( fromJust
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
 import Common.Model (Stats)
-import Common.Stage (StageIndex)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)
 import PloverDict (getMapsForExercise)
