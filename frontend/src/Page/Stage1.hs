@@ -58,8 +58,7 @@ import qualified Data.Text                     as Text
 import           Data.Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         (Routed,  R
-                                                , SetRoute
+import           Obelisk.Route.Frontend         (R , SetRoute
                                                 )
 import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
@@ -100,7 +99,6 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import Common.Stage (StageIndex)
 import qualified Palantype.Common.Indices as KI
 
 -- exercise 1

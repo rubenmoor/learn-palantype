@@ -47,7 +47,7 @@ import           Data.Maybe                     (isNothing,  maybe
 import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
-import           Obelisk.Route.Frontend         (Routed,  R
+import           Obelisk.Route.Frontend         (R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
@@ -97,7 +97,7 @@ import           TextShow                       ( TextShow(showt) )
 import           Obelisk.Generated.Static       ( static )
 import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (StageSpecialGeneric (..), findStage, StageIndex )
+import           Common.Stage                   (StageSpecialGeneric (..), findStage )
 import           Data.Text                      ( Text )
 import           Data.Map.Strict                ( Map )
 import qualified Palantype.Common.Indices      as KI
@@ -276,6 +276,7 @@ renderDate d = Text.pack $ Time.formatTime defaultTimeLocale "%d.%m.%Y" d
 
 numDates :: Int
 numDates = 100
+
 numberMode
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -288,7 +289,6 @@ numberMode
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Routed t StageIndex m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m

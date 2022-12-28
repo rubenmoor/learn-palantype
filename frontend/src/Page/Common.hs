@@ -185,12 +185,12 @@ elFooter Navigation {..} = elClass "footer" "stage" $ do
         elClass "div" "floatLeft" $ do
             text "< "
             routeLink (stageUrl @key prv) $
-              text $ fromMaybe "" $ showt <$> Stage.fromIndex @key prv
-    text $ fromMaybe "" $ showt <$> Stage.fromIndex @key navCurrent
+              text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
+    text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
     whenJust navMNext $ \nxt -> do
         elClass "div" "floatRight" $ do
             routeLink (stageUrl @key nxt) $
-              text $ fromMaybe "" $ showt <$> Stage.fromIndex @key nxt
+              text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
             text " >"
     elClass "br" "clearBoth" blank
 
@@ -271,7 +271,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                         text " to continue to "
                         elClass "div" "paragraph" $ do
                             (e, _) <- elClass' "a" "normalLink" $
-                                text $ showt $ Stage.fromIndex @key nxt
+                                text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
                             text "."
                             pure e
                     let eContinue =

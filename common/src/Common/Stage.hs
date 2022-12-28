@@ -33,7 +33,7 @@ module Common.Stage
     , StageIndex
     , mPrev
     , mNext
-    ,isValidIndex,findStageIndex,toStageRepr)
+    ,isValidIndex,findStageIndex,toStageRepr,showShort)
 where
 
 import           Control.Category               ((<<<),  Category ((.)))
@@ -166,6 +166,11 @@ capitalize :: Text -> Text
 capitalize str = case uncons str of
     Nothing       -> ""
     Just (h, rem) -> cons (toUpper h) rem
+
+showShort :: Stage key -> Text
+showShort (Stage _ (StageSublevel t s)) = "Stage " <> showt t <> "." <> showt s
+showShort (Stage (StageSpecial str) StageToplevel) = str
+showShort (Stage (StageGeneric _ _) StageToplevel) = $failure "generic stage on top-level"
 
 instance Palantype key => TextShow (Stage key) where
     showb (Stage sg h) = case sg of

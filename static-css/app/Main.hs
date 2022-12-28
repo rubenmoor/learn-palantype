@@ -389,17 +389,16 @@ main = putCss $ do
                 ".stage" & do
                     cursor pointer
                     paddingTop $ em 0.2
-                    i ? do
-                        color anthrazit
-                        fontSize $ pt 18
                 span ? do
                     paddingLeft $ px 8
                     paddingRight $ px 8
-                    color gray
-                i ? do
+                    display inlineBlock
+                    width $ rem 2
+                span # ".caret" ? do
+                    color anthrazit
+                    fontSize $ pt 18
+                span # ".toc-checkmark" ? do
                     color green
-                    paddingLeft $ px 8
-                    paddingRight $ px 8
                     fontSize $ pt 14
 
     footer # ".stage" ? do

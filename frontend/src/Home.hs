@@ -954,7 +954,7 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                                 else ""
                     elClass "li" cls $ do
                         if iSubstage `Set.member` cleared
-                            then iFa "fas fa-check"
+                            then elClass "span" "toc-checkmark" $ iFa "fas fa-check"
                             else el "span" $ text "○"
                         routeLink (stageUrl @key iSubstage) $ do
                             let (str1, mg, str2) = Stage.toTOCString $
@@ -971,7 +971,7 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                         let dynClass =
                                 bool "fas fa-caret-right" "fas fa-caret-down"
                                     <$> dynShowStage i
-                        elDynClass "i" dynClass blank
+                        elClass "span" "caret" $ elDynClass "i" dynClass blank
                         text $ "Stage " <> showt i <> ": " <> stageTitle
 
                         let dynClassUl = bool "displayNone" "" <$> dynShowStage i

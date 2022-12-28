@@ -80,13 +80,14 @@ exercises = Map.fromList
               \first is a safe path to learning a valid steno code for any \
               \conceivable word, before you concern yourself with any \
               \optional rules for efficiency. On the other hand, \
-              \it would be nice to learn the most common words first. \
+              \it would be nice to learn the most common words first - \
+              \along with their most efficient steno code. \
               \This way, you may find yourself advancing much quicker."
           el "p" $ text
               "My proposed solution - if you follow the exercises in order - \
               \is to interweave the greedier rules in between the G0 rules. \
-              \There more words are covered by a rule, regardless of its greediness \
-              \the earlier it appears in the exercises."
+              \The rules that cover a high number of words, regardless of their \
+              \greediness, will appear early on."
       )
     )
   , ( (PatReplCommon1, 3)
