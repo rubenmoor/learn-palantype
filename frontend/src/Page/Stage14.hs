@@ -3,7 +3,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Page.Stage50 where
+module Page.Stage14 where
 
 import Common.Route (FrontendRoute)
 import Common.Stage (StageIndex)

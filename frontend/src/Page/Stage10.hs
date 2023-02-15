@@ -35,7 +35,7 @@ exercises = Map.fromList
         , el "p" $ text "TODO"
         )
       )
-    , ( (PatSwapZ, 2)
+    , ( (PatSwapZ, 0)
       , ( el "p" $ text "TODO"
         , el "p" $ text "TODO"
         )

@@ -158,11 +158,11 @@ import Page.Introduction (introduction)
 import Page.StageGeneric (getGenericExercise)
 import qualified Page.Stage1 as Stage1
 import qualified Page.Stage2 as Stage2
-import Page.Stage40.PloverCommands (ploverCommands)
-import Page.Stage40.Fingerspelling (fingerspelling)
-import Page.Stage40.NumberMode (numberMode)
-import Page.Stage40.CommandKeys (commandKeys)
-import Page.Stage40.SpecialCharacters (specialCharacters)
+import Page.Stage15.PloverCommands (ploverCommands)
+import Page.Stage15.Fingerspelling (fingerspelling)
+import Page.Stage15.NumberMode (numberMode)
+import Page.Stage15.CommandKeys (commandKeys)
+import Page.Stage15.SpecialCharacters (specialCharacters)
 import qualified Page.Patterns as Patterns
 import Palantype.Common
     ( Chord (..),
@@ -994,32 +994,21 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                 case lang of
                   EN -> elStage 2 "Syllables and chords"           [9  .. 10]
                   DE -> do
-                      elStage 2 "Syllables and chords"           [9  .. 12]
-                      elStage 3 "Common replacement rules"       [13 .. 15]
-                      elStage 4 "Be efficient, be greedy"        [16 .. 18]
-                      elStage 5 "R, L, and Diconsonants"         [19 .. 22]
-                      elStage 6 "Stretching vowels with H and R" [23 .. 28]
-
-                          -- elLi $ $readLoc "stage_PatCodaH_0"
-                          -- elLi $ $readLoc "stage_PatCodaR_0"
-                          -- elLi $ $readLoc "stage_PatCodaRR_0"
-                          -- elLi $ $readLoc "stage_PatCodaHR_0"
-                          -- elLi $ $readLoc "stage_PatDt_0"
-                          -- elLi $ $readLoc "stage_PatDiphtong_0"
-                          -- elLi $ $readLoc "stage_PatReplC_0"
-                          -- elLi $ $readLoc "stage_PatBreakUpI_0"
-                          -- elLi $ $readLoc "stage_PatSwapS_0"
-                          -- elLi $ $readLoc "stage_PatSwapSch_0"
-                          -- elLi $ $readLoc "stage_PatSwapZ_0"
-                          -- elLi $ $readLoc "stage_PatDiVowel_0"
-                          -- elLi $ $readLoc "stage_PatReplH_0"
-                          -- elLi $ $readLoc "stage_PatCodaGK_3"
-                          -- elLi $ $readLoc "stage_PatReplRare_0"
-                          -- elLi $ $readLoc "stage_PatSmallS_0"
-
-                      elStage 40 "Real-life text input"  [29 .. 33]
-                      elStage 50 "Increasing efficiency" [34]
-                      elLi 35
+                      elStage 2  "Syllables and chords"           [9  .. 12]
+                      elStage 3  "Common replacement rules"       [13 .. 15]
+                      elStage 4  "Be efficient, be greedy"        [16 .. 18]
+                      elStage 5  "R, L, and Di consonants"         [19 .. 22]
+                      elStage 6  "Stretching vowels with H and R" [23 .. 28]
+                      elStage 7  "The dt-rule"                    [29 .. 30]
+                      elStage 8  "Multiple vowels"                [31 .. 33]
+                      elStage 9  "Replacing C and breaking IA/IO" [34 .. 37]
+                      elStage 10 "Swapping s, sch, and z"         [38 .. 42]
+                      elStage 11 "Double vowels and long a"       [43 .. 46]
+                      elStage 12 "The silent h"                   [47 .. 48]
+                      elStage 13 "Rare replacements and small s"  [49 .. 52]
+                      elStage 14 "Briefs"                         [53]
+                      elStage 15 "Real-life text input"           [54 .. 58]
+                      elLi 59
 
 landingPage
   :: forall t (m :: * -> *)

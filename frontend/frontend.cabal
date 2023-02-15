@@ -58,12 +58,19 @@ library
     , Page.Stage4
     , Page.Stage5
     , Page.Stage6
-    , Page.Stage40.PloverCommands
-    , Page.Stage40.Fingerspelling
-    , Page.Stage40.NumberMode
-    , Page.Stage40.CommandKeys
-    , Page.Stage40.SpecialCharacters
-    , Page.Stage50
+    , Page.Stage7
+    , Page.Stage8
+    , Page.Stage9
+    , Page.Stage10
+    , Page.Stage11
+    , Page.Stage12
+    , Page.Stage13
+    , Page.Stage14
+    , Page.Stage15.PloverCommands
+    , Page.Stage15.Fingerspelling
+    , Page.Stage15.NumberMode
+    , Page.Stage15.CommandKeys
+    , Page.Stage15.SpecialCharacters
     , Page.StageGeneric
     , PloverDict
     , Shared

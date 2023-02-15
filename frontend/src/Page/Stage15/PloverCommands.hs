@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage40.PloverCommands
+module Page.Stage15.PloverCommands
     ( ploverCommands
     ) where
 

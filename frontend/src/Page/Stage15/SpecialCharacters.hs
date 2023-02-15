@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage40.SpecialCharacters
+module Page.Stage15.SpecialCharacters
     ( specialCharacters
     ) where
 

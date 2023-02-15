@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage40.Fingerspelling
+module Page.Stage15.Fingerspelling
     ( fingerspelling
     ) where
 

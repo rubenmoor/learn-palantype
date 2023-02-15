@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module Page.Stage40.CommandKeys
+module Page.Stage15.CommandKeys
     ( commandKeys
     ) where
 
