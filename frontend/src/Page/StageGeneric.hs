@@ -8,6 +8,12 @@ import qualified Page.Stage4 as Stage4
 import qualified Page.Stage5 as Stage5
 import qualified Page.Stage6 as Stage6
 import qualified Page.Stage7 as Stage7
+import qualified Page.Stage8 as Stage8
+import qualified Page.Stage9 as Stage9
+import qualified Page.Stage10 as Stage10
+import qualified Page.Stage11 as Stage11
+import qualified Page.Stage12 as Stage12
+import qualified Page.Stage13 as Stage13
 import qualified Page.Stage14 as Stage14
 import Data.Map.Strict (Map)
 import qualified Palantype.DE as DE
@@ -39,5 +45,11 @@ exercises = Map.unionsWith (\_ _ -> $failure "key duplicate")
     , Stage5.exercises
     , Stage6.exercises
     , Stage7.exercises
+    , Stage8.exercises
+    , Stage9.exercises
+    , Stage10.exercises
+    , Stage11.exercises
+    , Stage12.exercises
+    , Stage13.exercises
     , Stage14.exercises
     ]

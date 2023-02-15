@@ -997,7 +997,7 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                       elStage 2  "Syllables and chords"           [9  .. 12]
                       elStage 3  "Common replacement rules"       [13 .. 15]
                       elStage 4  "Be efficient, be greedy"        [16 .. 18]
-                      elStage 5  "R, L, and Di consonants"         [19 .. 22]
+                      elStage 5  "R, L, and Diconsonants"         [19 .. 22]
                       elStage 6  "Stretching vowels with H and R" [23 .. 28]
                       elStage 7  "The dt-rule"                    [29 .. 30]
                       elStage 8  "Multiple vowels"                [31 .. 33]

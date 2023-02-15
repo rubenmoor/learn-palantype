@@ -87,12 +87,16 @@ import Client ( getMaybeAuthData, postEventViewPage, request )
 import Common.Auth (SessionData(..))
 import Data.Functor (Functor(fmap))
 import Control.Monad (when)
+import Data.Map.Strict (Map)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
 
 iFa :: DomBuilder t m => Text -> m ()
 iFa = void . iFa'
+
+iFaAttr :: DomBuilder t m => Text -> Map Text Text -> m ()
+iFaAttr class' attrs = void $ elAttr "i" ("class" =: class' <> attrs) blank
 
 elLabelInput
     :: DomBuilder t m

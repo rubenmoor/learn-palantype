@@ -63,7 +63,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , foldDyn
                                                 , text
                                                 )
-import           Shared                         ( iFa )
+import           Shared                         (iFaAttr,  iFa )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , stageUrl
@@ -74,6 +74,7 @@ import           Text.Show                      ( Show(show) )
 import           PloverDict                     ( eMapDictExamples )
 import Servant.API (ToHttpApiData(toUrlPiece))
 import qualified Data.Text as Text
+import Common.Stage (StageSpecialGeneric(StageGeneric), findStage)
 
 overview
     :: forall key t (m :: * -> *)
@@ -127,49 +128,47 @@ overview = do
                     <> toDescription p
 
     -- pattern documentation content
-    for_
-        iPatternDoc
-        \(i, (p, mapPattern)) -> do
-            elAttr "h2" ("id" =: showt p)
-                $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
-                $  text
-                $  showt i
-                <> " "
-                <> toDescription p
-            el "div" $ for_ (Map.toList mapPattern) $ \(g, doc) -> do
-                let (n, lsExamples) =
-                        Map.findWithDefault (0, []) g
-                            $ Map.findWithDefault Map.empty p map
-                el "h3" $ do
-                    text $ "Greediness " <> showt g
-                    case readMaybe $ "stage_" <> show p <> "_" <> show g of
-                        Just stage -> routeLink (stageUrl @key stage)
-                            $ iFa "fas fa-book-open"
-                        Nothing ->
-                            elClass "span" "lightgray" $ iFa "fas fa-book-open"
+    for_ iPatternDoc \(i, (p, mapPattern)) -> do
+        elAttr "h2" ("id" =: showt p)
+            $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
+            $  text
+            $  showt i
+            <> " "
+            <> toDescription p
+        el "div" $ for_ (Map.toList mapPattern) $ \(g, doc) -> do
+            let (n, lsExamples) =
+                    Map.findWithDefault (0, []) g
+                        $ Map.findWithDefault Map.empty p map
+            el "h3" $ do
+                text $ "Greediness " <> showt g
+                case findStage (StageGeneric p g) of
+                    Just (si, _, _) -> routeLink (stageUrl @key si)
+                        $ iFaAttr "fas fa-book-open" ("title" =: "Go to exercise")
+                    Nothing ->
+                        elClass "span" "lightgray" $ iFa "fas fa-book-open"
 
-                elClass "div" "patternExamples" $ mdo
-                    elClass "strong" "floatLeft" $ text "Examples"
-                    (btn, _) <-
-                        elClass' "button" "floatLeft"
-                        $   dyn_
-                        $   dynToggle
-                        <&> \case
-                                False -> iFa "fas fa-plus"
-                                True  -> iFa "fas fa-minus"
-                    elClass "em" "floatRight" $ do
-                        text "# total: "
-                        text $ showt n
-                    elClass "br" "clearBoth" blank
+            elClass "div" "patternExamples" $ mdo
+                elClass "strong" "floatLeft" $ text "Examples"
+                (btn, _) <-
+                    elClass' "button" "floatLeft"
+                    $   dyn_
+                    $   dynToggle
+                    <&> \case
+                            False -> iFa "fas fa-plus"
+                            True  -> iFa "fas fa-minus"
+                elClass "em" "floatRight" $ do
+                    text "# total: "
+                    text $ showt n
+                elClass "br" "clearBoth" blank
 
-                    dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
-                    let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
-                    elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
-                        el "span" $ text w
-                        text " "
-                        el "code" $ text $ showt s
-                        text ", "
+                dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
+                let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
+                elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
+                    el "span" $ text w
+                    text " "
+                    el "code" $ text $ showt s
+                    text ", "
 
-                elPatterns $ Map.toList doc
+            elPatterns $ Map.toList doc
 
     pure envNavigation
