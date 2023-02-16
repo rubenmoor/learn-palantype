@@ -22,7 +22,7 @@ module Page.Common where
 
 import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
 import           Common.Route                   ( FrontendRoute(..) )
-import qualified Common.Stage as Stage
+import qualified Palantype.Common.Stage as Stage
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))

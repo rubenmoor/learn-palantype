@@ -50,6 +50,7 @@ import           Data.Function                  ( const
 import           Data.Semigroup                 ( Semigroup((<>)) )
 import           Servant.API                    ( (:<|>)(..) )
 import           Palantype.Common               ( Lang
+                                                , StageIndex
                                                 )
 import           State                          ( stSession
                                                 , State
@@ -62,7 +63,6 @@ import           Common.Model                   ( Journal
                                                 , Stats
                                                 , AppState
                                                 )
-import           Common.Stage                   (StageIndex )
 import           Data.Functor                   ( Functor(fmap) )
 import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)

@@ -27,7 +27,7 @@ import           Control.Monad.Reader           ( asks )
 import           Data.Bool                      ( Bool(..) )
 import qualified Data.ByteString.Lazy.UTF8     as BSU
 import           Data.Char                      ( isAlphaNum )
-import           Data.Either                    (fromRight,  either )
+import           Data.Either                    (either )
 import           Data.Function                  (($) )
 import           Data.Functor                   ( (<$>) )
 import           Data.List                      ( null )

@@ -23,7 +23,7 @@ import TextShow (TextShow (..), fromText)
 import Common.Model (Stats, AppState)
 import State (Session)
 import Data.Map.Strict (Map)
-import Common.Stage (StageIndex)
+import Palantype.Common (StageIndex)
 import Palantype.Common (Lang)
 
 data Key a where

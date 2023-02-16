@@ -63,7 +63,6 @@ import GHC.Num (fromInteger, Num((*)))
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Bool (Bool, (&&), not)
 import TextShow (TextShow(showt))
-import Data.Either (fromRight)
 
 default(Text)
 

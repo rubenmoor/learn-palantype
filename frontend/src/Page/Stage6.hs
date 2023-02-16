@@ -9,7 +9,7 @@ module Page.Stage6 where
 import           Obelisk.Route.Frontend         ( routeLink
                                                 )
 import Page.Common.Exercise (Constraints)
-import           Palantype.Common               (Greediness)
+import           Palantype.Common               (Greediness, StageSpecialGeneric(..), findStage)
 import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     ( blank
                                                 , el, text)
@@ -19,7 +19,6 @@ import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
 import qualified Palantype.DE as DE
 import qualified Data.Map.Strict as Map
-import Common.Stage (StageSpecialGeneric(..), findStage)
 import Palantype.Common.TH (fromJust)
 
 exercises

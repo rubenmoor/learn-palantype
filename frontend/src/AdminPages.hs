@@ -104,7 +104,7 @@ import Data.Witherable (mapMaybe)
 import Palantype.Common (Palantype, Lang(..))
 import qualified Palantype.EN as EN
 import qualified Palantype.DE as DE
-import qualified Common.Stage as Stage
+import qualified Palantype.Common.Stage as Stage
 import Palantype.Common.TH (fromJust)
 
 data JournalReqConfig = JournalReqConfig

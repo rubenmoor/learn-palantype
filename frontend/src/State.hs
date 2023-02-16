@@ -15,7 +15,7 @@
 module State where
 
 import           Common.Route                   ( FrontendRoute(..) )
-import           Common.Stage                   ( StageIndex )
+import           Palantype.Common               ( StageIndex )
 import           Common.Auth                    ( SessionData )
 import           Control.Applicative            ( (<$>)
                                                 )

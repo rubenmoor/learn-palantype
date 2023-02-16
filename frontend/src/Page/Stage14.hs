@@ -6,7 +6,7 @@
 module Page.Stage14 where
 
 import Common.Route (FrontendRoute)
-import Common.Stage (StageIndex)
+import Palantype.Common (StageIndex)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader.Class (MonadReader)

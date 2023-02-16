@@ -31,9 +31,6 @@ import           Data.Aeson                     (FromJSON,  ToJSON )
 import           Data.ByteString.UTF8           ( ByteString )
 import qualified Data.Aeson                    as Aeson
 import           Control.Category               ( (<<<) )
-import Data.Text (Text)
-import qualified Data.Text as Text
-import Data.Either.Combinators (mapLeft)
 
 runDb :: DbAction a -> Handler a
 runDb action = do

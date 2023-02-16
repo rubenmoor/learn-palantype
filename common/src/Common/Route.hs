@@ -40,7 +40,7 @@ import           Obelisk.Route                  (reviewEncoder, packTextEncoder,
                                                 , unitEncoder
                                                 )
 import           Obelisk.Route.TH               ( deriveRouteComponent )
-import           Common.Stage                   (StageIndex )
+import           Palantype.Common.Stage         (StageIndex )
 import           Control.Category               ( Category(id) )
 import Palantype.Common.TH (failure)
 import Data.Semigroup (Semigroup((<>)))

@@ -26,7 +26,7 @@ import           Database.Persist.TH     (mkEntityDefList, mkPersist,
                                           persistLowerCase, share, sqlSettings)
 import DbAdapter.Instances ()
 import qualified Common.Model as Model
-import Common.Stage (StageRepr)
+import Palantype.Common (StageRepr)
 
 share [mkPersist sqlSettings, mkEntityDefList "entities"] [persistLowerCase|
 User                             -- some real person

@@ -64,10 +64,6 @@ import           Data.Text                      ( Text )
 import           GHC.Real                       ( fromIntegral )
 import           Database.Gerippe               ( isNothing )
 import Data.Functor ((<$>), ($>))
-import Data.Either (Either(..))
-import qualified Data.Text.Lazy.Encoding as LazyText
-import qualified Data.Text.Lazy as LazyText
-import Data.Semigroup (Semigroup((<>)))
 
 handlers :: ServerT RoutesAdmin a Handler
 handlers = (handleJournalGetAll)

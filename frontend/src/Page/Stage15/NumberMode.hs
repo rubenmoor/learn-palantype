@@ -62,6 +62,8 @@ import           Palantype.Common               ( kiChordsStart
                                                 , Chord
                                                 , Palantype
                                                 , RawSteno
+                                                , StageSpecialGeneric (..)
+                                                , findStage
                                                 )
 import           Reflex.Dom                     (current, gate, Dynamic,  Performable
                                                 , PerformEvent
@@ -97,7 +99,6 @@ import           TextShow                       ( TextShow(showt) )
 import           Obelisk.Generated.Static       ( static )
 import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (StageSpecialGeneric (..), findStage )
 import           Data.Text                      ( Text )
 import           Data.Map.Strict                ( Map )
 import qualified Palantype.Common.Indices      as KI

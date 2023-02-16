@@ -38,7 +38,7 @@ import           Common.Auth                    ( LoginData
                                                 , AuthOptional
                                                 )
 import           Common.Model (Journal, Stats, AppState)
-import Common.Stage (StageIndex)
+import Palantype.Common (StageIndex)
 import Data.Time (UTCTime, Day)
 
 type RoutesAuth =

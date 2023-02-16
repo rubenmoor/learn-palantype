@@ -44,6 +44,8 @@ import           Page.Common                    ( elPatterns )
 import           Palantype.Common               ( Palantype
                                                 , toDescription
                                                 , patternDoc
+                                                , StageSpecialGeneric(StageGeneric)
+                                                , findStage
                                                 )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
@@ -69,12 +71,10 @@ import           State                          ( Env(..)
                                                 , stageUrl
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import           Text.Read                      ( readMaybe )
 import           Text.Show                      ( Show(show) )
 import           PloverDict                     ( eMapDictExamples )
 import Servant.API (ToHttpApiData(toUrlPiece))
 import qualified Data.Text as Text
-import Common.Stage (StageSpecialGeneric(StageGeneric), findStage)
 
 overview
     :: forall key t (m :: * -> *)

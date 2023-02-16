@@ -17,9 +17,8 @@ import qualified Page.Stage13 as Stage13
 import qualified Page.Stage14 as Stage14
 import Data.Map.Strict (Map)
 import qualified Palantype.DE as DE
-import Palantype.Common (Greediness)
+import Palantype.Common (Greediness, StageHierarchy)
 import Page.Common.Exercise (exercise, Constraints)
-import Common.Stage (StageHierarchy)
 import State (Navigation)
 import qualified Data.Map.Strict as Map
 import Palantype.Common.TH (failure)

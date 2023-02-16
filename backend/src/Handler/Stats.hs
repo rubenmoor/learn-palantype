@@ -13,7 +13,6 @@ module Handler.Stats
 where
 
 import           Palantype.Common               ( Lang )
-import           Common.Stage                   ( StageIndex )
 import           Common.Model                   ( JournalEvent (EventApp),  Stats(..), EventApp (..) )
 import           AppData                        ( Handler )
 import           Servant.Server                 (err500, throwError,  ServantErr (errBody),  HasServer(ServerT) )
@@ -33,7 +32,6 @@ import           Database.Gerippe               (deleteBy, getBy, insert_,  Enti
                                                 )
 import           Database                       ( runDb )
 import qualified DbAdapter                     as Db
-import qualified Data.Text                     as Text
 import           Servant.API                    ( (:<|>)(..)
                                                 , ToHttpApiData(toUrlPiece)
                                                 )
@@ -44,10 +42,9 @@ import Data.Time (diffUTCTime, getCurrentTime)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import qualified Palantype.DE as DE
 import qualified Palantype.EN as EN
-import Palantype.Common (Palantype, Lang (..))
+import Palantype.Common (Lang (..), StageIndex, toStageRepr)
 import Palantype.Common.TH (fromJust)
-import qualified Common.Stage as Stage
-import Common.Stage (Stage, StageIndex, toStageRepr)
+import qualified Palantype.Common.Stage as Stage
 
 
 handlers :: ServerT RoutesStats a Handler

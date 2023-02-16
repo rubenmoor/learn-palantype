@@ -9,7 +9,6 @@ module Page.Common.Exercise
     ) where
 
 import Common.Route (FrontendRoute)
-import Common.Stage (StageHierarchy (..), StageIndex)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader.Class (MonadReader, ask)
@@ -17,7 +16,7 @@ import Data.Semigroup (Endo)
 import Obelisk.Route (R)
 import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute)
 import Page.Common (getStatsLocalAndRemote, elCongraz, elPatterns, taskWords)
-import Palantype.Common (patternDoc, Greediness, Palantype, toDescription)
+import Palantype.Common (patternDoc, Greediness, Palantype, toDescription, StageHierarchy (..), StageIndex)
 import Palantype.DE (Pattern (..))
 import Reflex.Dom (current, gate, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, el, elClass, never, text)
 import State (Env (..), Navigation (..), State)

@@ -27,7 +27,7 @@ import           Data.Map.Strict                ( Map )
 import           Palantype.Common               (Lang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
-import           Common.Stage                   (StageRepr,  StageIndex )
+import           Palantype.Common               (StageRepr,  StageIndex )
 
 -- frontend/Localstorage
 

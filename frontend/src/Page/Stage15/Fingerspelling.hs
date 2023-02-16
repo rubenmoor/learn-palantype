@@ -54,6 +54,8 @@ import           Palantype.Common               ( kiChordsStart
                                                 , kiBackUp
                                                 , Chord
                                                 , Palantype
+                                                , StageSpecialGeneric(..)
+                                                , findStage
                                                 )
 import           Reflex.Dom                     (Dynamic, current, gate,  dyn_
                                                 , TriggerEvent
@@ -83,7 +85,6 @@ import           State                          ( State
 import           TextShow                       ( TextShow(showt) )
 import           Control.Category               ( (.)
                                                 )
-import           Common.Stage                   (StageSpecialGeneric(..), findStage)
 import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS

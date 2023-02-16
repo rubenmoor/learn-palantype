@@ -27,7 +27,6 @@ import           Control.Monad                  ( foldM
 import           Control.Monad.Except           ( MonadError(throwError)
                                                 , runExcept
                                                 )
-import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , Value(Array)
                                                 )
@@ -51,36 +50,29 @@ import           Data.Function                  ( ($)
 import           Data.Functor                   ( (<$>) )
 import           Data.Map                       ( Map )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( maybe
-                                                , Maybe(..)
+import           Data.Maybe                     ( Maybe(..)
                                                 )
 import           Data.Monoid                    ( (<>) )
 import           Data.String                    ( String )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           GHC.Show                       ( Show(show) )
-import           Obelisk.Generated.Static       ( staticFilePath )
 import           Palantype.Common               ( KeyIndex
                                                 , keyIndex
                                                 , Lang(..)
                                                 )
 import           Palantype.Common               ( RawSteno
                                                 , parseStenoKey
-                                                , patternDoc
-                                                , PatternPos
                                                 )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Servant.API                    ( (:<|>)(..) )
-import           Servant.Server                 ( err500
-                                                , ServantErr(errBody)
+import           Servant.Server                 ( ServantErr(errBody)
                                                 , err400
                                                 , HasServer(ServerT)
                                                 )
 import qualified Servant.Server                as Snap
                                                 ( throwError )
 import           Snap.Core                      ( MonadSnap )
-import           Data.Tuple                     ( snd )
 
 handlers :: MonadSnap m => ServerT RoutesPalantype a m
 handlers =

@@ -36,7 +36,6 @@ import Common.Route
     (showRoute,  FrontendRoute (..)
     , FrontendRoute_AuthPages (..)
     )
-import Common.Stage (Stage (..), StageSpecialGeneric(..), StageIndex, mNext, mPrev)
 import Palantype.Common.TH (readLoc, failure)
 import Control.Applicative (Applicative (..))
 import Control.Category
@@ -177,7 +176,9 @@ import Palantype.Common
       kiPageUp,
       kiPageDown,
       mkChord,
+      Stage (..), StageSpecialGeneric(..), StageIndex
     )
+import qualified Palantype.Common.Stage as Stage
 import qualified Palantype.Common.Indices as KI
 import qualified Palantype.DE as DE
 import qualified Palantype.EN as EN
@@ -252,7 +253,6 @@ import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
 import Data.Int (Int)
 import Common.Model (AppState(..), Message(..))
-import qualified Common.Stage as Stage
 import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
 import Control.Monad.IO.Class (MonadIO)
 import Text.Show (Show(show))
@@ -1214,9 +1214,9 @@ elStages navLang toReady = do
             elTOC @key iCurrent
 
             let setEnv page =
-                    let navMPrevious = mPrev iCurrent
+                    let navMPrevious = Stage.mPrev iCurrent
                         navCurrent = iCurrent
-                        navMNext = mNext @key iCurrent
+                        navMNext = Stage.mNext @key iCurrent
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
