@@ -50,7 +50,7 @@ import           Page.Common                    (getStatsLocalAndRemote,  elCong
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
                                                 )
-import           Palantype.Common               ( kiChordsStart
+import           Palantype.Common               (mapStages,  kiChordsStart
                                                 , kiBackUp
                                                 , Chord
                                                 , Palantype
@@ -331,7 +331,7 @@ fingerspelling = mdo
         el "code" $ text "WIN"
         text " key shows up among the keys in "
         let (iStage, iT, iS) =
-              $fromJust $ findStage $ StageSpecial @DE.Key "Command Keys"
+              $fromJust $ findStage mapStages $ StageSpecial @DE.Key "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
@@ -394,7 +394,7 @@ fingerspelling = mdo
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
         let (iStage, iT, iS) =
-              $fromJust $ findStage @DE.Key $ StageSpecial "Command Keys"
+              $fromJust $ findStage @DE.Key mapStages $ StageSpecial "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text

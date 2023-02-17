@@ -9,7 +9,7 @@ module Page.Stage6 where
 import           Obelisk.Route.Frontend         ( routeLink
                                                 )
 import Page.Common.Exercise (Constraints)
-import           Palantype.Common               (Greediness, StageSpecialGeneric(..), findStage)
+import           Palantype.Common               (mapStages, Greediness, StageSpecialGeneric(..), findStage)
 import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     ( blank
                                                 , el, text)
@@ -175,7 +175,7 @@ exercises = Map.fromList
           text " using "
           el "code" $ text "+D"
           text " in "
-          let (i, t, s) = $fromJust $ findStage $ StageGeneric DE.PatReplCommon1 0
+          let (i, t, s) = $fromJust $ findStage mapStages $ StageGeneric DE.PatReplCommon1 0
           routeLink (stageUrl @key i)
               $  text
               $  "Exercise "

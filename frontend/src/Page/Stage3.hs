@@ -19,7 +19,7 @@ import           Reflex.Dom                     ( el
 import           State                          (stageUrl)
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
-import Palantype.Common (Greediness, findStage, StageSpecialGeneric (..))
+import Palantype.Common (mapStages, Greediness, findStage, StageSpecialGeneric (..))
 import qualified Data.Map.Strict as Map
 
 exercises
@@ -38,7 +38,7 @@ exercises = Map.fromList
                   "First of all, note that these patterns are in addition to the \
                         \simple patterns of the previous "
               let (iStage, iT, iS) =
-                    $fromJust $ findStage $ StageSpecial @key "Onset, nucleus, and coda"
+                    $fromJust $ findStage mapStages $ StageSpecial @key "Onset, nucleus, and coda"
               routeLink (stageUrl @key iStage)
                   $  text
                   $  "Exercise "
@@ -140,7 +140,7 @@ exercises = Map.fromList
                    \This onset code is also used for "
 
               let (iStage, iT, iS) =
-                    $fromJust $ findStage $ StageSpecial @DE.Key "Fingerspelling"
+                    $fromJust $ findStage mapStages $ StageSpecial @DE.Key "Fingerspelling"
               routeLink (stageUrl @key iStage)
                   $  text
                   $  "Exercise "
