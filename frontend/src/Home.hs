@@ -36,7 +36,7 @@ import Common.Route
     (showRoute,  FrontendRoute (..)
     , FrontendRoute_AuthPages (..)
     )
-import Palantype.Common.TH (readLoc, failure)
+import Palantype.Common.TH (failure)
 import Control.Applicative (Applicative (..))
 import Control.Category
     ( (>>>), (<<<),
@@ -176,6 +176,7 @@ import Palantype.Common
       kiPageUp,
       kiPageDown,
       mkChord,
+      mkStageIndex,
       Stage (..), StageSpecialGeneric(..), StageIndex
     )
 import qualified Palantype.Common.Stage as Stage
@@ -183,7 +184,7 @@ import qualified Palantype.Common.Indices as KI
 import qualified Palantype.DE as DE
 import qualified Palantype.EN as EN
 import Reflex.Dom
-    (TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
+    (never, dyn, TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -256,6 +257,7 @@ import Common.Model (AppState(..), Message(..))
 import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
 import Control.Monad.IO.Class (MonadIO)
 import Text.Show (Show(show))
+import Palantype.Common.TH (fromJust)
 
 default (Text)
 
@@ -284,14 +286,13 @@ message ::
 message = do
     dynMsg <- asks (fmap $ stApp >>> stMsg)
     dyn_ $
-        dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
-            let spanClose = elClass' "span" "close" $ iFa "fas fa-times"
-             in elClass "div" "msgOverlay" $ do
-                    (elClose, _) <- spanClose
-                    let eClose = domEvent Click elClose
-                    updateState $ eClose $> [field @"stApp" . field @"stMsg" .~ Nothing]
-                    el "div" $ text msgCaption
-                    el "span" $ text msgBody
+        dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} -> do
+            (elClose, _) <- elClass' "span" "close" $ iFa "fas fa-times"
+            elClass "div" "msgOverlay" $ do
+                let eClose = domEvent Click elClose
+                updateState $ eClose $> [field @"stApp" . field @"stMsg" .~ Nothing]
+                el "div" $ text msgCaption
+                el "span" $ text msgBody
 
 settings ::
     forall key t (m :: * -> *).
@@ -607,6 +608,12 @@ stenoInput = do
                     showQwerty
 
         kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
+        (elPowerOff, _) <- elAttr' "span"
+          (  "class" =: "icon-link-power-off"
+          <> "title" =: "Switch off interactive input"
+          ) $ iFa "fas fa-power-off"
+        updateState $ domEvent Click elPowerOff $>
+          [field @"stApp" . field @"stKeyboardActive" .~ False]
 
         -- TODO: doesn't seem to have the desired effect
         let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
@@ -872,8 +879,8 @@ elStenoOutput
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynDownKeys = mdo
     let eFocus = updated (_inputElement_hasFocus i) <&> \case
-            True -> ("Type!", "class" =: Just "anthrazit")
-            False -> ("Click me!", "class" =: Just "red")
+            True  -> ("Type!"    , "class" =: Just "anthrazit")
+            False -> ("Click me!", "class" =: Just "red"      )
         eTyping = updated dynDownKeys <&> \downKeys ->
             if Set.null downKeys
                 then ("...", "class" =: Nothing)
@@ -1082,7 +1089,7 @@ landingPage = elClass "div" "landing" $ do
                             [ field @"stApp" . field @"stMLang" ?~ lang,
                               -- if no progress in map, insert "Introduction"
                               field @"stApp" . field @"stProgress"
-                                  %~ Map.insertWith (\_ o -> o) lang ($readLoc "introduction")
+                                  %~ Map.insertWith (\_ o -> o) lang ($fromJust $ mkStageIndex 0)
                             ]
                     dynState <- ask
                     let toMNewRoute st _ = do
@@ -1180,7 +1187,6 @@ landingPage = elClass "div" "landing" $ do
           elAttr "a" ("href" =: "https://en.wikipedia.org/wiki/Haskell") $ text "Read more on Wikipedia"
           text "."
 
-
 elStages
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -1208,7 +1214,22 @@ elStages navLang toReady = do
         RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
     stages' iCurrent = elClass "div" "box" $ do
 
-        eChord <- stenoInput @key
+        dynState' <- ask
+        let dynKeyboardActive = dynState' <&> \st ->
+              st ^. field @"stApp" . field @"stKeyboardActive"
+        eChord <- dynSimple $ dynKeyboardActive <&> \case
+          True  -> stenoInput @key
+          False -> do
+            el "hr" blank
+            elClass "div" "keyboard-deactivated" $ do
+                text "The interactive keyboard is deactivated"
+                (elPowerOn, _) <- elAttr' "span"
+                    ( "class" =: "icon-link-power-on"
+                    <> "title" =: "Switch on interactive input"
+                    ) $ iFa "fas fa-power-off"
+                updateState $ domEvent Click elPowerOn $>
+                  [ field @"stApp" . field @"stKeyboardActive" .~ True ]
+            pure never
 
         navigation <- elClass "div" "row" $ mdo
             elTOC @key iCurrent

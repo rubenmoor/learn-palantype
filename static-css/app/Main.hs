@@ -215,7 +215,7 @@ import           Clay.Border                    ( borderBottom
                                                 , borderTop
                                                 , dotted
                                                 )
-import           Clay.Color                     ( darkgray )
+import           Clay.Color                     ( darkgray, darkgreen )
 import Clay.Flexbox
     ( row, flexDirection, SpaceAround(spaceAround) )
 import qualified Clay.Flexbox                  as Flex
@@ -668,6 +668,15 @@ main = putCss $ do
         hover & color darkblue
         fontFamily ["Special Elite"] [cursive]
 
+    span # ".icon-link-power-off" ? do
+        color myLightgray
+        cursor pointer
+        hover & color red
+
+    span # ".icon-link-power-on" ? do
+        color darkgreen
+        cursor pointer
+
     -- file input with custom look
     -- cf. https://stackoverflow.com/a/29251314/2925659
     span # ".hiddenFileInput" ? do
@@ -701,6 +710,17 @@ main = putCss $ do
     ".darkgray" ? color darkgray
     ".textAlign-center" ? textAlign center
     ".bold" ? fontWeight bold
+    ".italic" ? fontStyle italic
+
+    div # ".keyboard-deactivated" ? do
+      color darkgray
+      border solid (px 1) lightgray
+      borderRadius (px 8) (px 8) (px 8) (px 8)
+      padding (px 8) (px 8) (px 8) (px 8)
+      textAlign center
+      marginLeft auto
+      marginRight auto
+      span ? paddingLeft (em 0.7)
 
     ".exerciseField" ? do
         backgroundColor myLightgray

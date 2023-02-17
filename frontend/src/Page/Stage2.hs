@@ -24,9 +24,8 @@ import           Control.Applicative            ((<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.), id)
-                                                , (<<<)
                                                 )
-import           Control.Lens                   (preview,  (+~)
+import           Control.Lens                   (at, preview,  (+~)
                                                 , (?~)
                                                 , (%~)
                                                 , (.~)
@@ -87,7 +86,7 @@ import           Page.Common                    (elBtnSound, getStatsLocalAndRem
                                                 , taskWords
                                                 )
 import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
-import           Palantype.Common               (patternDoc,  kiChordsStart
+import           Palantype.Common               (StageSpecialGeneric (..), mapStages, patternDoc,  kiChordsStart
                                                 , Chord(..)
                                                 , Lang(..)
                                                 , Palantype
@@ -96,9 +95,9 @@ import           Palantype.Common               (patternDoc,  kiChordsStart
                                                 , allKeys
                                                 )
 import           Palantype.Common               ( kiBackUp
-                                                )
-import           Palantype.Common               ( RawSteno
+                                                , RawSteno
                                                 , parseStenoMaybe
+                                                , findStage
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.DE                   ( Pattern(..) )
@@ -141,10 +140,8 @@ import           State                          ( Env(..)
                                                 )
 import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
-import           Text.Read                      ( readMaybe )
 import           TextShow                       ( TextShow(showt) )
 import           Palantype.Common.TH            ( fromJust
-                                                , readLoc
                                                 )
 import qualified Palantype.Common.RawSteno     as Raw
 import           Data.Function                  ( (&) )
@@ -334,11 +331,12 @@ exercise1 = mdo
         pure e
 
     let eBack = leftmost [eChordBackUp, domEvent Click elABack]
+        (stage1_1, _, _) = $fromJust $ findStage @key mapStages (StageSpecial "Type the letters")
     setRoute $ eBack $> stageUrl @key 1 -- Stage 1.1
     updateState
         $  eBack
-        $> [ field @"stApp" . field @"stProgress"
-                 %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
+        $> [ field @"stApp" . field @"stProgress" . at navLang ?~ stage1_1
+                 -- %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
            ]
 
     el "p" $ do

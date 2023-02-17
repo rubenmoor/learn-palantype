@@ -38,6 +38,7 @@ data AppState = AppState
     , stPloverCfg     :: PloverCfg
     , stShowKeyboard  :: Bool
     , stKeyboardShowQwerty :: Bool
+    , stKeyboardActive :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map Lang StageIndex
     , stTOCShowStage  :: Set Int
@@ -50,18 +51,20 @@ instance FromJSON AppState
 instance ToJSON AppState
 
 defaultAppState :: AppState
-defaultAppState = AppState { stCleared            = Set.empty
-                           , stMLang              = Nothing
-                           , stMsg                = Nothing
-                           , stPloverCfg          = defaultPloverCfg
-                           , stShowKeyboard       = True
-                           , stKeyboardShowQwerty = True
-                           , stShowTOC            = False
-                           , stProgress           = defaultProgress
-                           , stTOCShowStage       = Set.empty
-                           , stShowStats          = ShowStatsHide
-                           , stSound              = False
-                           }
+defaultAppState = AppState
+  { stCleared            = Set.empty
+  , stMLang              = Nothing
+  , stMsg                = Nothing
+  , stPloverCfg          = defaultPloverCfg
+  , stShowKeyboard       = True
+  , stKeyboardShowQwerty = True
+  , stKeyboardActive     = True
+  , stShowTOC            = False
+  , stProgress           = defaultProgress
+  , stTOCShowStage       = Set.empty
+  , stShowStats          = ShowStatsHide
+  , stSound              = False
+  }
 
 data Message = Message
     { msgCaption :: Text
