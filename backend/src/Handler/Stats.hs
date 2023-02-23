@@ -12,7 +12,6 @@ module Handler.Stats
     )
 where
 
-import           Palantype.Common               ( Lang )
 import           Common.Model                   ( JournalEvent (EventApp),  Stats(..), EventApp (..) )
 import           AppData                        ( Handler )
 import           Servant.Server                 (err500, throwError,  ServantErr (errBody),  HasServer(ServerT) )
@@ -42,7 +41,7 @@ import Data.Time (diffUTCTime, getCurrentTime)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import qualified Palantype.DE as DE
 import qualified Palantype.EN as EN
-import Palantype.Common (Lang (..), StageIndex, toStageRepr)
+import Palantype.Common (SystemLang (..), StageIndex, toStageRepr)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.Common.Stage as Stage
 
@@ -54,11 +53,11 @@ handlers =
     :<|> handleStatsCompleted
 
 handleStatsGet
-    :: Maybe UserInfo -> Lang -> StageIndex -> Handler [(Maybe Text, Stats)]
+    :: Maybe UserInfo -> SystemLang -> StageIndex -> Handler [(Maybe Text, Stats)]
 handleStatsGet mUi lang iStage = do
     let mStageRepr = case lang of
-          DE -> toStageRepr @DE.Key <$> Stage.fromIndex iStage
-          EN -> toStageRepr @EN.Key <$> Stage.fromIndex iStage
+          SystemDE -> toStageRepr @DE.Key <$> Stage.fromIndex iStage
+          SystemEN -> toStageRepr @EN.Key <$> Stage.fromIndex iStage
     es <- runDb $ select $ from $ \(s `InnerJoin` a) -> do
         on $ s ^. Db.StatsFkAlias ==. a ^. Db.AliasId
         where_ $ a ^. Db.AliasIsVisible
@@ -81,11 +80,11 @@ handleStatsStart UserInfo {..} = do
     deleteBy $ Db.UFkAlias uiKeyAlias
     insert_ $ Db.StageBegin uiKeyAlias now
 
-handleStatsCompleted :: Maybe UserInfo -> (Lang, StageIndex, Stats) -> Handler ()
+handleStatsCompleted :: Maybe UserInfo -> (SystemLang, StageIndex, Stats) -> Handler ()
 handleStatsCompleted mUi (lang, iStage, stats@Stats{..}) = do
   let stageRepr = case lang of
-        DE -> toStageRepr @DE.Key $ $fromJust $ Stage.fromIndex iStage
-        EN -> toStageRepr @EN.Key $ $fromJust $ Stage.fromIndex iStage
+        SystemDE -> toStageRepr @DE.Key $ $fromJust $ Stage.fromIndex iStage
+        SystemEN -> toStageRepr @EN.Key $ $fromJust $ Stage.fromIndex iStage
   DbJournal.insert (uiKeyAlias <$> mUi) $ EventApp $
     EventStageCompleted lang stageRepr stats
   whenJust mUi $ \UserInfo{..} -> do

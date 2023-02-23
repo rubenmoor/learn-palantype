@@ -1,6 +1,6 @@
+cabal-version: 2.2
 name: backend
 version: 0.1
-cabal-version: >= 1.8
 build-type: Simple
 
 library
@@ -14,12 +14,14 @@ library
     , common
     , ConfigFile
     , containers
+    , data-default
     , either
     , frontend
     , gerippe
     , generic-lens
     , jose
     , lens
+    , lens-aeson
     , lifted-base
     , megaparsec
     , monad-control
@@ -33,6 +35,8 @@ library
     , obelisk-generated-static
     , obelisk-executable-config-lookup
     , obelisk-route
+    , pandoc
+    , pandoc-types
     , password
     , password-instances
     , persistent
@@ -49,6 +53,7 @@ library
     , transformers
     , unordered-containers
     , utf8-string
+    , wreq
   exposed-modules:
       Backend
   other-modules:
@@ -59,15 +64,21 @@ library
     , DbAdapter
     , DbAdapter.Instances
     , DbJournal
+    , GithubApi
     , Handler
     , Handler.Admin
     , Handler.Auth
+    , Handler.CMS
     , Handler.Event
     , Handler.Palantype
     , Handler.Stats
     , Handler.User
       
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
+  default-extensions:
+      LambdaCase
+    , BlockArguments
+    , OverloadedStrings
 
 executable backend
   main-is: main.hs

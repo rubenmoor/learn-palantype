@@ -1,6 +1,6 @@
+cabal-version: 2.2
 name: frontend
 version: 0.1
-cabal-version: >= 1.8
 build-type: Simple
 
 library
@@ -27,11 +27,13 @@ library
     , obelisk-frontend
     , obelisk-generated-static
     , obelisk-route
+    , pandoc-types
     , patch
     , proxied
     , random
     , random-shuffle
     , reflex-dom
+    , reflex-dom-pandoc
     , safe
     , servant
     , servant-reflex
@@ -45,7 +47,6 @@ library
       AdminPages
     , AuthPages
     , Client
-    , Github
     , Home
     , LocalStorage
     , Page.Common
@@ -84,7 +85,6 @@ library
     , LambdaCase
     , ScopedTypeVariables
     , OverloadedStrings
-
 
 executable frontend
   main-is: main.hs

@@ -323,7 +323,7 @@ main = putCss $ do
         position relative
 
     iframe ?
-        border none (px 0) transparent
+        border (px 0) none transparent
 
     -- section # "#content" # before ? do
         -- content $ stringContent "Up \\25B2  DMKSD" -- U+25B2
@@ -452,7 +452,7 @@ main = putCss $ do
         color white
         fontSize $ pt 24
         borderRadius (px 12) (px 12) (px 12) (px 12)
-        border none (px 0) transparent
+        border (px 0) none transparent
         cursor pointer
         fontSize (pt 18)
         padding (px 12) (px 12) (px 12) (px 12)
@@ -470,13 +470,13 @@ main = putCss $ do
         marginRight auto
         textAlign center
         paddingTop $ em 0.5
-        borderBottom dotted (px 1) lightgray
+        borderBottom (px 1) dotted lightgray
         input # "#stenoOutput" ? do
             width $ px keyboardWidth
             textAlign center
             fontSize $ pt 32
             padding (px 8) (px 8) (px 8) (px 8)
-            border none (px 0) transparent
+            border (px 0) none transparent
             --backgroundColor transparent
             -- input # focus ? outline none (px 0) transparent
             ":focus-visible" & outline none (px 0) transparent
@@ -510,7 +510,7 @@ main = putCss $ do
 
             td ? do
                 borderRadius (px 4) (px 4) (px 4) (px 4)
-                border solid (px 1) gray
+                border (px 1) solid gray
                 backgroundColor white
                 width $ pct 8.11
                 height $ pct 25
@@ -600,7 +600,7 @@ main = putCss $ do
 
         span # ".vertical-line" ? do
           -- display inlineBlock
-          borderLeft solid (px 1) lightgray
+          borderLeft (px 1) solid lightgray
 
         div # ".login-signup" ? do
           fontSize $ pt 14
@@ -658,7 +658,7 @@ main = putCss $ do
                 color anthrazit
                 fontSize $ pt 10
                 fontWeight bold
-                borderBottom solid (px 1) lightgray
+                borderBottom (px 1) solid lightgray
 
         ":hover" & div # ".dropdown-content" ? display block
 
@@ -714,7 +714,7 @@ main = putCss $ do
 
     div # ".keyboard-deactivated" ? do
       color darkgray
-      border solid (px 1) lightgray
+      border (px 1) solid lightgray
       borderRadius (px 8) (px 8) (px 8) (px 8)
       padding (px 8) (px 8) (px 8) (px 8)
       textAlign center
@@ -759,7 +759,7 @@ main = putCss $ do
         margin (px 24) (px 24) (px 24) (px 24)
 
     hr ? do
-        border none (px 0) black
+        border (px 0) none black
         height $ px 1
         backgroundColor myBlue
 
@@ -800,7 +800,7 @@ main = putCss $ do
         div # ".video-and-buttons" |> div # ".container" |> video ? do
                 backgroundColor white
                 margin (px 4) (px 4) (px 4) (px 4)
-                border solid (px 8) white
+                border (px 8) solid white
 
         div # ".video-and-buttons" |> div # ".container" |> div ? do
           minHeight $ px 405
@@ -834,7 +834,7 @@ main = putCss $ do
                 fontSize $ pt 12
                 borderRadius (px 24) (px 24) (px 24) (px 24)
                 margin (px 4) (px 4) (px 4) (px 4)
-                border solid (px 1) black
+                border (px 1) solid black
                 textAlign center
                 display flex
                 color anthrazit
@@ -848,7 +848,7 @@ main = putCss $ do
                 backgroundColor myBlue
                 borderRadius (px 24) (px 24) (px 24) (px 24)
                 margin (px 4) (px 4) (px 4) (px 4)
-                border none (px 0) lightgray
+                border (px 0) none lightgray
                 cursor pointer
                 fontFamily ["Abel"] [sansSerif]
 
@@ -906,7 +906,7 @@ main = putCss $ do
                 div # ".caption" ? do
                     fontWeight bold
                     fontStyle italic
-                    borderBottom solid (px 1) white
+                    borderBottom (px 1) solid white
                     marginBottom $ em 1
                     textAlign center
                 div # ".description" ? do
@@ -1015,7 +1015,7 @@ main = putCss $ do
 
         button ? do
             backgroundColor transparent
-            border none (px 0) black
+            border (px 0) none black
             cursor pointer
             color anthrazit
             fontSize $ em 0.5
@@ -1023,7 +1023,7 @@ main = putCss $ do
     ".whiteSpaceNoWrap" ? whiteSpace nowrap
 
     div # ".embeddedToc" ? do
-        border solid (px 1) anthrazit
+        border (px 1) solid anthrazit
         borderRadius (px 4) (px 4) (px 4) (px 4)
         fontSize $ pt 12
         padding (px 8) (px 8) (px 8) (px 8)
@@ -1063,10 +1063,10 @@ main = putCss $ do
 
     div # ".stopwatch" ? do
         hr ? do
-            borderBottom none (px 0) black
-            borderLeft none (px 0) black
-            borderRight none (px 0) black
-            borderTop dotted (px 1) lightgray
+            borderBottom (px 0) none black
+            borderLeft (px 0) none black
+            borderRight (px 0) none black
+            borderTop (px 1) dotted lightgray
             height $ px 1
         div ? do
             marginTop $ em 0.5
@@ -1087,7 +1087,7 @@ main = putCss $ do
         marginRight auto
         caption ? do
             textAlign $ alignSide sideLeft
-            borderBottom solid (px 1) lightgray
+            borderBottom (px 1) solid lightgray
         td # ".date" ? do
             color gray
             fontStyle italic
@@ -1112,7 +1112,7 @@ main = putCss $ do
           borderRadius (px 12) (px 12) (px 12) (px 12)
           padding (px 8) (px 8) (px 8) (px 8)
           outline none (px 0) transparent
-          border solid (px 1) myBlue
+          border (px 1) solid myBlue
 
         input # focus ? do
           boxShadow

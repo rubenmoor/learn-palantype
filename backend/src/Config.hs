@@ -10,10 +10,11 @@ import           Data.String  (String)
 import           GHC.Generics (Generic)
 
 data Params = Params
-  { paramDbHost     :: String
-  , paramDbUser     :: String
-  , paramDbPassword :: String
-  , paramDbDatabase :: String
+  { paramDbHost            :: String
+  , paramDbUser            :: String
+  , paramDbPassword        :: String
+  , paramDbDatabase        :: String
+  , paramGithubAccessToken :: String
   }
   deriving (Generic)
 

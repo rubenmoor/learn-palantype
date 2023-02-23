@@ -59,7 +59,7 @@ import qualified Data.Text                     as Text
 import           GHC.Show                       ( Show(show) )
 import           Palantype.Common               ( KeyIndex
                                                 , keyIndex
-                                                , Lang(..)
+                                                , SystemLang(..)
                                                 )
 import           Palantype.Common               ( RawSteno
                                                 , parseStenoKey
@@ -95,7 +95,7 @@ instance FromJSON KeysMapJSON where
          in KeysMapJSON <$> map
     parseJSON invalid = typeMismatch "key map" invalid
 
-handleConfigNew :: MonadSnap m => String -> m (Lang, PloverSystemCfg)
+handleConfigNew :: MonadSnap m => String -> m (SystemLang, PloverSystemCfg)
 handleConfigNew str = do
     let eCfg = runExcept $ do
             parser <- CfgParser.readstring CfgParser.emptyCP str
@@ -134,15 +134,15 @@ handleConfigNew str = do
         Left err -> Snap.throwError $ errNotFound err
         Right (system, machine, stenoKeys) -> do
             lang <- case system of
-                "Palantype"    -> pure EN
-                "Palantype DE" -> pure DE
+                "Palantype"    -> pure SystemEN
+                "Palantype DE" -> pure SystemDE
                 _              -> Snap.throwError $ errSystemNotImplemented system
 
             let rawToIndex raw = case lang of
-                    EN ->
+                    SystemEN ->
                         either (const Nothing) (Just . keyIndex) $
                             parseStenoKey @EN.Key raw
-                    DE ->
+                    SystemDE ->
                         either (const Nothing) (Just . keyIndex) $
                             parseStenoKey @DE.Key raw
                 acc

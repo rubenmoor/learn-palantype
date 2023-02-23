@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DataKinds #-}
+
 module Handler.Event where
 
 import Servant.Server (HasServer(ServerT))

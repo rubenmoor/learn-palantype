@@ -1,6 +1,7 @@
 {
-  "paramDbHost"     : "localhost",
-  "paramDbUser"     : "palantype",
-  "paramDbPassword" : "password",
-  "paramDbDatabase" : "palantype"
+    "paramDbHost"            : "localhost",
+    "paramDbUser"            : "palantype",
+    "paramDbPassword"        : "password",
+    "paramDbDatabase"        : "palantype",
+    "paramGithubAccessToken" : ""
 }

@@ -30,7 +30,7 @@ import           GHC.Generics                   ( Generic )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Palantype.Common               (Palantype,  Lang(..)
+import           Palantype.Common               (Palantype,  SystemLang(..)
                                                 , Chord
                                                 )
 import           Reflex.Dom                     ( EventWriter(..)
@@ -56,7 +56,7 @@ data Env t key = Env
     }
 
 data Navigation = Navigation
-    { navLang      :: Lang
+    { navLang      :: SystemLang
     , navMPrevious :: Maybe StageIndex
     , navCurrent   :: StageIndex
     , navMNext     :: Maybe StageIndex

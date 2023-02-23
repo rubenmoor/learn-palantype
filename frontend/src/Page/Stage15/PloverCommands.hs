@@ -22,7 +22,7 @@ import Data.Eq (Eq ((==)))
 import Data.Function (($))
 import Data.Semigroup ((<>))
 import Page.Common (elNotImplemented)
-import Palantype.Common (Lang(DE))
+import Palantype.Common (SystemLang(SystemDE))
 import Reflex.Dom ((=:), DomBuilder, el, elAttr, elClass, text)
 import State (Env (..), Navigation (..))
 
@@ -37,7 +37,7 @@ ploverCommands ::
 ploverCommands = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    unless (navLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Formatting input"
 

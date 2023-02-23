@@ -24,6 +24,7 @@ import qualified Handler.User                  as User
 import qualified Handler.Event                 as Event
 import qualified Handler.Admin                 as Admin
 import qualified Handler.Stats                 as Stats
+import qualified Handler.CMS                   as CMS
 import           AppData                        ( Handler )
 
 handlers :: ServerT RoutesApi a Handler
@@ -34,3 +35,4 @@ handlers =
    :<|> User.handlers
    :<|> Event.handlers
    :<|> Stats.handlers
+   :<|> CMS.handlers

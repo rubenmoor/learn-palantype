@@ -15,10 +15,9 @@ import           TextShow                       ( fromText
                                                 , TextShow(showb)
                                                 )
 import           Data.Map.Strict                ( Map )
-import           Palantype.Common               ( Lang(..)
+import           Palantype.Common               ( SystemLang(..)
                                                 , RawSteno
                                                 , KeyIndex
-                                                , Lang
                                                 )
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
@@ -30,7 +29,7 @@ import qualified Data.Map.Strict               as Map
 import           Control.Category               ( (<<<) )
 import           Common.PloverAdapter           ( fromPlover )
 
-newtype PloverCfg = PloverCfg { unPloverCfg :: Map Lang PloverSystemCfg }
+newtype PloverCfg = PloverCfg { unPloverCfg :: Map SystemLang PloverSystemCfg }
   deriving (Eq, Generic, Show, ToJSON, FromJSON)
 
 instance Wrapped PloverCfg
@@ -76,8 +75,8 @@ instance ToJSON CfgName
 --
 defaultPloverCfg :: PloverCfg
 defaultPloverCfg = PloverCfg $ Map.fromList
-    [ (EN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
-    , (DE, defaultPloverSystemCfg)
+    [ (SystemEN, keyMapToPloverCfg lsStenoQwertyOrig [] "keyboard" CNQwertyEN)
+    , (SystemDE, defaultPloverSystemCfg)
     ]
 
 {-|

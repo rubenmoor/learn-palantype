@@ -38,7 +38,7 @@ exercises = Map.fromList
                   "First of all, note that these patterns are in addition to the \
                         \simple patterns of the previous "
               let (iStage, iT, iS) =
-                    $fromJust $ findStage mapStages $ StageSpecial @key "Onset, nucleus, and coda"
+                    $fromJust $ findStage $ StageSpecial @key "Onset, nucleus, and coda"
               routeLink (stageUrl @key iStage)
                   $  text
                   $  "Exercise "
@@ -140,7 +140,7 @@ exercises = Map.fromList
                    \This onset code is also used for "
 
               let (iStage, iT, iS) =
-                    $fromJust $ findStage mapStages $ StageSpecial @DE.Key "Fingerspelling"
+                    $fromJust $ findStage $ StageSpecial @DE.Key "Fingerspelling"
               routeLink (stageUrl @key iStage)
                   $  text
                   $  "Exercise "

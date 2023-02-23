@@ -38,10 +38,10 @@ import           Data.Maybe                     ( fromMaybe
                                                 )
 import           Data.Ord                       ( Ord((>)) )
 import           Text.Show                      ( show )
-import           Data.Password                  ( mkPassword )
 import           Data.Password.Argon2           ( PasswordCheck(..)
                                                 , checkPassword
                                                 , hashPassword
+                                                , mkPassword
                                                 )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text

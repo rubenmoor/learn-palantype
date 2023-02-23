@@ -166,7 +166,7 @@ import qualified Page.Patterns as Patterns
 import Palantype.Common
     ( Chord (..),
       KeyIndex,
-      Lang (..),
+      SystemLang (..),
       Palantype (keyCode),
       fromChord,
       fromIndex,
@@ -184,7 +184,7 @@ import qualified Palantype.Common.Indices as KI
 import qualified Palantype.DE as DE
 import qualified Palantype.EN as EN
 import Reflex.Dom
-    (never, dyn, TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
+    (never, TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
       DomBuilder
           ( DomBuilderSpace,
             inputElement
@@ -248,7 +248,6 @@ import State
       stageUrl,
       updateState,
     )
-import Text.Read (readMaybe)
 import TextShow (TextShow (showt))
 import qualified Palantype.Common.Dictionary.Numbers as Numbers
 import Control.Monad (when)
@@ -311,8 +310,8 @@ settings = elClass "div" "topmenu" do
     dynState <- ask
     let dynAppState = stApp <$> dynState
         lang = if
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | otherwise -> $failure "Key not implemented"
 
     elClass "div" "floatLeft" $ do
@@ -352,8 +351,8 @@ settings = elClass "div" "topmenu" do
                     text "qwerty EN"
                 let eQwerty = domEvent Click elQwerty
                     lsStenoQwertyEN = case lang of
-                        EN -> lsStenoQwertyOrig
-                        _ -> lsStenoQwerty
+                        SystemEN -> lsStenoQwertyOrig
+                        _        -> lsStenoQwerty
                 updateState $
                     eQwerty
                         $> [ field @"stApp" . field @"stPloverCfg"
@@ -453,8 +452,8 @@ settings = elClass "div" "topmenu" do
         (s, _) <- elDynClass' "div" dynClass $ do
             iFa "fas fa-keyboard"
             el "code" $ text $ showt $ case lang of
-              DE -> KI.toRaw @DE.Key kiInsert
-              EN -> KI.toRaw @EN.Key kiInsert
+              SystemDE -> KI.toRaw @DE.Key kiInsert
+              SystemEN -> KI.toRaw @EN.Key kiInsert
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
@@ -532,8 +531,8 @@ stenoInput
     => m (Event t (Chord key))
 stenoInput = do
     let lang = if
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
           | otherwise -> $failure "Key not implemented"
     dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
     dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
@@ -594,7 +593,7 @@ stenoInput = do
             -- a bit of a hack to switch to the original Palantype
             -- keyboard layout for English
             -- that original layout I will consider the exception
-            EN ->
+            SystemEN ->
                 elKeyboardEN
                     pcfgName
                     pcfgMapStenoKeys
@@ -669,7 +668,7 @@ elKeyboard
   => CfgName
   -> Map KeyIndex [Text]
   -> Dynamic t (Set key)
-  -> Lang
+  -> SystemLang
   -> Bool
   -> m ()
 elKeyboard cfgName stenoKeys dynPressedKeys lang showQwerty =
@@ -800,7 +799,7 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell True stenoKeys dynPressedKeys 19 "1" ""
             elCell True stenoKeys dynPressedKeys 32 "3" ""
     elClass "div" "configuration" $ do
-        el "div" $ text $ showt EN
+        el "div" $ text $ showt SystemEN
         el "div" $ text $ showt cfgName
 
 elCell
@@ -995,12 +994,12 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                 elLi 0
                 elStage 1 "The Palantype Alphabet"  [1 .. 8 ]
                 let lang = if
-                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> EN
-                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> DE
+                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
+                      | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
                       | otherwise -> $failure "Key not implemented"
                 case lang of
-                  EN -> elStage 2 "Syllables and chords"           [9  .. 10]
-                  DE -> do
+                  SystemEN -> elStage 2 "Syllables and chords"           [9  .. 10]
+                  SystemDE -> do
                       elStage 2  "Syllables and chords"           [9  .. 12]
                       elStage 3  "Common replacement rules"       [13 .. 15]
                       elStage 4  "Be efficient, be greedy"        [16 .. 18]
@@ -1081,23 +1080,26 @@ landingPage = elClass "div" "landing" $ do
                         pure elEN
 
                     let evClick = leftmost
-                          [ domEvent Click elEN $> EN
-                          , domEvent Click elDE $> DE
+                          [ domEvent Click elEN $> SystemEN
+                          , domEvent Click elDE $> SystemDE
                           ]
                     updateState $
                         evClick <&> \lang ->
-                            [ field @"stApp" . field @"stMLang" ?~ lang,
-                              -- if no progress in map, insert "Introduction"
-                              field @"stApp" . field @"stProgress"
-                                  %~ Map.insertWith (\_ o -> o) lang ($fromJust $ mkStageIndex 0)
-                            ]
+                            let mSi = case lang of
+                                  SystemEN -> mkStageIndex @EN.Key 0
+                                  SystemDE -> mkStageIndex @DE.Key 0
+                            in  [ field @"stApp" . field @"stMLang" ?~ lang,
+                                -- if no progress in map, insert "Introduction"
+                                field @"stApp" . field @"stProgress"
+                                    %~ Map.insertWith (\_ o -> o) lang ($fromJust mSi)
+                                ]
                     dynState <- ask
                     let toMNewRoute st _ = do
                           lang <- st ^. field @"stApp" . field @"stMLang"
                           stage <- st ^. field @"stApp" . field @"stProgress" . at lang
                           pure $ case lang of
-                            DE -> stageUrl @DE.Key stage
-                            EN -> stageUrl @EN.Key stage
+                            SystemDE -> stageUrl @DE.Key stage
+                            SystemEN -> stageUrl @EN.Key stage
                     setRoute $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
 
     elClass "div" "info-columns" $ do
@@ -1201,7 +1203,7 @@ elStages
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => Lang
+    => SystemLang
     -> (Event t () -> Event t ())
     -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
 elStages navLang toReady = do
@@ -1271,7 +1273,7 @@ elStages navLang toReady = do
 
                   case Stage.fromIndex iCurrent of
                     Just (Stage (StageSpecial str) _) -> case str of
-                      "Introduction"              -> introduction
+                      "Introduction"              -> introduction toReady
                       "Type the letters"          -> Stage1.exercise1
                       "Memorize the order"        -> Stage1.exercise2
                       "Type the letters blindly"  -> Stage1.exercise3

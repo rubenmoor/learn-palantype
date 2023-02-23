@@ -49,7 +49,7 @@ import           Data.Function                  ( const
                                                 )
 import           Data.Semigroup                 ( Semigroup((<>)) )
 import           Servant.API                    ( (:<|>)(..) )
-import           Palantype.Common               ( Lang
+import           Palantype.Common               ( SystemLang
                                                 , StageIndex
                                                 )
 import           State                          ( stSession
@@ -59,7 +59,7 @@ import           State                          ( stSession
 import           Data.Bool                      ( Bool )
 import           Control.Lens.Getter            ( (^.) )
 import           Data.Text.Encoding             ( decodeUtf8' )
-import           Common.Model                   ( Journal
+import           Common.Model                   (TextLang,  Journal
                                                 , Stats
                                                 , AppState
                                                 )
@@ -68,6 +68,7 @@ import           Data.Time                      ( Day )
 import Servant.Reflex (QParam)
 import Data.Int (Int)
 import Control.Category ((<<<))
+import Text.Pandoc.Definition (Pandoc)
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender = fmap switchDyn <<< prerender (pure never)
@@ -111,7 +112,7 @@ postConfigNew
     :: SupportsServantReflex t m
     => Dynamic t (Either Text String)
     -> Event t ()
-    -> m (Event t (ReqResult () (Lang, PloverSystemCfg)))
+    -> m (Event t (ReqResult () (SystemLang, PloverSystemCfg)))
 
 -- auth
 
@@ -197,7 +198,7 @@ postEventViewPage
 postEventStageCompleted
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
-    -> Dynamic t (Either Text (Lang, StageIndex, Stats))
+    -> Dynamic t (Either Text (SystemLang, StageIndex, Stats))
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
@@ -217,7 +218,7 @@ getJournalAll
 getStats
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (Maybe (CompactJWT, Text)))
-    -> Dynamic t (Either Text Lang)
+    -> Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text StageIndex)
     -> Event t ()
     -> m (Event t (ReqResult () [(Maybe Text, Stats)]))
@@ -228,7 +229,15 @@ postStatsStart
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-((postConfigNew) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage) :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted))
+getCMS
+    :: SupportsServantReflex t m
+    => Dynamic t (QParam SystemLang)
+    -> Dynamic t (QParam TextLang)
+    -> Dynamic t (QParam Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () [Pandoc]))
+
+((postConfigNew) :<|> (getJournalAll) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> (postEventViewPage) :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> getCMS)
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

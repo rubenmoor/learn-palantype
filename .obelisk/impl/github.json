@@ -1,8 +1,8 @@
 {
-  "owner": "rubenmoor",
-  "repo": "obelisk",
-  "branch": "master",
-  "private": false,
-  "rev": "ca596fa001c76ba27e03d1d1ca39665602ce5699",
-  "sha256": "0pk06648wy9xq98isbha20j9l2h943q35865v5f99nxfgywy7sa2"
+    "owner": "rubenmoor",
+    "repo": "obelisk",
+    "branch": "development",
+    "private": false,
+    "rev": "e45b37817c74a199e618804a70480d241666e5e0",
+    "sha256": "1xkdzxlc75s5655v2wx2ga8nmhqi9afh1jjwddmjm2k457dcvh4m"
 }

@@ -24,23 +24,24 @@ import qualified Data.Set                      as Set
 import           Data.Set                       ( Set )
 import qualified Data.Map.Strict               as Map
 import           Data.Map.Strict                ( Map )
-import           Palantype.Common               (Lang (..))
+import           Palantype.Common               (SystemLang (..))
 
 import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
 import           Palantype.Common               (StageRepr,  StageIndex )
+import Web.HttpApiData (FromHttpApiData (parseQueryParam), ToHttpApiData (toQueryParam))
 
 -- frontend/Localstorage
 
 data AppState = AppState
     { stCleared       :: Set StageIndex
-    , stMLang         :: Maybe Lang
+    , stMLang         :: Maybe SystemLang
     , stMsg           :: Maybe Message
     , stPloverCfg     :: PloverCfg
     , stShowKeyboard  :: Bool
     , stKeyboardShowQwerty :: Bool
     , stKeyboardActive :: Bool
     , stShowTOC       :: Bool
-    , stProgress      :: Map Lang StageIndex
+    , stProgress      :: Map SystemLang StageIndex
     , stTOCShowStage  :: Set Int
     , stShowStats     :: ShowStats
     , stSound         :: Bool
@@ -85,8 +86,8 @@ instance FromJSON ShowStats
 instance ToJSON ShowStats
 
 
-defaultProgress :: Map Lang StageIndex
-defaultProgress = Map.fromList [(EN, 0), (DE, 0)]
+defaultProgress :: Map SystemLang StageIndex
+defaultProgress = Map.fromList [(SystemEN, 0), (SystemDE, 0)]
 
 -- frontend and backend
 
@@ -146,8 +147,25 @@ instance FromJSON EventUser
 
 data EventApp
   = EventViewPage Text
-  | EventStageCompleted Lang StageRepr Stats
+  | EventStageCompleted SystemLang StageRepr Stats
   deriving (Generic)
 
 instance ToJSON EventApp
 instance FromJSON EventApp
+
+-- cms
+
+data TextLang
+  = TextDE
+  | TextEN
+
+instance ToHttpApiData TextLang where
+  toQueryParam = \case
+    TextDE -> "DE"
+    TextEN -> "EN"
+
+instance FromHttpApiData TextLang where
+  parseQueryParam = \case
+    "DE" -> Right TextDE
+    "EN" -> Right TextEN
+    str     -> Left $ "FromHttpApiData: Couldn't parse TextLang: " <> str

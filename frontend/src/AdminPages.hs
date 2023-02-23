@@ -101,7 +101,7 @@ import GHC.Real (fromIntegral)
 import Data.Foldable (Foldable(null))
 import Data.Traversable (Traversable(sequence))
 import Data.Witherable (mapMaybe)
-import Palantype.Common (Palantype, Lang(..))
+import Palantype.Common (Palantype, SystemLang(..))
 import qualified Palantype.EN as EN
 import qualified Palantype.DE as DE
 import qualified Palantype.Common.Stage as Stage
@@ -299,8 +299,8 @@ showEvent = \case
                     routeLink r $ text str
 
             case lang of
-                EN -> mkRouteLink @EN.Key
-                DE -> mkRouteLink @DE.Key
+                SystemEN -> mkRouteLink @EN.Key
+                SystemDE -> mkRouteLink @DE.Key
 
             text $ " " <> formatTime statsTime
 

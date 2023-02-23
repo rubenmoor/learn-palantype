@@ -141,7 +141,7 @@ overview = do
                         $ Map.findWithDefault Map.empty p map
             el "h3" $ do
                 text $ "Greediness " <> showt g
-                case findStage mapStages (StageGeneric p g) of
+                case findStage (StageGeneric p g) of
                     Just (si, _, _) -> routeLink (stageUrl @key si)
                         $ iFaAttr "fas fa-book-open" ("title" =: "Go to exercise")
                     Nothing ->

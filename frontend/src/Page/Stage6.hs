@@ -175,7 +175,7 @@ exercises = Map.fromList
           text " using "
           el "code" $ text "+D"
           text " in "
-          let (i, t, s) = $fromJust $ findStage mapStages $ StageGeneric DE.PatReplCommon1 0
+          let (i, t, s) = $fromJust $ findStage $ StageGeneric DE.PatReplCommon1 0
           routeLink (stageUrl @key i)
               $  text
               $  "Exercise "

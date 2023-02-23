@@ -17,7 +17,7 @@ import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (.)
                                                 )
-import           Control.Lens                   ((?~), at,  (%~)
+import           Control.Lens                   ((%~)
                                                 , (.~)
                                                 )
 import           Control.Monad.Reader           ( MonadReader(ask) )
@@ -36,11 +36,11 @@ import           Data.Witherable                ( Filterable(filter) )
 import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute(setRoute)
                                                 )
-import           Palantype.Common               ( Lang(..)
+import           Palantype.Common               ( SystemLang(..)
                                                 , Palantype
                                                 )
 import           Palantype.Common.RawSteno      ( parseChordMaybe )
-import           Reflex.Dom                     (xhrRequestConfig_headers, XhrResponse (..), widgetHold_, MonadHold, widgetHold, Prerender, Performable, TriggerEvent, PostBuild, getPostBuild, Client, PerformEvent, XhrRequest(..), def, Event, performRequestAsync,  elClass'
+import           Reflex.Dom                     (constDyn, fanEither, widgetHold_, MonadHold, Prerender, PostBuild, getPostBuild, Event,  elClass'
                                                 , (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
@@ -59,21 +59,15 @@ import           State                          ( stageUrl
                                                 , State
                                                 , updateState
                                                 )
-import           TextShow                       ( TextShow(showt) )
 import           Palantype.Common.TH            ( fromJust )
 import Data.Functor ((<$>))
-import Language.Javascript.JSaddle (MonadJSM)
 import Data.Functor ((<&>))
-import Control.Lens ((&))
-import Data.Text (Text)
-
 import Shared (loadingScreen)
-import Client (postRender)
-import Github
-    (GithubAPIResponse (..),  RequestConfig(RequestConfig, rqcLang, rqcWrittenLang,
-                    rqcPageName),
-      requestGithub )
-import qualified Data.Text as Text
+import Data.Functor (Functor(fmap))
+import Client (getCMS, request)
+import Servant.Common.Req (QParam(QParamSome))
+import Common.Model (TextLang(TextEN))
+import Reflex.Dom.Pandoc (defaultConfig, elPandoc)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -83,7 +77,7 @@ introduction
        , MonadReader (Env t key) m
        , Palantype key
        , Prerender t m
-       , PostBuild t (Event t)
+       , PostBuild t m
        , SetRoute t (R FrontendRoute) m
        )
     => (Event t () -> Event t ())
@@ -91,56 +85,60 @@ introduction
 introduction toReady = do
 
     Env {..} <- ask
+    evReady <- toReady <$> getPostBuild
 
     let
         Navigation {..} = envNavigation
-        eReady = toReady <$> getPostBuild
 
-        rqcLang = "PalantypeDE"
-        rqcWrittenLang = "EN"
-        rqcPageName = "introduction"
-        reqConfig = RequestConfig{..}
+        systemLang = QParamSome SystemDE
+        txtLang    = QParamSome TextEN
+        pageName   = QParamSome "introduction"
 
-        -- TODO retrieve file from github
+    (evRespFail, evRespSucc) <- fmap fanEither $ request $
+      getCMS (constDyn systemLang)
+             (constDyn txtLang   )
+             (constDyn pageName  )
+             evReady
 
-    eContent <- postRender $ requestGithub (eReady $> reqConfig)
-    widgetHold_ (loadingScreen "") $ eContent <&> \case
-        GithubAPIError code str -> el "span" $
-            text $ "Error loading content: " <> showt code <> " " <> str
-        GithubAPISuccess str -> el "span" $ text $ Text.take 500 str
+    widgetHold_ (loadingScreen "") $ evRespFail <&> \strError ->
+      el "span" $ text $ "Error loading content: " <> strError
 
-    -- TODO part1
+    widgetHold_ (loadingScreen "") $ evRespSucc <&> \case
+        [part1, part2, part3] -> do
 
-    elClass "p" "textAlign-center" $ elAttr
-        "iframe"
-        (  "width"
-        =: "640"
-        <> "height"
-        =: "480"
-        <> "src"
-        =: "https://www.youtube.com/embed/za1qxU4jdfg"
-        )
-        blank
+            elPandoc defaultConfig part1
 
-    -- TODO part2
+            elClass "p" "textAlign-center" $ elAttr
+                "iframe"
+                (  "width"
+                =: "640"
+                <> "height"
+                =: "480"
+                <> "src"
+                =: "https://www.youtube.com/embed/za1qxU4jdfg"
+                )
+                blank
 
-    let rsStart = case navLang of
-            EN -> "START"
-            DE -> "DSAÜD"
-        eChordSTART =
-            void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
+            elPandoc defaultConfig part2
 
-    elClass "div" "start" $ do
-        (btn, _) <- elClass' "button" "small" $ text "Get Started!"
-        let eStart = leftmost [eChordSTART, domEvent Click btn]
-        updateState
-            $  eStart
-            $> [ field @"stApp" . field @"stProgress" %~ Map.insert navLang ($fromJust navMNext)
-               , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-               , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
-               ]
-        setRoute $ eStart $> stageUrl @key 1
+            let rsStart = case navLang of
+                    SystemEN -> "START"
+                    SystemDE -> "DSAÜD"
+                eChordSTART =
+                    void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
 
-    -- TODO part3
+            elClass "div" "start" $ do
+                (btn, _) <- elClass' "button" "small" $ text "Get Started!"
+                let eStart = leftmost [eChordSTART, domEvent Click btn]
+                updateState
+                    $  eStart
+                    $> [ field @"stApp" . field @"stProgress" %~ Map.insert navLang ($fromJust navMNext)
+                       , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
+                       , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
+                       ]
+                setRoute $ eStart $> stageUrl @key 1
+
+            elPandoc defaultConfig part3
+        _ -> el "span" $ text "wrong number of parts in markdown"
 
     pure envNavigation

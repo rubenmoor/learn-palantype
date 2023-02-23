@@ -59,7 +59,7 @@ import           Obelisk.Route.Frontend         (RoutedT
                                                 , mapRoutedT
                                                 , subRoute_
                                                 )
-import           Palantype.Common               ( Lang(..) )
+import           Palantype.Common               ( SystemLang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
 import           Reflex.Dom                     (zipDyn, holdUniqDyn, fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
@@ -226,8 +226,8 @@ frontendBody = mdo
               toReady <$> getPostBuild >>=
                 requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
-            FrontendRoute_EN -> elStages @EN.Key EN toReady
-            FrontendRoute_DE -> elStages @DE.Key DE toReady
+            FrontendRoute_EN -> elStages @EN.Key SystemEN toReady
+            FrontendRoute_DE -> elStages @DE.Key SystemDE toReady
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
                   toReady <$> getPostBuild >>=

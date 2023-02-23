@@ -90,7 +90,7 @@ import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterUS
                                                 )
 import qualified Data.Text                     as Text
-import           Palantype.Common               ( Lang(DE) )
+import           Palantype.Common               ( SystemLang(SystemDE) )
 import           Data.Eq                        ( Eq((==)) )
 import           GHC.Num                        ( Num((-)) )
 import           Data.Tuple                     (snd,  fst )
@@ -253,7 +253,7 @@ fingerspelling
 fingerspelling = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    unless (navLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Fingerspelling"
 
@@ -331,7 +331,7 @@ fingerspelling = mdo
         el "code" $ text "WIN"
         text " key shows up among the keys in "
         let (iStage, iT, iS) =
-              $fromJust $ findStage mapStages $ StageSpecial @DE.Key "Command Keys"
+              $fromJust $ findStage $ StageSpecial @DE.Key "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
@@ -394,7 +394,7 @@ fingerspelling = mdo
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
         let (iStage, iT, iS) =
-              $fromJust $ findStage @DE.Key mapStages $ StageSpecial "Command Keys"
+              $fromJust $ findStage @DE.Key $ StageSpecial "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text

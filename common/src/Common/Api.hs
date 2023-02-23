@@ -28,7 +28,7 @@ import           Servant.API                    (Delete, QueryFlag, QueryParam, 
                                                 , ReqBody
                                                 )
 import           Web.KeyCode                    ( Key )
-import           Palantype.Common               ( Lang(..)
+import           Palantype.Common               ( SystemLang(..)
                                                 )
 import           Common.PloverConfig            ( PloverSystemCfg )
 import           Common.Auth                    ( LoginData
@@ -37,9 +37,10 @@ import           Common.Auth                    ( LoginData
                                                 , AuthRequired
                                                 , AuthOptional
                                                 )
-import           Common.Model (Journal, Stats, AppState)
+import           Common.Model (TextLang, Journal, Stats, AppState)
 import Palantype.Common (StageIndex)
 import Data.Time (UTCTime, Day)
+import Text.Pandoc.Definition (Pandoc)
 
 type RoutesAuth =
            "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
@@ -65,15 +66,15 @@ type RoutesUser =
     )
 
 type RoutesPalantype =
-          "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (Lang, PloverSystemCfg)
+          "config" :> "new" :> ReqBody '[PlainText] String :> Post '[JSON] (SystemLang, PloverSystemCfg)
 
 type RoutesEvent =
        AuthOptional "jwt" :> "view-page"       :> ReqBody '[JSON] Text                 :> Post '[JSON] ()
 
 type RoutesStats =
-       AuthOptional "jwt" :> Capture "lang" Lang :> Capture "stageIndex" StageIndex :> Get '[JSON] [(Maybe Text, Stats)]
+       AuthOptional "jwt" :> Capture "lang" SystemLang :> Capture "stageIndex" StageIndex :> Get '[JSON] [(Maybe Text, Stats)]
   :<|> AuthRequired "jwt" :> "start" :> Post '[JSON] ()
-  :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (Lang, StageIndex, Stats) :> Post '[JSON] ()
+  :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (SystemLang, StageIndex, Stats) :> Post '[JSON] ()
 
 type RouteStatsNew =
        AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()
@@ -99,6 +100,11 @@ type RoutesAdmin =
                                   :> QueryFlag "filter-anonymous"
                                   :> Get '[JSON] [Journal]
 
+type RoutesCMS = QueryParam "system"   SystemLang
+              :> QueryParam "lang"     TextLang
+              :> QueryParam "pagename" Text
+              :> Get '[JSON] [Pandoc]
+
 type RoutesApi = "api" :>
     (      RoutesPalantype
       :<|> "admin" :> RoutesAdmin
@@ -106,14 +112,15 @@ type RoutesApi = "api" :>
       :<|> "user"  :> RoutesUser
       :<|> "event" :> RoutesEvent
       :<|> "stats" :> RoutesStats
+      :<|> "cms"   :> RoutesCMS
     )
 
 --
 
-showSymbol :: Lang -> Text
+showSymbol :: SystemLang -> Text
 showSymbol = \case
-  EN -> "EN"
-  DE -> "DE"
+  SystemEN -> "EN"
+  SystemDE -> "DE"
 
 instance ToJSON Key
 instance FromJSON Key

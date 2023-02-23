@@ -21,7 +21,7 @@ import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Function (($))
 import Data.Semigroup ((<>))
 import Page.Common (elNotImplemented)
-import Palantype.Common (Lang (DE))
+import Palantype.Common (SystemLang (SystemDE))
 import Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
 import State (Env (..), Navigation (..))
 import Obelisk.Generated.Static (static)
@@ -36,7 +36,7 @@ specialCharacters
 specialCharacters = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    unless (navLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Typing numbers"
 

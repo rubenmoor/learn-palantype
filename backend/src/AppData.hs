@@ -13,9 +13,10 @@ import           Snap.Core              (Snap)
 import           System.IO              (IO)
 
 data EnvApplication = EnvApplication
-  { envPool     :: Pool SqlBackend
-  , envUrl      :: Text
-  , envJwk      :: JWK
+  { envPool        :: Pool SqlBackend
+  , envUrl         :: Text
+  , envJwk         :: JWK
+  , envGithubToken :: Text
   }
 
 type Handler = ReaderT EnvApplication Snap

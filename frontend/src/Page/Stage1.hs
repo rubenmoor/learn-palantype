@@ -63,7 +63,7 @@ import           Obelisk.Route.Frontend         (R , SetRoute
 import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
                                                 )
-import           Palantype.Common               (keyCode, Lang(..),  Chord(..)
+import           Palantype.Common               (keyCode, SystemLang(..),  Chord(..)
                                                 , Finger(..)
                                                 , Palantype(toFinger)
                                                 , fromIndex
@@ -126,7 +126,7 @@ exercise1 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 1"
@@ -149,7 +149,7 @@ exercise1 = mdo
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-    when (navLang == DE) $ do
+    when (navLang == SystemDE) $ do
       el "p" $ text
             "In case you wonder: The letter ʃ is a phonetic symbol \
             \related to the German \"sch\". \
@@ -193,7 +193,7 @@ exercise2 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 2"
@@ -211,7 +211,7 @@ exercise2 = mdo
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
-        DE -> el "p" $ do
+        SystemDE -> el "p" $ do
             text "Well, how to pronounce ~? This symbol is used to turn "
             el "em" $ text "u"
             text " into "
@@ -229,7 +229,7 @@ exercise2 = mdo
             text " into "
             el "em" $ text "üh"
             text ". It is called «lang» (the German word for long)."
-        EN ->
+        SystemEN ->
             el "p"
                 $ text
                       "The + is called cross and the ^ is called point, \
@@ -256,7 +256,7 @@ exercise3 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 3"
@@ -274,7 +274,7 @@ exercise3 = mdo
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     case navLang of
-        DE -> do
+        SystemDE -> do
           el "p" $ do
             text "Missing the letters "
             el "em" $ text "C"
@@ -336,7 +336,7 @@ exercise3 = mdo
             text ", and "
             el "em" $ text "é"
             text "."
-        EN -> pure () -- TODO
+        SystemEN -> pure () -- TODO
     pure envNavigation
 
 -- 1.4
@@ -358,7 +358,7 @@ exercise4 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 4"
@@ -621,7 +621,7 @@ exercise5 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 5"
@@ -715,7 +715,7 @@ exercise6 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 6"
@@ -804,7 +804,7 @@ exercise7 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 7"
@@ -882,7 +882,7 @@ exercise8 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 8"

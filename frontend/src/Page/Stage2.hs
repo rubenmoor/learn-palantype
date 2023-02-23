@@ -88,7 +88,7 @@ import           Page.Common                    (elBtnSound, getStatsLocalAndRem
 import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
 import           Palantype.Common               (StageSpecialGeneric (..), mapStages, patternDoc,  kiChordsStart
                                                 , Chord(..)
-                                                , Lang(..)
+                                                , SystemLang(..)
                                                 , Palantype
                                                 , fromChord
                                                 , mkChord
@@ -295,7 +295,7 @@ exercise1
 exercise1 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 1"
@@ -331,7 +331,7 @@ exercise1 = mdo
         pure e
 
     let eBack = leftmost [eChordBackUp, domEvent Click elABack]
-        (stage1_1, _, _) = $fromJust $ findStage @key mapStages (StageSpecial "Type the letters")
+        (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
     setRoute $ eBack $> stageUrl @key 1 -- Stage 1.1
     updateState
         $  eBack
@@ -522,14 +522,14 @@ exercise2
 exercise2 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [DE, EN]) elNotImplemented
+    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 2"
     el "h2" $ text "Syllables and chords"
 
     evDone <- case navLang of
-        EN -> do
+        SystemEN -> do
             el "p" $ do
                 text
                     "We can begin with actually typing sentences now. \
@@ -583,7 +583,7 @@ exercise2 = mdo
                     \No worries, we'll get to that."
 
             pure evDone'
-        DE -> do
+        SystemDE -> do
             el "p"
                 $ text
                       "We can begin with actually typing sentences now. \
@@ -812,7 +812,7 @@ exercise3
 exercise3 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    unless (navLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 3"
@@ -932,7 +932,7 @@ exercise4
 exercise4 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == DE) elNotImplemented
+    unless (navLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 4"

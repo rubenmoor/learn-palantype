@@ -47,6 +47,7 @@ import           Control.Monad.Reader           ( runReaderT )
 import           Control.Monad.Logger           ( NoLoggingT(..) )
 import           Control.Monad.Trans.Resource   ( runResourceT )
 import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
 import qualified Data.Text.IO                  as Text
 import           System.Exit                    ( exitWith
                                                 , ExitCode(ExitFailure)
@@ -86,9 +87,10 @@ backend = Backend
         runNoLoggingT $ withMySQLPool connectInfo 10 $ \pool -> do
             runResourceT
                 $ runSqlPool (runMigration $ migrateModels entities) pool
-            let env = EnvApplication { envPool     = pool
-                                     , envUrl      = url
-                                     , envJwk      = jwk
+            let env = EnvApplication { envPool        = pool
+                                     , envUrl         = url
+                                     , envJwk         = jwk
+                                     , envGithubToken = Text.pack paramGithubAccessToken
                                      }
                 ctx = mkContext jwk pool
             NoLoggingT $ serve $ \case
