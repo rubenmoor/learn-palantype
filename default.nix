@@ -77,6 +77,7 @@ in
         ver = "1.5.0";
         sha256 = "a0/b2AfcA7mMmfrcbEEh5pNUq/OjJw4H7uLTpkl+Y1c=";
       } {};
+      #pandoc-types = self.callCabal2nix "pandoc-types" ../pandoc-types {};
       pandoc-types = self.callHackageDirect {
         pkg = "pandoc-types";
         ver = "1.23";
@@ -110,23 +111,6 @@ in
         ver = "0.8.1";
         sha256 = "XhaAQo0kYCZzenyUftgiCqNs/5esca2udcfeSpBOTjI=";
       } {};
-      # aeson = doJailbreak(self.callHackageDirect {
-      #   pkg = "aeson";
-      #   ver = "2.1.1.0";
-      #   sha256 = "j+pOGBmPazg4gfL2Iw6hT3zfMOWXlEVDsMGhPgovQso=";
-      # } {});
-      #  > OneTuple >=0.3.1 && <0.4,
-      #  > attoparsec >=0.14.2 && <0.15,
-      #  > data-fix >=0.3.2 && <0.4,
-      #  > indexed-traversable >=0.1.2 && <0.2,
-      #  > primitive >=0.7.3.0 && <0.8,
-      #  > scientific >=0.3.7.0 && <0.4,
-      #  > semialign ==1.2.*,
-      #  > text-short >=0.1.5 && <0.2,
-      #  > time-compat >=1.9.6 && <1.10
-      #semialign = self.callHackage "semialign" "1.2.0.1" {};
-      #generically = self.callHackage "generically" "0.1" {};
-      #aeson-pretty = self.callHackage "aeson-pretty" "0.8.9" {};
 
       doclayout = self.callHackage "doclayout" "0.4" {};
       emojis = self.callHackage "emojis" "0.1.2" {};
@@ -142,7 +126,7 @@ in
         sha256 = "HnBsPBdONbaw42/JnpONXAIwsEwc/fMyUXcm4cJdWUQ=";
       } {};
 
-      pandoc = doJailbreak(self.callCabal2nix "pandoc" ../pandoc {});
+      pandoc = self.callCabal2nix "pandoc" ../pandoc {};
       # pandoc = doJailbreak(self.callHackageDirect  {
       #   pkg = "pandoc";
       #   ver = "3.1";
@@ -172,6 +156,8 @@ in
       # ghc 8.10.7 compatible, not published on hackage
       # TODO: jailbreak shouldn't be necessary
       # check versions of aeson >= 0.7 && <1.5 and base64-bytestring ==1.0.*
+      # aeson is actually 1.5.6.0
+      # base64-bytestring is 1.1.0.0
       servant-snap = doJailbreak(self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "haskell-servant";
         repo = "servant-snap";

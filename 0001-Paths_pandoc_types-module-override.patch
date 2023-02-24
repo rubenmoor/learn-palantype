@@ -1,0 +1,27 @@
+From 84e60ed6a7b4063f1e4307812ce5c88dc7796636 Mon Sep 17 00:00:00 2001
+From: Ruben Moor <ruben.moor@gmail.com>
+Date: Thu, 23 Feb 2023 20:17:00 -0500
+Subject: [PATCH] Paths_pandoc_types module override
+
+---
+ src/Paths_pandoc_types.hs | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+ create mode 100644 src/Paths_pandoc_types.hs
+
+diff --git a/src/Paths_pandoc_types.hs b/src/Paths_pandoc_types.hs
+new file mode 100644
+index 0000000..f767b57
+--- /dev/null
++++ b/src/Paths_pandoc_types.hs
+@@ -0,0 +1,8 @@
++module Paths_pandoc_types
++  ( version
++  ) where
++
++import Data.Version (Version, makeVersion)
++
++version :: Version
++version = makeVersion [1, 23]
+-- 
+2.38.3
+
