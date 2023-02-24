@@ -10,107 +10,144 @@
 
 module AdminPages where
 
-import Data.Generics.Sum (_As)
-import Data.Generics.Product (field)
-import Control.Lens.Getter (view, (^.))
-import Control.Lens.Setter ((.~))
-import           Reflex.Dom                     (dynText, tag, EventName (Click), domEvent, current, gate, leftmost, prerender, updated, inputElementConfig_setValue, DomBuilderSpace, InputElementConfig, inputElementConfig_initialChecked, elementConfig_initialAttributes, inputElementConfig_elementConfig, inputElement, InputElement (..)
-                                                , EventWriter
-                                                , constDyn
-                                                , (=:)
-                                                , elAttr
-                                                , DomBuilder
-                                                , MonadHold
-                                                , elClass
-                                                , widgetHold_
-                                                , text
-                                                , el
-                                                , Prerender
-                                                , Dynamic
-                                                , PostBuild
-
-                                                , blank
+import           Control.Lens.Getter            ( (^.)
+                                                , view
                                                 )
+import           Control.Lens.Setter            ( (.~) )
 import           Control.Monad.Reader           ( MonadReader(ask) )
-import           Data.Foldable                  ( for_ )
-import           Data.Functor                   ((<$>)
+import           Data.Either                    ( Either(..)
+                                                , either
+                                                )
+import           Data.Foldable                  ( Foldable(length, null)
+                                                , for_
+                                                )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                , (.)
+                                                )
+import           Data.Functor                   ( (<$>)
                                                 , (<&>)
+                                                , Functor(fmap)
+                                                , void
                                                 )
-import           Data.Either                    (either,  Either(..) )
-import           Data.Time                      (getCurrentTime, parseTimeM, Day,  addDays
-                                                , utctDay
-
-                                                , defaultTimeLocale
-                                                )
-import qualified Data.Time.Format              as Time
-                                                ( formatTime )
-import           Data.Maybe                     (maybe,  Maybe(..) )
-import           Data.Function                  ((.),  ($)
+import           Data.Generics.Product          ( field )
+import           Data.Generics.Sum              ( _As )
+import           Data.Maybe                     ( Maybe(..)
+                                                , maybe
                                                 )
 import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Text                     as Text
-import           TextShow                       ( TextShow(showt) )
 import           Data.Text                      ( Text )
-import           Obelisk.Route.Frontend         (RouteToUrl, routeLink, setRoute,  R
+import           Data.Time                      ( Day
+                                                , addDays
+                                                , defaultTimeLocale
+                                                , getCurrentTime
+                                                , parseTimeM
+                                                , utctDay
+                                                )
+import qualified Data.Time.Format              as Time
+                                                ( formatTime )
+import           Obelisk.Route.Frontend         ( pattern (:/)
+                                                , R
+                                                , RouteToUrl
                                                 , SetRoute
-                                                , pattern (:/)
+                                                , routeLink
+                                                , setRoute
                                                 )
+import           Reflex.Dom                     ( (=:)
+                                                , DomBuilder
+                                                , DomBuilderSpace
+                                                , Dynamic
+                                                , EventName(Click)
+                                                , EventWriter
+                                                , InputElement(..)
+                                                , InputElementConfig
+                                                , MonadHold
+                                                , PostBuild
+                                                , Prerender
+                                                , blank
+                                                , constDyn
+                                                , current
+                                                , domEvent
+                                                , dynText
+                                                , el
+                                                , elAttr
+                                                , elClass
+                                                , elementConfig_initialAttributes
+                                                , gate
+                                                , inputElement
+                                                , inputElementConfig_elementConfig
+                                                , inputElementConfig_initialChecked
+                                                , inputElementConfig_setValue
+                                                , leftmost
+                                                , prerender
+                                                , tag
+                                                , text
+                                                , updated
+                                                , widgetHold_
+                                                )
+import           TextShow                       ( TextShow(showt) )
 
-import           Shared                         (iFa', elLoginSignup
-                                                , loadingScreen
-                                                , formatTime
+import           Client                         ( getAuthData
+                                                , getJournalAll
+                                                , request
                                                 )
-import           State                          (Session (..), stageUrl, State (..)  )
-import           Client                         (getJournalAll,  request
-                                                , getAuthData
-                                                )
-import           Common.Model                   ( Stats(..)
-                                                , Journal(..)
-                                                )
-import           Common.Model                   ( JournalEvent(..)
+import           Common.Model                   ( EventApp(..)
                                                 , EventUser(..)
-                                                , EventApp(..)
+                                                , Journal(..)
+                                                , JournalEvent(..)
+                                                , Stats(..)
                                                 )
-import           Common.Route                   (FrontendRoute
+import           Common.Route                   ( FrontendRoute
                                                     ( FrontendRoute_Admin
                                                     )
                                                 )
-import           Data.Functor                   ( Functor(fmap) )
-import Data.Bool (Bool(..))
-import Data.Foldable (Foldable(length))
-import GHC.Generics (Generic)
-import Data.Aeson (FromJSON, ToJSON)
-import Servant.Reflex (QParam(..))
-import Control.Category ((<<<))
-import Data.Default (Default(def))
-import Data.Function ((&))
-import Text.Show (Show(show))
-import Control.Category (Category(id))
-import Control.Applicative (Applicative(pure))
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Functor (void)
-import Control.Monad (when)
-import GHC.Base (Ord((>)))
-import Data.Word (Word)
-import Text.Read (readEither)
-import Data.Either.Combinators (mapLeft)
-import GHC.Real (fromIntegral)
-import Data.Foldable (Foldable(null))
-import Data.Traversable (Traversable(sequence))
-import Data.Witherable (mapMaybe)
-import Palantype.Common (Palantype, SystemLang(..))
-import qualified Palantype.EN as EN
-import qualified Palantype.DE as DE
-import qualified Palantype.Common.Stage as Stage
-import Palantype.Common.TH (fromJust)
+import           Control.Applicative            ( Applicative(pure) )
+import           Control.Category               ( (<<<)
+                                                , Category(id)
+                                                )
+import           Control.Monad                  ( when )
+import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Data.Aeson                     ( FromJSON
+                                                , ToJSON
+                                                )
+import           Data.Bool                      ( Bool(..) )
+import           Data.Default                   ( Default(def) )
+import           Data.Either.Combinators        ( mapLeft )
+import           Data.Word                      ( Word )
+import           GHC.Base                       ( Ord((>)) )
+import           GHC.Generics                   ( Generic )
+import           GHC.Real                       ( fromIntegral )
+import           Palantype.Common               ( Palantype
+                                                , SystemLang(..)
+                                                )
+import qualified Palantype.Common.Stage        as Stage
+import           Palantype.Common.TH            ( fromJust )
+import qualified Palantype.DE                  as DE
+import qualified Palantype.EN                  as EN
+import           Servant.Reflex                 ( QParam(..) )
+import           Shared                         ( elLoginSignup
+                                                , formatTime
+                                                , iFa'
+                                                , loadingScreen
+                                                )
+import           State                          ( Session(..)
+                                                , State(..)
+                                                , stageUrl
+                                                )
+import           Text.Read                      ( readEither )
+import           Text.Show                      ( Show(show) )
+import           Witherable                     ( mapMaybe )
+import Data.Traversable (Traversable(traverse))
 
 data JournalReqConfig = JournalReqConfig
-  { jrcExcludeAdmin :: Bool
-  , jrcFilterPred :: JournalEvent
-  } deriving (Generic)
+    { jrcExcludeAdmin :: Bool
+    , jrcFilterPred   :: JournalEvent
+    }
+    deriving Generic
 
 instance ToJSON JournalReqConfig
 instance FromJSON JournalReqConfig
@@ -173,8 +210,7 @@ journal dynHasLoaded = mdo
             dynFilterByVisitor
             dynFilterByUser
             dynFilterByAlias
-            dynFilterAnon
-            $ evLoad
+            dynFilterAnon evLoad
 
     (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias, dynFilterAnon) <-
       elClass "div" "journal" do
@@ -193,7 +229,7 @@ journal dynHasLoaded = mdo
 
             let elemId = "exclude-admin"
                 confCbx = def
-                  & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ ("type" =: "checkbox" <> "id" =: elemId)
+                  & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "type" =: "checkbox" <> "id" =: elemId
                   & inputElementConfig_initialChecked .~ True
             dynExclAdmin' <- el "span" do
               domCbx <- inputElement confCbx
@@ -217,10 +253,10 @@ journal dynHasLoaded = mdo
                 confCbxAnon = def &
                   inputElementConfig_elementConfig
                   . elementConfig_initialAttributes
-                  .~ ("type" =: "checkbox" <> "id" =: elemIdAnon)
+                  .~ "type" =: "checkbox" <> "id" =: elemIdAnon
             dynFilterAnon' <- el "span" do
               domCbx <- inputElement confCbxAnon
-              elAttr "label" ("for" =: elemIdAnon) $ el "span" $ do
+              elAttr "label" ("for" =: elemIdAnon) $ el "span" $
                 text "Show only anonymous "
               pure $ _inputElement_checked domCbx
 
@@ -295,7 +331,7 @@ showEvent = \case
                     let (r, str) = $fromJust $ do
                           index <- Stage.findStageIndex stageRepr
                           stage <- Stage.fromIndex @key index
-                          pure $ (stageUrl @key index, showt stage)
+                          pure (stageUrl @key index, showt stage)
                     routeLink r $ text str
 
             case lang of
@@ -314,7 +350,7 @@ elLabelInputDate conf label elemId = do
     elAttr "label" ("for" =: elemId) $ text label
     i <-
         inputElement
-        $  conf & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ ("id" =: elemId <> "type" =: "date")
+        $  conf & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "id" =: elemId <> "type" =: "date"
     pure $ _inputElement_value i <&> \str ->
           parseTimeM True defaultTimeLocale "%Y-%m-%d" (Text.unpack str)
 
@@ -329,7 +365,7 @@ elLabelInput conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ ("id" =: elemId <> "type" =: "text" <> "maxlength" =: "64")
+           .~ "id" =: elemId <> "type" =: "text" <> "maxlength" =: "64"
     pure $ _inputElement_value i <&> \str ->
       if Text.null str then Nothing else Just str
 
@@ -344,10 +380,8 @@ elLabelInputWord conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ ("id" =: elemId <> "type" =: "number" <> "patern" =: "\\d+")
+           .~ "id" =: elemId <> "type" =: "number" <> "patern" =: "\\d+"
     let toMaybe str = if null str then Nothing else Just str
-    pure $ sequence
-         . fmap (mapLeft Text.pack . readEither)
-         . toMaybe
+    pure $ traverse (mapLeft Text.pack . readEither) . toMaybe
          . Text.unpack
          <$> _inputElement_value i

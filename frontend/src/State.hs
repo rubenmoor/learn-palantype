@@ -14,14 +14,16 @@
 
 module State where
 
-import           Common.Route                   ( FrontendRoute(..) )
-import           Palantype.Common               ( StageIndex )
 import           Common.Auth                    ( SessionData )
-import           Control.Applicative            ( (<$>)
+import           Common.Model                   ( AppState
+                                                , defaultAppState
                                                 )
+import           Common.Route                   ( FrontendRoute(..) )
+import           Control.Applicative            ( (<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
+import           Data.Bool                      ( otherwise )
 import           Data.Foldable                  ( Foldable(foldMap) )
 import           Data.Function                  ( ($) )
 import           Data.Maybe                     ( Maybe(..) )
@@ -30,18 +32,21 @@ import           GHC.Generics                   ( Generic )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Palantype.Common               (Palantype,  SystemLang(..)
-                                                , Chord
+import           Palantype.Common               ( Chord
+                                                , Palantype
+                                                , StageIndex
+                                                , SystemLang(..)
                                                 )
+import           Palantype.Common.TH            ( failure )
+import qualified Palantype.DE                  as DE
+import qualified Palantype.EN                  as EN
 import           Reflex.Dom                     ( EventWriter(..)
                                                 , Reflex(Dynamic, Event)
                                                 )
-import Common.Model (defaultAppState, AppState)
-import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
-import qualified Palantype.DE as DE
-import qualified Palantype.EN as EN
-import Palantype.Common.TH (failure)
-import Data.Bool (otherwise)
+import           Type.Reflection                ( (:~~:)(HRefl)
+                                                , eqTypeRep
+                                                , typeRep
+                                                )
 
 -- environment for frontend pages
 

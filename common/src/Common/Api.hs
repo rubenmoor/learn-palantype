@@ -1,46 +1,51 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Common.Api where
 
+import           Common.Auth                    ( AuthOptional
+                                                , AuthRequired
+                                                , LoginData
+                                                , SessionData
+                                                , UserNew
+                                                )
+import           Common.Model                   ( AppState
+                                                , Journal
+                                                , Stats
+                                                , TextLang
+                                                )
+import           Common.PloverConfig            ( PloverSystemCfg )
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
                                                 )
 import           Data.Text                      ( Text )
-import           Servant.API                    (Delete, QueryFlag, QueryParam,  Capture
-                                                , (:<|>)
-                                                , Get
+import           Data.Time                      ( Day
+                                                , UTCTime
+                                                )
+import           Palantype.Common               ( StageIndex
+                                                , SystemLang(..)
+                                                )
+import           Servant.API                    ( (:<|>)
                                                 , (:>)
+                                                , Capture
+                                                , Delete
+                                                , Get
                                                 , JSON
                                                 , PlainText
                                                 , Post
+                                                , QueryFlag
+                                                , QueryParam
                                                 , ReqBody
                                                 )
+import           Text.Pandoc.Definition         ( Pandoc )
 import           Web.KeyCode                    ( Key )
-import           Palantype.Common               ( SystemLang(..)
-                                                )
-import           Common.PloverConfig            ( PloverSystemCfg )
-import           Common.Auth                    ( LoginData
-                                                , SessionData
-                                                , UserNew
-                                                , AuthRequired
-                                                , AuthOptional
-                                                )
-import           Common.Model (TextLang, Journal, Stats, AppState)
-import Palantype.Common (StageIndex)
-import Data.Time (UTCTime, Day)
-import Text.Pandoc.Definition (Pandoc)
 
 type RoutesAuth =
            "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))

@@ -19,156 +19,182 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Page.Common where
-
-import           Client                         (getStats, getMaybeAuthData, postEventStageCompleted, request,  postRender )
+import           Client                         ( getMaybeAuthData
+                                                , getStats
+                                                , postEventStageCompleted
+                                                , postRender
+                                                , request
+                                                )
+import           Common.Model                   ( AppState(stSound)
+                                                , Message(..)
+                                                , Stats(..)
+                                                )
 import           Common.Route                   ( FrontendRoute(..) )
-import qualified Palantype.Common.Stage as Stage
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
                                                 )
-import           Control.Lens                   ( (?~)
-                                                , (%~)
+import           Control.Lens                   ( (%~)
                                                 , (.~)
+                                                , (?~)
                                                 , preview
+                                                )
+import           Control.Monad                  ( (=<<)
+                                                , when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand
                                                 , newStdGen
                                                 )
-import           Control.Monad.Reader           (ask,  MonadReader
-
+import           Control.Monad.Reader           ( MonadReader
+                                                , ask
                                                 )
-import           Data.Bool                      (not,  (||)
-                                                , Bool(..)
+import           Data.Bifunctor                 ( Bifunctor(second) )
+import           Data.Bool                      ( Bool(..)
+                                                , not
+                                                , (||)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( for_
+import           Data.Foldable                  ( Foldable(elem, minimum, null)
+                                                , for_
                                                 , traverse_
                                                 )
-import           Data.Foldable                  ( Foldable(null) )
-import           Data.Function                  (flip, const,  ($) )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                , const
+                                                , flip
+                                                )
 import           Data.Functor                   ( ($>)
-                                                , void
                                                 , (<$>)
                                                 , (<&>)
+                                                , Functor(fmap)
+                                                , void
                                                 )
 import           Data.Generics.Product          ( field )
-import           Data.Generics.Sum          ( _As )
+import           Data.Generics.Sum              ( _As )
 import           Data.Int                       ( Int )
-import           Data.List                      (sortOn, (!!)
+import           Data.List                      ( (!!)
                                                 , head
+                                                , intersperse
+                                                , sortOn
+                                                , take
                                                 )
-import           Data.List                      ( intersperse )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     (fromMaybe, maybe, isJust
-                                                , Maybe(..)
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
+                                                , isJust
+                                                , maybe
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
-import           Data.Ord                       (Down  (Down),  Ord((>)) )
+import           Data.Ord                       ( Down(Down)
+                                                , Ord((>))
+                                                )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Set                      as Set
-import           Data.Text                      ( Text )
-import           Data.Text                      ( length )
-import           Data.Witherable                ( Filterable(filter) )
+import           Data.Text                      ( Text
+                                                , length
+                                                )
 import           GHC.Enum                       ( Enum(succ)
                                                 , pred
                                                 )
 import           GHC.Float                      ( Double )
+import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((+)) )
 import           GHC.Real                       ( (/)
                                                 , fromIntegral
                                                 )
-import           Obelisk.Route.Frontend         (R
+import           GHCJS.DOM.HTMLMediaElement     ( play )
+import           GHCJS.DOM.Types                ( HTMLAudioElement
+                                                    ( HTMLAudioElement
+                                                    )
+                                                , unElement
+                                                )
+import           Language.Javascript.JSaddle    ( liftJSM )
+import qualified LocalStorage                  as LS
+import           Obelisk.Generated.Static       ( static )
+import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Palantype.Common               ( kiChordsStart
-                                                , Chord
+import           Page.Common.Stopwatch          ( elStatisticsPersonalShort
+                                                , elStopwatch
+                                                , mkStopwatch
+                                                )
+import           Palantype.Common               ( Chord
                                                 , Palantype
                                                 , PatternPos
-                                                , unparts
-                                                , showPretty
-                                                )
-import           Palantype.Common               ( RawSteno
-                                                , parseSteno
-                                                )
-import           Palantype.Common               ( kiBackUp
+                                                , RawSteno
+                                                , kiBackUp
+                                                , kiChordsStart
                                                 , kiEnter
+                                                , parseSteno
+                                                , showPretty
+                                                , unparts
                                                 )
 import qualified Palantype.Common.Indices      as KI
-import           Reflex.Dom                     (elAttr', performEvent_, prerender_, gate, attach, current, fanEither, prerender, constDyn, Dynamic,  TriggerEvent
-                                                , Performable
-                                                , PerformEvent
-                                                , widgetHold
-                                                , switchDyn
-                                                , holdUniqDyn
-                                                , (=:)
+import qualified Palantype.Common.RawSteno     as Raw
+import qualified Palantype.Common.Stage        as Stage
+import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
-                                                , Element (_element_raw)
+                                                , Dynamic
+                                                , Element(_element_raw)
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
                                                 , MonadHold
+                                                , PerformEvent
+                                                , Performable
                                                 , PostBuild(getPostBuild)
                                                 , Prerender
                                                 , Reflex(Event, never)
+                                                , TriggerEvent
+                                                , attach
                                                 , blank
+                                                , constDyn
+                                                , current
                                                 , dyn_
                                                 , el
                                                 , elAttr
+                                                , elAttr'
                                                 , elClass
                                                 , elClass'
+                                                , fanEither
                                                 , foldDyn
+                                                , gate
+                                                , holdUniqDyn
                                                 , leftmost
                                                 , performEvent
+                                                , performEvent_
+                                                , prerender
+                                                , prerender_
+                                                , switchDyn
                                                 , text
                                                 , updated
+                                                , widgetHold
                                                 )
 import           Safe                           ( initMay )
-import           Shared                         (dynSimple, formatTime,  iFa
+import           Shared                         ( dynSimple
+                                                , formatTime
+                                                , iFa
                                                 , whenJust
                                                 )
-import           State                          (Session (..),  State(..)
-                                                , Env(..)
+import           State                          ( Env(..)
                                                 , Navigation(..)
-                                                , State
+                                                , Session(..)
+                                                , State(..)
                                                 , stageUrl
                                                 , updateState
                                                 )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( showt )
-import qualified Palantype.Common.RawSteno     as Raw
-import           Data.Function                  ( (&) )
-import           Data.Functor                   ( Functor(fmap) )
-import           Data.Foldable                  ( Foldable(elem) )
-import           Page.Common.Stopwatch          (elStatisticsPersonalShort,  elStopwatch
-                                                , mkStopwatch
-
-
+import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
-import           Control.Monad                  ( when )
-import           Data.Foldable                  ( Foldable(minimum) )
-import           Data.List                      ( take )
-import           Common.Model                   (AppState (stSound),  Message(..)
-                                                , Stats (..)
-
-                                                )
-import Data.Witherable (Filterable(catMaybes))
-import qualified LocalStorage as LS
-import Language.Javascript.JSaddle (liftJSM)
-import Data.Bifunctor (Bifunctor(second))
-import Obelisk.Generated.Static (static)
-import GHC.Generics (Generic)
-import GHCJS.DOM.Types (HTMLAudioElement(HTMLAudioElement), unElement)
-import GHCJS.DOM.HTMLMediaElement (play)
-import Control.Monad ((=<<))
 
 elFooter
     :: forall key t (m :: * -> *)
@@ -181,17 +207,17 @@ elFooter
     => Navigation
     -> m ()
 elFooter Navigation {..} = elClass "footer" "stage" $ do
-    whenJust navMPrevious $ \prv -> do
+    whenJust navMPrevious $ \prv ->
         elClass "div" "floatLeft" $ do
-            text "< "
-            routeLink (stageUrl @key prv) $
-              text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
+        text "< "
+        routeLink (stageUrl @key prv) $
+          text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
     text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
-    whenJust navMNext $ \nxt -> do
+    whenJust navMNext $ \nxt ->
         elClass "div" "floatRight" $ do
-            routeLink (stageUrl @key nxt) $
-              text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
-            text " >"
+        routeLink (stageUrl @key nxt) $
+          text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
+        text " >"
     elClass "br" "clearBoth" blank
 
 elBackUp
@@ -314,7 +340,7 @@ parseStenoOrError _ raw = case parseSteno raw of
                 "Could not parse steno code: " <> showt raw <> "\n" <> err
         updateState
             $  ePb
-            $> [field @"stApp" . field @"stMsg" .~ Just Message { .. }]
+            $> [(field @"stApp" . field @"stMsg") ?~ Message { .. }]
         pure Nothing
 
 elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()
@@ -392,11 +418,10 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                             st
                                 &  _As @"StateRun"
                                 .  field @"stMHint"
-                                ?~ (Map.findWithDefault
+                                ?~ Map.findWithDefault
                                        []
                                        (stWords !! stCounter)
                                        mapWordStenos
-                                   )
                 StateRun Run {..} ->
                     let rawSteno = unparts $ stChords <> [Raw.fromChord c]
                         word     = Map.findWithDefault "" rawSteno mapStenoWord
@@ -417,7 +442,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                                 st
                                 &  _As @"StateRun"
                                 .  field @"stChords"
-                                .~ (stChords <> [Raw.fromChord c])
+                                .~ stChords <> [Raw.fromChord c]
             stepStart = StateRun Run
                 { stCounter   = 0
                 , stChords    = []
@@ -536,7 +561,7 @@ getStatsLocalAndRemote
 getStatsLocalAndRemote evNewStats = do
   Env{..} <- ask
   let Navigation{..} = envNavigation
-  evReady <- fmap envToReady $ getPostBuild
+  evReady <- envToReady <$> getPostBuild
 
   (evRespFail, evRespSucc) <- fmap fanEither $ request $
       getStats (getMaybeAuthData <$> envDynState)
@@ -550,7 +575,7 @@ getStatsLocalAndRemote evNewStats = do
 
   let dynMIsVisible =
         envDynState <&> preview (field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible")
-      evNewStats' = attach (current dynMIsVisible <&> fromMaybe False) $ evNewStats <&> \s -> (Nothing, s)
+      evNewStats' = attach (current dynMIsVisible <&> fromMaybe False) $ (Nothing, ) <$> evNewStats
 
   -- TODO: performEvent within prerender doesn't seem to work
   --let isLoggedIn = \case
@@ -571,8 +596,8 @@ getStatsLocalAndRemote evNewStats = do
   evLSMapStats <- fmap updated $ prerender (pure Map.empty) $
     fromMaybe Map.empty <$> liftJSM (LS.retrieve LS.KeyStats)
 
-  let evLSStats = evLSMapStats <&> \map ->
-        (False, ) . (Nothing, ) <$> Map.findWithDefault [] (navLang, navCurrent) map
+  let evLSStats = evLSMapStats <&> (fmap ((False,) . (Nothing,))
+         . Map.findWithDefault [] (navLang, navCurrent))
 
   fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (flip (<>)) [] $ leftmost
     [ evLSStats

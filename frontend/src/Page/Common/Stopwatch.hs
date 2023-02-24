@@ -15,38 +15,83 @@ module Page.Common.Stopwatch
     )
 where
 
-import Client
+import           Client                         ( getAuthData
+                                                , postStatsStart
+                                                , request
+                                                )
+import           Common.Model                   ( AppState(..)
+                                                , ShowStats(..)
+                                                , Stats(..)
+                                                )
+import           Control.Applicative            ( Applicative(pure) )
+import           Control.Category               ( (.)
+                                                , (<<<)
+                                                )
 import           Control.Lens.Setter            ( (.~) )
-import           Data.Generics.Product          ( field )
+import           Control.Monad                  ( Monad((>>=))
+                                                , unless
+                                                )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( (<&>)
-                                                , ($>)
-                                                , (<$>)
+import           Control.Monad.Reader           ( MonadReader
+                                                , ask
                                                 )
+import           Data.Bool                      ( Bool )
+import           Data.Eq                        ( Eq((==)) )
+import           Data.Foldable                  ( Foldable(minimum, null)
+                                                , for_
+                                                )
+import           Data.Function                  ( ($) )
+import           Data.Functor                   ( ($>)
+                                                , (<$>)
+                                                , (<&>)
+                                                , Functor(fmap)
+                                                , void
+                                                )
+import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
+import           Data.List                      ( filter
+                                                , take
+                                                )
+import           Data.Maybe                     ( Maybe(..)
+                                                , isNothing
+                                                )
 import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
                                                 )
+import qualified Data.Text                     as Text
+import           Data.Text                      ( Text )
+import           Data.Time                      ( NominalDiffTime
+                                                , UTCTime
+                                                , defaultTimeLocale
+                                                , diffUTCTime
+                                                , getCurrentTime
+                                                )
+import qualified Data.Time                     as Time
+import           Data.Tuple                     ( fst
+                                                , snd
+                                                )
 import           GHC.Float                      ( Double )
-import           GHC.Real                       ( realToFrac
-                                                , (/)
+import           GHC.Real                       ( (/)
                                                 , fromIntegral
+                                                , realToFrac
                                                 , round
                                                 )
-import           Reflex.Dom                     (Prerender,  EventWriter
-                                                , zipDyn
+import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
+                                                , EventName(Click)
+                                                , EventWriter
+                                                , HasDomEvent(domEvent)
                                                 , MonadHold
+                                                , PerformEvent
+                                                    ( Performable
+                                                    , performEvent
+                                                    )
                                                 , PostBuild
+                                                , Prerender
                                                 , Reflex(Dynamic, Event)
-                                                , leftmost
-                                                , foldDyn
-                                                , holdUniqDyn
-
-                                                , tickLossyFromPostBuildTime
-                                                , (=:)
+                                                , TickInfo(_tickInfo_lastUTC)
+                                                , TriggerEvent
                                                 , blank
                                                 , dyn
                                                 , dyn_
@@ -54,61 +99,22 @@ import           Reflex.Dom                     (Prerender,  EventWriter
                                                 , elAttr
                                                 , elClass
                                                 , elClass'
+                                                , foldDyn
+                                                , holdUniqDyn
+                                                , leftmost
                                                 , text
-                                                , PerformEvent
-                                                    ( performEvent
-                                                    , Performable
-                                                    )
-                                                , TickInfo(_tickInfo_lastUTC)
-                                                , TriggerEvent
-                                                , HasDomEvent(domEvent)
-                                                , EventName(Click)
-                                                )
-import           TextShow                       ( showt )
-import           Data.Functor                   ( Functor(fmap) )
-import           Data.Time                      ( defaultTimeLocale
-                                                , diffUTCTime
-                                                , UTCTime
-                                                , NominalDiffTime
-                                                , getCurrentTime
-                                                )
-import qualified Data.Text                     as Text
-import           Control.Category               ( (<<<)
-                                                , (.)
-                                                )
-import           Data.Witherable                ( Filterable(catMaybes) )
-import           State                          ( updateState
-                                                , State(..)
-                                                , Env(..)
-                                                , Navigation(..)
-                                                )
-import           Control.Monad.Reader           ( ask
-                                                , MonadReader
-                                                )
-import           Control.Monad                  ( when )
-import           Data.Eq                        ( Eq
-                                                , (==)
-                                                )
-import           Data.Maybe                     (isNothing,  Maybe(..) )
-import           Control.Applicative            ( Applicative(pure) )
-import           Data.Foldable                  ( for_
-                                                , Foldable(minimum)
-                                                )
-import           Data.Bool                      (Bool, not )
-import qualified Data.Time                     as Time
-import           Control.Monad                  ( Monad((>>=)) )
-import           Common.Model                   ( ShowStats(..)
-                                                , Stats(..)
-                                                , AppState(..)
+                                                , tickLossyFromPostBuildTime
+                                                , zipDyn
                                                 )
 import           Shared                         ( formatTime )
-import           Data.Text                      ( Text )
-import           Data.Tuple                     (fst,  snd )
-import Data.Foldable (Foldable(null))
-import Data.List (filter)
-import qualified Data.Witherable as Witherable
-import Data.Functor (void)
-import Data.List (take)
+import           State                          ( Env(..)
+                                                , Navigation(..)
+                                                , State(..)
+                                                , updateState
+                                                )
+import           TextShow                       ( showt )
+import qualified Witherable
+import           Witherable                     ( Filterable(catMaybes) )
 
 data StateStopwatch
     = SWInitial
@@ -176,15 +182,15 @@ elStopwatch dynStats dynStopwatch n = do
             (ShowStatsHide    , _ ) -> blank
             (ShowStatsPersonal, ls) -> do
               let lsPersonal = filter (isNothing . fst . snd) ls
-              when (not $ null lsPersonal) $ el "p" $ do
-                text $ "Personal best: "
+              unless (null lsPersonal) $ el "p" $ do
+                text "Personal best: "
                 elClass "span" "stopwatch" $ text $ formatTime
                   (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPersonal lsPersonal
             (ShowStatsPublic, ls) -> do
               let lsPersonal = filter (isNothing . fst . snd) ls
-              when (not $ null lsPersonal) $ el "p" $ do
-                text $ "Personal best: "
+              unless (null lsPersonal) $ el "p" $ do
+                text "Personal best: "
                 elClass "span" "stopwatch" $ text $ formatTime
                   (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPublic ls
@@ -211,7 +217,7 @@ mkStopwatch ev = do
     let evGo = void $ Witherable.filter (== (-1)) ev
     _ <- request $ postStatsStart (getAuthData <$> envDynState) evGo
     evToggle <- performEvent $ ev <&> \nErrors ->
-        (ESWToggle nErrors <$> liftIO getCurrentTime)
+        ESWToggle nErrors <$> liftIO getCurrentTime
     evTick <- fmap (ESWTick <<< _tickInfo_lastUTC)
         <$> tickLossyFromPostBuildTime 0.1
 
@@ -243,28 +249,28 @@ elStatistics flag ls = do
   let lsShow = snd <$> case flag of
         ElStatsPublic   -> filter fst ls
         ElStatsPersonal -> ls
-  elClass "table" "statistics" $ do
+  elClass "table" "statistics" $
     for_ lsShow \(mAlias, Stats {..}) -> el "tr" $ do
-            elClass "td" "date" $ text $ Text.pack $ Time.formatTime
-                defaultTimeLocale
-                "%F %R"
-                statsDate
-            elClass "td" "time" $ text $ formatTime statsTime
-            case flag of
-                ElStatsPersonal -> blank
-                ElStatsPublic   -> elClass "td" "alias" $ case mAlias of
-                    Just alias -> el "strong" $ text alias
-                    Nothing    -> el "em" $ text "you"
-            elClass "td" "nMistakes" $ do
-                if statsNErrors == 0
-                    then elAttr "strong" ("title" =: "0 mistakes")
-                        $ text "flawless"
-                    else text $ showt statsNErrors <> " mistakes"
-            elClass "td" "wpm"
-                $  text
-                $  showt @Int
-                       (round $ fromIntegral statsLength / toMinutes statsTime)
-                <> " wpm"
+          elClass "td" "date" $ text $ Text.pack $ Time.formatTime
+              defaultTimeLocale
+              "%F %R"
+              statsDate
+          elClass "td" "time" $ text $ formatTime statsTime
+          case flag of
+              ElStatsPersonal -> blank
+              ElStatsPublic   -> elClass "td" "alias" $ case mAlias of
+                  Just alias -> el "strong" $ text alias
+                  Nothing    -> el "em" $ text "you"
+          elClass "td" "nMistakes" $ do
+              if statsNErrors == 0
+                  then elAttr "strong" ("title" =: "0 mistakes")
+                      $ text "flawless"
+                  else text $ showt statsNErrors <> " mistakes"
+          elClass "td" "wpm"
+              $  text
+              $  showt @Int
+                     (round $ fromIntegral statsLength / toMinutes statsTime)
+              <> " wpm"
 
 elStatisticsPersonalShort
     :: forall t (m :: * -> *)
@@ -279,7 +285,7 @@ elStatisticsPersonalShort ls =
                 "%F %R"
                 statsDate
             elClass "td" "time" $ text $ formatTime statsTime
-            elClass "td" "nMistakes" $ do
+            elClass "td" "nMistakes" $
                 if statsNErrors == 0
                     then elAttr "strong" ("title" =: "0 mistakes")
                         $ text "flawless"

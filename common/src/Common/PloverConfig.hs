@@ -7,27 +7,28 @@
 
 module Common.PloverConfig where
 
+import           Common.PloverAdapter           ( fromPlover )
+import           Control.Category               ( (<<<) )
 import           Control.Lens.Wrapped           ( Wrapped )
-import           Data.Aeson.Types               ( ToJSON
-                                                , FromJSON
+import           Data.Aeson.Types               ( FromJSON
+                                                , ToJSON
                                                 )
-import           TextShow                       ( fromText
-                                                , TextShow(showb)
-                                                )
-import           Data.Map.Strict                ( Map )
-import           Palantype.Common               ( SystemLang(..)
-                                                , RawSteno
-                                                , KeyIndex
-                                                )
-import           GHC.Generics                   ( Generic )
-import           Data.Text                      ( Text )
-import           Reflex.Dom                     ( KeyCode )
 import           Data.Either                    ( lefts
                                                 , rights
                                                 )
+import           Data.Foldable                  ( Foldable(foldl') )
+import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as Map
-import           Control.Category               ( (<<<) )
-import           Common.PloverAdapter           ( fromPlover )
+import           Data.Text                      ( Text )
+import           GHC.Generics                   ( Generic )
+import           Palantype.Common               ( KeyIndex
+                                                , RawSteno
+                                                , SystemLang(..)
+                                                )
+import           Reflex.Dom                     ( KeyCode )
+import           TextShow                       ( TextShow(showb)
+                                                , fromText
+                                                )
 
 newtype PloverCfg = PloverCfg { unPloverCfg :: Map SystemLang PloverSystemCfg }
   deriving (Eq, Generic, Show, ToJSON, FromJSON)
@@ -103,7 +104,7 @@ keyMapToPloverCfg lsIndexPlover pcfgUnrecognizedStenos pcfgMachine pcfgName =
                 (lsKeySteno', mapStenoKeys', lsUQwerty')
 
         (pcfgLsKeySteno, pcfgMapStenoKeys, pcfgUnrecognizedQwertys) =
-            foldl acc ([], Map.empty, []) lsIndexPlover
+            foldl' acc ([], Map.empty, []) lsIndexPlover
     in
         PloverSystemCfg { .. }
 

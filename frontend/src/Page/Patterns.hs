@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -14,7 +13,6 @@
 module Page.Patterns where
 
 --
-
 import           Common.Route                   ( FrontendRoute )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Monad.Fix              ( MonadFix )
@@ -27,26 +25,33 @@ import           Data.Bool                      ( Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Foldable                  ( for_ )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( (<&>) )
-import           Data.Functor                   ( (<$>) )
+import           Data.Function                  ( ($)
+                                                , const
+                                                )
+import           Data.Functor                   ( (<$>)
+                                                , (<&>)
+                                                )
 import           Data.Int                       ( Int )
 import           Data.List                      ( zip )
 import qualified Data.Map.Strict               as Map
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Semigroup                 ( (<>) )
-import           Obelisk.Route.Frontend         (R
+import qualified Data.Text                     as Text
+import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
                                                 )
 import           Page.Common                    ( elPatterns )
-import           Palantype.Common               (mapStages,  Palantype
-                                                , toDescription
-                                                , patternDoc
-                                                , StageSpecialGeneric(StageGeneric)
+import           Palantype.Common               ( Palantype
+                                                , StageSpecialGeneric
+                                                    ( StageGeneric
+                                                    )
                                                 , findStage
+                                                , patternDoc
+                                                , toDescription
                                                 )
+import           PloverDict                     ( eMapDictExamples )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
                                                 , EventName(Click)
@@ -65,16 +70,16 @@ import           Reflex.Dom                     ( (=:)
                                                 , foldDyn
                                                 , text
                                                 )
-import           Shared                         (iFaAttr,  iFa )
+import           Servant.API                    ( ToHttpApiData(toUrlPiece) )
+import           Shared                         ( iFa
+                                                , iFaAttr
+                                                )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , stageUrl
                                                 )
-import           TextShow                       ( TextShow(showt) )
 import           Text.Show                      ( Show(show) )
-import           PloverDict                     ( eMapDictExamples )
-import Servant.API (ToHttpApiData(toUrlPiece))
-import qualified Data.Text as Text
+import           TextShow                       ( TextShow(showt) )
 
 overview
     :: forall key t (m :: * -> *)
@@ -105,7 +110,7 @@ overview = do
 
     -- TOC embedded in content
     elClass "div" "embeddedToc" $ mdo
-        dynToggle <- foldDyn (\_ -> not) False (domEvent Click elToggle)
+        dynToggle <- foldDyn (const not) False (domEvent Click elToggle)
         elToggle  <- el "div" $ do
             el "strong" $ text "Contents"
             text " ("
@@ -161,7 +166,7 @@ overview = do
                     text $ showt n
                 elClass "br" "clearBoth" blank
 
-                dynToggle <- foldDyn (\_ -> not) False $ domEvent Click btn
+                dynToggle <- foldDyn (const not) False $ domEvent Click btn
                 let dynShow = bool "whiteSpaceNoWrap" "" <$> dynToggle
                 elDynClass "div" dynShow $ for_ lsExamples $ \(w, s) -> do
                     el "span" $ text w

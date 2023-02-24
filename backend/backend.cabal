@@ -79,6 +79,7 @@ library
       LambdaCase
     , BlockArguments
     , OverloadedStrings
+    , ScopedTypeVariables
 
 executable backend
   main-is: main.hs

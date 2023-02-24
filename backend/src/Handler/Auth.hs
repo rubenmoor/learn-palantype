@@ -6,8 +6,6 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TupleSections        #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
@@ -29,7 +27,7 @@ import qualified Data.ByteString.Lazy.UTF8     as BSU
 import           Data.Char                      ( isAlphaNum )
 import           Data.Either                    (either )
 import           Data.Function                  (($) )
-import           Data.Functor                   ( (<$>) )
+import Data.Functor ( (<$>), Functor(fmap) )
 import           Data.List                      ( null )
 import           Data.Maybe                     ( fromMaybe
                                                 , Maybe(Just, Nothing)
@@ -83,7 +81,6 @@ import           Database                       (blobDecode, blobEncode,  runDb 
 import           Common.Model                   (defaultAppState, Rank (..), JournalEvent(..), EventUser(..), AppState,          )
 import qualified DbJournal
 import qualified DbAdapter                     as Db
-import Data.Functor (Functor(fmap))
 import Control.Category ((<<<))
 
 default(Text)
@@ -131,7 +128,7 @@ handleGrantAuthPwd LoginData {..} =
                         appState = fromMaybe defaultAppState $ blobDecode userBlobAppState
 
                     DbJournal.insert (Just keyAlias) $ EventUser EventLogin
-                    pure $ Just $ (SessionData { .. }, appState)
+                    pure $ Just (SessionData { .. }, appState)
                 PasswordCheckFail -> pure Nothing
 
 handleUserNew :: UserNew -> Handler SessionData

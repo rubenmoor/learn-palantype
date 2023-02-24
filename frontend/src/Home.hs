@@ -20,243 +20,264 @@
 
 module Home where
 
-import Client
-    (getMaybeAuthData, postEventViewPage, request,  postConfigNew,
-      postRender,
-    )
-import Common.PloverConfig
-    (defaultPloverSystemCfg, defaultPloverCfg,  CfgName (..),
-      PloverSystemCfg (..),
-      keyMapToPloverCfg,
-      lsStenoQwerty,
-      lsStenoQwertyOrig,
-      lsStenoQwertz)
-import Common.Api (showSymbol)
-import Common.Route
-    (showRoute,  FrontendRoute (..)
-    , FrontendRoute_AuthPages (..)
-    )
-import Palantype.Common.TH (failure)
-import Control.Applicative (Applicative (..))
-import Control.Category
-    ( (>>>), (<<<),
-      Category ((.), id),
-    )
-import Control.Lens
-    ((^.),  At (at),
-      Ixed (ix),
-      non,
-      view,
-    )
-import Control.Lens.Setter
-    ( (%~),
-      (.~),
-      (?~)
-    )
-import Control.Lens.Wrapped (_Wrapped')
-import Control.Monad
-    ( (<=<),
-      (=<<),
-      guard,
-    )
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.Reader
-    (ask,  MonadReader,
-      ReaderT,
-      asks,
-      withReaderT,
-    )
-import Data.Bool
-    ((&&), (||), Bool (..),
-      bool,
-      not,
-      otherwise,
-    )
-import Data.Default (Default (def))
-import Data.Either (either, Either (..))
-import Data.Eq (Eq ((==)))
-import Data.Foldable
-    (traverse_, Foldable (foldl, null),
-      concat,
-    )
-import Data.Function
-    ( ($),
-      (&),
-      const,
-    )
-import Data.Functor
-    ( ($>),
-      (<$>),
-      (<&>),
-      fmap,
-      void,
-    )
-import Data.Functor.Misc (Const2 (Const2))
-import Data.Generics.Product (field)
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
-import Data.Maybe
-    (maybe, fromMaybe,  Maybe (..),
-      listToMaybe,
-    )
-import Data.Monoid ((<>))
-import Data.Ord ((>=), Ord)
-import Data.Proxy (Proxy (..))
-import Data.Semigroup (Endo (..))
-import Data.Set (Set)
-import qualified Data.Set as Set
-import Data.String (String)
-import Data.Text
-    ( Text,
-      unwords,
-    )
-import qualified Data.Text as Text
-import Data.Tuple
-    ( fst,
-      snd,
-    )
-import Data.Witherable
-    ( Filterable
-          ( catMaybes,
-            filter,
-            mapMaybe
-          ),
-    )
-import Data.Word (Word)
-import GHC.Real (fromIntegral)
-import GHCJS.DOM.EventM (on)
-import GHCJS.DOM.FileReader
-    ( getResult,
-      load,
-      newFileReader,
-      readAsText,
-    )
-import GHCJS.DOM.HTMLElement (focus)
-import GHCJS.DOM.Types (File)
-import Language.Javascript.JSaddle
-    ( FromJSVal (fromJSVal),
-      ToJSVal (toJSVal),
-      eval,
-      liftJSM,
-    )
-import Obelisk.Generated.Static (static)
-import Obelisk.Route.Frontend
-    (Routed,  R,
-      RouteToUrl,
-      RoutedT,
-      SetRoute (setRoute),
-      askRoute,
-      mapRoutedT,
-      routeLink,
-      pattern (:/),
-    )
-import Page.Common
-    ( elFooter
-    )
-import Page.Introduction (introduction)
-import Page.StageGeneric (getGenericExercise)
-import qualified Page.Stage1 as Stage1
-import qualified Page.Stage2 as Stage2
-import Page.Stage15.PloverCommands (ploverCommands)
-import Page.Stage15.Fingerspelling (fingerspelling)
-import Page.Stage15.NumberMode (numberMode)
-import Page.Stage15.CommandKeys (commandKeys)
-import Page.Stage15.SpecialCharacters (specialCharacters)
-import qualified Page.Patterns as Patterns
-import Palantype.Common
-    ( Chord (..),
-      KeyIndex,
-      SystemLang (..),
-      Palantype (keyCode),
-      fromChord,
-      fromIndex,
-      kiDown,
-      kiInsert,
-      kiUp,
-      kiPageUp,
-      kiPageDown,
-      mkChord,
-      mkStageIndex,
-      Stage (..), StageSpecialGeneric(..), StageIndex
-    )
-import qualified Palantype.Common.Stage as Stage
-import qualified Palantype.Common.Indices as KI
-import qualified Palantype.DE as DE
-import qualified Palantype.EN as EN
-import Reflex.Dom
-    (never, TriggerEvent, Performable, current, tag, attachPromptlyDynWithMaybe, zipDyn, inputElementConfig_initialChecked, (=:),
-      DomBuilder
-          ( DomBuilderSpace,
-            inputElement
-          ),
-      DomSpace (addEventSpecFlags),
-      EventName (Click, Keydown, Keyup),
-      EventResult,
-      EventSelector (select),
-      EventTag (KeydownTag, KeyupTag),
-      EventWriter,
-      EventWriterT,
-      HasDomEvent (DomEventType, domEvent),
-      InputElement (..),
-      InputElementConfig,
-      KeyCode,
-      MonadHold (holdDyn),
-      PerformEvent (performEvent_),
-      PostBuild (getPostBuild),
-      Prerender (Client),
-      Reflex
-          ( Dynamic,
-            Event,
-            updated
-          ),
-      blank,
-      delay,
-      dyn_,
-      el,
-      el',
-      elAttr,
-      elAttr',
-      elClass,
-      elClass',
-      elDynAttr,
-      elDynClass,
-      elDynClass',
-      elementConfig_eventSpec,
-      elementConfig_initialAttributes,
-      elementConfig_modifyAttributes,
-      fanMap,
-      fmapMaybe,
-      foldDyn,
-      inputElementConfig_elementConfig,
-      inputElementConfig_initialValue,
-      inputElementConfig_setValue,
-      leftmost,
-      mergeWith,
-      preventDefault,
-      text,
-      wrapDomEvent,
-    )
-import Shared
-    (elLoginSignup, dynSimple,
-      iFa,
-      whenJust,
-    )
-import State
-    (Session (..), Env (..),
-      Navigation (..),
-      State (..),
-      stageUrl,
-      updateState,
-    )
-import TextShow (TextShow (showt))
-import qualified Palantype.Common.Dictionary.Numbers as Numbers
-import Control.Monad (when)
-import Data.Int (Int)
-import Common.Model (AppState(..), Message(..))
-import Type.Reflection (eqTypeRep, (:~~:)(HRefl), typeRep)
-import Control.Monad.IO.Class (MonadIO)
-import Text.Show (Show(show))
-import Palantype.Common.TH (fromJust)
+import           Client                         ( getMaybeAuthData
+                                                , postConfigNew
+                                                , postEventViewPage
+                                                , postRender
+                                                , request
+                                                )
+import           Common.Api                     ( showSymbol )
+import           Common.Model                   ( AppState(..)
+                                                , Message(..)
+                                                )
+import           Common.PloverConfig            ( CfgName(..)
+                                                , PloverSystemCfg(..)
+                                                , defaultPloverCfg
+                                                , defaultPloverSystemCfg
+                                                , keyMapToPloverCfg
+                                                , lsStenoQwerty
+                                                , lsStenoQwertyOrig
+                                                , lsStenoQwertz
+                                                )
+import           Common.Route                   ( FrontendRoute(..)
+                                                , FrontendRoute_AuthPages(..)
+                                                , showRoute
+                                                )
+import           Control.Applicative            ( Applicative(..) )
+import           Control.Category               ( (<<<)
+                                                , (>>>)
+                                                , Category((.), id)
+                                                )
+import           Control.Lens                   ( At(at)
+                                                , Ixed(ix)
+                                                , (^.)
+                                                , non
+                                                , view
+                                                )
+import           Control.Lens.Setter            ( (%~)
+                                                , (.~)
+                                                , (?~)
+                                                )
+import           Control.Lens.Wrapped           ( _Wrapped' )
+import           Control.Monad                  ( (<=<)
+                                                , (=<<)
+                                                , guard
+                                                , when
+                                                )
+import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO )
+import           Control.Monad.Reader           ( MonadReader
+                                                , ReaderT
+                                                , ask
+                                                , asks
+                                                , withReaderT
+                                                )
+import           Data.Bool                      ( (&&)
+                                                , Bool(..)
+                                                , bool
+                                                , not
+                                                , otherwise
+                                                , (||)
+                                                )
+import           Data.Default                   ( Default(def) )
+import           Data.Either                    ( Either(..)
+                                                , either
+                                                )
+import           Data.Eq                        ( Eq((==)) )
+import           Data.Foldable                  ( Foldable(foldl', null)
+                                                , concat
+                                                , traverse_
+                                                )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                , const
+                                                )
+import           Data.Functor                   ( ($>)
+                                                , (<$>)
+                                                , (<&>)
+                                                , fmap
+                                                , void
+                                                )
+import           Data.Functor.Misc              ( Const2(Const2) )
+import           Data.Generics.Product          ( field )
+import           Data.Int                       ( Int )
+import           Data.Map.Strict                ( Map )
+import qualified Data.Map.Strict               as Map
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
+                                                , listToMaybe
+                                                , maybe
+                                                )
+import           Data.Monoid                    ( (<>) )
+import           Data.Ord                       ( (>=)
+                                                , Ord
+                                                )
+import           Data.Proxy                     ( Proxy(..) )
+import           Data.Semigroup                 ( Endo(..) )
+import           Data.Set                       ( Set )
+import qualified Data.Set                      as Set
+import           Data.String                    ( String )
+import           Data.Text                      ( Text
+                                                , unwords
+                                                )
+import qualified Data.Text                     as Text
+import           Data.Tuple                     ( fst
+                                                , snd
+                                                )
+import           Data.Word                      ( Word )
+import           GHC.Real                       ( fromIntegral )
+import           GHCJS.DOM.EventM               ( on )
+import           GHCJS.DOM.FileReader           ( getResult
+                                                , load
+                                                , newFileReader
+                                                , readAsText
+                                                )
+import           GHCJS.DOM.HTMLElement          ( focus )
+import           GHCJS.DOM.Types                ( File )
+import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
+                                                , ToJSVal(toJSVal)
+                                                , eval
+                                                , liftJSM
+                                                )
+import           Obelisk.Generated.Static       ( static )
+import           Obelisk.Route.Frontend         ( pattern (:/)
+                                                , R
+                                                , RouteToUrl
+                                                , Routed
+                                                , RoutedT
+                                                , SetRoute(setRoute)
+                                                , askRoute
+                                                , mapRoutedT
+                                                , routeLink
+                                                )
+import           Page.Common                    ( elFooter )
+import           Page.Introduction              ( introduction )
+import qualified Page.Patterns                 as Patterns
+import qualified Page.Stage1                   as Stage1
+import           Page.Stage15.CommandKeys       ( commandKeys )
+import           Page.Stage15.Fingerspelling    ( fingerspelling )
+import           Page.Stage15.NumberMode        ( numberMode )
+import           Page.Stage15.PloverCommands    ( ploverCommands )
+import           Page.Stage15.SpecialCharacters ( specialCharacters )
+import qualified Page.Stage2                   as Stage2
+import           Page.StageGeneric              ( getGenericExercise )
+import           Palantype.Common               ( Chord(..)
+                                                , KeyIndex
+                                                , Palantype(keyCode)
+                                                , Stage(..)
+                                                , StageIndex
+                                                , StageSpecialGeneric(..)
+                                                , SystemLang(..)
+                                                , fromChord
+                                                , fromIndex
+                                                , kiDown
+                                                , kiInsert
+                                                , kiPageDown
+                                                , kiPageUp
+                                                , kiUp
+                                                , mkChord
+                                                , mkStageIndex
+                                                )
+import qualified Palantype.Common.Dictionary.Numbers
+                                               as Numbers
+import qualified Palantype.Common.Indices      as KI
+import qualified Palantype.Common.Stage        as Stage
+import           Palantype.Common.TH            ( failure
+                                                , fromJust
+                                                )
+import qualified Palantype.DE                  as DE
+import qualified Palantype.EN                  as EN
+import           Reflex.Dom                     ( (=:)
+                                                , DomBuilder
+                                                    ( DomBuilderSpace
+                                                    , inputElement
+                                                    )
+                                                , DomSpace(addEventSpecFlags)
+                                                , EventName
+                                                    ( Click
+                                                    , Keydown
+                                                    , Keyup
+                                                    )
+                                                , EventResult
+                                                , EventSelector(select)
+                                                , EventTag(KeydownTag, KeyupTag)
+                                                , EventWriter
+                                                , EventWriterT
+                                                , HasDomEvent
+                                                    ( DomEventType
+                                                    , domEvent
+                                                    )
+                                                , InputElement(..)
+                                                , InputElementConfig
+                                                , KeyCode
+                                                , MonadHold(holdDyn)
+                                                , PerformEvent(performEvent_)
+                                                , Performable
+                                                , PostBuild(getPostBuild)
+                                                , Prerender(Client)
+                                                , Reflex
+                                                    ( Dynamic
+                                                    , Event
+                                                    , updated
+                                                    )
+                                                , TriggerEvent
+                                                , attachPromptlyDynWithMaybe
+                                                , blank
+                                                , current
+                                                , delay
+                                                , dyn_
+                                                , el
+                                                , el'
+                                                , elAttr
+                                                , elAttr'
+                                                , elClass
+                                                , elClass'
+                                                , elDynAttr
+                                                , elDynClass
+                                                , elDynClass'
+                                                , elementConfig_eventSpec
+                                                , elementConfig_initialAttributes
+                                                , elementConfig_modifyAttributes
+                                                , fanMap
+                                                , fmapMaybe
+                                                , foldDyn
+                                                , inputElementConfig_elementConfig
+                                                , inputElementConfig_initialChecked
+                                                , inputElementConfig_initialValue
+                                                , inputElementConfig_setValue
+                                                , leftmost
+                                                , mergeWith
+                                                , never
+                                                , preventDefault
+                                                , tag
+                                                , text
+                                                , wrapDomEvent
+                                                , zipDyn
+                                                )
+import           Shared                         ( dynSimple
+                                                , elLoginSignup
+                                                , iFa
+                                                , whenJust
+                                                )
+import           State                          ( Env(..)
+                                                , Navigation(..)
+                                                , Session(..)
+                                                , State(..)
+                                                , stageUrl
+                                                , updateState
+                                                )
+import           Text.Show                      ( Show(show) )
+import           TextShow                       ( TextShow(showt) )
+import           Type.Reflection                ( (:~~:)(HRefl)
+                                                , eqTypeRep
+                                                , typeRep
+                                                )
+import           Witherable                     ( Filterable
+                                                    ( catMaybes
+                                                    , filter
+                                                    , mapMaybe
+                                                    )
+                                                )
 
 default (Text)
 
@@ -428,7 +449,7 @@ settings = elClass "div" "topmenu" do
                               msgBody =
                                   "Your key map contains unrecognized entries:\n"
                                       <> Text.intercalate "\n" pcfgUnrecognizedQwertys
-                           in field @"stApp" . field @"stMsg" .~ Just Message {..},
+                           in field @"stApp" . field @"stMsg" ?~ Message {..},
                   if null pcfgUnrecognizedStenos
                       then id
                       else
@@ -438,7 +459,7 @@ settings = elClass "div" "topmenu" do
                                       <> Text.intercalate
                                           "\n"
                                           (showt <$> pcfgUnrecognizedStenos)
-                           in field @"stApp" . field @"stMsg" .~ Just Message {..}
+                           in field @"stApp" . field @"stMsg" ?~ Message {..}
                 ]
 
         elClass "span" "vertical-line" blank
@@ -557,7 +578,7 @@ stenoInput = do
               -> StateInput key
             register es StateInput{ stiKeysPressed, stiKeysDown } =
                 let
-                    stiKeysPressed' = foldl accDownUp stiKeysPressed es
+                    stiKeysPressed' = foldl' accDownUp stiKeysPressed es
                     (stiKeysDown', stiMChord) =
                         if Set.null stiKeysPressed'
                         then
@@ -565,7 +586,7 @@ stenoInput = do
                             , Just $ mkChord $ Set.elems stiKeysDown
                             )
                         else
-                            ( foldl accDown stiKeysDown es
+                            ( foldl' accDown stiKeysDown es
                             , Nothing
                             )
 
@@ -929,7 +950,7 @@ elTOC ::
 elTOC stageCurrent = elClass "section" "toc" $ do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
-        dynShowStage i = (Set.member i . stTOCShowStage) <$> dynState
+        dynShowStage i = Set.member i . stTOCShowStage <$> dynState
 
     -- button to toggle TOC
     dyn_ $ dynShowTOC <&> \showTOC -> do
@@ -986,7 +1007,7 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                     let eClickS = domEvent Click s
                     updateState $ eClickS $>
                         [ field @"stApp" . field @"stTOCShowStage" . at i %~
-                            maybe (Just ()) (\_ -> Nothing)
+                            maybe (Just ()) (const Nothing)
                         ]
 
             el "ul" $ do

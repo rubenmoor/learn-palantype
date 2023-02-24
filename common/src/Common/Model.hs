@@ -1,7 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -9,26 +6,33 @@
 
 module Common.Model
     ( module Common.Model
-    )
-where
+    ) where
 
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
+import qualified Data.Map.Strict               as Map
+import           Data.Map.Strict                ( Map )
+import qualified Data.Set                      as Set
+import           Data.Set                       ( Set )
 import           Data.Text                      ( Text )
 import           Data.Time                      ( NominalDiffTime
                                                 , UTCTime
                                                 )
 import           GHC.Generics                   ( Generic )
-import qualified Data.Set                      as Set
-import           Data.Set                       ( Set )
-import qualified Data.Map.Strict               as Map
-import           Data.Map.Strict                ( Map )
-import           Palantype.Common               (SystemLang (..))
+import           Palantype.Common               ( StageIndex
+                                                , StageRepr
+                                                , SystemLang(..)
+                                                )
 
-import Common.PloverConfig ( PloverCfg, defaultPloverCfg )
-import           Palantype.Common               (StageRepr,  StageIndex )
-import Web.HttpApiData (FromHttpApiData (parseQueryParam), ToHttpApiData (toQueryParam))
+import           Common.PloverConfig            ( PloverCfg
+                                                , defaultPloverCfg
+                                                )
+import           Web.HttpApiData                ( FromHttpApiData
+                                                    ( parseQueryParam
+                                                    )
+                                                , ToHttpApiData(toQueryParam)
+                                                )
 
 -- frontend/Localstorage
 

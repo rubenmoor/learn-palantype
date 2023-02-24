@@ -1,25 +1,42 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage14 where
 
-import Common.Route (FrontendRoute)
-import Palantype.Common (StageIndex)
-import Control.Monad.Fix (MonadFix)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Reader.Class (MonadReader)
-import Data.Semigroup (Endo)
-import Obelisk.Route (R)
-import Obelisk.Route.Frontend (Routed, RouteToUrl, SetRoute)
-import Palantype.Common (Greediness, Palantype)
-import Palantype.DE (Pattern (..))
-import Reflex.Dom (blank, TriggerEvent, DomBuilder, EventWriter, MonadHold, PerformEvent, Performable, PostBuild, Prerender, el, elClass, text)
-import State (Env (..), State)
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
-import qualified Palantype.DE as DE
+import           Common.Route                   ( FrontendRoute )
+import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO )
+import           Control.Monad.Reader.Class     ( MonadReader )
+import qualified Data.Map.Strict               as Map
+import           Data.Map.Strict                ( Map )
+import           Data.Semigroup                 ( Endo )
+import           Obelisk.Route                  ( R )
+import           Obelisk.Route.Frontend         ( RouteToUrl
+                                                , Routed
+                                                , SetRoute
+                                                )
+import           Palantype.Common               ( Greediness
+                                                , Palantype
+                                                , StageIndex
+                                                )
+import           Palantype.DE                   ( Pattern(..) )
+import qualified Palantype.DE                  as DE
+import           Reflex.Dom                     ( DomBuilder
+                                                , EventWriter
+                                                , MonadHold
+                                                , PerformEvent
+                                                , Performable
+                                                , PostBuild
+                                                , Prerender
+                                                , TriggerEvent
+                                                , blank
+                                                , el
+                                                , elClass
+                                                , text
+                                                )
+import           State                          ( Env(..)
+                                                , State
+                                                )
 
 type Constraints key t m =
     ( DomBuilder t m

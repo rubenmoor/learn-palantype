@@ -15,29 +15,30 @@ import           Common.Api                     ( RoutesAdmin )
 import           AppData                        ( Handler )
 import           Auth                           ( UserInfo(..) )
 import           Common.Model                   ( Journal(..) )
-import           Database.Gerippe               ( (||.)
-                                                , (!=.)
-                                                , just
-                                                , (?.)
-                                                , valkey
-                                                , delete
-                                                , desc
-                                                , orderBy
-                                                , (&&.)
-                                                , (<=.)
-                                                , from
-                                                , select
-                                                , val
-                                                , (>=.)
-                                                , (==.)
-                                                , (^.)
-                                                , where_
-                                                , InnerJoin(..)
-                                                , keyToId
-                                                , LeftOuterJoin(..)
-
-                                                , Entity(..)
-                                                )
+import Database.Gerippe
+    ( (||.),
+      (!=.),
+      just,
+      (?.),
+      valkey,
+      delete,
+      desc,
+      orderBy,
+      (&&.),
+      (<=.),
+      from,
+      select,
+      val,
+      (>=.),
+      (==.),
+      (^.),
+      where_,
+      InnerJoin(..),
+      keyToId,
+      LeftOuterJoin(..),
+      Entity(..),
+      on,
+      isNothing )
 import qualified DbAdapter                     as Db
 import           Database                       ( blobDecode
                                                 , runDb
@@ -51,7 +52,6 @@ import           Control.Monad                  ( when
 import           Data.Traversable               ( for )
 import           Control.Applicative            ( Applicative(pure) )
 import           Data.Function                  ( ($) )
-import           Database.Gerippe               ( on )
 import           Data.Time                      ( addDays
                                                 , Day
                                                 , UTCTime(..)
@@ -62,11 +62,10 @@ import           Data.Bool                      ( Bool )
 import           Data.Int                       ( Int )
 import           Data.Text                      ( Text )
 import           GHC.Real                       ( fromIntegral )
-import           Database.Gerippe               ( isNothing )
 import Data.Functor ((<$>), ($>))
 
 handlers :: ServerT RoutesAdmin a Handler
-handlers = (handleJournalGetAll)
+handlers = handleJournalGetAll
 
 handleJournalGetAll
     :: UserInfo
@@ -88,7 +87,7 @@ handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAl
               on $ j ^. Db.JournalFkMAlias ==. ma ?. Db.AliasId
               on $ j ^. Db.JournalFkVisitor ==. v ^. Db.VisitorId
               where_ $   j ^.  Db.JournalCreated >=. val (UTCTime start 0)
-                  &&. j ^.  Db.JournalCreated <=. val (UTCTime (addDays 1 end) 0)
+                     &&. j ^.  Db.JournalCreated <=. val (UTCTime (addDays 1 end) 0)
               when bExcludeAdmin $
                 where_ $   isNothing (j ^. Db.JournalFkMAlias)
                 ||. j ^.  Db.JournalFkMAlias !=. val (Just uiKeyAlias)

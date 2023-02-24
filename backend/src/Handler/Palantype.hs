@@ -1,10 +1,8 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
@@ -34,7 +32,6 @@ import qualified Data.Aeson                    as Json
 import           Data.Aeson.Types               ( Parser
                                                 , typeMismatch
                                                 )
-import qualified Data.ByteString.Char8         as Char8
 import qualified Data.ByteString.Lazy          as LazyBS
 import qualified Data.ConfigFile               as CfgParser
 import           Data.Either                    ( Either(..)
@@ -57,13 +54,8 @@ import           Data.String                    ( String )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           GHC.Show                       ( Show(show) )
-import           Palantype.Common               ( KeyIndex
-                                                , keyIndex
-                                                , SystemLang(..)
-                                                )
-import           Palantype.Common               ( RawSteno
-                                                , parseStenoKey
-                                                )
+import Palantype.Common
+    ( KeyIndex, keyIndex, SystemLang(..), RawSteno, parseStenoKey )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
 import           Servant.Server                 ( ServantErr(errBody)
@@ -73,6 +65,7 @@ import           Servant.Server                 ( ServantErr(errBody)
 import qualified Servant.Server                as Snap
                                                 ( throwError )
 import           Snap.Core                      ( MonadSnap )
+import qualified Data.ByteString.UTF8 as BSU
 
 handlers :: MonadSnap m => ServerT RoutesPalantype a m
 handlers =
@@ -112,7 +105,7 @@ handleConfigNew str = do
                     ("System: " <> systemName)
                     ("keymap[" <> machineType <> "]")
             m <-
-                case Json.eitherDecode $ LazyBS.fromStrict $ Char8.pack keyMapStr of
+                case Json.eitherDecode $ LazyBS.fromStrict $ BSU.fromString keyMapStr of
                     Left msg ->
                         throwError
                             ( CfgParser.ParseError msg,
@@ -122,12 +115,12 @@ handleConfigNew str = do
             pure (systemName, machineType, Map.toList $ unKeysMapJSON m)
 
         errSystemNotImplemented system = err400
-            { errBody = LazyBS.fromStrict $ Char8.pack $ "System "
+            { errBody = LazyBS.fromStrict $ BSU.fromString $ "System "
                           <> system
                           <> " not implemented."
             }
         errNotFound err = err400
-          { errBody = LazyBS.fromStrict $ Char8.pack $ show err
+          { errBody = LazyBS.fromStrict $ BSU.fromString $ show err
           }
 
     case eCfg of

@@ -2,19 +2,6 @@
 , pkgs ? import <nixos-unstable> {}
 }:
 let
-  pkgs20_09 = import (pkgs.fetchFromGitHub {
-    owner = "NixOS";
-    repo = "nixpkgs";
-    rev = "20.09";
-    sha256 = "1wg61h4gndm3vcprdcg7rc4s1v3jkm5xd7lw8r2f67w502y94gcy";
-  }) {};
-  pkgs21_05 = import (pkgs.fetchFromGitHub {
-    owner = "NixOS";
-    repo = "nixpkgs";
-    rev = "21.05";
-    sha256 = "1ckzhh24mgz6jd1xhfgx0i9mijk6xjqxwsshnvq789xsavrmsc36";
-  }) {};
-
   obelisk = (import ./.obelisk/impl {
     inherit system;
     iosSdkVersion = "13.2";
@@ -36,15 +23,6 @@ let
     sha256 = "0ycxbf5m9kxx0ikg53hqzk5hq79vd5xm8pm6li2k3jgx9pl75aks";
   };
 
-easy-hls = pkgs.callPackage (pkgs.fetchFromGitHub {
-    owner = "jkachmar";
-    repo = "easy-hls-nix";
-    rev = "ecb85ab6ba0aab0531fff32786dfc51feea19370";
-    sha256 = "14v0jx8ik40vpkcq1af1b3377rhkh95f4v2cl83bbzpna9aq6hn2";
-  }) {
-    ghcVersions = [ "8.10.7" ];
-  };
-
 in
   with pkgs.haskell.lib;
   obelisk.project ./. ({ ... }: {
@@ -56,9 +34,7 @@ in
     staticFiles = import ./static.nix { inherit pkgs; };
 
     shellToolOverrides = self: super: {
-      inherit easy-hls;
-      inherit (pkgs) cabal-install;
-      inherit (pkgs.haskell.compiler) ghc8107Binary;
+      inherit (pkgs.haskellPackages) cabal-plan cabal-install;
     };
 
     overrides = self: super: {
@@ -68,6 +44,7 @@ in
           doHaddock = false;
           enableLibraryProfiling = false;
         });
+
       # for persistent
       lift-type = self.callHackage "lift-type" "0.1.0.1" {};
       # esqueleto's test suite introduces dependencies to persistent-... packages
@@ -88,9 +65,6 @@ in
         sha256 = "1mfxxn0q09wa81bdw4ngisklaaib4lz1ibxayrpk7g7l44hy92sm";
       }) {};
       #gerippe = self.callCabal2nix "gerippe" ../../gerippe {};
-
-      #lpeg = self.callHackage "lpeg" "1.0.3" {};
-      # lpeg = pkgs.haskellPackages.lpeg;
 
       gridtables = self.callHackageDirect {
         pkg = "gridtables";

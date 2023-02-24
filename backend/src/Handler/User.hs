@@ -1,41 +1,40 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE LambdaCase           #-}
 {-# LANGUAGE LiberalTypeSynonyms  #-}
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TupleSections        #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
 module Handler.User
     ( handlers
-    )
-where
+    ) where
 
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               (Category((.)) )
+import           Control.Category               ( Category((.)) )
 import           Control.Monad                  ( Monad((>>=))
                                                 , when
                                                 )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<$>) )
-import           Data.Maybe                     ( fromMaybe
-                                                , Maybe(..)
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
                                                 , maybe
                                                 )
-import           Data.Ord                       ((<),  Ord((>)) )
+import           Data.Ord                       ( (<)
+                                                , Ord((>))
+                                                )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Database.Gerippe               ( Entity(..)
+                                                , PersistStoreRead(get)
                                                 , PersistUniqueRead(getBy)
                                                 , getWhere
                                                 )
-import           Database.Persist.MySQL         ( PersistStoreWrite(update)
-                                                , (=.)
+import           Database.Persist.MySQL         ( (=.)
+                                                , PersistStoreWrite(update)
                                                 )
 import           Servant.API                    ( (:<|>)(..) )
 import           Servant.Server                 ( HasServer(ServerT)
@@ -48,21 +47,30 @@ import           Servant.Server                 ( HasServer(ServerT)
 import           AppData                        ( Handler )
 import           Auth                           ( UserInfo(..) )
 import           Common.Api                     ( RoutesUser )
-import qualified DbAdapter                     as Db
-import           Common.Model                   (defaultAppState, JournalEvent(EventUser)
+import           Common.Model                   ( AppState(..)
                                                 , EventUser(..)
-                                                , AppState(..)
+                                                , JournalEvent(EventUser)
+                                                , defaultAppState
                                                 )
-import           Database                       (blobDecode, blobEncode,  runDb
+import           Database                       ( blobDecode
+                                                , blobEncode
+                                                , runDb
                                                 )
+import qualified DbAdapter                     as Db
 
+import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Data.Bool                      ( (&&)
+                                                , Bool
+                                                , not
+                                                )
+import           Data.Time                      ( diffUTCTime
+                                                , getCurrentTime
+                                                )
 import qualified DbJournal
-import           Database.Gerippe               ( PersistStoreRead(get) )
-import Data.Time (getCurrentTime, diffUTCTime)
-import GHC.Num (fromInteger, Num((*)))
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Bool (Bool, (&&), not)
-import TextShow (TextShow(showt))
+import           GHC.Num                        ( Num((*))
+                                                , fromInteger
+                                                )
+import           TextShow                       ( TextShow(showt) )
 
 default(Text)
 
@@ -117,7 +125,7 @@ handleAliasSetDefault UserInfo {..} aliasName = do
     runDb $ update keyUser [Db.UserFkDefaultAlias =. Just keyAlias]
     DbJournal.insert (Just uiKeyAlias) $ EventUser $ EventEdit
         "default alias"
-        (fromMaybe "" $ Db.aliasName <$> mOldDefaultAlias)
+        (maybe "" Db.aliasName mOldDefaultAlias)
         aliasName
 
 handleAliasSetVisibility :: UserInfo -> Bool -> Handler ()

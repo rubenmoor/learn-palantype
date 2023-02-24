@@ -7,24 +7,31 @@ module LocalStorage
   )
   where
 
+import           Common.Model                   ( AppState
+                                                , Stats
+                                                )
+import           Control.Category               ( (<<<) )
+import           Data.Aeson                     ( FromJSON
+                                                , ToJSON
+                                                )
+import qualified Data.Aeson                    as Aeson
+import           Data.Map.Strict                ( Map )
+import           Data.Text                      ( Text )
+import qualified Data.Text.Lazy                as Lazy
+import qualified Data.Text.Lazy.Encoding       as Lazy
 import           GHCJS.DOM                      ( currentWindowUnchecked )
 import           GHCJS.DOM.Storage              ( getItem
                                                 , setItem
                                                 )
-import           GHCJS.DOM.Window               (getLocalStorage)
-import Data.Text (Text)
-import Data.Aeson (ToJSON, FromJSON)
-import qualified Data.Aeson as Aeson
-import qualified Data.Text.Lazy.Encoding as Lazy
-import qualified Data.Text.Lazy as Lazy
-import Language.Javascript.JSaddle (MonadJSM)
-import Control.Category ((<<<))
-import TextShow (TextShow (..), fromText)
-import Common.Model (Stats, AppState)
-import State (Session)
-import Data.Map.Strict (Map)
-import Palantype.Common (StageIndex)
-import Palantype.Common (SystemLang)
+import           GHCJS.DOM.Window               ( getLocalStorage )
+import           Language.Javascript.JSaddle    ( MonadJSM )
+import           Palantype.Common               ( StageIndex
+                                                , SystemLang
+                                                )
+import           State                          ( Session )
+import           TextShow                       ( TextShow(..)
+                                                , fromText
+                                                )
 
 data Key a where
   KeyAppState :: Key AppState
@@ -40,7 +47,7 @@ instance TextShow (Key a) where
 retrieve :: (MonadJSM m, FromJSON a) => Key a -> m (Maybe a)
 retrieve key =
   currentWindowUnchecked >>= getLocalStorage >>= \s ->
-    fmap (decode =<<) $ getItem s (showt key)
+    (decode =<<) <$> getItem s (showt key)
 
 put :: (MonadJSM m, ToJSON a) => Key a -> a -> m ()
 put key d =

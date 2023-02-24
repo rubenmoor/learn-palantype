@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RecursiveDo #-}
@@ -13,114 +12,134 @@ module AuthPages
     )
 where
 
-import           Reflex.Dom                     (inputElementConfig_initialChecked,  domEvent, EventName (Click), tagPromptlyDyn, getPostBuild, elAttr, elementConfig_initialAttributes, inputElement, fanEither, leftmost, keypress,  Key (Enter),  attachWith
-                                                , dyn_
-                                                , widgetHold_
-                                                , PostBuild
-                                                , Dynamic
-                                                , elClass
-                                                , gate
-                                                , blank
-                                                , current
-                                                , tag
-                                                , inputElementConfig_setValue
-                                                , zipDyn
-                                                , holdDyn
-                                                , EventWriter
-                                                , MonadHold
-                                                , Prerender
-                                                , text
-                                                , el
-                                                , DomBuilder
-                                                , updated
-                                                , InputElement(..)
-                                                , inputElementConfig_elementConfig
-                                                , elementConfig_modifyAttributes
-                                                , (=:)
-                                                )
-import           Obelisk.Route.Frontend         ( setRoute
-                                                , pattern (:/)
-                                                , SetRoute
-                                                , R
-                                                , RouteToUrl
-                                                , routeLink
+import           Client                         ( getAuthData
+                                                , postAliasRename
+                                                , postAliasVisibility
+                                                , postAuthNew
+                                                , postAuthenticate
+                                                , postDoesAliasExist
+                                                , postDoesUserExist
+                                                , request
                                                 )
 import           Common.Route                   ( FrontendRoute
                                                     ( FrontendRoute_Auth
                                                     )
                                                 , FrontendRoute_AuthPages
                                                     ( AuthPage_SignUp
-
                                                     )
-                                                , FrontendRoute
                                                 )
-import           Control.Monad.Writer.Strict    ( MonadFix )
-import           Data.Semigroup                 ( Endo )
-import           Data.Generics.Product          ( field )
-import           Data.Generics.Sum          ( _As )
-import           Data.Witherable                ( filter )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
                                                 )
-import           Data.Function                  ( const
-                                                , ($)
-                                                , (&)
+import           Control.Lens.Setter            ( (.~)
+                                                , (?~)
                                                 )
-import           Data.Functor                   ( (<&>)
-                                                , fmap
-                                                , void
-                                                , (<$>)
-                                                , ($>)
-                                                )
-import           Data.Bool                      ( not
-                                                , Bool(..)
+import           Control.Monad.Writer.Strict    ( MonadFix )
+import           Data.Bool                      ( Bool(..)
                                                 , bool
-                                                )
-import           Data.Eq                        ((==),  (/=) )
-import           Data.Either                    ( either
-                                                , isRight
-                                                , Either(..)
+                                                , not
                                                 )
 import           Data.Default                   ( Default(def) )
-import           Client                         (postAliasVisibility, getAuthData, postAliasRename, postDoesAliasExist, postAuthenticate
-                                                , postAuthNew
-                                                , request
-                                                , postDoesUserExist
+import           Data.Either                    ( Either(..)
+                                                , either
+                                                , isRight
                                                 )
-import           Data.Maybe                     ( isNothing
+import           Data.Eq                        ( (/=)
+                                                , (==)
+                                                )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                , const
+                                                )
+import           Data.Functor                   ( ($>)
+                                                , (<$>)
+                                                , (<&>)
+                                                , fmap
+                                                , void
+                                                )
+import           Data.Generics.Product          ( field )
+import           Data.Generics.Sum              ( _As )
+import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
+                                                , isNothing
                                                 , maybe
-                                                , Maybe(..)
                                                 )
-import           Control.Lens.Setter            ( (?~)
-                                                , (.~)
+import           Data.Semigroup                 ( Endo
+                                                , Semigroup((<>))
                                                 )
 import qualified Data.Text                     as Text
+import           Obelisk.Route.Frontend         ( pattern (:/)
+                                                , R
+                                                , RouteToUrl
+                                                , SetRoute
+                                                , routeLink
+                                                , setRoute
+                                                )
+import           Reflex.Dom                     ( (=:)
+                                                , DomBuilder
+                                                , Dynamic
+                                                , EventName(Click)
+                                                , EventWriter
+                                                , InputElement(..)
+                                                , Key(Enter)
+                                                , MonadHold
+                                                , PostBuild
+                                                , Prerender
+                                                , attachWith
+                                                , blank
+                                                , current
+                                                , domEvent
+                                                , dyn_
+                                                , el
+                                                , elAttr
+                                                , elClass
+                                                , elementConfig_initialAttributes
+                                                , elementConfig_modifyAttributes
+                                                , fanEither
+                                                , gate
+                                                , getPostBuild
+                                                , holdDyn
+                                                , inputElement
+                                                , inputElementConfig_elementConfig
+                                                , inputElementConfig_initialChecked
+                                                , inputElementConfig_setValue
+                                                , keypress
+                                                , leftmost
+                                                , tag
+                                                , tagPromptlyDyn
+                                                , text
+                                                , updated
+                                                , widgetHold_
+                                                , zipDyn
+                                                )
+import           Witherable                     ( Filterable
+                                                    ( catMaybes
+                                                    , mapMaybe
+                                                    )
+                                                , filter
+                                                )
 
-import           Shared                         (iFa',  elLabelInput
-                                                , elButtonSubmit
-                                                , elLabelCheckbox
-                                                , elLoginSignup
-                                                )
-import           State                          (State(..)
-                                                , Session(..)
-                                                , updateState
-                                                )
 import           Common.Auth                    ( LoginData(..)
                                                 , UserNew(UserNew)
                                                 )
-import           Control.Monad.Reader           ( ask
-                                                , MonadReader
+import           Common.Model                   ( Message(..) )
+import           Control.Lens                   ( preview
+                                                , view
+                                                )
+import           Control.Monad.Reader           ( MonadReader
+                                                , ask
                                                 )
 import           Data.Char                      ( isAlphaNum )
-import           Data.Witherable                ( Filterable
-                                                    ( mapMaybe
-                                                    , catMaybes
-                                                    )
+import           Shared                         ( elButtonSubmit
+                                                , elLabelCheckbox
+                                                , elLabelInput
+                                                , elLoginSignup
+                                                , iFa'
                                                 )
-import           Common.Model                   (Message(..) )
-import Data.Semigroup (Semigroup((<>)))
-import Control.Lens (view, preview)
+import           State                          ( Session(..)
+                                                , State(..)
+                                                , updateState
+                                                )
 
 signup
     :: forall t (m :: * -> *)
@@ -151,7 +170,7 @@ signup = elClass "div" "auth" $ mdo
             Just str -> Text.filter (not <<< isAlphaNum) str /= ""
             Nothing  -> False
     dynNotAlphaNumeric <- holdDyn False
-        $ attachWith (\na _ -> na) behNotAlphanumeric evFocusLostUser
+        $ attachWith const behNotAlphanumeric evFocusLostUser
     dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric -> if notAlphaNumeric
         then elClass "p" "red small"
             $ text "The user name can only contain A-Z, a-z, 0-9."
@@ -226,11 +245,12 @@ signup = elClass "div" "auth" $ mdo
                   zipDyn dynMPassword $
                     zipDyn dynMAlias dynCheckedVisible
             ) <&> \case
-                (_, (True, _))               -> Left "User name already exists."
+                (_, (True , _             )) -> Left "User name already exists."
                 (_, (False, (_, (True, _)))) -> Left "Alias already in use."
                 (State{..}, (False, (Just u, (False, (Just p, (mAlias, isVisible)))))) ->
                     Right $ UserNew u p mAlias isVisible stApp
-                _ -> Left "User name and password required."
+                (_, (_, (Nothing, _))) -> Left "User name required."
+                (_, (_, (_, (_, (Nothing, _))))) -> Left "Password required."
 
     evRespNew <- request $ postAuthNew dynEUserNew $ leftmost [evSubmit, evPressEnter]
     updateState $ evRespNew <&> \case
@@ -314,7 +334,8 @@ login = elClass "div" "auth" $ mdo
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
             (Just ldUserName, Just ldPassword) -> Right LoginData { .. }
-            _ -> Left "User name and password required."
+            (Nothing, _) -> Left "User name required."
+            (_, Nothing) -> Left "Password required."
     evRespAuth <- request $ postAuthenticate dynELoginData $ leftmost [evSubmit, evPressEnter]
     updateState $ mapMaybe (either Just (const Nothing)) evRespAuth <&> \errMsg ->
         [field @"stApp" . field @"stMsg" ?~ Message "Error" errMsg]
@@ -422,7 +443,7 @@ settings = do
               $  def
               &  inputElementConfig_elementConfig
               .  elementConfig_initialAttributes
-              .~ ("type" =: "checkbox" <> "id" =: elemId)
+              .~ "type" =: "checkbox" <> "id" =: elemId
               & inputElementConfig_initialChecked .~ bVisible
           elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
           let dynShowScoresChecked = _inputElement_checked cb

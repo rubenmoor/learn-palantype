@@ -6,28 +6,79 @@
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Shared where
 
-import Data.Generics.Product (field)
-import GHC.Real (div, mod, realToFrac, fromIntegral, floor)
-import           Control.Applicative            ( Applicative(pure)
-                                                , (<$>)
+import           Client                         ( getMaybeAuthData
+                                                , postEventViewPage
+                                                , request
+                                                )
+import           Common.Auth                    ( SessionData(..) )
+import           Common.Route                   ( FrontendRoute(..)
+                                                , FrontendRoute_AuthPages(..)
+                                                , showRoute
+                                                )
+import           Control.Applicative            ( (<$>)
+                                                , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.)) )
-import           Control.Lens                   ((.~) )
-import           Control.Monad                  ( (=<<) )
-import           Data.Function                  (flip,  ($))
-import           Data.Functor                   (($>),  void, (<&>) )
+import           Control.Lens                   ( (.~) )
+import           Control.Monad                  ( (=<<)
+                                                , Monad((>>=))
+                                                , unless
+                                                , when
+                                                )
+import           Control.Monad.Reader           ( MonadReader
+                                                , ask
+                                                , asks
+                                                )
+import           Data.Bool                      ( Bool(..) )
+import           Data.Either                    ( Either(Right) )
+import           Data.Function                  ( ($)
+                                                , flip
+                                                )
+import           Data.Functor                   ( ($>)
+                                                , (<&>)
+                                                , Functor(fmap)
+                                                , void
+                                                )
+import           Data.Generics.Product          ( field )
+import           Data.Int                       ( Int )
+import           Data.Map.Strict                ( Map )
 import           Data.Maybe                     ( Maybe(..) )
-import           Data.Monoid                    (Endo,  (<>) )
+import           Data.Monoid                    ( (<>)
+                                                , Endo
+                                                )
+import           Data.Ord                       ( Ord((>)) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
+import           Data.Time                      ( NominalDiffTime )
 import           Data.Tuple                     ( fst )
-import           Reflex.Dom                     (leftmost, current, tag, EventWriter, Prerender,  dyn_
-                                                , MonadHold
+import           GHC.Float                      ( Double )
+import           GHC.Num                        ( (*)
+                                                , Num((-))
+                                                )
+import           GHC.Real                       ( div
+                                                , floor
+                                                , fromIntegral
+                                                , mod
+                                                , realToFrac
+                                                )
+import           GHCJS.DOM                      ( currentWindowUnchecked )
+import           GHCJS.DOM.Document             ( getLocationUnchecked )
+import           GHCJS.DOM.Location             ( assign )
+import           GHCJS.DOM.Window               ( getDocument )
+import           Language.Javascript.JSaddle    ( MonadJSM
+                                                , liftJSM
+                                                )
+import           Obelisk.Route.Frontend         ( pattern (:/)
+                                                , R
+                                                , SetRoute
+                                                , setRoute
+                                                )
+import           Reflex.Dom                     ( (&)
+                                                , (=:)
                                                 , Adjustable
                                                 , DomBuilder
                                                     ( DomBuilderSpace
@@ -36,18 +87,23 @@ import           Reflex.Dom                     (leftmost, current, tag, EventWr
                                                 , Element
                                                 , EventName(Click)
                                                 , EventResult
+                                                , EventWriter
                                                 , HasDomEvent(domEvent)
                                                 , InputElement
                                                     ( _inputElement_checked
                                                     , _inputElement_value
                                                     )
                                                 , InputElementConfig
+                                                , MonadHold
                                                 , NotReady
                                                 , PostBuild
+                                                , Prerender
                                                 , Reflex(Dynamic, Event, never)
                                                 , blank
+                                                , current
                                                 , def
                                                 , dyn
+                                                , dyn_
                                                 , el
                                                 , elAttr
                                                 , elAttr'
@@ -56,38 +112,17 @@ import           Reflex.Dom                     (leftmost, current, tag, EventWr
                                                 , elementConfig_initialAttributes
                                                 , inputElementConfig_elementConfig
                                                 , inputElementConfig_initialChecked
+                                                , leftmost
                                                 , switchHold
+                                                , tag
                                                 , text
-                                                , (&)
-                                                , (=:)
                                                 )
-import           Data.Bool                      (Bool (..) )
-import           Control.Monad.Reader           (asks,  ask
-                                                , MonadReader
+import           State                          ( Session(..)
+                                                , State(..)
+                                                , updateState
                                                 )
-import           State                          (updateState, Session (..),  State (..))
-import Data.Int (Int)
-import TextShow (TextShow(showt))
-import Control.Monad (unless)
-import           GHCJS.DOM                      ( currentWindowUnchecked )
-import GHCJS.DOM.Location (assign)
-import         GHCJS.DOM.Window               (getDocument)
-import GHCJS.DOM.Document (getLocationUnchecked)
-import Language.Javascript.JSaddle (MonadJSM, liftJSM)
-import Control.Monad (Monad((>>=)))
-import Data.Time (NominalDiffTime)
-import GHC.Float (Double)
-import Text.Printf (printf)
-import GHC.Num ((*), Num((-)))
-import Data.Ord (Ord((>)))
-import Obelisk.Route.Frontend (setRoute, SetRoute, R, pattern (:/))
-import Common.Route (FrontendRoute_AuthPages (..), showRoute, FrontendRoute (..))
-import Data.Either (Either(Right))
-import Client ( getMaybeAuthData, postEventViewPage, request )
-import Common.Auth (SessionData(..))
-import Data.Functor (Functor(fmap))
-import Control.Monad (when)
-import Data.Map.Strict (Map)
+import           Text.Printf                    ( printf )
+import           TextShow                       ( TextShow(showt) )
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -115,7 +150,7 @@ elLabelInput conf label maxlength id = do
         $  conf
         &  inputElementConfig_elementConfig
         .  elementConfig_initialAttributes
-        .~ ("id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength)
+        .~ "id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength
     let dynStr  = _inputElement_value i
         dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
     pure (dynMStr, i)
@@ -136,7 +171,7 @@ elLabelPasswordInput conf label id = do
         $  conf
         &  inputElementConfig_elementConfig
         .  elementConfig_initialAttributes
-        .~ ("id" =: id <> "type" =: "password" <> "maxlength" =: "64")
+        .~ "id" =: id <> "type" =: "password" <> "maxlength" =: "64"
     let dynStr  = _inputElement_value i
         dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
     pure (dynMStr, i)
@@ -201,7 +236,7 @@ elLabelCheckbox initial label id = do
         $  def
         &  inputElementConfig_elementConfig
         .  elementConfig_initialAttributes
-        .~ ("type" =: "checkbox" <> "id" =: id)
+        .~ "type" =: "checkbox" <> "id" =: id
         &  inputElementConfig_initialChecked
         .~ initial
     elAttr "label" ("for" =: id) $ el "span" $ text label

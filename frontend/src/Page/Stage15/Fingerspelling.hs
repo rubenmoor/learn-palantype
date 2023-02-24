@@ -17,104 +17,113 @@ module Page.Stage15.Fingerspelling
     ( fingerspelling
     ) where
 
-import           Shared                         ( whenJust )
+import           Common.Model                   ( Stats )
 import           Common.Route                   ( FrontendRoute )
 import           Control.Applicative            ( Applicative(pure) )
+import           Control.Category               ( (.) )
+import           Control.Lens                   ( (+~)
+                                                , (.~)
+                                                , (?~)
+                                                )
 import           Control.Monad                  ( unless )
 import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader.Class     ( MonadReader
                                                 , ask
                                                 )
-import           Data.Foldable                  ( for_ )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( (<&>) )
-import           Data.Functor                   ( (<$>) )
-import Data.Generics.Product (field)
-import Data.Generics.Sum (_As)
+import           Data.Bool                      ( Bool
+                                                , not
+                                                )
+import           Data.Eq                        ( Eq((==)) )
+import           Data.Foldable                  ( Foldable(elem, length)
+                                                , for_
+                                                )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                )
+import           Data.Functor                   ( (<$>)
+                                                , (<&>)
+                                                , Functor(fmap)
+                                                )
+import           Data.Generics.Product          ( field )
+import           Data.Generics.Sum              ( _As )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
+                                                , filter
                                                 , zip
                                                 )
-import           Data.Maybe                     (isNothing,  Maybe(..) )
-import           Data.Semigroup                 ( Endo
-                                                , (<>)
+import           Data.Maybe                     ( Maybe(..)
+                                                , isNothing
                                                 )
-import           Obelisk.Route.Frontend         (R
+import           Data.Ord                       ( Ord((>)) )
+import           Data.Semigroup                 ( (<>)
+                                                , Endo
+                                                )
+import qualified Data.Text                     as Text
+import           Data.Text                      ( Text )
+import           Data.Tuple                     ( fst
+                                                , snd
+                                                )
+import           GHC.Generics                   ( Generic )
+import           GHC.Num                        ( Num((-)) )
+import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
                                                 , SetRoute
                                                 , routeLink
                                                 )
-import           Page.Common                    (getStatsLocalAndRemote,  elCongraz
+import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
+                                                , getStatsLocalAndRemote
                                                 )
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
                                                 )
-import           Palantype.Common               (mapStages,  kiChordsStart
-                                                , kiBackUp
-                                                , Chord
+import           Palantype.Common               ( Chord
                                                 , Palantype
                                                 , StageSpecialGeneric(..)
+                                                , SystemLang(SystemDE)
                                                 , findStage
+                                                , kiBackUp
+                                                , kiChordsStart
                                                 )
-import           Reflex.Dom                     (Dynamic, current, gate,  dyn_
-                                                , TriggerEvent
-                                                , PerformEvent
-                                                , Performable
-                                                , EventWriter
-                                                , holdUniqDyn
-                                                , updated
-                                                , Event
-                                                , (=:)
-                                                , DomBuilder
-                                                , MonadHold
-                                                , PostBuild
-                                                , Prerender
-                                                , blank
-                                                , el
-                                                , elAttr
-                                                , elClass
-                                                , foldDyn
-                                                , text
-                                                )
-import           State                          ( State
-                                                , Env(..)
-                                                , Navigation(..)
-                                                , stageUrl
-                                                )
-import           TextShow                       ( TextShow(showt) )
-import           Control.Category               ( (.)
-                                                )
+import qualified Palantype.Common.Indices      as KI
+import qualified Palantype.Common.RawSteno     as Raw
+import           Palantype.Common.TH            ( fromJust )
+import qualified Palantype.DE                  as DE
 import           Palantype.DE.FingerSpelling    ( dictLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS
                                                 )
-import qualified Data.Text                     as Text
-import           Palantype.Common               ( SystemLang(SystemDE) )
-import           Data.Eq                        ( Eq((==)) )
-import           GHC.Num                        ( Num((-)) )
-import           Data.Tuple                     (snd,  fst )
-import qualified Palantype.Common.RawSteno     as Raw
-import qualified Palantype.Common.Indices      as KI
-import           Data.Foldable                  ( Foldable(length) )
-import           Data.Ord                       ( Ord((>)) )
-import           Control.Lens                   ( (?~)
-                                                , (+~)
-
-
-                                                , (.~)
+import           Reflex.Dom                     ( (=:)
+                                                , DomBuilder
+                                                , Dynamic
+                                                , Event
+                                                , EventWriter
+                                                , MonadHold
+                                                , PerformEvent
+                                                , Performable
+                                                , PostBuild
+                                                , Prerender
+                                                , TriggerEvent
+                                                , blank
+                                                , current
+                                                , dyn_
+                                                , el
+                                                , elAttr
+                                                , elClass
+                                                , foldDyn
+                                                , gate
+                                                , holdUniqDyn
+                                                , text
+                                                , updated
                                                 )
-import           Data.Foldable                  ( Foldable(elem) )
-import           Data.Function                  ( (&) )
-import           Data.Functor                   ( Functor(fmap) )
-import           Control.Monad.IO.Class         ( MonadIO )
-import           Common.Model                   ( Stats )
-import GHC.Generics (Generic)
-import Data.Bool (Bool, not)
-import Data.Text (Text)
-import Data.List (filter)
-import Palantype.Common.TH (fromJust)
-import qualified Palantype.DE as DE
+import           Shared                         ( whenJust )
+import           State                          ( Env(..)
+                                                , Navigation(..)
+                                                , State
+                                                , stageUrl
+                                                )
+import           TextShow                       ( TextShow(showt) )
 
 data StateLiterals k
     = StatePause Int
@@ -123,7 +132,7 @@ data StateLiterals k
 
 data Run k = Run
     { stCounter  :: Int
-    , stMMistake :: Maybe (Int, Chord k)
+    , stMMistake :: Maybe (Int, Palantype.Common.Chord k)
     , stNMistakes :: Int
     } deriving (Generic)
 
@@ -138,14 +147,14 @@ taskLiterals
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadReader (Env t key) m
-       , Palantype key
+       , Palantype.Common.Palantype key
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Chord key)
+    -> Event t (Palantype.Common.Chord key)
     -> m (Event t Stats)
 taskLiterals dynStats evChord = do
     Env {..} <- ask
@@ -153,10 +162,10 @@ taskLiterals dynStats evChord = do
 
         len             = length dictLiterals
 
-        step :: Chord key -> StateLiterals key -> StateLiterals key
+        step :: Palantype.Common.Chord key -> StateLiterals key -> StateLiterals key
         step c st = case st of
             StatePause _ ->
-                if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
+                if Raw.fromChord c `elem` (KI.toRaw @key <$> Palantype.Common.kiChordsStart)
                     then stepStart
                     else st
             StateRun Run {..} ->
@@ -166,7 +175,7 @@ taskLiterals dynStats evChord = do
 
                         -- mistake mode ...
                         -- ... back up
-                        Just _ | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                        Just _ | Raw.fromChord c == KI.toRaw @key Palantype.Common.kiBackUp ->
                             st & _As @"StateRun" . field @"stMMistake" .~ Nothing
                         -- ... or do nothing
                         Just _ -> st
@@ -227,7 +236,7 @@ taskLiterals dynStats evChord = do
                         elClass "span" "btnSteno blinking"
                             $  text
                             $  "↤ "
-                            <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                            <> showt (KI.toRaw @key Palantype.Common.kiBackUp) -- U+21A4
 
                 text $ showt stCounter <> " / " <> showt len
 
@@ -241,7 +250,7 @@ fingerspelling
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadReader (Env t key) m
-       , Palantype key
+       , Palantype.Common.Palantype key
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
@@ -253,7 +262,7 @@ fingerspelling
 fingerspelling = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navLang == Palantype.Common.SystemDE) elNotImplemented
 
     el "h1" $ text "Fingerspelling"
 
@@ -331,7 +340,7 @@ fingerspelling = mdo
         el "code" $ text "WIN"
         text " key shows up among the keys in "
         let (iStage, iT, iS) =
-              $fromJust $ findStage $ StageSpecial @DE.Key "Command Keys"
+              $fromJust $ Palantype.Common.findStage $ Palantype.Common.StageSpecial @DE.Key "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text "."
@@ -394,7 +403,7 @@ fingerspelling = mdo
     elClass "div" "paragraph" $ do
         text "Fingerspelling is a powerfull feature. Together with "
         let (iStage, iT, iS) =
-              $fromJust $ findStage @DE.Key $ StageSpecial "Command Keys"
+              $fromJust $ Palantype.Common.findStage @DE.Key $ Palantype.Common.StageSpecial "Command Keys"
         routeLink (stageUrl @key iStage) $
           text $ "Ex. " <> showt iT <> "." <> showt iS
         text

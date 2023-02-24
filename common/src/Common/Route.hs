@@ -18,19 +18,26 @@
 
 module Common.Route where
 
-import           Control.Category               ( Category((.)) )
-import           Data.Functor.Identity          ( Identity )
-import           Data.Text                      ( Text )
-import           Data.Either                    (Either (..) )
+import           Control.Applicative            ( Applicative )
+import           Control.Category               ( Category((.), id) )
+import           Control.Lens.Wrapped           ( Unwrapped
+                                                , Wrapped
+                                                )
+import           Control.Monad.Except           ( MonadError )
+import           Data.Either                    ( Either(..) )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<$>) )
+import           Data.Functor.Identity          ( Identity )
 import           Data.List                      ( concat )
 import           Data.Monoid                    ( Monoid(mempty) )
+import           Data.Semigroup                 ( Semigroup((<>)) )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
+import           Data.Text.Lens                 ( IsText )
 import           Data.Traversable               ( mapM )
-import           Obelisk.Route                  (reviewEncoder, packTextEncoder, unwrappedEncoder, checkEncoder, renderFrontendRoute,  pathComponentEncoder
-                                                , singlePathSegmentEncoder
-                                                , mkFullRouteEncoder
-                                                , pattern (:/)
+import           GHC.Real                       ( Integral )
+import           Numeric.Lens                   ( base )
+import           Obelisk.Route                  ( pattern (:/)
                                                 , Encoder
                                                 , FullRoute(FullRoute_Backend)
                                                 , PageName
@@ -39,20 +46,19 @@ import           Obelisk.Route                  (reviewEncoder, packTextEncoder,
                                                     ( PathEnd
                                                     , PathSegment
                                                     )
+                                                , checkEncoder
+                                                , mkFullRouteEncoder
+                                                , packTextEncoder
+                                                , pathComponentEncoder
+                                                , renderFrontendRoute
+                                                , reviewEncoder
+                                                , singlePathSegmentEncoder
                                                 , unitEncoder
+                                                , unwrappedEncoder
                                                 )
 import           Obelisk.Route.TH               ( deriveRouteComponent )
-import           Palantype.Common.Stage         (StageIndex )
-import           Control.Category               ( Category(id) )
-import Palantype.Common.TH (failure)
-import Data.Semigroup (Semigroup((<>)))
-import qualified Data.Text as Text
-import Numeric.Lens (base)
-import Control.Applicative (Applicative)
-import Data.Text.Lens (IsText)
-import Control.Lens.Wrapped (Unwrapped, Wrapped)
-import Control.Monad.Except (MonadError)
-import GHC.Real (Integral)
+import           Palantype.Common.Stage         ( StageIndex )
+import           Palantype.Common.TH            ( failure )
 
 data FrontendRoute_AuthPages :: * -> * where
   AuthPage_SignUp   :: FrontendRoute_AuthPages ()

@@ -47,11 +47,8 @@ import           Data.Foldable                  ( Foldable(length)
                                                 , for_
                                                 , traverse_
                                                 )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( ($>)
-                                                , void
-                                                )
-import           Data.Functor                   ( Functor(fmap) )
+import Data.Function ( ($), (&) )
+import Data.Functor ( ($>), void, Functor(fmap) )
 import           Data.Generics.Product          ( field )
 import Data.Generics.Sum (_As)
 import           Data.Int                       ( Int )
@@ -71,7 +68,7 @@ import           Data.Semigroup                 ( (<>)
                                                 )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
-import           Data.Witherable                ( Filterable(catMaybes, filter)
+import           Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         (R , RouteToUrl
@@ -86,19 +83,20 @@ import           Page.Common                    (elBtnSound, getStatsLocalAndRem
                                                 , taskWords
                                                 )
 import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
-import           Palantype.Common               (StageSpecialGeneric (..), mapStages, patternDoc,  kiChordsStart
-                                                , Chord(..)
-                                                , SystemLang(..)
-                                                , Palantype
-                                                , fromChord
-                                                , mkChord
-                                                , allKeys
-                                                )
-import           Palantype.Common               ( kiBackUp
-                                                , RawSteno
-                                                , parseStenoMaybe
-                                                , findStage
-                                                )
+import Palantype.Common
+    ( StageSpecialGeneric(..),
+      patternDoc,
+      kiChordsStart,
+      Chord(..),
+      SystemLang(..),
+      Palantype,
+      fromChord,
+      mkChord,
+      allKeys,
+      kiBackUp,
+      RawSteno,
+      parseStenoMaybe,
+      findStage )
 import qualified Palantype.Common.Indices      as KI
 import           Palantype.DE                   ( Pattern(..) )
 import           Reflex.Dom                     (constDyn, Dynamic, current, gate,  TriggerEvent
@@ -144,7 +142,6 @@ import           TextShow                       ( TextShow(showt) )
 import           Palantype.Common.TH            ( fromJust
                                                 )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Data.Function                  ( (&) )
 import Common.Model (Stats)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)

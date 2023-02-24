@@ -19,33 +19,39 @@
 
 module Frontend where
 
-import           Language.Javascript.JSaddle    (liftJSM )
-import           State                          (Session(..)
+import           Language.Javascript.JSaddle    ( liftJSM )
+import           State                          ( Session(..)
                                                 , State(..)
                                                 , defaultState
-
                                                 )
 
-import           Common.Route                   (FrontendRoute(..)
+import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendRoute_AuthPages(..)
                                                 )
-import           Control.Monad.Reader           (ReaderT(runReaderT) )
-import           Data.Functor                   ( ($>)
-                                                , (<&>)
+import           Control.Monad.Reader           ( ReaderT(runReaderT) )
+import           Data.Function                  ( ($)
+                                                , (.)
+                                                , const
+                                                , flip
                                                 )
-import           Data.Function                  ( (.) )
+import           Data.Functor                   ( ($>)
+                                                , (<$>)
+                                                , (<&>)
+                                                , Functor(fmap)
+                                                , void
+                                                )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     (isJust,  Maybe(..)
+import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
+                                                , isJust
                                                 )
 import           Data.Semigroup                 ( (<>)
                                                 , Endo(..)
                                                 )
 import           Data.Text                      ( Text )
-import           Home                           ( message
-
+import           Home                           ( elStages
                                                 , landingPage
-                                                , elStages
+                                                , message
                                                 )
 import           Obelisk.Frontend               ( Frontend(..)
                                                 , ObeliskWidget
@@ -54,7 +60,7 @@ import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
-import           Obelisk.Route.Frontend         (RoutedT
+import           Obelisk.Route.Frontend         ( RoutedT
                                                 , SetRoute(setRoute)
                                                 , mapRoutedT
                                                 , subRoute_
@@ -62,59 +68,66 @@ import           Obelisk.Route.Frontend         (RoutedT
 import           Palantype.Common               ( SystemLang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
-import           Reflex.Dom                     (zipDyn, holdUniqDyn, fanEither, attachPromptlyDynWith, select, fanMap, gate, current, attach, constDyn
-                                                , holdDyn
-                                                , prerender
+import           Reflex.Dom                     ( (=:)
                                                 , PerformEvent(performEvent_)
                                                 , PostBuild(getPostBuild)
-                                                , Reflex(updated)
+                                                , Reflex(Event, updated)
+                                                , attach
+                                                , attachPromptlyDynWith
                                                 , blank
+                                                , constDyn
+                                                , current
                                                 , dyn_
                                                 , el
                                                 , elAttr
+                                                , fanEither
+                                                , fanMap
                                                 , foldDyn
+                                                , gate
+                                                , holdDyn
+                                                , holdUniqDyn
                                                 , leftmost
+                                                , prerender
                                                 , prerender_
                                                 , runEventWriterT
+                                                , select
                                                 , tailE
                                                 , text
-                                                , (=:)
+                                                , zipDyn
                                                 )
 
-import           Shared                         (requestPostViewPage, redirectToWikipedia,  loadingScreen )
+import qualified AdminPages
 import qualified AuthPages
-import           Control.Category               ( (<<<))
-import           Common.Model                   (AppState, Rank (RankAdmin)
-                                                , defaultAppState
+import           Client                         ( getAppState
+                                                , postAppState
+                                                , request
                                                 )
 import           Common.Auth                    ( SessionData(..) )
-import           Client                         (postAppState , request , getAppState
-                                                )
-import           Data.Either                    ( Either(..)
-                                                )
-import           Control.Monad                  ( Monad((>>=))
-
-                                                )
-import           Data.Function                  ( flip
-                                                , const
-                                                , ($)
+import           Common.Model                   ( AppState
+                                                , Rank(RankAdmin)
+                                                , defaultAppState
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
-import           Data.Functor                   ( void )
-import           Data.Bool                      ((||),  Bool(..)
+import           Control.Category               ( (<<<) )
+import           Control.Monad                  ( Monad((>>=)) )
+import           Data.Bool                      ( Bool(..)
                                                 , not
+                                                , (||)
                                                 )
-import           Data.Witherable                ( Filterable(filter) )
-import           Data.Functor                   ( (<$>) )
-import qualified AdminPages
-import Data.Ord (Ord((>=)))
-import Reflex.Dom (Reflex(Event))
-import Data.Functor (Functor(fmap))
-import Data.Witherable (Filterable(catMaybes))
-import Data.Eq ((==), Eq)
-import Data.Functor.Misc (Const2(Const2))
-import Palantype.Common.TH (failure)
-import qualified LocalStorage as LS
+import           Data.Either                    ( Either(..) )
+import           Data.Eq                        ( (==)
+                                                , Eq
+                                                )
+import           Data.Functor.Misc              ( Const2(Const2) )
+import           Data.Ord                       ( Ord((>=)) )
+import qualified LocalStorage                  as LS
+import           Palantype.Common.TH            ( failure )
+import           Shared                         ( loadingScreen
+                                                , redirectToWikipedia
+                                                , requestPostViewPage
+                                                )
+import           Witherable                     ( Filterable(catMaybes, filter)
+                                                )
 
 default(Text)
 
@@ -223,19 +236,16 @@ frontendBody = mdo
         subRoute_ $ \r -> do
           case r of
             FrontendRoute_Main -> do
-              toReady <$> getPostBuild >>=
-                requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
+              getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Main :/ ()) . toReady
               landingPage
             FrontendRoute_EN -> elStages @EN.Key SystemEN toReady
             FrontendRoute_DE -> elStages @DE.Key SystemDE toReady
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
-                  toReady <$> getPostBuild >>=
-                    requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+                  getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ()) . toReady
                   AuthPages.signup
                 AuthPage_Login  -> do
-                  toReady <$> getPostBuild >>=
-                    requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
+                  getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ()) . toReady
                   AuthPages.login
                 AuthPage_Settings -> do
                   dynSettings <- holdUniqDyn $ zipDyn dynHasLoaded (isLoggedIn <$> dynState) <&> \case
@@ -247,8 +257,9 @@ frontendBody = mdo
 
                   requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
                   dyn_ $ dynSettings <&> \case
-                    Just True -> AuthPages.settings
-                    _         -> blank
+                    Just True  -> AuthPages.settings
+                    Just False -> blank
+                    Nothing    -> blank
             FrontendRoute_Admin -> do
                 evReady <- toReady <$> getPostBuild
                 let
