@@ -9,20 +9,6 @@ let
     useGHC810 = true;
   });
 
-  pandoc-src = pkgs.fetchFromGitHub {
-    repo = "pandoc";
-    owner = "jgm";
-    rev = "9c39d1632ea9dfd0ff12f15a555baf5b15143274";
-    sha256 = "12yxa58izqnbpdrflgklbais8dd5j98vb49zrgxvaljrk567c3sc";
-  };
-
-  commonmark-src = pkgs.fetchFromGitHub {
-    repo = "commonmark-hs";
-    owner = "jgm";
-    rev = "869bbce6b5e7e82bfce2ce36a38391176fb0fe4a";
-    sha256 = "0ycxbf5m9kxx0ikg53hqzk5hq79vd5xm8pm6li2k3jgx9pl75aks";
-  };
-
 in
   with pkgs.haskell.lib;
   obelisk.project ./. ({ ... }: {
@@ -126,18 +112,18 @@ in
         sha256 = "HnBsPBdONbaw42/JnpONXAIwsEwc/fMyUXcm4cJdWUQ=";
       } {};
 
-      pandoc = self.callCabal2nix "pandoc" ../pandoc {};
-      # pandoc = doJailbreak(self.callHackageDirect  {
-      #   pkg = "pandoc";
-      #   ver = "3.1";
-      #   sha256 = "R7ZPJ6l/Vh0ieExJBJMqM/pvFDJeUznLIdE8xZSUtus=";
-      # } { });
+      pandoc = self.callCabal2nix "pandoc" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "pandoc";
+        rev = "8fa46a2e5701db1ed579cc65378a927746ca8586";
+        sha256 = "0vl1ikgg80rkwdz6chj2s2h5xdkylvi4ymcziq3v0s62pnqf8bk3";
+      }) {};
 
       skylighting-core = self.callHackage "skylighting-core" "0.9" {};
       skylighting = self.callHackage "skylighting" "0.9" {};
 
       #reflex-dom-pandoc = self.callHackage "reflex-dom-pandoc" "1.0.0.0" {};
-      #
+      # waiting for my pull request to make it into upstream
       reflex-dom-pandoc = self.callCabal2nix "reflex-dom-pandoc" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "reflex-dom-pandoc";
@@ -153,25 +139,21 @@ in
         sha256 = "1gghpfgsw8p2v6msz17sr5nn30pkg2c59pz7gvazqrv80v8102bb";
       }) {};
 
-      # ghc 8.10.7 compatible, not published on hackage
-      # TODO: jailbreak shouldn't be necessary
-      # check versions of aeson >= 0.7 && <1.5 and base64-bytestring ==1.0.*
-      # aeson is actually 1.5.6.0
-      # base64-bytestring is 1.1.0.0
-      servant-snap = doJailbreak(self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
-        owner = "haskell-servant";
+      #servant-snap = self.callCabal2nix "servant-snap" ../servant-snap {};
+      servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
         repo = "servant-snap";
-        rev = "a30d5d8cbdfed524e93fda6c3dad002e46a49874";
-        sha256 = "0s5jizd3k33bh7v7kg79nsaz67jh9hsg490wxy95k4r12r802f17";
-      }) {});
+        rev = "657af13efa002b4f7c24bfc20d63d59e85a1086f";
+        sha256 = "0p1h1a1rnrg5c63cpir8i26w93af6hqwxgqc6w2h94wjz2fbxp4c";
+      }) {};
 
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      #my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-      #  owner = "rubenmoor";
-      #  repo = "my-palantype";
-      #  rev = "c258a5f678011dde1ff24ead2b5574c61d6398cb";
-      #  sha256 = "0hqd5vbc8wamm4npvsvg06vghv7vcin6pmx15wd9lysi3q7zf2s4";
-      #}) {};
+      #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "my-palantype";
+        rev = "a0a10c93736f30aa74dfb758e84dca3e88a3eb63";
+        sha256 = "1v9zsrmz1zwn0hanb09kg8w78xk9jns1f2r38wmyzn5v2h9hvqmm";
+      }) {};
 
       bytestring-trie = self.callHackage "bytestring-trie" "0.2.7" {};
     };
