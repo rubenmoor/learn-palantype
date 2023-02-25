@@ -5,7 +5,7 @@ let
     name = "nixos-unstable-2023-02-26";
     url = "https://github.com/nixos/nixpkgs/";
     ref = "refs/heads/nixos-unstable";
-    rev = "8ffbe72c00d9fd1b8950b2d22cbc77edb408f402";
+    rev = "7f5639fa3b68054ca0b062866dc62b22c3f11505";
   }) {};
   obelisk = (import ./.obelisk/impl {
     inherit system;
