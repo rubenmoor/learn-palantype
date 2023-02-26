@@ -1,7 +1,12 @@
 { system ? builtins.currentSystem
-, pkgs ? import <nixos-unstable> {}
 }:
 let
+  pkgs = import (builtins.fetchGit {
+    name = "nixos-unstable-2023-02-26";
+    url = "https://github.com/nixos/nixpkgs/";
+    ref = "refs/heads/nixos-unstable";
+    rev = "8ffbe72c00d9fd1b8950b2d22cbc77edb408f402";
+  }) {};
   obelisk = (import ./.obelisk/impl {
     inherit system;
     iosSdkVersion = "13.2";
