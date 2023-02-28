@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 let
-  staticCss = import ./static-css/release.nix {};
+  staticCss = import ./static-css/release.nix { inherit pkgs; };
 in pkgs.stdenv.mkDerivation {
   name = "static";
   src = ./static-files;
