@@ -17,10 +17,10 @@ let
 in
   with pkgs.haskell.lib;
   obelisk.project ./. ({ ... }: {
-    android.applicationId = "systems.obsidian.obelisk.examples.minimal";
-    android.displayName = "Palantype";
-    ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
-    ios.bundleName = "Palantype";
+    # android.applicationId = "systems.obsidian.obelisk.examples.minimal";
+    # android.displayName = "Palantype";
+    # ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
+    # ios.bundleName = "Palantype";
 
     staticFiles = import ./static.nix { inherit pkgs; };
 

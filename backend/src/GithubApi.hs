@@ -3,46 +3,76 @@
 
 module GithubApi where
 
-import Network.Wreq (statusMessage, responseBody, statusCode, responseStatus, auth, oauth2Token, getWith, header, defaults)
-import Data.Text (Text)
-import Common.Model (TextLang)
-import Palantype.Common (SystemLang)
-import Servant (ToHttpApiData(toUrlPiece))
-import Control.Monad.IO.Class (MonadIO(liftIO))
-import qualified Data.Text as Text
-import Data.Function ((&))
-import Control.Lens ((^.), (.~))
+import           Common.Model                   ( TextLang )
+import           Control.Lens                   ( (.~)
+                                                , (^.)
+                                                )
+import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Data.Function                  ( (&) )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
+import           Network.Wreq                   ( auth
+                                                , defaults
+                                                , getWith
+                                                , header
+                                                , oauth2Token
+                                                , responseBody
+                                                , responseStatus
+                                                , statusCode
+                                                , statusMessage
+                                                )
+import           Palantype.Common               ( SystemLang )
+import           Servant                        ( ToHttpApiData(toUrlPiece) )
 
-import AppData (EnvApplication (..), Handler)
-import qualified Data.Text.Encoding as Text
-import Control.Monad.Reader (MonadReader(ask))
-import Data.Aeson.Lens (key, _String)
+import           AppData                        ( EnvApplication(..)
+                                                , Handler
+                                                )
+import           Control.Monad.Reader           ( MonadReader(ask) )
+import qualified Data.Text.Encoding            as Text
+import           Data.Text.Encoding.Error       ( lenientDecode )
+import qualified Data.Text.Lazy                as LazyText
+import qualified Data.Text.Lazy.Encoding       as LazyText
 
 data RequestData = RequestData
-  { rdSystemLang :: SystemLang
-  , rdTextLang :: TextLang
-  , rdPageName :: Text
-  }
+    { rdSystemLang :: SystemLang
+    , rdTextLang   :: TextLang
+    , rdPageName   :: Text
+    }
 
 data Response
   = Success Text
   | Error   Int Text
 
 request :: RequestData -> Handler Response
-request RequestData{..} = do
+request RequestData {..} = do
     EnvApplication {..} <- ask
-    let
-        url = "https://api.github.com/repos/rubenmoor/learn-palantype/main/cms-content/"
-           <> toUrlPiece rdSystemLang <> "/"
-           <> toUrlPiece rdTextLang <> "/"
-           <> rdPageName <> ".md"
+    let url =
+            "https://api.github.com/repos/rubenmoor/learn-palantype/contents/cms-content/"
+                <> toUrlPiece rdSystemLang
+                <> "/"
+                <> toUrlPiece rdTextLang
+                <> "/"
+                <> rdPageName
+                <> ".md"
         mAuth = if Text.null envGithubToken
-                then Nothing
-                else Just $ oauth2Token (Text.encodeUtf8 envGithubToken)
-        opts = defaults & header "Accept"               .~ ["application/vnd.github.raw"]
-                        & header "X-GitHub-Api-Version" .~ ["2022-11-28"                ]
-                        & auth .~ mAuth
+            then Nothing
+            else Just $ oauth2Token (Text.encodeUtf8 envGithubToken)
+        opts =
+            defaults
+                &  header "Accept"
+                .~ ["application/vnd.github.raw"]
+                &  header "X-GitHub-Api-Version"
+                .~ ["2022-11-28"]
+                &  auth
+                .~ mAuth
     resp <- liftIO $ getWith opts $ Text.unpack url
     pure $ case resp ^. responseStatus . statusCode of
-        200  -> Success $ resp ^. responseBody . key "content" . _String
-        code -> Error code $ Text.decodeUtf8 $ resp ^. responseStatus . statusMessage
+        200 ->
+            Success
+                $  LazyText.toStrict
+                $  LazyText.decodeUtf8With lenientDecode
+                $  resp ^. responseBody
+        code ->
+            Error code
+                $  Text.decodeUtf8
+                $  resp ^. responseStatus .  statusMessage

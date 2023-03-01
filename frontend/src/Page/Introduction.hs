@@ -35,7 +35,7 @@ import           Data.Functor                   ( ($>)
                                                 )
 import           Data.Generics.Product          ( field )
 import qualified Data.Map                      as Map
-import           Data.Monoid                    ( Monoid(mempty) )
+import           Data.Monoid                    ( Monoid(mempty, mconcat) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
@@ -116,18 +116,19 @@ introduction toReady = do
              (constDyn pageName  )
              evReady
 
-    widgetHold_ (loadingScreen "") $ evRespFail <&> \strError ->
-      el "span" $ text $ "Error loading content: " <> strError
+    widgetHold_ blank $ evRespFail <&> \strError ->
+      el "span" $ text $ "CMS error: " <> strError
 
     dynParts <- widgetHold (loadingScreen "" $> (mempty, mempty, mempty)) $ evRespSucc <&> \case
         [p1, p2, p3] -> pure (p1, p2, p3)
         parts        -> do
-          el "span" $ text $
-                 "wrong number of parts in markdown. Expected: 3. Got: "
+          el "div" $ text $
+                 "CMS error: wrong number of parts in markdown. Expected: 3. Got: "
               <> showt (length parts)
-          pure (mempty, mempty, mempty)
+          pure (mconcat parts, mempty, mempty)
 
     dyn_ $ dynParts <&> \(part1, part2, part3) -> do
+      el "h1" $ text "Introduction"
 
       elPandoc defaultConfig part1
 
@@ -156,9 +157,9 @@ introduction toReady = do
           updateState
               $  eStart
               $> [ field @"stApp" . field @"stProgress" %~ Map.insert navLang ($fromJust navMNext)
-                  , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-                  , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
-                  ]
+                 , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
+                 , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
+                 ]
           setRoute $ eStart $> stageUrl @key 1
 
       elPandoc defaultConfig part3
