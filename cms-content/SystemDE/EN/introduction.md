@@ -24,6 +24,6 @@ Be sure to check out additional information on learning [Palantype](http://www.o
 >
 > The steno dictionary for German contains 1,945,685 words. Additional words are added regularly. Among the quality-of-life features are: command keys (Home, End, Insert, Delete, ...), special characters, fingerspelling, and plover commands for actual text formatting.
 
-<!--seperator-->
+<!--separator-->
 
 Instead of clicking the button, try to input `DSAÜD` by pressing D-, S-, A-, -Ü, -D all at once. Take your time finding the next key while holding down. The chord is only registered once you release all the keys.
