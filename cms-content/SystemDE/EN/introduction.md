@@ -1,5 +1,3 @@
-# ${title}
-
 ## Why Palantype
 
 Palantype allows you to type with lightning speed. It's a stenographic system in the wider sense. The most widespread of these systems is simply called steno. Any steno-style system requires quite a bit of learning. Palantype has the advantage that it's more suitable for regular keyboards. There are limitations, though.
