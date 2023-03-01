@@ -1,0 +1,30 @@
+name: CMS Content Update
+run-name: ${{ github.actor }} updated a markdown file in the cms-content
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: get changed files in the folder cms-content
+        id: changed-files-cms-content
+        uses: tj-actions/changed-files@v35
+        with:
+          files: cms-content/**
+
+      - name: for each file changed, echo filename
+        if: steps.changed-files-cms-content.outputs.any_changed == 'true'
+        run: |
+          echo "File changes for filter cms-content/**"
+          for filename in ${{steps.changed-files-cms-content.outputs.all_changed_files}}; do
+            echo "$filename was changed"
+          done
