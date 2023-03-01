@@ -6,7 +6,7 @@ Palantype allows you to type with lightning speed. It's a stenographic system in
 
 ### Hardware
 
-You can get started with your regular keyboard. However, keyboards usually have limit of how many keys register at the same time. Long term, you will need a keyboard that supports N-Key roll-over (NKRO) to type chords of up to ten keys. In addition, a ortho-linear layout as well as very sensitive keys are preferable.
+You can get started with your regular keyboard. However, keyboards usually have limit of how many keys register at the same time. Long term, you will need a keyboard that supports *N-Key roll-over (NKRO)* to type chords of up to ten keys. In addition, a ortho-linear layout as well as very sensitive keys are preferable.
 
 You can play around with the keyboard above to see how much keys register at the same time with your hardware.
 
