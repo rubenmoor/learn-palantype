@@ -46,6 +46,7 @@ import           Servant.API                    ( (:<|>)
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
 import           Web.KeyCode                    ( Key )
+import Data.Map.Strict (Map)
 
 type RoutesAuth =
            "login" :> ReqBody '[JSON] LoginData :> Post '[JSON] (Maybe (SessionData, AppState))
@@ -84,17 +85,6 @@ type RoutesStats =
 type RouteStatsNew =
        AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()
 
--- admin routes
-
--- data GetJournalOptions = GetJournalOptions
---   { gjoDayStart :: Day
---   , gjoDayEnd :: Day
---   , gjoExludeAdmin :: Bool
---   , gjoFilterByVisitor :: Maybe Int
---   , gjoFilterByUser :: Maybe Text
---   , gjoFilterByAlias :: Maybe Text
---   }
-
 type RoutesAdmin =
   AuthRequired "jwt" :> "journal" :> QueryParam "start" Day
                                   :> QueryParam "end" Day
@@ -105,10 +95,10 @@ type RoutesAdmin =
                                   :> QueryFlag "filter-anonymous"
                                   :> Get '[JSON] [Journal]
 
-type RoutesCMS = QueryParam "system"   SystemLang
-              :> QueryParam "lang"     TextLang
-              :> QueryParam "pagename" Text
-              :> Get '[JSON] [Pandoc]
+type RoutesCMS =
+       Capture "system" SystemLang :> Capture "lang" TextLang :> Capture "pagename" Text :> Get '[JSON] [Pandoc]
+  :<|> "invalidate-cache" :> ReqBody '[JSON] Text :> Post '[JSON] ()
+  :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
 
 type RoutesApi = "api" :>
     (      RoutesPalantype

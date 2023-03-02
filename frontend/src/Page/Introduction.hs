@@ -10,20 +10,22 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE BlockArguments #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-}
 
 module Page.Introduction where
 
 import           Client                         ( getCMS
-                                                , request
+                                                , request, postRender
                                                 )
 import           Common.Model                   ( TextLang(TextEN) )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ( (.) )
+import           Control.Category               ( (.), (<<<) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
-import           Control.Monad.Reader           ( MonadReader(ask) )
+import           Control.Monad.Reader           ( MonadReader(ask), MonadFix )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(length) )
 import           Data.Function                  ( ($) )
@@ -56,7 +58,6 @@ import           Reflex.Dom                     ( (=:)
                                                 , HasDomEvent(domEvent)
                                                 , MonadHold
                                                 , PostBuild
-                                                , Prerender
                                                 , blank
                                                 , constDyn
                                                 , dyn_
@@ -69,21 +70,27 @@ import           Reflex.Dom                     ( (=:)
                                                 , leftmost
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_
+                                                , widgetHold_, prerender_, PerformEvent (performEvent), current, tag, Prerender
                                                 )
 import           Reflex.Dom.Pandoc              ( defaultConfig
                                                 , elPandoc
                                                 )
-import           Servant.Common.Req             ( QParam(QParamSome) )
 import           Shared                         ( loadingScreen )
 import           State                          ( Env(..)
                                                 , Navigation(..)
-                                                , State
+                                                , State (stCMSCacheInvalidationData)
                                                 , stageUrl
                                                 , updateState
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import           Witherable                     ( Filterable(filter) )
+import Witherable ( Filterable(filter), catMaybes )
+import Data.Either (Either(..))
+import qualified LocalStorage                  as LS
+import Language.Javascript.JSaddle (liftJSM)
+import Data.Maybe (fromMaybe, isNothing, Maybe (..))
+import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Time (getCurrentTime)
+import Data.Ord ((>))
 
 introduction
     :: forall key t (m :: * -> *)
@@ -105,22 +112,43 @@ introduction toReady = do
 
     let
         Navigation {..} = envNavigation
+        behaviorCacheInvalidation = current $ stCMSCacheInvalidationData <$> envDynState
+        cacheKey = (navLang, TextEN, "introduction")
 
-        systemLang = QParamSome SystemDE
-        txtLang    = QParamSome TextEN
-        pageName   = QParamSome "introduction"
+    evMFromCache <- postRender $ performEvent $
+      tag behaviorCacheInvalidation evReady <&> \mapCacheInvalidation -> do
+        let latest = Map.lookup cacheKey mapCacheInvalidation
+        mMap <- liftJSM $ LS.retrieve LS.KeyCMSCache
+        pure do
+          map <- mMap
+          (time, contents) <- Map.lookup cacheKey map
+          if Just time > latest
+            then pure contents
+            else Nothing
+
+    let evNotFromCache = void $ filter isNothing evMFromCache
+        evFromCache = catMaybes evMFromCache
 
     (evRespFail, evRespSucc) <- fmap fanEither $ request $
-      getCMS (constDyn systemLang)
-             (constDyn txtLang   )
-             (constDyn pageName  )
-             evReady
+      getCMS (constDyn $ Right navLang       )
+             (constDyn $ Right TextEN        )
+             (constDyn $ Right "introduction")
+             evNotFromCache
+
+    widgetHold_ blank $ evFromCache $> el "div" (text "Retrieved contents from cache")
+    widgetHold_ blank $ evRespSucc $> el "div" (text "Retrieved contents from webserver")
 
     widgetHold_ blank $ evRespFail <&> \strError ->
       el "span" $ text $ "CMS error: " <> strError
 
-    dynParts <- widgetHold (loadingScreen "" $> (mempty, mempty, mempty)) $ evRespSucc <&> \case
-        [p1, p2, p3] -> pure (p1, p2, p3)
+    dynParts <- widgetHold (loadingScreen "" $> (mempty, mempty, mempty)) $
+      leftmost [evRespSucc, evFromCache] <&> \case
+        parts@[p1, p2, p3] -> do
+          prerender_ blank $ do
+            now <- liftIO getCurrentTime
+            liftJSM $ LS.update LS.KeyCMSCache $
+              Map.insert (navLang, TextEN, "introduction") (now, parts) <<< fromMaybe Map.empty
+          pure (p1, p2, p3)
         parts        -> do
           el "div" $ text $
                  "CMS error: wrong number of parts in markdown. Expected: 3. Got: "

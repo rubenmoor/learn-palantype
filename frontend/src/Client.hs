@@ -46,7 +46,7 @@ import           Data.Semigroup                 ( Semigroup((<>)) )
 import           Data.String                    ( String )
 import           Data.Text                      ( Text )
 import           Data.Text.Encoding             ( decodeUtf8' )
-import           Data.Time                      ( Day )
+import           Data.Time                      ( Day, UTCTime )
 import           Palantype.Common               ( StageIndex
                                                 , SystemLang
                                                 )
@@ -69,6 +69,7 @@ import           State                          ( Session(..)
                                                 , stSession
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
+import Data.Map.Strict (Map)
 
 postRender :: (Prerender t m, Monad m) => Client m (Event t a) -> m (Event t a)
 postRender = fmap switchDyn <<< prerender (pure never)
@@ -79,7 +80,7 @@ request
     => Client m (Event t (ReqResult () a))
     -> m (Event t (Either Text a))
 request =
-    fmap (fmap resultToEither <<< switchDyn) <<< prerender (pure never)
+  fmap (fmap resultToEither) <<< postRender
 
 resultToEither :: ReqResult () a -> Either Text a
 resultToEither = \case
@@ -231,13 +232,26 @@ postStatsStart
 
 getCMS
     :: SupportsServantReflex t m
-    => Dynamic t (QParam SystemLang)
-    -> Dynamic t (QParam TextLang)
-    -> Dynamic t (QParam Text)
+    => Dynamic t (Either Text SystemLang)
+    -> Dynamic t (Either Text TextLang)
+    -> Dynamic t (Either Text Text)
     -> Event t ()
     -> m (Event t (ReqResult () [Pandoc]))
 
-(postConfigNew :<|> getJournalAll :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> getCMS)
+-- | meant to be called from github.com only
+--   only implemented here to satisfy the API type
+_cmsInvalidateCache
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+getCacheInvalidationData
+    :: SupportsServantReflex t m
+    => Event t ()
+    -> m (Event t (ReqResult () (Map (SystemLang, TextLang, Text) UTCTime)))
+
+(postConfigNew :<|> getJournalAll :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

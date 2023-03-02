@@ -16,7 +16,7 @@ module State where
 
 import           Common.Auth                    ( SessionData )
 import           Common.Model                   ( AppState
-                                                , defaultAppState
+                                                , defaultAppState, TextLang
                                                 )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( (<$>) )
@@ -47,6 +47,10 @@ import           Type.Reflection                ( (:~~:)(HRefl)
                                                 , eqTypeRep
                                                 , typeRep
                                                 )
+import Data.Map.Strict (Map)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import qualified Data.Map.Strict as Map
 
 -- environment for frontend pages
 
@@ -85,6 +89,7 @@ data State = State
     { stSession     :: Session
     , stApp         :: AppState
     , stRedirectUrl :: R FrontendRoute
+    , stCMSCacheInvalidationData :: Map (SystemLang, TextLang, Text) UTCTime
     }
     deriving Generic
 
@@ -92,6 +97,7 @@ defaultState :: State
 defaultState = State { stSession     = SessionAnon
                      , stApp         = defaultAppState
                      , stRedirectUrl = FrontendRoute_Main :/ ()
+                     , stCMSCacheInvalidationData = Map.empty
                      }
 
 updateState

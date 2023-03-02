@@ -267,10 +267,10 @@ elCongraz evDone dynStats Navigation {..} = mdo
         evLSPutStats =
           gate (not . isLoggedIn . stSession <$> current envDynState) evNewStats
 
-    prerender_ blank $ performEvent_ $ evLSPutStats <&> \stats -> do
-      mMap <- liftJSM $ LS.retrieve LS.KeyStats
-      let oldStats = fromMaybe Map.empty mMap
-      liftJSM $ LS.put LS.KeyStats $ Map.insertWith (<>) (navLang, navCurrent) [stats] oldStats
+    prerender_ blank $ performEvent_ $ evLSPutStats <&> \stats ->
+      LS.update LS.KeyStats $
+              Map.insertWith (<>) (navLang, navCurrent) [stats]
+          <<< fromMaybe Map.empty
 
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never

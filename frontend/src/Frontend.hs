@@ -37,7 +37,6 @@ import           Data.Function                  ( ($)
 import           Data.Functor                   ( ($>)
                                                 , (<$>)
                                                 , (<&>)
-                                                , Functor(fmap)
                                                 , void
                                                 )
 import qualified Data.Map                      as Map
@@ -93,14 +92,14 @@ import           Reflex.Dom                     ( (=:)
                                                 , select
                                                 , tailE
                                                 , text
-                                                , zipDyn
+                                                , zipDyn, mergeWith, mapAccumMaybeDyn
                                                 )
 
 import qualified AdminPages
 import qualified AuthPages
 import           Client                         ( getAppState
                                                 , postAppState
-                                                , request
+                                                , request, getCacheInvalidationData
                                                 )
 import           Common.Auth                    ( SessionData(..) )
 import           Common.Model                   ( AppState
@@ -112,7 +111,7 @@ import           Control.Category               ( (<<<) )
 import           Control.Monad                  ( Monad((>>=)) )
 import           Data.Bool                      ( Bool(..)
                                                 , not
-                                                , (||)
+                                                , (||), (&&)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( (==)
@@ -128,6 +127,8 @@ import           Shared                         ( loadingScreen
                                                 )
 import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
+import Data.Generics.Product (field)
+import Control.Lens (set)
 
 default(Text)
 
@@ -136,6 +137,23 @@ data FanAdmin
   | FanAdminForbidden
   | FanAdminAccess
   deriving (Eq, Ord)
+
+data FrontendLoaded = FrontendLoaded
+  { flSession :: Bool
+  , flCacheInvalidation :: Bool
+  }
+
+allLoaded :: FrontendLoaded -> Bool
+allLoaded FrontendLoaded{..} = flSession && flCacheInvalidation
+
+setSessionLoaded :: FrontendLoaded -> FrontendLoaded
+setSessionLoaded fl = fl { flSession = True }
+
+setCacheInvalidationLoaded :: FrontendLoaded -> FrontendLoaded
+setCacheInvalidationLoaded fl = fl { flCacheInvalidation = True }
+
+frontendAllLoaded :: FrontendLoaded -> Bool
+frontendAllLoaded FrontendLoaded{..} = flSession && flCacheInvalidation
 
 frontend :: Frontend (R FrontendRoute)
 frontend =
@@ -160,18 +178,18 @@ frontendBody = mdo
         evMaybeFromServer = evSessionInitial <&> \case
           Just (SessionUser sd, _) -> Just sd
           Just (SessionAnon   , _) -> Nothing
-          Nothing                     -> Nothing
+          Nothing                  -> Nothing
 
-        evSessionFromServer = void $ filter isJust evMaybeFromServer
+        evSessionFromServer = catMaybes evMaybeFromServer
 
-    dynSessionData <- holdDyn Nothing $ Just <$> catMaybes evMaybeFromServer
+    dynSessionData <- holdDyn Nothing $ Just <$> evSessionFromServer
 
     let dynAuthData = dynSessionData <&> \case
           Nothing -> Left "not logged in"
           Just SessionData{..} -> Right (sdJwt, sdAliasName)
 
     evRespServerSession <-
-      request $ getAppState dynAuthData evSessionFromServer
+      request $ getAppState dynAuthData $ void evSessionFromServer
 
     let (evAppStateInvalid, evAppState) = fanEither evRespServerSession
 
@@ -186,30 +204,62 @@ frontendBody = mdo
 
         (evLoadedFromServer :: Event t (Endo State)) =
            attach (current dynSessionData) evAppState <&> \case
-             (Just sd, stApp) ->
-               let stRedirectUrl = FrontendRoute_Main :/ ()
-                   stSession = SessionUser sd
-               in  Endo $ const State{..}
+             (Just sd, stApp) -> Endo $ \st -> st
+                { stApp = stApp
+                , stRedirectUrl = FrontendRoute_Main :/ ()
+                , stSession = SessionUser sd
+                }
              (Nothing, _) -> $failure "impossible"
 
-        evLoadedLocal = fmap (Endo . const) $ evSessionLocal <&> \mAppState ->
-            let stRedirectUrl = FrontendRoute_Main :/ ()
-                stSession = SessionAnon
-                stApp = fromMaybe defaultAppState mAppState
-            in  State{..}
+        evLoadedLocal = evSessionLocal <&> \mAppState -> Endo $ \st -> st
+            { stApp         = fromMaybe defaultAppState mAppState
+            , stRedirectUrl = FrontendRoute_Main :/ ()
+            , stSession     = SessionAnon
+            }
 
-    let evLoaded = leftmost
+    let evSessionLoaded = leftmost
             [ evLoadedFromServer
             , evLoadedLocal
             ]
-    dynHasLoaded <- holdDyn False $ evLoaded $> True
 
-    let toReady evPb = leftmost [gate (current dynHasLoaded) evPb, void evLoaded]
+    evRespCacheInvalidationData <-
+      request $ getCacheInvalidationData $ void evSessionInitial
 
-    dyn_ $ dynHasLoaded <&> \hasLoaded ->
-      if hasLoaded then blank else loadingScreen ""
+    let
+        (_, evCacheInvalidationData) = fanEither evRespCacheInvalidationData
+        evSetCacheInvalidationData =
+          evCacheInvalidationData <&> Endo . set (field @"stCMSCacheInvalidationData")
 
-    dynState <- foldDyn appEndo defaultState $ leftmost [evLoaded, eStateUpdate]
+        accFunc fl func =
+          let fl' = func fl
+          in  (Just fl', if frontendAllLoaded fl' then Just () else Nothing)
+    (dynFrontendLoaded, evLoaded) <-
+      mapAccumMaybeDyn accFunc (FrontendLoaded False False) $ mergeWith (.)
+        [ evSessionLoaded $> setSessionLoaded
+        , evCacheInvalidationData $> setCacheInvalidationLoaded
+        ]
+
+    let
+        dynHasLoaded = frontendAllLoaded <$> dynFrontendLoaded
+        toReady ev = leftmost [gate (current dynHasLoaded) ev, void evLoaded]
+
+    dyn_ $ dynFrontendLoaded <&> \fl@FrontendLoaded{..} ->
+      if frontendAllLoaded fl
+      then blank
+      else
+        let strLoadingSession = if not flSession
+              then "Loading session ..."
+              else ""
+            strLoadingCacheInvalidation = if not flCacheInvalidation
+              then "Loading cache invalidation data ...\n"
+              else ""
+        in  loadingScreen $ strLoadingSession <> "\n" <> strLoadingCacheInvalidation
+
+    dynState <- foldDyn appEndo defaultState $ mergeWith (<>)
+      [ evSessionLoaded
+      , evStateUpdate
+      , evSetCacheInvalidationData
+      ]
 
     let isLoggedIn = \State{..} -> case stSession of
           SessionUser _ -> True
@@ -230,7 +280,7 @@ frontendBody = mdo
     prerender_ blank $ performEvent_ $ updated dynState <&> \State{..} -> do
         liftJSM $ LS.put LS.KeySession stSession
 
-    (_, eStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
+    (_, evStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 
         message
         subRoute_ $ \r -> do

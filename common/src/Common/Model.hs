@@ -162,6 +162,10 @@ instance FromJSON EventApp
 data TextLang
   = TextDE
   | TextEN
+  deriving (Eq, Generic, Ord, Read)
+
+instance ToJSON TextLang
+instance FromJSON TextLang
 
 instance ToHttpApiData TextLang where
   toQueryParam = \case

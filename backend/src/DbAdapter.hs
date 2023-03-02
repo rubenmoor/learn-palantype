@@ -26,7 +26,8 @@ import           Database.Persist.TH     (mkEntityDefList, mkPersist,
                                           persistLowerCase, share, sqlSettings)
 import DbAdapter.Instances ()
 import qualified Common.Model as Model
-import Palantype.Common (StageRepr)
+import Common.Model (TextLang)
+import Palantype.Common (StageRepr, SystemLang)
 
 share [mkPersist sqlSettings, mkEntityDefList "entities"] [persistLowerCase|
 User                             -- some real person
@@ -68,4 +69,16 @@ StageBegin
   fkAlias          AliasId
   created          UTCTime
   UFkAlias fkAlias
+CMSCache
+  systemLang       SystemLang
+  textLang         TextLang
+  pageName         Text
+  blob             ByteString
+  UPageContent systemLang textLang pageName
+CMSCacheInvalidation
+  time             UTCTime
+  systemLang       SystemLang
+  textLang         TextLang
+  pageName         Text
+  UPage systemLang textLang pageName
 |]
