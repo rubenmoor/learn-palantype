@@ -49,6 +49,7 @@ library
     , Client
     , Home
     , LocalStorage
+    , CMS
     , Page.Common
     , Page.Common.Exercise
     , Page.Common.Stopwatch

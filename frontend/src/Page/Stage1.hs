@@ -11,7 +11,6 @@
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage1 where
 
@@ -55,7 +54,7 @@ import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Text                     as Text
-import           Data.Witherable                ( Filterable(catMaybes, filter)
+import           Witherable                ( Filterable(catMaybes, filter)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         (R , SetRoute
@@ -88,7 +87,7 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
                                                 , foldDyn
                                                 , performEvent
                                                 , text
-                                                , widgetHold_
+                                                , widgetHold_, dyn
 
                                                 )
 import           State                          ( Env(..)
@@ -100,6 +99,9 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
+import CMS (elCMS)
+import Data.Monoid (Monoid(mconcat, mempty))
+import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
 
 -- exercise 1
 
@@ -122,55 +124,31 @@ exercise1
        , SetRoute t (R FrontendRoute) m
        )
     => m Navigation
-exercise1 = mdo
+exercise1 = do
 
     Env {..} <- ask
-    let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    --let Navigation {..} = envNavigation
 
-    el "h1" $ text "Stage 1"
-    el "h3" $ text "Exercise 1"
-    el "h2" $ text "The Palantype Alphabet"
-    el "p" $ text
-      "Palantype relies on chords. A chord means: You press up to ten keys at \
-      \the same time. The order in which you press down does not matter. \
-      \Instead, all the letters of one chord will appear in their proper order. \
-      \Therefore, you will learn the Palantype Alphabet in its proper order now."
-    el "p" $ text
-        "Type the following steno letters in order, one after another."
-    el "p" $ text
-      "Some letters occur twice, the first time for your left hand \
-      \and the second time for your right hand."
+    dynParts <- elCMS envToReady
+    evTwoParts <- dyn $ dynParts <&> \case
+        [p1, p2] -> pure (p1, p2)
+        parts -> do
+          el "div" $ text $
+                "CMS error: wrong number of parts in markdown. Expected: 2. Got: "
+              <> showt (length parts)
+          pure (mconcat parts, mempty)
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    widgetHold_ blank $ evTwoParts <&> \(part1, part2) -> mdo
+      elPandoc defaultConfig part1
 
-    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+      ePb <- getPostBuild
+      updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+      evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
 
-    when (navLang == SystemDE) $ do
-      el "p" $ text
-            "In case you wonder: The letter ʃ is a phonetic symbol \
-            \related to the German \"sch\". \
-            \We don't care about exact phonetics and thus simply treat ʃ \
-            \as \"sch\"."
-      el "p" $ do
-        text "Also, the keys with small letters are special. "
-        el "code" $ text "v"
-        text ", "
-        el "code" $ text "b"
-        text ", and "
-        el "code" $ text "n"
-        text " stand for \"ver-\", \"be-\", and \"-en\", respectively. \
-             \These keys aren't necessary and you won't use them in a while. \
-             \E.g. \"be\" can be typed simply by typing "
-        el "code" $ text "BE"
-        text ". But given the high frequency of these word parts, these \
-            \ special keys will help a lot with typing efficiency. The "
-        el "code" $ text "s"
-        text " key (small s) is a specical key among the special keys and has \
-            \ whole exercises dedicated to its use."
+      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+      elPandoc defaultConfig part2
 
     pure envNavigation
 
@@ -193,7 +171,7 @@ exercise2 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 2"
@@ -210,7 +188,7 @@ exercise2 = mdo
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-    case navLang of
+    case navSystemLang of
         SystemDE -> el "p" $ do
             text "Well, how to pronounce ~? This symbol is used to turn "
             el "em" $ text "u"
@@ -256,7 +234,7 @@ exercise3 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 3"
@@ -273,7 +251,7 @@ exercise3 = mdo
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-    case navLang of
+    case navSystemLang of
         SystemDE -> do
           el "p" $ do
             text "Missing the letters "
@@ -358,7 +336,7 @@ exercise4 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 4"
@@ -621,7 +599,7 @@ exercise5 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 5"
@@ -715,7 +693,7 @@ exercise6 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 6"
@@ -804,7 +782,7 @@ exercise7 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 7"
@@ -882,7 +860,7 @@ exercise8 = mdo
 
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 1"
     el "h3" $ text "Exercise 8"

@@ -12,6 +12,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Page.Stage15.NumberMode
     ( numberMode
@@ -32,15 +33,10 @@ import           Control.Monad.Reader.Class     ( MonadReader
                                                 , ask
                                                 )
 import           Data.Either                    ( Either(..) )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( ($>)
-                                                , (<&>)
-                                                )
-import           Data.Functor                   ( (<$>) )
+import Data.Function ( ($), (&) )
+import Data.Functor ( ($>), (<&>), (<$>), Functor(fmap) )
 import           Data.Int                       ( Int )
-import           Data.List                      ( (!!)
-                                                , repeat
-                                                )
+import Data.List ( (!!), repeat, take, filter, replicate )
 import           Data.Maybe                     (isNothing,  maybe
                                                 , Maybe(..)
                                                 )
@@ -117,25 +113,20 @@ import           Data.Traversable               ( Traversable(sequence) )
 import           Data.Eq                        ( Eq((==)) )
 import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
-import           Data.Foldable                  ( Foldable(null) )
-import           Data.Functor                   ( Functor(fmap) )
-import           Data.List                      ( take )
+import Data.Foldable ( Foldable(null), Foldable(elem) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Control.Monad                  ( unless )
+import           Control.Monad                  ( unless, replicateM )
 import           Control.Lens                   ( (<>~)
                                                 , (.~)
                                                 , (%~)
                                                 , (+~)
                                                 )
-import           Data.Function                  ( (&) )
-import           Data.Foldable                  ( Foldable(elem) )
 import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
 import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
 import Data.Bool (Bool, not)
 import Data.Tuple (fst, snd)
-import Data.List (filter)
 import PloverDict (eMapNumbersForExercise)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.DE as DE
@@ -269,8 +260,7 @@ taskDates dynStats evChord map = do
 
 getRandomDates :: MonadRandom m => m [Day]
 getRandomDates =
-    sequence $ take numDates $ repeat $ ModifiedJulianDay <$> getRandomR
-        (0, 60000)
+    replicateM numDates (ModifiedJulianDay <$> getRandomR (0, 60000))
 
 renderDate :: Day -> Text
 renderDate d = Text.pack $ Time.formatTime defaultTimeLocale "%d.%m.%Y" d
@@ -298,7 +288,7 @@ numberMode
 numberMode = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navSystemLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Typing numbers"
 
@@ -393,9 +383,9 @@ numberMode = mdo
 
     el "h3" $ text "Practicing dates"
 
-    elClass "div" "paragraph" $ do
+    elClass "div" "paragraph" $
         text
-            "Feel free to practice dates here. The format is fairly common \
+        "Feel free to practice dates here. The format is fairly common \
              \in Germany and you will learn numbers just fine this way. \
              \There are alternative ways to reach the same output now: \
              \Feel free to type digit by digit or use as many fingers as \

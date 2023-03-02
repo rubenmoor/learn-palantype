@@ -256,7 +256,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
       (getMaybeAuthData <$> envDynState)
       (dynDone <&> maybe (Left "not ready")
         (maybe (Left "no stats") \stats ->
-          Right (navLang, navCurrent, stats)
+          Right (navSystemLang, navCurrent, stats)
         )
       )
       (void evNewStats)
@@ -269,7 +269,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
 
     prerender_ blank $ performEvent_ $ evLSPutStats <&> \stats ->
       LS.update LS.KeyStats $
-              Map.insertWith (<>) (navLang, navCurrent) [stats]
+              Map.insertWith (<>) (navSystemLang, navCurrent) [stats]
           <<< fromMaybe Map.empty
 
     evRepeat <- dynSimple $ dynDone <&> \case
@@ -306,7 +306,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     updateState $ eContinue $>
                       [ field @"stApp" .  field @"stProgress" %~ Map.update
                                   (\s -> if nxt > s then Just nxt else Just s)
-                                  navLang
+                                  navSystemLang
                       , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
                       ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
                           Nothing -> []
@@ -565,7 +565,7 @@ getStatsLocalAndRemote evNewStats = do
 
   (evRespFail, evRespSucc) <- fmap fanEither $ request $
       getStats (getMaybeAuthData <$> envDynState)
-               (constDyn $ Right navLang)
+               (constDyn $ Right navSystemLang)
                (constDyn $ Right navCurrent)
                evReady
 
@@ -588,7 +588,7 @@ getStatsLocalAndRemote evNewStats = do
 
   --evLSMapStats <- fmap switchDyn $ prerender (pure never) $ performEvent $ evAnon <&> \stage -> do
   --  mMap <- liftJSM $ LS.retrieve LS.KeyStats
-  --  pure $ Map.findWithDefault [] (navLang, stage) $ fmap (Nothing,) <$> fromMaybe Map.empty mMap
+  --  pure $ Map.findWithDefault [] (navSystemLang, stage) $ fmap (Nothing,) <$> fromMaybe Map.empty mMap
 
   --       this is a workaround
   --       .. and I don't know why this works, `updated <$> prerender` fires
@@ -597,7 +597,7 @@ getStatsLocalAndRemote evNewStats = do
     fromMaybe Map.empty <$> liftJSM (LS.retrieve LS.KeyStats)
 
   let evLSStats = evLSMapStats <&> (fmap ((False,) . (Nothing,))
-         . Map.findWithDefault [] (navLang, navCurrent))
+         . Map.findWithDefault [] (navSystemLang, navCurrent))
 
   fmap (fmap $ sortOn (Down . second (second statsDate)) . take 10) $ foldDyn (flip (<>)) [] $ leftmost
     [ evLSStats

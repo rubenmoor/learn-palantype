@@ -32,7 +32,7 @@ commandKeys ::
     m Navigation
 commandKeys = do
     Env {..} <- ask
-    let Navigation {..} = envNavigation
+    -- let Navigation {..} = envNavigation
 
     -- TODO
     elNotImplemented

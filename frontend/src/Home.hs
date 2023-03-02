@@ -28,7 +28,7 @@ import           Client                         ( getMaybeAuthData
                                                 )
 import           Common.Api                     ( showSymbol )
 import           Common.Model                   ( AppState(..)
-                                                , Message(..)
+                                                , Message(..), TextLang (TextEN)
                                                 )
 import           Common.PloverConfig            ( CfgName(..)
                                                 , PloverSystemCfg(..)
@@ -1227,7 +1227,7 @@ elStages
     => SystemLang
     -> (Event t () -> Event t ())
     -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-elStages navLang toReady = do
+elStages navSystemLang toReady = do
     el "header" $ settings @key
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
@@ -1261,6 +1261,10 @@ elStages navLang toReady = do
                     let navMPrevious = Stage.mPrev iCurrent
                         navCurrent = iCurrent
                         navMNext = Stage.mNext @key iCurrent
+                        navPageName =
+                          maybe "stageindex-unknown" Stage.toPageName $
+                            Stage.fromIndex @key iCurrent
+                        navTextLang = TextEN
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
@@ -1285,7 +1289,7 @@ elStages navLang toReady = do
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
                 nav <- elClass "div" "content" $ setEnv $ do
                   let
-                      navigationNothing = Navigation navLang Nothing 0 Nothing
+                      navigationNothing = Navigation navSystemLang Nothing 0 Nothing "" TextEN
                       elPageNotImplemented str = do
                         elClass "div" "small anthrazit" $
                           text ("Page not implemented: StageIndex " <> showt iCurrent)
@@ -1294,7 +1298,7 @@ elStages navLang toReady = do
 
                   case Stage.fromIndex iCurrent of
                     Just (Stage (StageSpecial str) _) -> case str of
-                      "Introduction"              -> introduction toReady
+                      "Introduction"              -> introduction
                       "Type the letters"          -> Stage1.exercise1
                       "Memorize the order"        -> Stage1.exercise2
                       "Type the letters blindly"  -> Stage1.exercise3

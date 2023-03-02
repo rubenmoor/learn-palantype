@@ -157,9 +157,9 @@ taskLiterals
     -> Event t (Palantype.Common.Chord key)
     -> m (Event t Stats)
 taskLiterals dynStats evChord = do
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
-
+    --Env {..} <- ask
+    let
+        --Navigation {..} = envNavigation
         len             = length dictLiterals
 
         step :: Palantype.Common.Chord key -> StateLiterals key -> StateLiterals key
@@ -262,7 +262,7 @@ fingerspelling
 fingerspelling = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == Palantype.Common.SystemDE) elNotImplemented
+    unless (navSystemLang == Palantype.Common.SystemDE) elNotImplemented
 
     el "h1" $ text "Fingerspelling"
 

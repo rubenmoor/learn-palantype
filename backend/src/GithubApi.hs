@@ -65,13 +65,14 @@ request RequestData {..} = do
                 .~ ["2022-11-28"]
                 &  auth
                 .~ mAuth
+    -- TODO: getWith throws exceptions :(
     resp <- liftIO $ getWith opts $ Text.unpack url
     pure $ case resp ^. responseStatus . statusCode of
-        200 ->
-            Success
-                $  LazyText.toStrict
-                $  LazyText.decodeUtf8With lenientDecode
-                $  resp ^. responseBody
+        200 -> let body = LazyText.toStrict $ LazyText.decodeUtf8With lenientDecode $ resp ^. responseBody
+               in  if Text.null body
+                      then Error 400 "Empty response body"
+                      else Success body
+        404  -> Error 404 "Not found: url"
         code ->
             Error code
                 $  Text.decodeUtf8

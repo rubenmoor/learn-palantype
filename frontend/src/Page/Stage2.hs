@@ -292,7 +292,7 @@ exercise1
 exercise1 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 1"
@@ -332,8 +332,8 @@ exercise1 = mdo
     setRoute $ eBack $> stageUrl @key 1 -- Stage 1.1
     updateState
         $  eBack
-        $> [ field @"stApp" . field @"stProgress" . at navLang ?~ stage1_1
-                 -- %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navLang
+        $> [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+                 -- %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navSystemLang
            ]
 
     el "p" $ do
@@ -519,13 +519,13 @@ exercise2
 exercise2 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 2"
     el "h2" $ text "Syllables and chords"
 
-    evDone <- case navLang of
+    evDone <- case navSystemLang of
         SystemEN -> do
             el "p" $ do
                 text
@@ -809,7 +809,7 @@ exercise3
 exercise3 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navSystemLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 3"
@@ -929,7 +929,7 @@ exercise4
 exercise4 = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navSystemLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Stage 2"
     el "h3" $ text "Exercise 4"

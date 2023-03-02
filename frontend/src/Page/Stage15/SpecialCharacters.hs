@@ -36,7 +36,7 @@ specialCharacters
 specialCharacters = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navSystemLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Typing numbers"
 

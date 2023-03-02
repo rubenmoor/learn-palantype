@@ -42,7 +42,6 @@ import           Data.Functor                   ( ($>)
 import qualified Data.Map                      as Map
 import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
-                                                , isJust
                                                 )
 import           Data.Semigroup                 ( (<>)
                                                 , Endo(..)
@@ -164,29 +163,29 @@ frontendBody
      . (ObeliskWidget t (R FrontendRoute) m)
     => RoutedT t (R FrontendRoute) m ()
 frontendBody = mdo
-    (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
+    (evSessionInitial :: Event t (Data.Maybe.Maybe (Session, AppState))) <-
       updated <$> prerender (pure $ $failure "unexpected") do
             mSession <- liftJSM $ LS.retrieve LS.KeySession
-            appState <- fromMaybe defaultAppState <$> liftJSM (LS.retrieve LS.KeyAppState)
+            appState <- Data.Maybe.fromMaybe defaultAppState <$> liftJSM (LS.retrieve LS.KeyAppState)
             pure $ (,appState) <$> mSession
 
     let evMaybeLocal = evSessionInitial <&> \case
-          Just (SessionUser _, _       ) -> Nothing
-          Just (SessionAnon  , appState) -> Just (Just appState)
-          Nothing                        -> Just Nothing
+          Data.Maybe.Just (SessionUser _, _       ) -> Data.Maybe.Nothing
+          Data.Maybe.Just (SessionAnon  , appState) -> Data.Maybe.Just (Data.Maybe.Just appState)
+          Data.Maybe.Nothing                        -> Data.Maybe.Just Data.Maybe.Nothing
 
         evMaybeFromServer = evSessionInitial <&> \case
-          Just (SessionUser sd, _) -> Just sd
-          Just (SessionAnon   , _) -> Nothing
-          Nothing                  -> Nothing
+          Data.Maybe.Just (SessionUser sd, _) -> Data.Maybe.Just sd
+          Data.Maybe.Just (SessionAnon   , _) -> Data.Maybe.Nothing
+          Data.Maybe.Nothing                  -> Data.Maybe.Nothing
 
         evSessionFromServer = catMaybes evMaybeFromServer
 
-    dynSessionData <- holdDyn Nothing $ Just <$> evSessionFromServer
+    dynSessionData <- holdDyn Data.Maybe.Nothing $ Data.Maybe.Just <$> evSessionFromServer
 
     let dynAuthData = dynSessionData <&> \case
-          Nothing -> Left "not logged in"
-          Just SessionData{..} -> Right (sdJwt, sdAliasName)
+          Data.Maybe.Nothing -> Left "not logged in"
+          Data.Maybe.Just SessionData{..} -> Right (sdJwt, sdAliasName)
 
     evRespServerSession <-
       request $ getAppState dynAuthData $ void evSessionFromServer
@@ -199,20 +198,20 @@ frontendBody = mdo
 
     let evSessionLocal = leftmost
           [ catMaybes evMaybeLocal
-          , evAppStateInvalid $> Nothing
+          , evAppStateInvalid $> Data.Maybe.Nothing
           ]
 
         (evLoadedFromServer :: Event t (Endo State)) =
            attach (current dynSessionData) evAppState <&> \case
-             (Just sd, stApp) -> Endo $ \st -> st
+             (Data.Maybe.Just sd, stApp) -> Endo $ \st -> st
                 { stApp = stApp
                 , stRedirectUrl = FrontendRoute_Main :/ ()
                 , stSession = SessionUser sd
                 }
-             (Nothing, _) -> $failure "impossible"
+             (Data.Maybe.Nothing, _) -> $failure "impossible"
 
         evLoadedLocal = evSessionLocal <&> \mAppState -> Endo $ \st -> st
-            { stApp         = fromMaybe defaultAppState mAppState
+            { stApp         = Data.Maybe.fromMaybe defaultAppState mAppState
             , stRedirectUrl = FrontendRoute_Main :/ ()
             , stSession     = SessionAnon
             }
@@ -232,7 +231,7 @@ frontendBody = mdo
 
         accFunc fl func =
           let fl' = func fl
-          in  (Just fl', if frontendAllLoaded fl' then Just () else Nothing)
+          in  (Data.Maybe.Just fl', if frontendAllLoaded fl' then Data.Maybe.Just () else Data.Maybe.Nothing)
     (dynFrontendLoaded, evLoaded) <-
       mapAccumMaybeDyn accFunc (FrontendLoaded False False) $ mergeWith (.)
         [ evSessionLoaded $> setSessionLoaded
@@ -299,17 +298,17 @@ frontendBody = mdo
                   AuthPages.login
                 AuthPage_Settings -> do
                   dynSettings <- holdUniqDyn $ zipDyn dynHasLoaded (isLoggedIn <$> dynState) <&> \case
-                    (False, _        ) -> Nothing
-                    (True , bLoggedIn) -> Just bLoggedIn
-                  let evToLogin = filter (== Just False) $ updated dynSettings
-                      evToSettings = filter (== Just True) $ updated dynSettings
+                    (False, _        ) -> Data.Maybe.Nothing
+                    (True , bLoggedIn) -> Data.Maybe.Just bLoggedIn
+                  let evToLogin = filter (== Data.Maybe.Just False) $ updated dynSettings
+                      evToSettings = filter (== Data.Maybe.Just True) $ updated dynSettings
                   setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
 
                   requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
                   dyn_ $ dynSettings <&> \case
-                    Just True  -> AuthPages.settings
-                    Just False -> blank
-                    Nothing    -> blank
+                    Data.Maybe.Just True  -> AuthPages.settings
+                    Data.Maybe.Just False -> blank
+                    Data.Maybe.Nothing    -> blank
             FrontendRoute_Admin -> do
                 evReady <- toReady <$> getPostBuild
                 let

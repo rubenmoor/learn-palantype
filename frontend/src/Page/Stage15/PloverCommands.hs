@@ -33,7 +33,7 @@ ploverCommands ::
 ploverCommands = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
-    unless (navLang == SystemDE) elNotImplemented
+    unless (navSystemLang == SystemDE) elNotImplemented
 
     el "h1" $ text "Formatting input"
 

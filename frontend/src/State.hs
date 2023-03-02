@@ -65,10 +65,12 @@ data Env t key = Env
     }
 
 data Navigation = Navigation
-    { navLang      :: SystemLang
+    { navSystemLang      :: SystemLang
     , navMPrevious :: Maybe StageIndex
     , navCurrent   :: StageIndex
     , navMNext     :: Maybe StageIndex
+    , navPageName  :: Text
+    , navTextLang  :: TextLang
     }
 
 -- frontend application state

@@ -126,7 +126,7 @@ overview = do
             iPatternDoc
             \(i, (p, _)) -> do
                 el "li"
-                    $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
+                    $  elAttr "a" ("href" =: (toUrlPiece navSystemLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
                     $  text
                     $  showt @Int i
                     <> " "
@@ -135,7 +135,7 @@ overview = do
     -- pattern documentation content
     for_ iPatternDoc \(i, (p, mapPattern)) -> do
         elAttr "h2" ("id" =: showt p)
-            $  elAttr "a" ("href" =: (toUrlPiece navLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
+            $  elAttr "a" ("href" =: (toUrlPiece navSystemLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
             $  text
             $  showt i
             <> " "
