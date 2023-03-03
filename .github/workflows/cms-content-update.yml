@@ -28,6 +28,6 @@ jobs:
           for filename in ${{steps.changed-files-cms-content.outputs.all_changed_files}}; do
             echo "$filename was changed"
           curl -X POST https://palantype.com/api/cms/invalidate-cache \
-                -H "Content-Type: application/json"
-                -d "\"${{steps.changed-files-cms-content.outputs.all-changed-files}}\""
+               -H "Content-Type: application/json" \
+               -d "\"${{steps.changed-files-cms-content.outputs.all-changed-files}}\""
           done
