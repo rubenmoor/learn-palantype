@@ -24,7 +24,7 @@ Be sure to check out additional information on learning [Palantype](http://www.o
 >
 > There exists a plover plugin for original English Palantype with a dictionary of about 22'000 entries–enough to play around. No basic commands are defined. As far as I know, there are no active users of the original Palantype system. In case I am mistaken, please reach out to me on the Plover Discord Server in #palantype, @gurubm. Currently, only the exercises of Stage 1 are implemented, but adding further exercises for English Palantype is quite straightforward.
 
-<!--seperator-->
+<!--separator-->
 
 Instead of clicking the button, try to input `START` by pressing `S-`, `T-`, `A`, `-R`, and `-T` all at once.
 Take your time finding the next key while holding down.

@@ -62,7 +62,7 @@ import           Control.Lens.Setter            ( (%~)
 import           Control.Lens.Wrapped           ( _Wrapped' )
 import           Control.Monad                  ( (<=<)
                                                 , guard
-                                                , when
+                                                , when, (=<<)
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
@@ -252,7 +252,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , tag
                                                 , text
                                                 , wrapDomEvent
-                                                , zipDyn
+                                                , zipDyn, delay
                                                 )
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
@@ -646,7 +646,7 @@ stenoInput getLoadedAndBuilt = do
         -- post build auto focus: the post build event happens before the element
         -- is mounted. postmount event waits for pull request to be accepted
         -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
-        evLoadedAndBuilt <- getLoadedAndBuilt
+        evLoadedAndBuilt <- delay 0.1 =<< getLoadedAndBuilt
         performEvent_ $ evLoadedAndBuilt $> focus (_inputElement_raw kbInput)
 
         let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput

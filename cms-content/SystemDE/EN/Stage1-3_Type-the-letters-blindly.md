@@ -1,6 +1,6 @@
 # Stage 1
 
-### Exercise #
+### Exercise 3
 
 ## The Palantype Alphabet
 
