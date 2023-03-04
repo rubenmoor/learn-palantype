@@ -19,6 +19,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Page.Common where
+
 import           Client                         ( getMaybeAuthData
                                                 , getStats
                                                 , postEventStageCompleted
@@ -57,7 +58,7 @@ import           Data.Bool                      ( Bool(..)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(elem, minimum, null)
+import           Data.Foldable                  ( Foldable(minimum, null)
                                                 , for_
                                                 , traverse_
                                                 )
@@ -76,7 +77,6 @@ import           Data.Generics.Product          ( field )
 import           Data.Generics.Sum              ( _As )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
-                                                , head
                                                 , intersperse
                                                 , sortOn
                                                 , take
@@ -131,11 +131,9 @@ import           Palantype.Common               ( Chord
                                                 , PatternPos
                                                 , RawSteno
                                                 , kiBackUp
-                                                , kiChordsStart
                                                 , kiEnter
-                                                , parseSteno
                                                 , showPretty
-                                                , unparts
+                                                , unparts, SystemLang (..), parseChordMaybe, getSystemLang
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import qualified Palantype.Common.RawSteno     as Raw
@@ -195,6 +193,7 @@ import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( showt )
 import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
+import Palantype.Common.TH (fromJust)
 
 elFooter
     :: forall key t (m :: * -> *)
@@ -327,32 +326,10 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     pure $ leftmost [eChordBackUp, domEvent Click elABack]
     pure $ isJust <$> dynDone
 
-parseStenoOrError
-    :: forall proxy key t (m :: * -> *)
-     . ( EventWriter t (Endo State) m
-       , MonadReader (Env t key) m
-       , Palantype key
-       , PostBuild t m
-       , TriggerEvent t m
-       , PerformEvent t m
-       , MonadIO (Performable m)
-       , MonadHold t m
-       )
-    => proxy key
-    -> RawSteno
-    -> m (Maybe [Chord key])
-parseStenoOrError _ raw = case parseSteno raw of
-    Right words -> pure $ Just words
-    Left  err   -> do
-        Env{..} <- ask
-        evLoadedAndBuilt <- envGetLoadedAndBuilt
-        let msgCaption = "Internal error"
-            msgBody =
-                "Could not parse steno code: " <> showt raw <> "\n" <> err
-        updateState
-            $  evLoadedAndBuilt
-            $> [(field @"stApp" . field @"stMsg") ?~ Message { .. }]
-        pure Nothing
+chordStart :: forall key. Palantype key => Chord key
+chordStart = $fromJust $ parseChordMaybe @key $ case getSystemLang @key of
+  SystemDE -> "DSAÜD"
+  SystemEN -> "START"
 
 elNotImplemented :: forall (m :: * -> *) t . DomBuilder t m => m ()
 elNotImplemented = elClass "blockquote" "warning" $ do
@@ -413,7 +390,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             step :: Chord key -> StateWords -> StateWords
             step c st = case st of
                 StatePause _ ->
-                    if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
+                    if c == chordStart @key
                         then stepStart
                         else st
                 -- undo last input
@@ -484,8 +461,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
-                        el "code" $ text $ showt $ KI.toRaw @key $ head
-                            kiChordsStart
+                        el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateRun Run {..} -> do
                     -- TODO: what is span ".word"?

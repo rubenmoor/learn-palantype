@@ -49,9 +49,9 @@ import           Obelisk.Route.Frontend         (R
                                                 , routeLink
                                                 )
 import           Page.Common                    (getStatsLocalAndRemote,  elNotImplemented
-                                                , elCongraz
+                                                , elCongraz, chordStart
                                                 )
-import           Palantype.Common               (mapStages,  kiChordsStart
+import           Palantype.Common               ( mapStages
                                                 , SystemLang(SystemDE)
                                                 , renderPlover
                                                 , kiBackUp
@@ -175,8 +175,7 @@ taskDates dynStats evChord map = do
             let step :: Chord key -> StateDates key -> StateDates key
                 step c st = case st of
                     StatePause _ ->
-                        if Raw.fromChord c
-                                `elem` (KI.toRaw @key <$> kiChordsStart)
+                        if c == chordStart
                             then stepStart
                             else st
                         -- let current = _stDates !! _stCounter

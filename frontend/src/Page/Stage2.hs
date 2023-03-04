@@ -18,119 +18,140 @@
 
 module Page.Stage2 where
 
-import           Client                         ( postRender
-                                                )
+import           CMS                            ( elCMS )
+import           Client                         ( postRender )
+import           Common.Model                   ( Stats )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Control.Applicative            ((<$>)
+import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
-import           Control.Category               ( Category((.), id)
-                                                )
-import           Control.Lens                   (at, preview,  (+~)
-                                                , (?~)
-                                                , (%~)
+import           Control.Category               ( Category((.), id) )
+import           Control.Lens                   ( (%~)
+                                                , (+~)
                                                 , (.~)
                                                 , (<&>)
+                                                , (?~)
+                                                , at
+                                                , preview
                                                 )
-import Control.Lens.TH ( makePrisms, makeLenses )
+import           Control.Lens.TH                ( makeLenses
+                                                , makePrisms
+                                                )
 import           Control.Monad                  ( unless
                                                 , when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Random           ( evalRand )
-import           Control.Monad.Reader           ( MonadReader(ask)
+import           Control.Monad.Reader           ( MonadReader(ask) )
+import           Data.Bool                      ( Bool(..)
+                                                , not
                                                 )
-import           Data.Bool                      (not,  Bool(..) )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(length)
                                                 , for_
                                                 , traverse_
                                                 )
-import Data.Function ( ($), (&) )
-import Data.Functor ( ($>), void, Functor(fmap) )
+import           Data.Function                  ( ($)
+                                                , (&)
+                                                )
+import           Data.Functor                   ( ($>)
+                                                , Functor(fmap)
+                                                , void
+                                                )
 import           Data.Generics.Product          ( field )
-import Data.Generics.Sum (_As)
+import           Data.Generics.Sum              ( _As )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
-                                                , elem
-                                                , zip
-                                                , head
-                                                , take
                                                 , cycle
+                                                , elem
+                                                , take
+                                                , zip
                                                 )
 import qualified Data.Map                      as Map
 import           Data.Map.Strict                ( Map )
-import           Data.Maybe                     (isNothing, fromMaybe,  Maybe(..) )
+import           Data.Maybe                     ( Maybe(..)
+                                                , fromMaybe
+                                                , isNothing
+                                                )
 import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( (<>)
                                                 , Endo
                                                 )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
-import           Witherable                ( Filterable(catMaybes, filter, mapMaybe)
+import           Data.Tuple                     ( fst
+                                                , snd
                                                 )
+import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((+), (-)) )
-import           Obelisk.Route.Frontend         (R , RouteToUrl
+import           Obelisk.Route.Frontend         ( R
+                                                , RouteToUrl
                                                 , SetRoute(setRoute)
                                                 , routeLink
                                                 )
-import           Page.Common                    (elBtnSound, getStatsLocalAndRemote, elBackUp
+import           Page.Common                    ( elBackUp
+                                                , elBtnSound
                                                 , elCongraz
                                                 , elNotImplemented
                                                 , elPatterns
+                                                , getStatsLocalAndRemote
                                                 , loading
-                                                , taskWords
+                                                , taskWords, chordStart
                                                 )
-import Page.Common.Stopwatch ( elStopwatch, mkStopwatch )
-import Palantype.Common
-    ( StageSpecialGeneric(..),
-      patternDoc,
-      kiChordsStart,
-      Chord(..),
-      SystemLang(..),
-      Palantype,
-      fromChord,
-      mkChord,
-      allKeys,
-      kiBackUp,
-      RawSteno,
-      parseStenoMaybe,
-      findStage )
+import           Page.Common.Stopwatch          ( elStopwatch
+                                                , mkStopwatch
+                                                )
+import           Palantype.Common               ( Chord(..)
+                                                , Palantype
+                                                , RawSteno
+                                                , StageSpecialGeneric(..)
+                                                , SystemLang(..)
+                                                , allKeys
+                                                , findStage
+                                                , fromChord
+                                                , kiBackUp
+                                                , mkChord
+                                                , parseStenoMaybe
+                                                , patternDoc
+                                                )
 import qualified Palantype.Common.Indices      as KI
+import qualified Palantype.Common.RawSteno     as Raw
+import           Palantype.Common.TH            ( fromJust )
 import           Palantype.DE                   ( Pattern(..) )
-import           Reflex.Dom                     (constDyn, Dynamic, current, gate,  TriggerEvent
-                                                , Performable
-                                                , holdUniqDyn
-                                                , (=:)
+import           PloverDict                     ( getMapsForExercise )
+import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
-                                                , EventName(Click)
+                                                , Dynamic
                                                 , EventWriter
-                                                , HasDomEvent(domEvent)
                                                 , MonadHold(holdDyn)
                                                 , PerformEvent(performEvent)
+                                                , Performable
                                                 , PostBuild(getPostBuild)
                                                 , Prerender
                                                 , Reflex(Event, never, updated)
+                                                , TriggerEvent
                                                 , blank
-
+                                                , constDyn
+                                                , current
                                                 , dyn_
                                                 , el
                                                 , elAttr
                                                 , elClass
-                                                , elClass'
                                                 , elDynClass
-
                                                 , foldDyn
-                                                , leftmost
+                                                , gate
+                                                , holdUniqDyn
                                                 , switchDyn
                                                 , text
                                                 , widgetHold
                                                 , widgetHold_
-
                                                 )
-import           Shared                         (whenJust )
+import           Reflex.Dom.Pandoc              ( defaultConfig
+                                                , elPandoc
+                                                )
+import           Shared                         ( whenJust )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
@@ -140,15 +161,12 @@ import           State                          ( Env(..)
 import           System.Random                  ( newStdGen )
 import           System.Random.Shuffle          ( shuffleM )
 import           TextShow                       ( TextShow(showt) )
-import           Palantype.Common.TH            ( fromJust
+import           Witherable                     ( Filterable
+                                                    ( catMaybes
+                                                    , filter
+                                                    , mapMaybe
+                                                    )
                                                 )
-import qualified Palantype.Common.RawSteno     as Raw
-import Common.Model (Stats)
-import GHC.Generics (Generic)
-import Data.Tuple (fst, snd)
-import PloverDict (getMapsForExercise)
-import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
-import CMS (elCMS)
 
 -- Ex. 2.1
 
@@ -202,7 +220,7 @@ taskLetters dynStats evChord = do
             step :: Chord key -> StateLetters key -> StateLetters key
             step c st = case st of
                 StateLettersPause _ ->
-                    if Raw.fromChord c `elem` (KI.toRaw @key <$> kiChordsStart)
+                    if c == chordStart
                         then stepStart
                         else st
                 StateLettersRun SLRun {..} ->
@@ -251,8 +269,7 @@ taskLetters dynStats evChord = do
                     text "Type "
                     elClass "span" "btnSteno blinking" $ do
                         text "Start "
-                        el "code" $ text $ showt $ KI.toRaw @key $ head
-                            kiChordsStart
+                        el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateLettersRun SLRun {..} -> do
                     elClass "span" "exerciseField"
@@ -311,10 +328,9 @@ exercise1 = mdo
           (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
 
       setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
-      updateState
-          $  eChordBackUp
-          $> [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
-            ]
+      updateState $ eChordBackUp $>
+        [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+        ]
 
 
       dynStatsAll <- getStatsLocalAndRemote evDone
@@ -339,7 +355,6 @@ walkWords
      . ( DomBuilder t m
        , MonadFix m
        , MonadHold t m
-       , MonadReader (Env t key) m
        , Palantype key
        , PostBuild t m
        )
@@ -590,8 +605,7 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
                     step :: Chord key -> StateSingletons -> StateSingletons
                     step c st = case st of
                         StatePause _ ->
-                            if Raw.fromChord c
-                                `elem` (KI.toRaw @key <$> kiChordsStart)
+                            if c == chordStart
                             then
                                 stepStart
                             else
@@ -658,8 +672,7 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
                             text "Type "
                             elClass "span" "btnSteno blinking" $ do
                                 text "Start "
-                                el "code" $ text $ showt $ KI.toRaw @key $ head
-                                    kiChordsStart
+                                el "code" $ text $ showt $ chordStart @key
                             text " to begin the exercise."
                         StateRun Run {..} -> do
                             elClass "span" "exerciseField"

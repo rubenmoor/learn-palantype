@@ -35,7 +35,7 @@ import           Data.Bool                      ( Bool
                                                 , not
                                                 )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(elem, length)
+import           Data.Foldable                  ( Foldable(length)
                                                 , for_
                                                 )
 import           Data.Function                  ( ($)
@@ -73,7 +73,7 @@ import           Obelisk.Route.Frontend         ( R
                                                 )
 import           Page.Common                    ( elCongraz
                                                 , elNotImplemented
-                                                , getStatsLocalAndRemote
+                                                , getStatsLocalAndRemote, chordStart
                                                 )
 import           Page.Common.Stopwatch          ( elStopwatch
                                                 , mkStopwatch
@@ -84,7 +84,6 @@ import           Palantype.Common               ( Chord
                                                 , SystemLang(SystemDE)
                                                 , findStage
                                                 , kiBackUp
-                                                , kiChordsStart
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import qualified Palantype.Common.RawSteno     as Raw
@@ -165,7 +164,7 @@ taskLiterals dynStats evChord = do
         step :: Palantype.Common.Chord key -> StateLiterals key -> StateLiterals key
         step c st = case st of
             StatePause _ ->
-                if Raw.fromChord c `elem` (KI.toRaw @key <$> Palantype.Common.kiChordsStart)
+                if c == chordStart
                     then stepStart
                     else st
             StateRun Run {..} ->

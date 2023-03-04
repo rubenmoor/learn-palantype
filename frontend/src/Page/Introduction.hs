@@ -41,9 +41,7 @@ import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute(setRoute)
                                                 )
 import           Palantype.Common               ( Palantype
-                                                , SystemLang(..)
                                                 )
-import           Palantype.Common.RawSteno      ( parseChordMaybe )
 import           Palantype.Common.TH            ( fromJust )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
@@ -54,20 +52,12 @@ import           Reflex.Dom                     ( (=:)
                                                 , PerformEvent(Performable)
                                                 , PostBuild
                                                 , Prerender
-
                                                 , TriggerEvent
                                                 , blank
-
-
-
-                                                , el
                                                 , elAttr
                                                 , elClass
                                                 , elClass'
-
-
                                                 , leftmost
-
                                                 , text
                                                 , widgetHold_
                                                 )
@@ -82,6 +72,7 @@ import           State                          ( Env(..)
                                                 )
 import           Witherable                     ( Filterable(filter, mapMaybe)
                                                 )
+import Page.Common (chordStart)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -124,11 +115,7 @@ introduction = do
 
         elPandoc defaultConfig part2
 
-        let rsStart = case navSystemLang of
-                SystemEN -> "START"
-                SystemDE -> "DSAÜD"
-            eChordSTART =
-                void $ filter (== $fromJust (parseChordMaybe rsStart)) envEChord
+        let eChordSTART = void $ filter (== chordStart) envEChord
 
         elClass "div" "start" $ do
             (btn, _) <- elClass' "button" "small" $ text "Get Started!"
