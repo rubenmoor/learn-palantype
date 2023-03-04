@@ -17,6 +17,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Home where
 
@@ -60,7 +61,6 @@ import           Control.Lens.Setter            ( (%~)
                                                 )
 import           Control.Lens.Wrapped           ( _Wrapped' )
 import           Control.Monad                  ( (<=<)
-                                                , (=<<)
                                                 , guard
                                                 , when
                                                 )
@@ -213,7 +213,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , MonadHold(holdDyn)
                                                 , PerformEvent(performEvent_)
                                                 , Performable
-                                                , PostBuild(getPostBuild)
+                                                , PostBuild
                                                 , Prerender(Client)
                                                 , Reflex
                                                     ( Dynamic
@@ -224,7 +224,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , attachPromptlyDynWithMaybe
                                                 , blank
                                                 , current
-                                                , delay
+
                                                 , dyn_
                                                 , el
                                                 , el'
@@ -264,7 +264,7 @@ import           State                          ( Env(..)
                                                 , Session(..)
                                                 , State(..)
                                                 , stageUrl
-                                                , updateState
+                                                , updateState, GetLoadedAndBuilt
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
@@ -314,20 +314,23 @@ message = do
                 el "div" $ text msgCaption
                 el "span" $ text msgBody
 
-settings ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadHold t m,
-      Palantype key,
-      PostBuild t m,
-      Prerender t m,
-      EventWriter t (Endo State) m,
-      MonadReader (Dynamic t State) m,
-      Routed t StageIndex m,
-      SetRoute t (R FrontendRoute) m
-    ) =>
-    m ()
-settings = elClass "div" "topmenu" do
+settings
+  :: forall key t (m :: * -> *)
+  . ( DomBuilder t m
+    , MonadHold t m
+    , Palantype key
+    , PostBuild t m
+    , Prerender t m
+    , EventWriter t (Endo State) m
+    , MonadReader (Dynamic t State) m
+    , Routed t StageIndex m
+    , SetRoute t (R FrontendRoute) m
+    )
+  => m ()
+settings = elClass
+    "div"
+    "topmenu"
+    do
     dynState <- ask
     let dynAppState = stApp <$> dynState
         lang = if
@@ -549,8 +552,9 @@ stenoInput
        , PostBuild t m
        , Prerender t m
        )
-    => m (Event t (Chord key))
-stenoInput = do
+    => GetLoadedAndBuilt t
+    -> m (Event t (Chord key))
+stenoInput getLoadedAndBuilt = do
     let lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
@@ -642,8 +646,8 @@ stenoInput = do
         -- post build auto focus: the post build event happens before the element
         -- is mounted. postmount event waits for pull request to be accepted
         -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
-        ePb <- delay 0.1 =<< getPostBuild
-        performEvent_ $ ePb $> focus (_inputElement_raw kbInput)
+        evLoadedAndBuilt <- getLoadedAndBuilt
+        performEvent_ $ evLoadedAndBuilt $> focus (_inputElement_raw kbInput)
 
         let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
             selector = fanMap $ eChordAll <&> \c -> if
@@ -1224,10 +1228,9 @@ elStages
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => SystemLang
-    -> (Event t () -> Event t ())
+    => GetLoadedAndBuilt t
     -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-elStages navSystemLang toReady = do
+elStages getLoadedAndBuilt = do
     el "header" $ settings @key
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
@@ -1238,10 +1241,9 @@ elStages navSystemLang toReady = do
     stages' iCurrent = elClass "div" "box" $ do
 
         dynState' <- ask
-        let dynKeyboardActive = dynState' <&> \st ->
-              st ^. field @"stApp" . field @"stKeyboardActive"
+        let dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
         eChord <- dynSimple $ dynKeyboardActive <&> \case
-          True  -> stenoInput @key
+          True  -> stenoInput @key getLoadedAndBuilt
           False -> do
             el "hr" blank
             elClass "div" "keyboard-deactivated" $ do
@@ -1265,22 +1267,23 @@ elStages navSystemLang toReady = do
                           maybe "stageindex-unknown" Stage.toPageName $
                             Stage.fromIndex @key iCurrent
                         navTextLang = TextEN
+                        navSystemLang = getSystemLang @key
                      in mapRoutedT
                             ( withReaderT $ \dynState ->
                                   Env
                                       { envDynState = dynState
                                       , envEChord = eChord
                                       , envNavigation = Navigation {..}
-                                      , envToReady = toReady
+                                      , envGetLoadedAndBuilt = getLoadedAndBuilt
                                       }
                             ) do
                               dynRoute <- askRoute
-                              evReady <- toReady <$> getPostBuild
                               Env{..} <- ask
+                              evLoadedAndBuilt <- envGetLoadedAndBuilt
                               void $ request $ postEventViewPage
                                 (getMaybeAuthData <$> envDynState)
                                 (Right . showRoute . stageUrl @key <$> dynRoute)
-                                evReady
+                                evLoadedAndBuilt
                               page
             navigation <- elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text
@@ -1289,7 +1292,7 @@ elStages navSystemLang toReady = do
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
                 nav <- elClass "div" "content" $ setEnv $ do
                   let
-                      navigationNothing = Navigation navSystemLang Nothing 0 Nothing "" TextEN
+                      navigationNothing = Navigation (getSystemLang @key) Nothing 0 Nothing "" TextEN
                       elPageNotImplemented str = do
                         elClass "div" "small anthrazit" $
                           text ("Page not implemented: StageIndex " <> showt iCurrent)
@@ -1333,3 +1336,9 @@ elStages navSystemLang toReady = do
                 pure nav
             pure navigation
         elFooter @key navigation
+
+getSystemLang :: forall key. Palantype key => SystemLang
+getSystemLang = if
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
+    | otherwise -> $failure "Key not implemented"

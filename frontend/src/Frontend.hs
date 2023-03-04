@@ -16,13 +16,14 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Frontend where
 
 import           Language.Javascript.JSaddle    ( liftJSM )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , defaultState
+                                                , defaultState, GetLoadedAndBuilt
                                                 )
 
 import           Common.Route                   ( FrontendRoute(..)
@@ -63,7 +64,6 @@ import           Obelisk.Route.Frontend         ( RoutedT
                                                 , mapRoutedT
                                                 , subRoute_
                                                 )
-import           Palantype.Common               ( SystemLang(..) )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
 import           Reflex.Dom                     ( (=:)
@@ -91,7 +91,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , select
                                                 , tailE
                                                 , text
-                                                , zipDyn, mergeWith, mapAccumMaybeDyn
+                                                , zipDyn, mergeWith, mapAccumMaybeDyn, headE, delay
                                                 )
 
 import qualified AdminPages
@@ -107,7 +107,7 @@ import           Common.Model                   ( AppState
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<) )
-import           Control.Monad                  ( Monad((>>=)) )
+import           Control.Monad                  ( Monad((>>=)), (=<<) )
 import           Data.Bool                      ( Bool(..)
                                                 , not
                                                 , (||), (&&)
@@ -238,9 +238,12 @@ frontendBody = mdo
         , evCacheInvalidationData $> setCacheInvalidationLoaded
         ]
 
+    dynHasLoaded <- holdUniqDyn $ frontendAllLoaded <$> dynFrontendLoaded
     let
-        dynHasLoaded = frontendAllLoaded <$> dynFrontendLoaded
-        toReady ev = leftmost [gate (current dynHasLoaded) ev, void evLoaded]
+        getLoadedAndBuilt :: GetLoadedAndBuilt t
+        getLoadedAndBuilt = do
+          evPb <- delay 0 =<< getPostBuild
+          headE $ leftmost [gate (current dynHasLoaded) evPb, evLoaded]
 
     dyn_ $ dynFrontendLoaded <&> \fl@FrontendLoaded{..} ->
       if frontendAllLoaded fl
@@ -285,34 +288,34 @@ frontendBody = mdo
         subRoute_ $ \r -> do
           case r of
             FrontendRoute_Main -> do
-              getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Main :/ ()) . toReady
+              getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
-            FrontendRoute_EN -> elStages @EN.Key SystemEN toReady
-            FrontendRoute_DE -> elStages @DE.Key SystemDE toReady
+            FrontendRoute_EN -> elStages @EN.Key getLoadedAndBuilt
+            FrontendRoute_DE -> elStages @DE.Key getLoadedAndBuilt
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
-                  getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ()) . toReady
+                  getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                   AuthPages.signup
                 AuthPage_Login  -> do
-                  getPostBuild >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ()) . toReady
+                  getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Login :/ ())
                   AuthPages.login
                 AuthPage_Settings -> do
                   dynSettings <- holdUniqDyn $ zipDyn dynHasLoaded (isLoggedIn <$> dynState) <&> \case
-                    (False, _        ) -> Data.Maybe.Nothing
-                    (True , bLoggedIn) -> Data.Maybe.Just bLoggedIn
-                  let evToLogin = filter (== Data.Maybe.Just False) $ updated dynSettings
-                      evToSettings = filter (== Data.Maybe.Just True) $ updated dynSettings
+                    (False, _        ) -> Nothing
+                    (True , bLoggedIn) -> Just bLoggedIn
+                  let evToLogin    = filter (== Just False) $ updated dynSettings
+                      evToSettings = filter (== Just True) $ updated dynSettings
                   setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
 
                   requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
                   dyn_ $ dynSettings <&> \case
-                    Data.Maybe.Just True  -> AuthPages.settings
-                    Data.Maybe.Just False -> blank
-                    Data.Maybe.Nothing    -> blank
+                    Just True  -> AuthPages.settings getLoadedAndBuilt
+                    Just False -> blank
+                    Nothing    -> blank
             FrontendRoute_Admin -> do
-                evReady <- toReady <$> getPostBuild
+                evLoadedAndBuilt <- getLoadedAndBuilt
                 let
-                    evAdmin = attachPromptlyDynWith const dynState evReady
+                    evAdmin = attachPromptlyDynWith const dynState evLoadedAndBuilt
                     selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
                       SessionAnon -> Map.singleton FanAdminLogin ()
                       SessionUser SessionData{..} ->

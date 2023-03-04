@@ -27,7 +27,7 @@ import           Control.Monad                  ( unless
                                                 , when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
-import           Control.Monad.IO.Class         ( liftIO )
+import Control.Monad.IO.Class ( liftIO, MonadIO )
 import           Control.Monad.Random           ( evalRand
                                                 , newStdGen
                                                 )
@@ -54,7 +54,7 @@ import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Text                     as Text
-import           Witherable                ( Filterable(catMaybes, filter)
+import           Witherable                ( Filterable(catMaybes, filter, mapMaybe)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         (R , SetRoute
@@ -87,7 +87,7 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
                                                 , foldDyn
                                                 , performEvent
                                                 , text
-                                                , widgetHold_, dyn
+                                                , widgetHold_, TriggerEvent, PerformEvent, Performable
 
                                                 )
 import           State                          ( Env(..)
@@ -100,7 +100,6 @@ import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import qualified Palantype.Common.Indices as KI
 import CMS (elCMS)
-import Data.Monoid (Monoid(mconcat, mempty))
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
 
 -- exercise 1
@@ -117,32 +116,28 @@ exercise1
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
        , Palantype key
+       , PerformEvent t m
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
        )
     => m Navigation
 exercise1 = do
 
     Env {..} <- ask
-    --let Navigation {..} = envNavigation
 
-    dynParts <- elCMS envToReady
-    evTwoParts <- dyn $ dynParts <&> \case
-        [p1, p2] -> pure (p1, p2)
-        parts -> do
-          el "div" $ text $
-                "CMS error: wrong number of parts in markdown. Expected: 2. Got: "
-              <> showt (length parts)
-          pure (mconcat parts, mempty)
-
-    widgetHold_ blank $ evTwoParts <&> \(part1, part2) -> mdo
+    evParts <- elCMS 2 <&> mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
+      _        -> Nothing
+    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
       elPandoc defaultConfig part1
 
-      ePb <- getPostBuild
-      updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+      evLoadedAndBuilt <- envGetLoadedAndBuilt
+      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
       evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
 
@@ -165,6 +160,9 @@ exercise2
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
+       , MonadIO (Performable m)
+       , PerformEvent t m
+       , TriggerEvent t m
        )
     => m Navigation
 exercise2 = mdo
@@ -182,8 +180,8 @@ exercise2 = mdo
       \Learn to remember the correct order by \
       \pronouncing each letter while you type it!"
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
@@ -228,6 +226,9 @@ exercise3
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
+       , MonadIO (Performable m)
+       , PerformEvent t m
+       , TriggerEvent t m
        )
     => m Navigation
 exercise3 = mdo
@@ -245,8 +246,8 @@ exercise3 = mdo
       \without the virtual keyboard? \
       \Again, get used to remembering them!"
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
@@ -330,6 +331,9 @@ exercise4
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
        )
     => m Navigation
 exercise4 = mdo
@@ -348,8 +352,8 @@ exercise4 = mdo
       \a bit of a challenge: First, don't look at your fingers. Second, \
       \try to speak out loud every letter, before you are going to type it."
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
@@ -593,6 +597,9 @@ exercise5
        , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
        )
     => m Navigation
 exercise5 = mdo
@@ -621,8 +628,8 @@ exercise5 = mdo
          \twice. In this task, you will only need your left hand. Thus \
          \the letters have a trailing -."
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
         leftHand =
@@ -687,6 +694,9 @@ exercise6
        , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
        )
     => m Navigation
 exercise6 = mdo
@@ -705,8 +715,8 @@ exercise6 = mdo
     el "p" $ do
         text "Type every steno letter as it appears!"
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let fingersRight =
             [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
@@ -776,6 +786,9 @@ exercise7
        , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
        )
     => m Navigation
 exercise7 = mdo
@@ -797,8 +810,8 @@ exercise7 = mdo
       text "Be sure to practice this one to perfection. It will only get more \
            \difficult from here."
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
@@ -854,6 +867,9 @@ exercise8
        , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
+       , MonadIO (Performable m)
+       , PerformEvent t m
+       , TriggerEvent t m
        )
     => m Navigation
 exercise8 = mdo
@@ -877,8 +893,8 @@ exercise8 = mdo
            \are presented to you, by reloading the page, if you feel the need to."
 
 
-    ePb <- getPostBuild
-    updateState $ ePb $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
 

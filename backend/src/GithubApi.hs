@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module GithubApi where
 
@@ -17,7 +18,6 @@ import           Network.Wreq                   ( auth
                                                 , header
                                                 , oauth2Token
                                                 , responseBody
-                                                , responseStatus
                                                 , statusCode
                                                 , statusMessage
                                                 )
@@ -32,6 +32,10 @@ import qualified Data.Text.Encoding            as Text
 import           Data.Text.Encoding.Error       ( lenientDecode )
 import qualified Data.Text.Lazy                as LazyText
 import qualified Data.Text.Lazy.Encoding       as LazyText
+import Control.Exception (try)
+import Network.HTTP.Client (HttpException (..), HttpExceptionContent (StatusCodeException), responseStatus)
+import Data.Functor ((<&>))
+import Network.HTTP.Types (status404)
 
 data RequestData = RequestData
     { rdSystemLang :: SystemLang
@@ -41,19 +45,23 @@ data RequestData = RequestData
 
 data Response
   = Success Text
+  | PageNotFound Text
   | Error   Int Text
 
 request :: RequestData -> Handler Response
 request RequestData {..} = do
     EnvApplication {..} <- ask
-    let url =
-            "https://api.github.com/repos/rubenmoor/learn-palantype/contents/cms-content/"
-                <> toUrlPiece rdSystemLang
-                <> "/"
-                <> toUrlPiece rdTextLang
-                <> "/"
-                <> rdPageName
-                <> ".md"
+    let
+        filename = "cms-content/"
+          <> toUrlPiece rdSystemLang
+          <> "/"
+          <> toUrlPiece rdTextLang
+          <> "/"
+          <> rdPageName
+          <> ".md"
+        url =
+            "https://api.github.com/repos/rubenmoor/learn-palantype/contents/"
+          <> filename
         mAuth = if Text.null envGithubToken
             then Nothing
             else Just $ oauth2Token (Text.encodeUtf8 envGithubToken)
@@ -65,15 +73,20 @@ request RequestData {..} = do
                 .~ ["2022-11-28"]
                 &  auth
                 .~ mAuth
-    -- TODO: getWith throws exceptions :(
-    resp <- liftIO $ getWith opts $ Text.unpack url
-    pure $ case resp ^. responseStatus . statusCode of
-        200 -> let body = LazyText.toStrict $ LazyText.decodeUtf8With lenientDecode $ resp ^. responseBody
-               in  if Text.null body
-                      then Error 400 "Empty response body"
-                      else Success body
-        404  -> Error 404 "Not found: url"
-        code ->
-            Error code
-                $  Text.decodeUtf8
-                $  resp ^. responseStatus .  statusMessage
+    -- getWith throws exceptions :(
+    liftIO (try $ getWith opts $ Text.unpack url) <&> \case
+      Left (HttpExceptionRequest req (StatusCodeException resp msg)) | responseStatus resp == status404 ->
+        PageNotFound filename
+      Left (HttpExceptionRequest req content) -> Error 500 $ Text.pack $ show content
+      Left (InvalidUrlException u msg) -> Error 500 $ "Url " <> Text.pack u <> " invalid: " <> Text.pack msg
+      Right resp ->
+        let body = LazyText.toStrict $ LazyText.decodeUtf8With lenientDecode $ resp ^. responseBody
+        in  if Text.null body
+            then Error 400 "Empty response body"
+            else Success body
+
+    -- resp <- liftIO (getWith opts $ Text.unpack url)
+    -- pure $ let body = LazyText.toStrict $ LazyText.decodeUtf8With lenientDecode $ resp ^. responseBody
+    --        in  if Text.null body
+    --            then Error 400 "Empty response body"
+    --            else Success body

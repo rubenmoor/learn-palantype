@@ -17,13 +17,12 @@ import           Client                         ( getCMS
                                                 )
 import           Common.Model                   ( TextLang(TextEN) )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ( (<<<) )
+import           Control.Category               ( (<<<), (.) )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Reader           ( MonadReader(ask) )
 import           Data.Either                    ( Either(..) )
 import           Data.Function                  ( ($) )
-import           Data.Functor                   ( ($>)
-                                                , (<$>)
+import           Data.Functor                   ( (<$>)
                                                 , (<&>)
                                                 , Functor(fmap, (<$))
                                                 , void
@@ -39,9 +38,9 @@ import           Data.Time                      ( getCurrentTime )
 import           Language.Javascript.JSaddle    ( liftJSM )
 import qualified LocalStorage                  as LS
 import           Reflex.Dom                     ( DomBuilder
-                                                , MonadHold (holdDyn)
+                                                , MonadHold
                                                 , PerformEvent(..)
-                                                , PostBuild
+                                                , PostBuild (..)
                                                 , Prerender
                                                 , Reflex(..)
                                                 , blank
@@ -49,15 +48,13 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , current
                                                 , el
                                                 , fanEither
-                                                , getPostBuild
                                                 , leftmost
                                                 , prerender_
                                                 , tag
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, dyn_
+                                                , widgetHold_, TriggerEvent, dyn_, dyn
                                                 )
-import           Shared                         ( loadingScreen )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State
@@ -68,35 +65,42 @@ import           Text.Pandoc.Definition         ( Pandoc )
 import           Witherable                     ( Filterable(filter)
                                                 , catMaybes
                                                 )
-import Data.Bool (Bool(..))
-import Control.Monad (when)
+import Data.Foldable (Foldable(length))
+import Data.Eq (Eq((==)))
+import TextShow (TextShow(showt))
+import Data.Int (Int)
 
 elCMS
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
+       , PerformEvent t m
        , Prerender t m
        , PostBuild t m
+       , TriggerEvent t m
        )
-    => (Event t () -> Event t ())
-    -> m (Dynamic t [Pandoc])
-elCMS toReady = do
+    => Int
+    -> m (Event t [Pandoc])
+elCMS numParts = do
     Env {..} <- ask
-    evReady <- toReady <$> getPostBuild
+
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+
     let
         Navigation {..} = envNavigation
-        behaviorCacheInvalidation = current $ stCMSCacheInvalidationData <$> envDynState
+        cacheInvalidation = current $ stCMSCacheInvalidationData <$> envDynState
         cacheKey = (navSystemLang, navTextLang, navPageName)
 
     evMFromCache <- postRender $ performEvent $
-      tag behaviorCacheInvalidation evReady <&> \mapCacheInvalidation -> do
-        let latest = Map.lookup cacheKey mapCacheInvalidation
+      tag cacheInvalidation evLoadedAndBuilt <&> \mapCacheInvalidation -> do
+        let mLatest = Map.lookup cacheKey mapCacheInvalidation
         mMap <- liftJSM $ LS.retrieve LS.KeyCMSCache
         pure do
           map <- mMap
           (time, contents) <- Map.lookup cacheKey map
-          if Just time > latest
+          if Just time > mLatest
             then pure contents
             else Nothing
 
@@ -109,23 +113,22 @@ elCMS toReady = do
              (constDyn $ Right navPageName)
              evNotFromCache
 
-    widgetHold_ blank $ evFromCache $> el "div" (text "Retrieved contents from cache")
-    widgetHold_ blank $ evRespSucc $> el "div" (text "Retrieved contents from webserver")
-
     widgetHold_ blank $ evRespFail <&> \strError ->
       el "span" $ text $ "CMS error: " <> strError
 
-    dynLoading <- holdDyn True $ leftmost
-      [ evRespSucc  $> False
-      , evFromCache $> False
-      , evRespFail  $> False
-      ]
-    dyn_ $ dynLoading <&> \bLoading -> when bLoading $ loadingScreen ""
+    dynMParts <- widgetHold (pure Nothing) $
+      leftmost [Just <$> evRespSucc, Just <$> evFromCache, Nothing <$ evRespFail] <&> \case
+        Just parts -> do
+          prerender_ blank $ do
+            now <- liftIO getCurrentTime
+            liftJSM $ LS.update LS.KeyCMSCache $
+              Map.insert (navSystemLang, TextEN, navPageName) (now, parts) <<< fromMaybe Map.empty
+          pure $ Just parts
+        Nothing -> pure $ Just []
 
-    widgetHold (pure []) $
-      leftmost [evRespSucc, evFromCache] <&> \parts -> do
-        prerender_ blank $ do
-          now <- liftIO getCurrentTime
-          liftJSM $ LS.update LS.KeyCMSCache $
-            Map.insert (navSystemLang, TextEN, "introduction") (now, parts) <<< fromMaybe Map.empty
-        pure parts
+    fmap catMaybes $ dyn $ dynMParts <&> el "div" . \case
+        Nothing                               -> Nothing <$ text "Loading content ..."
+        Just parts | length parts == numParts -> pure $ Just parts
+        Just parts                            -> do
+          text ("Wrong number of parts, expected 3, got " <> showt (length parts))
+          pure Nothing

@@ -11,6 +11,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms   #-}
+{-# LANGUAGE RankNTypes #-}
 
 module State where
 
@@ -41,7 +42,7 @@ import           Palantype.Common.TH            ( failure )
 import qualified Palantype.DE                  as DE
 import qualified Palantype.EN                  as EN
 import           Reflex.Dom                     ( EventWriter(..)
-                                                , Reflex(Dynamic, Event)
+                                                , Reflex(Dynamic, Event), MonadHold, PostBuild, PerformEvent (Performable), TriggerEvent
                                                 )
 import           Type.Reflection                ( (:~~:)(HRefl)
                                                 , eqTypeRep
@@ -51,17 +52,25 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import qualified Data.Map.Strict as Map
+import Control.Monad.IO.Class (MonadIO)
+
+type GetLoadedAndBuilt t =
+  forall m
+  . ( MonadHold t m
+    , MonadIO (Performable m)
+    , PerformEvent t m
+    , PostBuild t m
+    , TriggerEvent t m
+    )
+  => m (Event t ())
 
 -- environment for frontend pages
 
 data Env t key = Env
-    { envDynState   :: Dynamic t State
-
-  -- ideally, envEChord would have the type `Event t (Chord k)`
-  -- however, that requires a choice of k (e.g. k ~ DE.Key)
-    , envEChord     :: Event t (Chord key)
-    , envNavigation :: Navigation
-    , envToReady    :: Event t () -> Event t ()
+    { envDynState          :: Dynamic t State
+    , envEChord            :: Event t (Chord key)
+    , envNavigation        :: Navigation
+    , envGetLoadedAndBuilt :: GetLoadedAndBuilt t
     }
 
 data Navigation = Navigation
@@ -72,17 +81,6 @@ data Navigation = Navigation
     , navPageName  :: Text
     , navTextLang  :: TextLang
     }
-
--- frontend application state
-
--- newtype EStateUpdate
---   = EStateUpdate { unEStateUpdate :: State -> State }
---
--- instance Semigroup EStateUpdate where
---   u <> v =
---     let u' = unEStateUpdate u
---         v' = unEStateUpdate v
---     in  EStateUpdate $ v' . u'
 
 -- State
 

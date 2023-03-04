@@ -67,7 +67,7 @@ import           Servant.API                    ( type (:<|>)((:<|>)) )
 import           Servant.Server                 ( HasServer(ServerT)
                                                 , ServantErr(errBody)
                                                 , err400
-                                                , err500
+                                                , err500, err404
                                                 )
 import qualified Text.Pandoc.Class             as Pandoc
 import           Text.Pandoc.Class              ( PandocIO )
@@ -102,8 +102,11 @@ handleCMSGet systemLang textLang pageName = do
                                 <> BLU.fromString (show err)
                         }
                     Right ls -> ls <$ runDb ( insert $ CMSCache systemLang textLang pageName $ blobEncode ls)
+            GithubApi.PageNotFound strFilename -> Servant.throwError $ err404
+                { errBody = "Missing file: " <> textToLazyBS strFilename
+                }
             GithubApi.Error code msg -> Servant.throwError $ err500
-                { errBody = "Couldn't retrieve page from CMS: "
+                { errBody = "Couldn't retrieve page: "
                             <> BLU.fromString (show code)
                             <> " "
                             <> textToLazyBS msg

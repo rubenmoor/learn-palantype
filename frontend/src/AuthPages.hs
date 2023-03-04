@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AuthPages
     ( login
@@ -97,7 +98,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elementConfig_modifyAttributes
                                                 , fanEither
                                                 , gate
-                                                , getPostBuild
+
                                                 , holdDyn
                                                 , inputElement
                                                 , inputElementConfig_elementConfig
@@ -110,7 +111,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , text
                                                 , updated
                                                 , widgetHold_
-                                                , zipDyn
+                                                , zipDyn, TriggerEvent, PerformEvent (Performable)
                                                 )
 import           Witherable                     ( Filterable
                                                     ( catMaybes
@@ -138,8 +139,9 @@ import           Shared                         ( elButtonSubmit
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , updateState
+                                                , updateState, GetLoadedAndBuilt
                                                 )
+import Control.Monad.IO.Class (MonadIO)
 
 signup
     :: forall t (m :: * -> *)
@@ -355,22 +357,26 @@ login = elClass "div" "auth" $ mdo
             text " here."
 
 settings
-    :: forall t (m :: * -> *)
-     . ( DomBuilder t m
-       , EventWriter t (Endo State) m
-       , MonadFix m
-       , MonadHold t m
-       , MonadReader (Dynamic t State) m
-       , PostBuild t m
-       , Prerender t m
-       , SetRoute t (R FrontendRoute) m
-       )
-    => m ()
-settings = do
+  :: forall t (m :: * -> *)
+  . ( DomBuilder t m
+    , EventWriter t (Endo State) m
+    , MonadFix m
+    , MonadHold t m
+    , MonadIO (Performable m)
+    , MonadReader (Dynamic t State) m
+    , PerformEvent t m
+    , PostBuild t m
+    , Prerender t m
+    , SetRoute t (R FrontendRoute) m
+    , TriggerEvent t m
+    )
+  => GetLoadedAndBuilt t
+  -> m ()
+settings getLoadedAndBuilt = do
 
     dynState <- ask
 
-    evPb <- getPostBuild
+    evLoadedAndBuilt <- getLoadedAndBuilt
 
     elClass "div" "topmenu" $ do
         elClass "div" "floatLeft" $ do
@@ -390,7 +396,7 @@ settings = do
               )
             conf = def & inputElementConfig_setValue
               .~ tagPromptlyDyn dynCurrentAlias
-                                (leftmost [evPb, void evRespAliasRenameFail])
+                                (leftmost [evLoadedAndBuilt, void evRespAliasRenameFail])
         (dynMAliasNew, inputAliasNew) <- elLabelInput conf "Change alias" 64 "alias-new"
 
         let evFocusLostAlias =

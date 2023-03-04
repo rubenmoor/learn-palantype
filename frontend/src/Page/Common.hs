@@ -212,7 +212,9 @@ elFooter Navigation {..} = elClass "footer" "stage" $ do
         text "< "
         routeLink (stageUrl @key prv) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
+
     text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
+
     whenJust navMNext $ \nxt ->
         elClass "div" "floatRight" $ do
         routeLink (stageUrl @key nxt) $
@@ -327,19 +329,28 @@ elCongraz evDone dynStats Navigation {..} = mdo
 
 parseStenoOrError
     :: forall proxy key t (m :: * -> *)
-     . (EventWriter t (Endo State) m, Palantype key, PostBuild t m)
+     . ( EventWriter t (Endo State) m
+       , MonadReader (Env t key) m
+       , Palantype key
+       , PostBuild t m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
+       , MonadHold t m
+       )
     => proxy key
     -> RawSteno
     -> m (Maybe [Chord key])
 parseStenoOrError _ raw = case parseSteno raw of
     Right words -> pure $ Just words
     Left  err   -> do
-        ePb <- getPostBuild
+        Env{..} <- ask
+        evLoadedAndBuilt <- envGetLoadedAndBuilt
         let msgCaption = "Internal error"
             msgBody =
                 "Could not parse steno code: " <> showt raw <> "\n" <> err
         updateState
-            $  ePb
+            $  evLoadedAndBuilt
             $> [(field @"stApp" . field @"stMsg") ?~ Message { .. }]
         pure Nothing
 
@@ -547,27 +558,29 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
 --       Bool: whether or not this is a public stats record (visible to anyone)
 --       Maybe Text: Nothing for personal stats, Just aliasName for the stats of others
 getStatsLocalAndRemote
-  :: forall key (m :: * -> *) t
-  . ( EventWriter t (Endo State) m
-    , MonadFix m
-    , MonadHold t m
-    , MonadReader (Env t key) m
-    , PerformEvent t m
-    , PostBuild t m
-    , Prerender t m
-    )
-  => Event t Stats
-  -> m (Dynamic t [(Bool, (Maybe Text, Stats))])
+    :: forall key (m :: * -> *) t
+     . ( EventWriter t (Endo State) m
+       , MonadFix m
+       , MonadHold t m
+       , MonadReader (Env t key) m
+       , PerformEvent t m
+       , PostBuild t m
+       , Prerender t m
+       , MonadIO (Performable m)
+       , TriggerEvent t m
+       )
+    => Event t Stats
+    -> m (Dynamic t [(Bool, (Maybe Text, Stats))])
 getStatsLocalAndRemote evNewStats = do
-  Env{..} <- ask
+  Env {..} <- ask
   let Navigation{..} = envNavigation
-  evReady <- envToReady <$> getPostBuild
 
+  evLoadedAndBuilt <- envGetLoadedAndBuilt
   (evRespFail, evRespSucc) <- fmap fanEither $ request $
       getStats (getMaybeAuthData <$> envDynState)
                (constDyn $ Right navSystemLang)
                (constDyn $ Right navCurrent)
-               evReady
+               evLoadedAndBuilt
 
   updateState $ evRespFail $> [ field @"stApp" . field @"stMsg" ?~
                                   Message "Error" "Couldn't load statistics"

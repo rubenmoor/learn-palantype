@@ -14,24 +14,25 @@
 
 module Page.Introduction where
 
+import           CMS                            ( elCMS )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Applicative            ( Applicative(pure) )
-import           Control.Category               ( (.)
-                                                )
+import           Control.Category               ( (.) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
+import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(length) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  ( ($)
+                                                )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 , void
                                                 )
 import           Data.Generics.Product          ( field )
 import qualified Data.Map                      as Map
-import           Data.Monoid                    ( Monoid(mconcat, mempty) )
+import           Data.Maybe                     ( Maybe(..) )
 import           Data.Semigroup                 ( Endo(..)
                                                 , Semigroup((<>))
                                                 )
@@ -46,20 +47,27 @@ import           Palantype.Common.RawSteno      ( parseChordMaybe )
 import           Palantype.Common.TH            ( fromJust )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
-                                                , Event
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
                                                 , MonadHold
+                                                , PerformEvent(Performable)
                                                 , PostBuild
                                                 , Prerender
+
+                                                , TriggerEvent
                                                 , blank
-                                                , dyn
+
+
+
                                                 , el
                                                 , elAttr
                                                 , elClass
                                                 , elClass'
+
+
                                                 , leftmost
+
                                                 , text
                                                 , widgetHold_
                                                 )
@@ -72,21 +80,22 @@ import           State                          ( Env(..)
                                                 , stageUrl
                                                 , updateState
                                                 )
-import           TextShow                       ( TextShow(showt) )
-import           Witherable                     ( Filterable(filter)
+import           Witherable                     ( Filterable(filter, mapMaybe)
                                                 )
-import CMS (elCMS)
 
 introduction
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
        , Palantype key
+       , PerformEvent t m
        , Prerender t m
        , PostBuild t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
        )
     => m Navigation
 introduction = do
@@ -94,16 +103,12 @@ introduction = do
     Env {..} <- ask
     let
         Navigation {..} = envNavigation
-    dynParts <- elCMS envToReady
-    evThreeParts <- dyn $ dynParts <&> \case
-        [p1, p2, p3] -> pure (p1, p2, p3)
-        parts -> do
-          el "div" $ text $
-                "CMS error: wrong number of parts in markdown. Expected: 3. Got: "
-              <> showt (length parts)
-          pure (mconcat parts, mempty, mempty)
 
-    widgetHold_ blank $ evThreeParts <&> \(part1, part2, part3) -> do
+    evParts <- elCMS 3 <&> mapMaybe \case
+      [p1, p2, p3] -> Just (p1, p2, p3)
+      _ -> Nothing
+
+    widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> do
         el "h1" $ text "Introduction"
 
         elPandoc defaultConfig part1

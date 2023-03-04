@@ -19,6 +19,8 @@ library
     , frontend
     , gerippe
     , generic-lens
+    , http-client
+    , http-types
     , jose
     , lens
     , lens-aeson

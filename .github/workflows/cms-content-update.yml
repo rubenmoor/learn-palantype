@@ -25,8 +25,7 @@ jobs:
         if: steps.changed-files-cms-content.outputs.any_changed == 'true'
         run: |
           echo "File changes for filter cms-content/**"
-          for filename in ${{steps.changed-files-cms-content.outputs.all_changed_files}}; do
-            echo "$filename was changed"
+          echo "${{steps.changed-files-cms-content.outputs.all_changed_files}}"
           curl -X POST https://palantype.com/api/cms/invalidate-cache \
                -H "Content-Type: application/json" \
                -d "\"${{steps.changed-files-cms-content.outputs.all-changed-files}}\""
