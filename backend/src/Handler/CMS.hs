@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.UTF8     as BLU
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..) )
+import           Data.Foldable                  ( for_ )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
@@ -67,7 +68,8 @@ import           Servant.API                    ( type (:<|>)((:<|>)) )
 import           Servant.Server                 ( HasServer(ServerT)
                                                 , ServantErr(errBody)
                                                 , err400
-                                                , err500, err404
+                                                , err404
+                                                , err500
                                                 )
 import qualified Text.Pandoc.Class             as Pandoc
 import           Text.Pandoc.Class              ( PandocIO )
@@ -117,7 +119,7 @@ convertMarkdown str =
     traverse (Pandoc.readMarkdown def) $ Text.splitOn separatorToken str
 
 handleInvalidateCache :: Text -> Handler ()
-handleInvalidateCache filepath = do
+handleInvalidateCache str = for_ (Text.words str) \filepath -> do
     (strSystemLang, strTextLang, pageName) <- case Text.splitOn "/" filepath of
         ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
         _ -> bail
