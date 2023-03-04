@@ -203,6 +203,8 @@ postEventStageCompleted
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
+-- admin
+
 getJournalAll
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
@@ -215,6 +217,14 @@ getJournalAll
     -> Dynamic t Bool
     -> Event t ()
     -> m (Event t (ReqResult () [Journal]))
+
+getLocallyCreateMissingFiles
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+-- stats
 
 getStats
     :: SupportsServantReflex t m
@@ -251,7 +261,7 @@ getCacheInvalidationData
     => Event t ()
     -> m (Event t (ReqResult () (Map (SystemLang, TextLang, Text) UTCTime)))
 
-(postConfigNew :<|> getJournalAll :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData))
+(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

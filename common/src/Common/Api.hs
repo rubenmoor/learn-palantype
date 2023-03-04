@@ -86,14 +86,16 @@ type RouteStatsNew =
        AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()
 
 type RoutesAdmin =
-  AuthRequired "jwt" :> "journal" :> QueryParam "start" Day
-                                  :> QueryParam "end" Day
-                                  :> QueryFlag "exclude-admin"
-                                  :> QueryParam "filter-by-visitor" Int
-                                  :> QueryParam "filter-by-user" Text
-                                  :> QueryParam "filter-by-alias" Text
-                                  :> QueryFlag "filter-anonymous"
-                                  :> Get '[JSON] [Journal]
+       AuthRequired "jwt" :> "journal"
+           :> QueryParam "start" Day
+           :> QueryParam "end" Day
+           :> QueryFlag "exclude-admin"
+           :> QueryParam "filter-by-visitor" Int
+           :> QueryParam "filter-by-user" Text
+           :> QueryParam "filter-by-alias" Text
+           :> QueryFlag "filter-anonymous"
+           :> Get '[JSON] [Journal]
+  :<|> AuthRequired "jwt" :> "locally-create-missing-files" :> Get '[JSON] ()
 
 type RoutesCMS =
        Capture "system" SystemLang :> Capture "lang" TextLang :> Capture "pagename" Text :> Get '[JSON] [Pandoc]

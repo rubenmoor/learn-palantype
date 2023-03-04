@@ -27,7 +27,7 @@ import           State                          ( Session(..)
                                                 )
 
 import           Common.Route                   ( FrontendRoute(..)
-                                                , FrontendRoute_AuthPages(..)
+                                                , FrontendRoute_AuthPages(..), FrontendRoute_AdminPages (..)
                                                 )
 import           Control.Monad.Reader           ( ReaderT(runReaderT) )
 import           Data.Function                  ( ($)
@@ -98,7 +98,7 @@ import qualified AdminPages
 import qualified AuthPages
 import           Client                         ( getAppState
                                                 , postAppState
-                                                , request, getCacheInvalidationData
+                                                , request, getCacheInvalidationData, getLocallyCreateMissingFiles, getAuthData
                                                 )
 import           Common.Auth                    ( SessionData(..) )
 import           Common.Model                   ( AppState
@@ -312,25 +312,29 @@ frontendBody = mdo
                     Just True  -> AuthPages.settings getLoadedAndBuilt
                     Just False -> blank
                     Nothing    -> blank
-            FrontendRoute_Admin -> do
-                evLoadedAndBuilt <- getLoadedAndBuilt
-                let
-                    evAdmin = attachPromptlyDynWith const dynState evLoadedAndBuilt
-                    selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
-                      SessionAnon -> Map.singleton FanAdminLogin ()
-                      SessionUser SessionData{..} ->
-                        if sdIsSiteAdmin || sdClearances >= RankAdmin
-                        then Map.singleton FanAdminAccess ()
-                        else Map.singleton FanAdminForbidden ()
-                    evToLogin = select selector $ Const2 FanAdminLogin
-                    evAccess = select selector $ Const2 FanAdminAccess
-                    evForbidden = select selector $ Const2 FanAdminForbidden
+            FrontendRoute_Admin -> subRoute_ \case
+                AdminPage_CreateMissingFiles -> do
+                  evLoadedAndBuilt <- getLoadedAndBuilt
+                  void $ request $ getLocallyCreateMissingFiles (getAuthData <$> dynState) evLoadedAndBuilt
+                AdminPage_Journal -> do
+                  evLoadedAndBuilt <- getLoadedAndBuilt
+                  let
+                      evAdmin = attachPromptlyDynWith const dynState evLoadedAndBuilt
+                      selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
+                        SessionAnon -> Map.singleton FanAdminLogin ()
+                        SessionUser SessionData{..} ->
+                          if sdIsSiteAdmin || sdClearances >= RankAdmin
+                          then Map.singleton FanAdminAccess ()
+                          else Map.singleton FanAdminForbidden ()
+                      evToLogin = select selector $ Const2 FanAdminLogin
+                      evAccess = select selector $ Const2 FanAdminAccess
+                      evForbidden = select selector $ Const2 FanAdminForbidden
 
-                setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
-                prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
+                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
-                requestPostViewPage (constDyn $ FrontendRoute_Admin :/ ()) evAccess
-                AdminPages.journal dynHasLoaded
+                  requestPostViewPage (constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()) evAccess
+                  AdminPages.journal dynHasLoaded
     blank
 
 frontendHead

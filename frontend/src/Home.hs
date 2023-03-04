@@ -176,7 +176,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageUp
                                                 , kiUp
                                                 , mkChord
-                                                , mkStageIndex
+                                                , mkStageIndex, getSystemLang
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -1336,9 +1336,3 @@ elStages getLoadedAndBuilt = do
                 pure nav
             pure navigation
         elFooter @key navigation
-
-getSystemLang :: forall key. Palantype key => SystemLang
-getSystemLang = if
-    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
-    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
-    | otherwise -> $failure "Key not implemented"

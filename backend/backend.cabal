@@ -15,6 +15,7 @@ library
     , ConfigFile
     , containers
     , data-default
+    , directory
     , either
     , frontend
     , gerippe

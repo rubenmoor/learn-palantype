@@ -18,7 +18,7 @@ import           Client                         ( getMaybeAuthData
 import           Common.Auth                    ( SessionData(..) )
 import           Common.Route                   ( FrontendRoute(..)
                                                 , FrontendRoute_AuthPages(..)
-                                                , showRoute
+                                                , showRoute, FrontendRoute_AdminPages (AdminPage_Journal)
                                                 )
 import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
@@ -328,7 +328,7 @@ elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
             el "span" $ text " "
             domAdmin <- elClass "span" "icon-link small" $ iFa' "fas fa-lock"
             let evClickAdmin = domEvent Click domAdmin
-            setRoute $ evClickAdmin $> FrontendRoute_Admin :/ ()
+            setRoute $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
             updateState $ tag (current dynRedirectRoute) evClickAdmin <&> \r ->
               [ field @"stRedirectUrl" .~ r ]
           let evLogout = domEvent Click domLogout

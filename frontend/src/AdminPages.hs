@@ -102,7 +102,7 @@ import           Common.Model                   ( EventApp(..)
                                                 )
 import           Common.Route                   ( FrontendRoute
                                                     ( FrontendRoute_Admin
-                                                    )
+                                                    ), FrontendRoute_AdminPages (AdminPage_Journal)
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
@@ -174,7 +174,7 @@ journal dynHasLoaded = mdo
         elClass "div" "floatLeft" $ do
             domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
             setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $ domEvent Click domBack
-        elLoginSignup $ constDyn $ FrontendRoute_Admin :/ ()
+        elLoginSignup $ constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()
         elClass "br" "clearBoth" blank
 
     let

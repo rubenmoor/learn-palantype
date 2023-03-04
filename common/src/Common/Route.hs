@@ -60,6 +60,10 @@ import           Obelisk.Route.TH               ( deriveRouteComponent )
 import           Palantype.Common.Stage         ( StageIndex )
 import           Palantype.Common.TH            ( failure )
 
+data FrontendRoute_AdminPages :: * -> * where
+  AdminPage_Journal            :: FrontendRoute_AdminPages ()
+  AdminPage_CreateMissingFiles :: FrontendRoute_AdminPages ()
+
 data FrontendRoute_AuthPages :: * -> * where
   AuthPage_SignUp   :: FrontendRoute_AuthPages ()
   AuthPage_Login    :: FrontendRoute_AuthPages ()
@@ -75,7 +79,7 @@ data FrontendRoute :: * -> * where
   FrontendRoute_DE    :: FrontendRoute StageIndex
   FrontendRoute_EN    :: FrontendRoute StageIndex
   FrontendRoute_Auth  :: FrontendRoute (R FrontendRoute_AuthPages)
-  FrontendRoute_Admin :: FrontendRoute ()
+  FrontendRoute_Admin :: FrontendRoute (R FrontendRoute_AdminPages)
 
 fullRouteEncoder
     :: Encoder
@@ -97,7 +101,9 @@ fullRouteEncoder = mkFullRouteEncoder
             AuthPage_SignUp   -> PathSegment "signup"   $ unitEncoder mempty
             AuthPage_Login    -> PathSegment "login"    $ unitEncoder mempty
             AuthPage_Settings -> PathSegment "settings" $ unitEncoder mempty
-        FrontendRoute_Admin -> PathSegment "admin" $ unitEncoder mempty
+        FrontendRoute_Admin -> PathSegment "admin" $ pathComponentEncoder \case
+            AdminPage_Journal            -> PathSegment "journal" $ unitEncoder mempty
+            AdminPage_CreateMissingFiles -> PathSegment "create-missing-files" $ unitEncoder mempty
     )
   where
     wrappedIntEncoder
@@ -115,6 +121,7 @@ concat <$> mapM deriveRouteComponent
   [ ''BackendRoute
   , ''FrontendRoute
   , ''FrontendRoute_AuthPages
+  , ''FrontendRoute_AdminPages
   ]
 
 showRoute :: R FrontendRoute -> Text

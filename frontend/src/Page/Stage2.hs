@@ -14,6 +14,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Page.Stage2 where
 
@@ -68,7 +69,7 @@ import           Data.Semigroup                 ( (<>)
                                                 )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
-import           Witherable                ( Filterable(catMaybes, filter)
+import           Witherable                ( Filterable(catMaybes, filter, mapMaybe)
                                                 )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         (R , RouteToUrl
@@ -146,6 +147,8 @@ import Common.Model (Stats)
 import GHC.Generics (Generic)
 import Data.Tuple (fst, snd)
 import PloverDict (getMapsForExercise)
+import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+import CMS (elCMS)
 
 -- Ex. 2.1
 
@@ -291,139 +294,36 @@ exercise1
     => m Navigation
 exercise1 = mdo
     Env {..} <- ask
-    let Navigation {..} = envNavigation
-    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
-    el "h1" $ text "Stage 2"
-    el "h3" $ text "Exercise 1"
-    el "h2" $ text "Syllables and chords"
-    el "p" $ do
-        text
-            "You probably have noticed that on the virtual keyboard some keys \
-            \are highlighted blue. These keys are called home row. \
-            \The idea is that there is a resting position for your hands, where \
-            \every finger is placed on one key of home row."
-    el "p" $ do
-        text
-            "From this resting position your fingers can find any key, without \
-            \any need to look down on your keyboard, so your eyes can stay on \
-            \the screen all the time."
-    el "p" $ do
-        text
-            "In case you have been looking on your fingers during the exercises, \
-            \it's probably a good idea to get used to home row now. \
-            \Simply repeat Stage 1 until you can do all the exercises without \
-            \looking down. Just orient yourself once in the beginning!"
+    evParts <- elCMS 1 <&> mapMaybe \case
+      [p1] -> Just p1
+      _    -> Nothing
+    widgetHold_ blank $ evParts <&> \part1 -> mdo
+      elPandoc defaultConfig part1
 
-    let eChordBackUp =
-          void $ gate (not <$> current dynDone) $
-            filter (\c -> KI.fromChord c == kiBackUp) envEChord
+      let Navigation {..} = envNavigation
+      unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
-    elABack <- el "p" $ do
-        text "Type "
-        elBackUp @key
-        text " to "
-        (e, _) <- elClass' "a" "normalLink" $ text "go back to Exercise 1.1"
-        text " to practice home row."
-        pure e
+      let eChordBackUp =
+            void $ gate (not <$> current dynDone) $
+              filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
-    let eBack = leftmost [eChordBackUp, domEvent Click elABack]
-        (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
-    setRoute $ eBack $> stageUrl @key 1 -- Stage 1.1
-    updateState
-        $  eBack
-        $> [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
-                 -- %~ Map.update (\_ -> Just $ $readLoc "stage_1-1") navSystemLang
-           ]
+          (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
 
-    el "p" $ do
-        text
-            "Also, just like looking down on your fingers will slow you down, \
-            \you can't actually use the virtual keyboard if you want to get up \
-            \to speed. I recommend, turning it off. The following exercise \
-            \is an important prerequisite to actually learn the chords."
-    el "p" $ do
-        text
-            "Maybe, you want to come up with a mnemonic phrase that helps \
-            \remembering the keyboard layout, e.g."
-    el "p" $ do
-        el "div" $ do
-            el "strong" $ text "V"
-            text "er"
-            el "strong" $ text "D"
-            text "or"
-            el "strong" $ text "b"
-            text "ene"
-        el "div" $ do
-            el "strong" $ text "Sch"
-            text "warze "
-            el "strong" $ text "S"
-            text "tern"
-            el "strong" $ text "F"
-            text "rucht"
-        el "div" $ do
-            el "strong" $ text "G"
-            text "e"
-            el "strong" $ text "N"
-            text "ieß"
-            el "strong" $ text "B"
-            text "ar"
-        el "div" $ do
-            text "mit "
-            el "strong" $ text "M"
-            text "ilch "
-            el "strong" $ text "+"
-            el "strong" $ text " L"
-            text "ebertran"
-    el "p" $ do
-        el "div" $ do
-            el "strong" $ text "Ä"
-            text "tna-"
-            el "strong" $ text "E"
-            text "ruption "
-            el "strong" $ text "A"
-            text "ußergewöhnlich "
-            el "strong" $ text "Lang"
-    el "p" $ do
-        el "div" $ do
-            el "strong" $ text "U"
-            text "rgewalt "
-            el "strong" $ text "I"
-            text "mmens "
-            el "strong" $ text "O"
-            text "hne "
-            el "strong" $ text "Ü"
-            text "berlebende "
+      setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
+      updateState
+          $  eChordBackUp
+          $> [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+            ]
 
-    el "p" $ do
-        text "You can surely come up with a better one, yourself!"
 
-    el "p" $ text "This one is for the homerow:"
+      dynStatsAll <- getStatsLocalAndRemote evDone
+      let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+      evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
+      dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-    el "p" $ do
-      el "strong" $ text "D"
-      text "ussel "
-      el "strong" $ text "S"
-      text "ind "
-      el "strong" $ text "N"
-      text "iemand "
-      el "strong" $ text "+"
-      el "strong" $ text " A"
-      text "lle, "
-      el "strong" $ text "I"
-      text "mmer "
-      el "strong" $ text "+"
-      el "strong" $ text " N"
-      text "ie, "
-      el "strong" $ text "S"
-      text "ie "
-      el "strong" $ text "D"
-      text "ussel!"
+      pure ()
 
-    dynStatsAll <- getStatsLocalAndRemote evDone
-    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
-    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation
 
 -- Ex 2.2
@@ -448,8 +348,6 @@ walkWords
     -> RawSteno
     -> m (Event t ())
 walkWords evChord words raw = do
-    Env {..} <- ask
-    let Navigation {..} = envNavigation
 
     let chords = $fromJust $ parseStenoMaybe raw
         len    = length chords
@@ -514,10 +412,20 @@ exercise2
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
+       , TriggerEvent t m
+       , PerformEvent t m
+       , MonadIO (Performable m)
        )
     => m Navigation
 exercise2 = mdo
     Env {..} <- ask
+
+    evParts <- elCMS 2 <&> mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
+      _        -> Nothing
+    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
+      elPandoc defaultConfig part1
+
     let Navigation {..} = envNavigation
     unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
@@ -808,6 +716,13 @@ exercise3
     => m Navigation
 exercise3 = mdo
     Env {..} <- ask
+
+    evParts <- elCMS 2 <&> mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
+      _        -> Nothing
+    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
+      elPandoc defaultConfig part1
+
     let Navigation {..} = envNavigation
     unless (navSystemLang == SystemDE) elNotImplemented
 
@@ -928,6 +843,13 @@ exercise4
     => m Navigation
 exercise4 = mdo
     Env {..} <- ask
+
+    evParts <- elCMS 2 <&> mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
+      _        -> Nothing
+    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
+      elPandoc defaultConfig part1
+
     let Navigation {..} = envNavigation
     unless (navSystemLang == SystemDE) elNotImplemented
 

@@ -1,71 +1,98 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ExplicitNamespaces #-}
 
 module Handler.Admin where
 
-import           Servant.Server                 ( err500
-                                                , errBody
-                                                , throwError
-                                                , HasServer(ServerT)
-                                                )
-import           Common.Api                     ( RoutesAdmin )
-import           AppData                        ( Handler )
+import           AppData                        ( Handler, EnvApplication (..) )
 import           Auth                           ( UserInfo(..) )
+import           Common.Api                     ( RoutesAdmin )
 import           Common.Model                   ( Journal(..) )
-import Database.Gerippe
-    ( (||.),
-      (!=.),
-      just,
-      (?.),
-      valkey,
-      delete,
-      desc,
-      orderBy,
-      (&&.),
-      (<=.),
-      from,
-      select,
-      val,
-      (>=.),
-      (==.),
-      (^.),
-      where_,
-      InnerJoin(..),
-      keyToId,
-      LeftOuterJoin(..),
-      Entity(..),
-      on,
-      isNothing )
-import qualified DbAdapter                     as Db
+import           Control.Applicative            ( Applicative(pure) )
+import           Control.Monad                  ( when, unless, foldM )
+import           Control.Monad.IO.Class         ( liftIO )
+import           Data.Bool                      ( Bool )
+import           Data.Foldable                  ( for_ )
+import           Data.Function                  ( ($) )
+import           Data.Functor                   ( ($>)
+                                                , (<$>)
+                                                )
+import           Data.Int                       ( Int )
+import           Data.Maybe                     ( Maybe(..)
+                                                , catMaybes
+                                                , fromMaybe
+                                                )
+import           Data.Semigroup                 ( (<>) )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
+import           Data.Text.IO                   ( putStrLn
+                                                , writeFile
+                                                )
+import           Data.Time                      ( Day
+                                                , UTCTime(..)
+                                                , addDays
+                                                , getCurrentTime
+                                                )
+import           Data.Traversable               ( for )
 import           Database                       ( blobDecode
                                                 , runDb
                                                 )
-import           Data.Maybe                     ( Maybe(..)
-                                                , fromMaybe
-                                                , catMaybes
+import           Database.Gerippe               ( (!=.)
+                                                , (&&.)
+                                                , (<=.)
+                                                , (==.)
+                                                , (>=.)
+                                                , (?.)
+                                                , Entity(..)
+                                                , InnerJoin(..)
+                                                , LeftOuterJoin(..)
+                                                , (^.)
+                                                , delete
+                                                , desc
+                                                , from
+                                                , isNothing
+                                                , just
+                                                , keyToId
+                                                , on
+                                                , orderBy
+                                                , select
+                                                , val
+                                                , valkey
+                                                , where_
+                                                , (||.)
                                                 )
-import           Control.Monad                  ( when
-                                                )
-import           Data.Traversable               ( for )
-import           Control.Applicative            ( Applicative(pure) )
-import           Data.Function                  ( ($) )
-import           Data.Time                      ( addDays
-                                                , Day
-                                                , UTCTime(..)
-                                                , getCurrentTime
-                                                )
-import           Control.Monad.IO.Class         ( liftIO )
-import           Data.Bool                      ( Bool )
-import           Data.Int                       ( Int )
-import           Data.Text                      ( Text )
+import qualified DbAdapter                     as Db
 import           GHC.Real                       ( fromIntegral )
-import Data.Functor ((<$>), ($>))
+import           Palantype.Common               ( Palantype(toDescription)
+                                                , Stage(..)
+                                                , StageHierarchy(..)
+                                                , StageSpecialGeneric(..)
+                                                , getSystemLang
+                                                )
+import           Palantype.Common.Stage         ( stages
+                                                , toPageName
+                                                )
+import qualified Palantype.DE                  as DE
+import qualified Palantype.EN                  as EN
+import           Servant.API                    ( ToHttpApiData(toUrlPiece),type  (:<|>) ((:<|>)) )
+import           Servant.Server                 ( HasServer(ServerT)
+                                                , err500
+                                                , errBody
+                                                , throwError, err403
+                                                )
+import           System.Directory               ( doesFileExist )
+import           TextShow                       ( TextShow(showt) )
+import Obelisk.Configs (HasConfigs(getConfigs), runConfigsT, getTextConfig)
+import Control.Monad.Reader (MonadReader(ask))
+import Data.Eq (Eq((==)))
+import GHC.Enum (Enum(succ))
 
 handlers :: ServerT RoutesAdmin a Handler
-handlers = handleJournalGetAll
+handlers = handleJournalGetAll :<|> handleCreateMissingFilesLocally
 
 handleJournalGetAll
     :: UserInfo
@@ -78,6 +105,7 @@ handleJournalGetAll
     -> Bool
     -> Handler [Journal]
 handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAlias bAnonymous = do
+    unless uiIsSiteAdmin $ throwError err403
     now <- liftIO getCurrentTime
     let end   = fromMaybe (utctDay now) mEnd
         start = fromMaybe (addDays (-7) end) mStart
@@ -126,3 +154,47 @@ whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 whenJust m f = case m of
     Just x  -> f x
     Nothing -> pure ()
+
+-- | traverse the stages and check if a corresponding markdown file exists
+--   if not, create it
+handleCreateMissingFilesLocally :: UserInfo -> Handler ()
+handleCreateMissingFilesLocally UserInfo{..} = do
+    EnvApplication{..} <- ask
+    unless (envUrl == "http://localhost:8000") $ throwError err500
+      { errBody = "only meant for use in local development"
+      }
+    unless uiIsSiteAdmin $ throwError err403
+    createMissingFiles @DE.Key
+    createMissingFiles @EN.Key
+  where
+    createMissingFiles :: forall key. Palantype key => Handler ()
+    createMissingFiles = liftIO do
+        nTotal <- foldM accFunc (0 :: Int) stages
+        putStrLn $ showt nTotal <> " files created."
+      where
+        accFunc counter stage@Stage{..} = do
+          let
+              systemLang = getSystemLang @key
+              filename = "cms-content/"
+                <> Text.unpack (toUrlPiece systemLang)
+                <> "/EN/"
+                <> Text.unpack (toPageName @key stage) <> ".md"
+          bExists <- doesFileExist filename
+          if bExists
+            then do
+              putStrLn $ "Skipping existing file: " <> Text.pack filename
+              pure counter
+            else do
+              putStrLn $ "Creating file: " <> Text.pack filename
+              case stageHierarchy of
+                StageToplevel     -> case stageSpecialGeneric of
+                  StageSpecial str -> writeFile filename $ "# " <> str
+                  StageGeneric _ _ -> writeFile filename ""
+                StageSublevel t s -> case stageSpecialGeneric of
+                  StageSpecial str -> writeFile filename $ "# " <> str
+                  StageGeneric pg g -> writeFile filename $
+                      "# Stage " <> showt t <> "\n\n"
+                    <> "### Exercise " <> showt s <> "\n\n"
+                    <> "## " <> toDescription pg <> "\n\n"
+                    <> "### G" <> showt g <> "\n"
+              pure $ succ counter
