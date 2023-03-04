@@ -103,7 +103,7 @@ exercises = Map.fromList
           \steno key to type them."
       , el "p" $ text
             "This rule only is about double consonants in the coda. \
-            \Quite often, a double consonant is devided by an ortographic syllable \
+            \Quite often, a double consonant is devided by an orthographic syllable \
             \and this rule doesn't apply. In case you wonder what german syllable \
             \ever ends on dd: None of them. This entry is there only for anglicisms."
       )

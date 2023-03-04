@@ -97,7 +97,7 @@ introduction = do
 
     evParts <- elCMS 3 <&> mapMaybe \case
       [p1, p2, p3] -> Just (p1, p2, p3)
-      _ -> Nothing
+      _            -> Nothing
 
     widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> do
         elPandoc defaultConfig part1

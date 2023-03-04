@@ -19,7 +19,7 @@ import           Reflex.Dom                     ( el
 import           State                          (stageUrl)
 import           TextShow                       ( TextShow(showt) )
 import Data.Map.Strict (Map)
-import Palantype.Common (mapStages, Greediness, findStage, StageSpecialGeneric (..))
+import Palantype.Common ( findStage, StageSpecialGeneric (..), Greediness)
 import qualified Data.Map.Strict as Map
 
 exercises

@@ -25,7 +25,12 @@ jobs:
       - name: web request to invalidate cache
         if: steps.cms.outputs.any_changed == 'true'
         run: |
-          echo "changed files: ${{ steps.cms.outputs.all-changed-files }}"
+          set -x
+          echo "Changed files:"
+          for file in ${{ steps.cms.outputs.all-changed-files }}
+          do
+            echo $file
+          done
           curl -X POST https://palantype.com/api/cms/invalidate-cache \
                -H "Content-Type: application/json" \
                -d "\"${{ steps.cms.outputs.all-changed-files }}\""

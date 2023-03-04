@@ -87,9 +87,7 @@ import           Data.Tuple                     ( fst
 import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( R
-                                                , RouteToUrl
                                                 , SetRoute(setRoute)
-                                                , routeLink
                                                 )
 import           Page.Common                    ( elBackUp
                                                 , elBtnSound
@@ -586,7 +584,6 @@ taskSingletons
     -> m (Event t Stats)
 taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
 
-    Env{..} <- ask
     eStdGen <- postRender $ do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
@@ -594,122 +591,95 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
     dynMStdGen <- holdDyn Nothing $ Just <$> eStdGen
     let evReady = catMaybes $ updated dynMStdGen
 
-    fmap switchDyn
-        $   widgetHold (loading $> never)
-        $   evReady
-        <&> \stdGen -> do
+    fmap switchDyn $ widgetHold (loading $> never) $ evReady <&> \stdGen -> do
+        let
+            len = Map.size mapWordStenos
 
-                let
-                    len = Map.size mapWordStenos
+            step :: Chord key -> StateSingletons -> StateSingletons
+            step c st = case st of
+                StatePause _ ->
+                    if c == chordStart
+                    then
+                        stepStart
+                    else
+                        st
+                StateRun Run {..} ->
+                    let
+                        raw  = Raw.fromChord c
+                        word = _stWords !! _stCounter
+                        isCorrect = Map.findWithDefault "" raw mapStenoWord == word
+                    in
+                        if isCorrect
+                            then if _stCounter == len - 1
+                                then StatePause _stNMistakes
+                                else
+                                    st &  _StateRun %~ (stCounter +~ 1) . (stMMistake .~ Nothing)
+                            else case _stMMistake of
+                                    -- first mistake
+                                Nothing -> st & _StateRun %~ ( stMMistake ?~ MistakeOne raw ) .  ( stNMistakes +~ 1)
+                                -- second mistake
+                                Just (MistakeOne _) ->
+                                    let corrects = Map.findWithDefault [] word mapWordStenos
+                                    in  st &  _StateRun .  stMMistake ?~ MistakeTwo raw corrects
+                                -- third mistake and so forth
+                                Just (MistakeTwo _ _) -> st
+            stepStart = StateRun Run
+                { _stCounter   = 0
+                , _stMMistake  = Nothing
+                , _stWords     = evalRand
+                                      (shuffleM $ Map.keys mapWordStenos)
+                                      stdGen
+                , _stNMistakes = 0
+                }
 
-                    step :: Chord key -> StateSingletons -> StateSingletons
-                    step c st = case st of
-                        StatePause _ ->
-                            if c == chordStart
-                            then
-                                stepStart
-                            else
-                                st
-                        StateRun Run {..} ->
-                            let
-                                raw  = Raw.fromChord c
-                                word = _stWords !! _stCounter
-                                isCorrect = Map.findWithDefault "" raw mapStenoWord == word
-                            in
-                                if isCorrect
-                                    then if _stCounter == len - 1
-                                        then StatePause _stNMistakes
-                                        else
-                                            st
-                                            &  _StateRun
-                                            %~ (stCounter +~ 1)
-                                            .  (stMMistake .~ Nothing)
-                                    else case _stMMistake of
-                                            -- first mistake
-                                        Nothing -> st &  _StateRun
-                                          %~ ( stMMistake ?~ MistakeOne raw )
-                                          .  ( stNMistakes +~ 1)
-                                        -- second mistake
-                                        Just (MistakeOne _) ->
-                                            let
-                                                corrects = Map.findWithDefault
-                                                    []
-                                                    word
-                                                    mapWordStenos
-                                            in  st
-                                                    &  _StateRun
-                                                    .  stMMistake
-                                                    ?~ MistakeTwo raw corrects
-                                        -- third mistake and so forth
-                                        Just (MistakeTwo _ _) -> st
-                    stepStart = StateRun Run
-                        { _stCounter   = 0
-                        , _stMMistake  = Nothing
-                        , _stWords     = evalRand
-                                             (shuffleM $ Map.keys mapWordStenos)
-                                             stdGen
-                        , _stNMistakes = 0
-                        }
+        let stateInitial = StatePause 0
+        dynSingletons <- foldDyn step stateInitial evChord
+        evStartStop   <-
+            fmap updated $ holdUniqDyn $ dynSingletons <&> \case
+                StatePause nMistakes -> nMistakes
+                StateRun   _         -> -1
+        dynStopwatch <- mkStopwatch evStartStop
 
-                let stateInitial = StatePause 0
-                dynSingletons <- foldDyn step stateInitial evChord
-                evStartStop   <-
-                    fmap updated $ holdUniqDyn $ dynSingletons <&> \case
-                        StatePause nMistakes -> nMistakes
-                        StateRun   _         -> -1
-                dynStopwatch <- mkStopwatch evStartStop
+        elClass "div" "taskSingletons" $ do
 
-                elClass "div" "taskSingletons" $ do
+            evTrigger <- void . updated <$> holdUniqDyn
+              ( dynSingletons <&> fromMaybe 0
+                  . preview (_As @"StateRun" . field @"_stCounter")
+              )
+            elBtnSound evTrigger
 
-                    evTrigger <- void . updated <$> holdUniqDyn
-                      ( dynSingletons <&> fromMaybe 0
-                          . preview (_As @"StateRun" . field @"_stCounter")
-                      )
-                    elBtnSound evTrigger
+            dyn_ $ dynSingletons <&> \case
+                StatePause _ -> el "div" $ do
+                    text "Type "
+                    elClass "span" "btnSteno blinking" $ do
+                        text "Start "
+                        el "code" $ text $ showt $ chordStart @key
+                    text " to begin the exercise."
+                StateRun Run {..} -> do
+                    elClass "span" "exerciseField"
+                        $  el "code"
+                        $  text
+                        $  _stWords
+                        !! _stCounter
 
-                    dyn_ $ dynSingletons <&> \case
-                        StatePause _ -> el "div" $ do
-                            text "Type "
-                            elClass "span" "btnSteno blinking" $ do
-                                text "Start "
-                                el "code" $ text $ showt $ chordStart @key
-                            text " to begin the exercise."
-                        StateRun Run {..} -> do
-                            elClass "span" "exerciseField"
-                                $  el "code"
-                                $  text
-                                $  _stWords
-                                !! _stCounter
+                    whenJust _stMMistake \case
+                        MistakeOne raw -> do
+                            elClass "code" "red small" $ text $ showt raw
+                            elClass "span" "small" $ text " try again!"
+                        MistakeTwo raw corrects -> do
+                            elClass "code" "red small" $ text $ showt raw
+                            elClass "span" "small" $ text
+                                $ if length corrects == 1
+                                      then " try this: "
+                                      else " try one of these: "
+                            for_ corrects $ \correct ->
+                                elClass "code" "small" $ text $ showt correct
 
-                            whenJust
-                                _stMMistake
-                                \case
-                                    MistakeOne raw -> do
-                                        elClass "code" "red small"
-                                            $ text
-                                            $ showt raw
-                                        elClass "span" "small"
-                                            $ text " try again!"
-                                    MistakeTwo raw corrects -> do
-                                        elClass "code" "red small"
-                                            $ text
-                                            $ showt raw
-                                        elClass "span" "small"
-                                            $ text
-                                            $ if length corrects == 1
-                                                  then " try this: "
-                                                  else " try one of these: "
-                                        for_ corrects
-                                            $ \correct ->
-                                                  elClass "code" "small"
-                                                      $ text
-                                                      $ showt correct
+                    elClass "hr" "visibilityHidden" blank
+                    el "strong" $ text $ showt _stCounter
+                    text $ " / " <> showt len
 
-                            elClass "hr" "visibilityHidden" blank
-                            el "strong" $ text $ showt _stCounter
-                            text $ " / " <> showt len
-
-                    elStopwatch dynStats dynStopwatch len
+            elStopwatch dynStats dynStopwatch len
 
 exercise3
     :: forall key t (m :: * -> *)
@@ -730,97 +700,11 @@ exercise3
 exercise3 = mdo
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
-      [p1, p2] -> Just (p1, p2)
-      _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
-
-    let Navigation {..} = envNavigation
-    unless (navSystemLang == SystemDE) elNotImplemented
-
-    el "h1" $ text "Stage 2"
-    el "h3" $ text "Exercise 3"
-    el "h2" $ text "Syllables and chords"
-
-    el "p"
-        $ text
-              "During the following exercises, you will learn to type words, \
-            \starting with the most straightfoward ones. \
-            \You will be able to guess the correct chord without problem."
-
-    el "p"
-        $ text
-              "There are rules that will become progressively more complex \
-            \in the course of this tutorial. We start simple:"
-
-    el "h4" $ text "Rule 1: Steno key order"
-
-    el "p"
-        $ text
-              "Every chord consists of up to ten keys \
-            \pressed at once. \
-            \Within one chord, the order in which you press down keys does not \
-            \matter. \
-            \Instead, all keys of one chord will always be interpreted \
-            \in their proper order."
-
-    el "p" $ do
-        text "For example, the steno keys "
-        el "code" $ text "BUʃ"
-        text
-            " can only appear in exactly that order and always mean «Busch». \
-            \The word «Schub» has to be typed using different keys \
-            \, and indeed here it is: "
-        el "code" $ text "ʃUB"
-        text "."
-    el "p" $ do
-      text "In conclusion, it "
-      el "em" $ text "does"
-      text " matter which key (or which hand) you use: "
-      el "code" $ text "ʃ-"
-      text " isn't the same as "
-      el "code" $ text "-ʃ"
-      text ". But it "
-      el "em" $ text "does not"
-      text " matter in which order you actually put down your fingers. \
-           \Ideally you press all the keys of one chord at the same time."
-
-    el "h4" $ text "Rule 2: Word part structure"
-
-    el "p"
-        $ text
-              "One chord either makes a word or a word part. \
-            \In general, a part consists of an onset, a nucleus, \
-            \and a coda. The onset comprises the consonants in the beginning \
-            \and can be missing. The nucleus comprises the vowels that follow \
-            \and the coda finally comprises the consonants in the end."
-
-    el "p"
-        $ text
-              "For a word part structured that way, you will use the fingers \
-            \of your left hand for the consonants of the onset and the fingers \
-            \of your right hand for the consonants of the coda. \
-            \For the nucleus you have your thumbs."
-
-    el "h4" $ text "Practice simple words"
-
-    el "p" $ do
-        text
-            "To get started, we start with the most simple words. \
-            \Every letter can be typed as it is, just make sure to use the \
-            \correct finger. The only specialty for now is \"sch\", \
-            \for which you will have to use "
-        el "code" $ text "ʃ"
-        text ". And remember: the small keys "
-        el "code" $ text "v"
-        text ", "
-        el "code" $ text "b"
-        text ", "
-        el "code" $ text "s"
-        text ", and "
-        el "code" $ text "n"
-        text " are special keys. Don't use them yet."
+    evParts <- elCMS 1 <&> mapMaybe \case
+      [p] -> Just p
+      _   -> Nothing
+    widgetHold_ blank $ evParts <&> \part -> mdo
+      elPandoc defaultConfig part
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
@@ -833,6 +717,7 @@ exercise3 = mdo
             taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
+
     pure envNavigation
 
 -- Ex 2.4
@@ -849,7 +734,6 @@ exercise4
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
@@ -857,99 +741,39 @@ exercise4
 exercise4 = mdo
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
-      [p1, p2] -> Just (p1, p2)
+    evParts <- elCMS 3 <&> mapMaybe \case
+      [p1, p2, p3] -> Just (p1, p2, p3)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
+    widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> mdo
       elPandoc defaultConfig part1
 
-    let Navigation {..} = envNavigation
-    unless (navSystemLang == SystemDE) elNotImplemented
+      dynStatsAll <- getStatsLocalAndRemote evDone
+      evDone      <- case getMapsForExercise PatSimpleMulti 0 of
+          Left str -> do
+              elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+              pure never
+          Right (mSW, mWSs) -> taskWords
+              dynStatsAll
+              (gate (not <$> current dynDone) envEChord)
+              mSW
+              mWSs
 
-    el "h1" $ text "Stage 2"
-    el "h3" $ text "Exercise 4"
-    el "h2" $ text "Syllables and chords"
+      let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+      dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-    el "p"
-        $ text
-              "Introducing words that rely on two or more chords to type now. \
-            \In general, the idea of any steno system is typing efficiency \
-            \and the less chords you need to type a word, the better. \
-            \There are, however, several reasons why especially German words \
-            \do not always fit into one steno chord. In that case, \
-            \the words are simply split up and you type the corresponding chord \
-            \in succession to produce the word."
+      elPandoc defaultConfig part2
 
-    el "p" $ do
-        text
-            "As a rule of thumb, words are split up along their ortographic \
-            \syllables, e.g. we saw «Zweifel» as "
-        el "code" $ text "SWEI/FEL"
-        text " in "
-        routeLink (stageUrl @key 10) -- Stage 2.2
-            $ text "Exercise 2.2"
-        text ". In the same exercise we saw «Wissen» as "
-        el "code" $ text "WISn"
-        text
-            ", thus ortographic syllables are not respected, after all? \
-            \Well, there are alternative spellings and you can choose \
-            \to type "
-        el "code" $ text "WIS/SEN"
-        text ", too. Thus our next rule: "
+      elPatterns
+          $ Map.toList
+          $ Map.findWithDefault Map.empty 0
+          $ Map.findWithDefault Map.empty PatSimple patternDoc
 
-    el "h4" $ text "Rule 3: syllables and word parts"
+      elPandoc defaultConfig part3
 
-    el "p"
-        $ text
-              "Words that contain more than one syllable can be typed \
-            \by typing the syllables separately, one after the other."
+      el "p" $ do
+          let styleHuge = "style" =: "font-size: 48pt"
+          elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
+          elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
+          elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
 
-    dynStatsAll <- getStatsLocalAndRemote evDone
-    evDone      <- case getMapsForExercise PatSimpleMulti 0 of
-        Left str -> do
-            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
-            pure never
-        Right (mSW, mWSs) -> taskWords
-            dynStatsAll
-            (gate (not <$> current dynDone) envEChord)
-            mSW
-            mWSs
-
-    el "h3" $ text "Simple substitution rules"
-
-    el "p"
-        $ text
-              "Like with a lot of rules, there are exceptions. \
-            \We don't need to bother right now, the words of this exercise \
-            \are not affected. Just that you now, \
-            \sometimes you will have to type chords that span multiple \
-            \syllables and sometimes you will need multiple chords to \
-            \type a single syllable. For this reason we generally speak of \
-            \word parts instead of syllables."
-
-    el "p"
-        $ text
-              "For completeness sake, find below the \"substitution rules\" \
-            \that have been applied so far. They look trivial still, but will \
-            \more complicated soon enough."
-
-    elPatterns
-        $ Map.toList
-        $ Map.findWithDefault Map.empty 0
-        $ Map.findWithDefault Map.empty PatSimple patternDoc
-
-    el "p"
-        $ text
-              "Each lowercase letter in the table is a letter of natural \
-            \language. Next to it you find a steno code, denoted as \
-            \uppercase letter. The entries are sorted alphabetically."
-
-    el "p" $ do
-        let styleHuge = "style" =: "font-size: 48pt"
-        elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
-        elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
-        elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
-
-    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     pure envNavigation

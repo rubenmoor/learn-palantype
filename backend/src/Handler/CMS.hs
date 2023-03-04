@@ -2,7 +2,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Handler.CMS
     ( handlers
@@ -13,7 +13,7 @@ import           Common.Api                     ( RoutesCMS )
 import           Common.Model                   ( TextLang )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<) )
-import           Control.Monad                  ( Monad((>>=)) )
+import           Control.Monad                  ( Monad((>>=)), unless )
 import           Control.Monad.IO.Class         ( liftIO )
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.UTF8     as BLU
@@ -46,7 +46,7 @@ import           Database.Gerippe               ( Entity(..)
                                                 , PersistUniqueWrite(deleteBy)
                                                 , getAll
                                                 , getBy
-                                                , insert
+                                                , insert, deleteAll
                                                 )
 import           DbAdapter                      ( CMSCache
                                                     ( CMSCache
@@ -69,7 +69,7 @@ import           Servant.Server                 ( HasServer(ServerT)
                                                 , ServantErr(errBody)
                                                 , err400
                                                 , err404
-                                                , err500
+                                                , err500, err403
                                                 )
 import qualified Text.Pandoc.Class             as Pandoc
 import           Text.Pandoc.Class              ( PandocIO )
@@ -77,13 +77,17 @@ import           Text.Pandoc.Definition         ( Pandoc )
 import qualified Text.Pandoc.Readers           as Pandoc
 import           Text.Read                      ( readMaybe )
 import           Text.Show                      ( Show(..) )
+import Auth (UserInfo (..))
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
 
 handlers :: ServerT RoutesCMS a Handler
 handlers =
-    handleCMSGet :<|> handleInvalidateCache :<|> handleGetCacheInvalidationData
+         handleCMSGet
+    :<|> handleInvalidateCache
+    :<|> handleGetCacheInvalidationData
+    :<|> handleClearCache
 
 handleCMSGet :: SystemLang -> TextLang -> Text -> Handler [Pandoc]
 handleCMSGet systemLang textLang pageName = do
@@ -158,3 +162,8 @@ handleGetCacheInvalidationData = do
 
 textToLazyBS :: Text -> BL.ByteString
 textToLazyBS = LazyText.encodeUtf8 <<< LazyText.fromStrict
+
+handleClearCache :: UserInfo -> Handler ()
+handleClearCache UserInfo{..} = do
+  unless uiIsSiteAdmin $ Servant.throwError err403
+  runDb $ deleteAll @CMSCache

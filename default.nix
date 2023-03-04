@@ -52,8 +52,8 @@ in
       gerippe = self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "gerippe";
-        rev = "041f32de5094589ebc7dfe2bfd6e8078470ef2b6";
-        sha256 = "1mfxxn0q09wa81bdw4ngisklaaib4lz1ibxayrpk7g7l44hy92sm";
+        rev = "a25ccf56afe17ae5870955dbe5b968325dea8e24";
+        sha256 = "1ny1kacfd4vx0sbkxzlrz6ixkwxlinmfm5k3x184a0m5si5qb7n7";
       }) {};
       #gerippe = self.callCabal2nix "gerippe" ../../gerippe {};
 

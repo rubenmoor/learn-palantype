@@ -11,6 +11,10 @@
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE ExplicitNamespaces #-}
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage1 where
 
@@ -32,7 +36,7 @@ import           Control.Monad.Random           ( evalRand
                                                 )
 import           Control.Monad.Reader           ( MonadReader(ask)
                                                 )
-import           Data.Bool                      (not,  Bool(..) )
+import           Data.Bool                      (not,  Bool(..), otherwise )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(elem, length)
                                                 , for_
@@ -45,7 +49,7 @@ import           Data.Functor                   ( ($>)
 import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
 import           Data.List                      ( (!!)
-                                                , zip
+                                                , zip, sortOn
                                                 )
 import           Data.Maybe                     ( Maybe(..) )
 import           Data.Ord                       ( Ord((<), (>)) )
@@ -97,6 +101,14 @@ import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
 import CMS (elCMS)
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+import Palantype.EN.Keys (palanRank)
+import qualified Palantype.EN as EN
+import qualified Palantype.DE as DE
+import           Type.Reflection                ( (:~~:)(HRefl)
+                                                , eqTypeRep
+                                                , typeRep
+                                                )
+import Palantype.Common.TH (failure)
 
 -- exercise 1
 
@@ -272,7 +284,13 @@ taskAlphabet
     -> m (Event t ())
 taskAlphabet evChord showAlphabet = do
 
-    let len = length $ allKeys @key
+    let
+        keys = if
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> sortOn palanRank allKeys
+          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> allKeys
+          | otherwise -> $failure "Key not implemented"
+
+        len = length keys
 
         step :: Chord key -> WalkState key -> WalkState key
         step (Chord ks) ws@WalkState {..} =
@@ -287,7 +305,7 @@ taskAlphabet evChord showAlphabet = do
                     ws { wsCounter = 0, wsMMistake = Nothing }
 
                 -- correct
-                ([l], _, _) | allKeys !! wsCounter == l -> ws
+                ([l], _, _) | keys !! wsCounter == l -> ws
                     { wsDone    = if wsCounter == len - 1
                                       then Just True
                                       else Nothing
@@ -309,7 +327,7 @@ taskAlphabet evChord showAlphabet = do
 
     elClass "div" "exerciseField" $ el "code" $ do
         let clsLetter = if showAlphabet then "" else "fgTransparent"
-        for_ (zip [0 :: Int ..] $ allKeys @key) $ \(i, c) -> do
+        for_ (zip [0 :: Int ..] keys) $ \(i, c) -> do
             let
                 dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
                     Just (j, _) -> if i == j then "bgRed" else clsLetter

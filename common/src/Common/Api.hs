@@ -99,8 +99,9 @@ type RoutesAdmin =
 
 type RoutesCMS =
        Capture "system" SystemLang :> Capture "lang" TextLang :> Capture "pagename" Text :> Get '[JSON] [Pandoc]
-  :<|> "invalidate-cache" :> ReqBody '[JSON] Text :> Post '[JSON] ()
+  :<|> "invalidate-cache"        :> ReqBody '[JSON] Text :> Post '[JSON] ()
   :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
+  :<|> AuthRequired "jwt" :> "clear-cache"             :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype

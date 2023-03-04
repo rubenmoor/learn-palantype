@@ -13,7 +13,7 @@ module CMS where
 
 import           Client                         ( getCMS
                                                 , postRender
-                                                , request
+                                                , request, getAuthData, postClearCache
                                                 )
 import           Common.Model                   ( TextLang(TextEN) )
 import           Control.Applicative            ( Applicative(pure) )
@@ -25,7 +25,7 @@ import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<$>)
                                                 , (<&>)
                                                 , Functor(fmap, (<$))
-                                                , void
+                                                , void, ($>)
                                                 )
 import qualified Data.Map.Strict               as Map
 import           Data.Maybe                     ( Maybe(..)
@@ -41,7 +41,7 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , MonadHold
                                                 , PerformEvent(..)
                                                 , PostBuild (..)
-                                                , Prerender
+                                                , Prerender (..)
                                                 , Reflex(..)
                                                 , blank
                                                 , constDyn
@@ -53,13 +53,13 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , tag
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, TriggerEvent, dyn_, dyn
+                                                , widgetHold_, TriggerEvent, dyn, HasDomEvent (..), el', EventName (..)
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State
-                                                    ( stCMSCacheInvalidationData
-                                                    )
+                                                    (..
+                                                    ), Session (..)
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
 import           Witherable                     ( Filterable(filter)
@@ -69,6 +69,9 @@ import Data.Foldable (Foldable(length))
 import Data.Eq (Eq((==)))
 import TextShow (TextShow(showt))
 import Data.Int (Int)
+import Control.Monad (Monad)
+import Common.Auth (SessionData(..))
+import Shared (dynSimple)
 
 elCMS
     :: forall key t (m :: * -> *)
@@ -130,5 +133,38 @@ elCMS numParts = do
         Nothing                               -> Nothing <$ text "Loading content ..."
         Just parts | length parts == numParts -> pure $ Just parts
         Just parts                            -> do
-          text ("Wrong number of parts, expected 3, got " <> showt (length parts))
+          el "p" $ text $ "Wrong number of parts, expected "
+                       <> showt numParts
+                       <> ", got "
+                       <> showt (length parts)
+          evResp <- el "p" $ do
+            text "Try to "
+            (elA, _) <- el' "a" $ text "clear the local cache"
+            let evClickA = domEvent Click elA
+            clearLocalCache evClickA
+            text " and refresh the page."
+            let dynSession = stSession <$> envDynState
+            dynSimple $ dynSession <&> \case
+              SessionUser SessionData{..} | sdIsSiteAdmin -> do
+                text " If that doesn't do the trick, "
+                (elB, _) <- el' "a" $ text "clear the server cache"
+                let evClickB = domEvent Click elB
+                evResp <- request $ postClearCache (getAuthData <$> envDynState) evClickB
+                text " and refresh the page."
+                pure evResp
+              _ -> pure never
+          widgetHold_ blank $ evResp <&> el "p" . text . \case
+             Left msg -> "Request failed: " <> showt msg
+             Right _  -> "Cache cleared"
           pure Nothing
+
+clearLocalCache
+  :: forall t (m :: * -> *)
+  . ( PerformEvent t (Client m)
+    , Prerender t m
+    , Monad m
+    )
+  => Event t () -> m ()
+clearLocalCache ev =
+  prerender_ blank $ performEvent_ $ ev $>
+    liftJSM (LS.put LS.KeyCMSCache Map.empty)

@@ -1,54 +1,106 @@
-{-# LANGUAGE TemplateHaskell #-}
-module Page.StageGeneric
-  ( getGenericExercise
-  ) where
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE RecursiveDo #-}
 
-import qualified Page.Stage3 as Stage3
-import qualified Page.Stage4 as Stage4
-import qualified Page.Stage5 as Stage5
-import qualified Page.Stage6 as Stage6
-import qualified Page.Stage7 as Stage7
-import qualified Page.Stage8 as Stage8
-import qualified Page.Stage9 as Stage9
-import qualified Page.Stage10 as Stage10
-import qualified Page.Stage11 as Stage11
-import qualified Page.Stage12 as Stage12
-import qualified Page.Stage13 as Stage13
-import qualified Page.Stage14 as Stage14
-import Data.Map.Strict (Map)
-import qualified Palantype.DE as DE
-import Palantype.Common (Greediness, StageHierarchy)
-import Page.Common.Exercise (exercise, Constraints)
-import State (Navigation)
-import qualified Data.Map.Strict as Map
-import Palantype.Common.TH (failure)
+module Page.StageGeneric
+    ( getGenericExercise
+    ) where
+
+import           CMS                            ( elCMS )
+import           Common.Route                   ( FrontendRoute )
+import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO )
+import           Control.Monad.Reader           ( ask )
+import           Control.Monad.Reader.Class     ( MonadReader )
+import           Data.Functor                   ( (<&>) )
+import qualified Data.Map.Strict               as Map
+import           Data.Maybe                     ( isNothing )
+import           Data.Semigroup                 ( Endo )
+import           Obelisk.Route.Frontend         ( R
+                                                , SetRoute
+                                                )
+import           Page.Common                    ( elCongraz
+                                                , elPatterns
+                                                , getStatsLocalAndRemote
+                                                , taskWords
+                                                )
+import           Palantype.Common               ( Greediness
+                                                , Palantype
+                                                , patternDoc
+                                                )
+import qualified Palantype.DE                  as DE
+import           PloverDict                     ( getMapsForExercise )
+import           Reflex.Dom                     ( DomBuilder
+                                                , EventWriter
+                                                , MonadHold
+                                                , PerformEvent(..)
+                                                , PostBuild
+                                                , Prerender
+                                                , Reflex(..)
+                                                , TriggerEvent
+                                                , blank
+                                                , elClass
+                                                , gate
+                                                , splitE
+                                                , text
+                                                , widgetHold_
+                                                )
+import           Reflex.Dom.Pandoc              ( defaultConfig
+                                                , elPandoc
+                                                )
+import           State                          ( Env(..)
+                                                , Navigation(..)
+                                                , State
+                                                )
+import           Witherable                     ( Filterable(mapMaybe) )
 
 getGenericExercise
   :: forall key t (m :: * -> *)
-  . Constraints key t m
-  => (DE.Pattern, Greediness)
-  -> StageHierarchy
+  . ( DomBuilder t m
+    , EventWriter t (Endo State) m
+    , MonadFix m
+    , MonadHold t m
+    , MonadReader (Env t key) m
+    , Palantype key
+    , MonadIO (Performable m)
+    , PerformEvent t m
+    , PostBuild t m
+    , Prerender t m
+    , SetRoute t (R FrontendRoute) m
+    , TriggerEvent t m
+    )
+  => DE.Pattern
+  -> Greediness
   -> m Navigation
-  -> m Navigation
-getGenericExercise pgg h elNotImplemented = case Map.lookup pgg exercises of
-    Nothing -> elNotImplemented
-    Just (part1, part2) -> exercise h part1 pgg part2
+getGenericExercise patternGroup greediness = mdo
 
-exercises
-  :: forall key t (m :: * -> *)
-  . Constraints key t m
-  => Map (DE.Pattern, Greediness) (m (), m ())
-exercises = Map.unionsWith (\_ _ -> $failure "key duplicate")
-    [ Stage3.exercises
-    , Stage4.exercises
-    , Stage5.exercises
-    , Stage6.exercises
-    , Stage7.exercises
-    , Stage8.exercises
-    , Stage9.exercises
-    , Stage10.exercises
-    , Stage11.exercises
-    , Stage12.exercises
-    , Stage13.exercises
-    , Stage14.exercises
-    ]
+    Env{..} <- ask
+
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
+      _        -> Nothing
+
+    widgetHold_ blank $ elPandoc defaultConfig <$> evPart1
+
+    elPatterns
+        $ Map.toList
+        $ Map.findWithDefault Map.empty greediness
+        $ Map.findWithDefault Map.empty patternGroup patternDoc
+
+    widgetHold_ blank $ elPandoc defaultConfig <$> evPart2
+
+    dynStatsAll <- getStatsLocalAndRemote evDone
+
+    evDone <- case getMapsForExercise patternGroup greediness of
+        Left str -> do
+            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            pure never
+        Right (mSW, mWSs) -> taskWords
+            dynStatsAll
+            (gate (not <$> current dynDone) envEChord)
+            mSW
+            mWSs
+
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
+
+    pure envNavigation

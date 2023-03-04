@@ -819,9 +819,9 @@ elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
             elCell True stenoKeys dynPressedKeys 3 "3" ""
             elCell True stenoKeys dynPressedKeys 14 "1" ""
             elCell True stenoKeys dynPressedKeys 15 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 17 "2" ""
-            elCell True stenoKeys dynPressedKeys 18 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 19 "1" ""
+            elCell True stenoKeys dynPressedKeys 18 "2" ""
+            elCell True stenoKeys dynPressedKeys 19 "1" "homerow"
+            elCell True stenoKeys dynPressedKeys 20 "1" ""
             elCell True stenoKeys dynPressedKeys 32 "3" ""
     elClass "div" "configuration" $ do
         el "div" $ text $ showt SystemEN
@@ -1322,9 +1322,7 @@ elStages getLoadedAndBuilt = do
                       "Pattern Overview"          -> Patterns.overview
                       _                           ->
                         elPageNotImplemented "special page not found" $> navigationNothing
-                    Just (Stage (StageGeneric pg g) h) ->
-                      getGenericExercise (pg, g) h $
-                        elPageNotImplemented "generic exercise not found" $> navigationNothing
+                    Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
                     Nothing -> elPageNotImplemented "index invalid" $> navigationNothing
 
                 elClass "div" "scrollBottom"
