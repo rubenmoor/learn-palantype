@@ -1,3 +1,5 @@
+# Introduction
+
 ## Why Palantype
 
 Palantype allows you to type with lightning speed. It's a stenographic system in the wider sense. The most widespread of these systems is simply called steno. Any steno-style system requires quite a bit of learning. Palantype has the advantage that it's more suitable for regular keyboards. There are limitations, though.
@@ -24,4 +26,6 @@ Be sure to check out additional information on learning [Palantype](http://www.o
 
 <!--separator-->
 
-Instead of clicking the button, try to input `DSAÜD` by pressing D-, S-, A-, -Ü, -D all at once. Take your time finding the next key while holding down. The chord is only registered once you release all the keys.
+Instead of clicking the button, try to input `DSAÜD` by pressing `D-`, `S-`, `A-`, `-Ü`, `-D` all at once.
+Take your time finding the next key while holding down.
+The chord is only registered once you release all the keys.

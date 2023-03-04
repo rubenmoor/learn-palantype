@@ -1,4 +1,4 @@
-# ${title}
+# Introduction
 
 ## Why Palantype
 
@@ -26,4 +26,6 @@ Be sure to check out additional information on learning [Palantype](http://www.o
 
 <!--seperator-->
 
-Instead of clicking the button, try to input `START` by pressing S-, T-, A, -R, and -T all at once. Take your time finding the next key while holding down. The chord is only registered once you release all the keys.
+Instead of clicking the button, try to input `START` by pressing `S-`, `T-`, `A`, `-R`, and `-T` all at once.
+Take your time finding the next key while holding down.
+The chord is only registered once you release all the keys.

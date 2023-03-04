@@ -21,7 +21,7 @@ jobs:
         with:
           files: cms-content/**
 
-      - name: for each file changed, echo filename
+      - name: echo filenames
         if: steps.changed-files-cms-content.outputs.any_changed == 'true'
         run: |
           echo "File changes for filter cms-content/**"

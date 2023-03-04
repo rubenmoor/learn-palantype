@@ -109,8 +109,6 @@ introduction = do
       _ -> Nothing
 
     widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> do
-        el "h1" $ text "Introduction"
-
         elPandoc defaultConfig part1
 
         elClass "p" "textAlign-center" $ elAttr
