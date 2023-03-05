@@ -15,25 +15,18 @@ module Page.Stage15.CommandKeys
     ( commandKeys
     ) where
 
-import           Control.Applicative (Applicative (pure))
-import           Control.Monad.Reader.Class (MonadReader, ask)
 import           Data.Function (($))
 import           Data.Semigroup ((<>))
 import           Obelisk.Generated.Static (static)
 import           Page.Common (elNotImplemented)
 import           Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
-import           State (Env (..), Navigation (..))
 
 commandKeys ::
-    forall key t (m :: * -> *).
-    ( DomBuilder t m,
-      MonadReader (Env t key) m
+    forall t (m :: * -> *).
+    ( DomBuilder t m
     ) =>
-    m Navigation
+    m ()
 commandKeys = do
-    Env {..} <- ask
-    -- let Navigation {..} = envNavigation
-
     -- TODO
     elNotImplemented
 
@@ -95,5 +88,3 @@ commandKeys = do
 
     -- TODO: link to further special chars
     -- TODO: link to plover commands
-
-    pure envNavigation

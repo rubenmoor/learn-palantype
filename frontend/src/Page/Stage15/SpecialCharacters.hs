@@ -15,7 +15,6 @@ module Page.Stage15.SpecialCharacters
     ( specialCharacters
     ) where
 
-import Control.Applicative (Applicative (pure))
 import Control.Monad (unless)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Function (($))
@@ -32,7 +31,7 @@ specialCharacters
   . ( DomBuilder t m
     , MonadReader (Env t key) m
     )
-  => m Navigation
+  => m ()
 specialCharacters = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -101,5 +100,3 @@ specialCharacters = do
         el "strong" $ text "Not implemented"
         el "br" blank
         text "There hasn't been any exercise implemented yet"
-
-    pure envNavigation

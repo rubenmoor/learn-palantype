@@ -19,7 +19,6 @@ module Page.Stage15.Fingerspelling
 
 import           Common.Model                   ( Stats )
 import           Common.Route                   ( FrontendRoute )
-import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (.) )
 import           Control.Lens                   ( (+~)
                                                 , (.~)
@@ -257,7 +256,7 @@ fingerspelling
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 fingerspelling = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -408,5 +407,3 @@ fingerspelling = mdo
         text
             " you can utilize any conventional key binding in steno mode \
              \without any additional configuration."
-
-    pure envNavigation

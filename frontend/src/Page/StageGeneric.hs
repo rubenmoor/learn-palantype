@@ -48,7 +48,6 @@ import           Reflex.Dom.Pandoc              ( defaultConfig
                                                 , elPandoc
                                                 )
 import           State                          ( Env(..)
-                                                , Navigation(..)
                                                 , State
                                                 )
 import           Witherable                     ( Filterable(mapMaybe) )
@@ -70,7 +69,7 @@ getGenericExercise
     )
   => DE.Pattern
   -> Greediness
-  -> m Navigation
+  -> m ()
 getGenericExercise patternGroup greediness = mdo
 
     Env{..} <- ask
@@ -103,4 +102,4 @@ getGenericExercise patternGroup greediness = mdo
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-    pure envNavigation
+    blank

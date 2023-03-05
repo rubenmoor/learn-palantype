@@ -92,7 +92,6 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
 
                                                 )
 import           State                          ( Env(..)
-                                                , Navigation(..)
                                                 , State(..)
                                                 , updateState
                                                 )
@@ -133,7 +132,7 @@ exercise1
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise1 = do
 
     Env {..} <- ask
@@ -153,9 +152,7 @@ exercise1 = do
 
       elPandoc defaultConfig part2
 
-    pure envNavigation
-
--- 1.2
+  -- 1.2
 
 exercise2
     :: forall key t (m :: * -> *)
@@ -172,7 +169,7 @@ exercise2
        , PerformEvent t m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise2 = mdo
 
     Env {..} <- ask
@@ -191,8 +188,6 @@ exercise2 = mdo
 
       elPandoc defaultConfig part2
 
-    pure envNavigation
-
 -- 1.3
 
 exercise3
@@ -210,7 +205,7 @@ exercise3
        , PerformEvent t m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise3 = mdo
 
     Env {..} <- ask
@@ -228,7 +223,6 @@ exercise3 = mdo
       dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
       elPandoc defaultConfig part2
-    pure envNavigation
 
 -- 1.4
 
@@ -247,7 +241,7 @@ exercise4
        , PerformEvent t m
        , MonadIO (Performable m)
        )
-    => m Navigation
+    => m ()
 exercise4 = mdo
 
     Env {..} <- ask
@@ -256,17 +250,15 @@ exercise4 = mdo
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
     widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
+        elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+        evLoadedAndBuilt <- envGetLoadedAndBuilt
+        updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
-      evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+        evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+        dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-      elPandoc defaultConfig part2
-
-    pure envNavigation
+        elPandoc defaultConfig part2
 
 {-|
 Pass through all the letters of the steno alphabet one by one
@@ -480,7 +472,7 @@ exercise5
        , PerformEvent t m
        , MonadIO (Performable m)
        )
-    => m Navigation
+    => m ()
 exercise5 = mdo
 
     Env {..} <- ask
@@ -503,8 +495,6 @@ exercise5 = mdo
 
       elPandoc defaultConfig part2
 
-    pure envNavigation
-
 exercise6
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -520,7 +510,7 @@ exercise6
        , PerformEvent t m
        , MonadIO (Performable m)
        )
-    => m Navigation
+    => m ()
 exercise6 = mdo
 
     Env {..} <- ask
@@ -544,8 +534,6 @@ exercise6 = mdo
 
       elPandoc defaultConfig part2
 
-    pure envNavigation
-
 exercise7
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -561,7 +549,7 @@ exercise7
        , PerformEvent t m
        , MonadIO (Performable m)
        )
-    => m Navigation
+    => m ()
 exercise7 = mdo
 
     Env {..} <- ask
@@ -582,8 +570,6 @@ exercise7 = mdo
 
       elPandoc defaultConfig part2
 
-    pure envNavigation
-
 exercise8
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
@@ -599,7 +585,7 @@ exercise8
        , PerformEvent t m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise8 = mdo
 
     Env {..} <- ask
@@ -617,4 +603,3 @@ exercise8 = mdo
       dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
       elPandoc defaultConfig part2
-    pure envNavigation

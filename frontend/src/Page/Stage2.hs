@@ -144,7 +144,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , switchDyn
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_
+                                                , widgetHold_, splitE
                                                 )
 import           Reflex.Dom.Pandoc              ( defaultConfig
                                                 , elPandoc
@@ -306,7 +306,7 @@ exercise1
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise1 = mdo
     Env {..} <- ask
 
@@ -338,7 +338,6 @@ exercise1 = mdo
 
       pure ()
 
-    pure envNavigation
 
 -- Ex 2.2
 
@@ -429,118 +428,33 @@ exercise2
        , PerformEvent t m
        , MonadIO (Performable m)
        )
-    => m Navigation
+    => m ()
 exercise2 = mdo
     Env {..} <- ask
+    let Navigation{..} = envNavigation
 
-    evParts <- elCMS 2 <&> mapMaybe \case
-      [p1, p2] -> Just (p1, p2)
-      _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
+    (evPart1, evPart2) <- elCMS 2 <&> splitE .mapMaybe \case
+        [p1, p2] -> Just (p1, p2)
+        _        -> Nothing
 
-    let Navigation {..} = envNavigation
-    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
-
-    el "h1" $ text "Stage 2"
-    el "h3" $ text "Exercise 2"
-    el "h2" $ text "Syllables and chords"
+    widgetHold_ blank $ elPandoc defaultConfig <$> evPart1
 
     evDone <- case navSystemLang of
-        SystemEN -> do
-            el "p" $ do
-                text
-                    "We can begin with actually typing sentences now. \
-                    \How about this one sentences I found in the "
-                elAttr
-                        "a"
-                        ("href"
-                        =: "http://www.openstenoproject.org/palantype/tutorial/2016/08/21/learn-palantype.html"
-                        )
-                    $ text "Palantype Tutorial"
-                text
-                    " of the Open Steno Project? In case you have trouble \
-                    \with keys that appear twice on the steno keyboard: There is \
-                    \always only exactly one correct key that results in the desired \
-                    \output."
+      SystemEN ->
+        let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
+            txt = "The quick brown fox jumps over the la zy dog ."
 
-            let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
-                lsWord =
-                    [ "The"
-                    , "quick"
-                    , "brown"
-                    , "fox"
-                    , "jumps"
-                    , "over"
-                    , "the"
-                    , "lazy"
-                    , ""
-                    , "dog"
-                    , "."
-                    ]
+        in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
 
-            evDone' <- walkWords (gate (not <$> current dynDone) envEChord) lsWord raw
+      SystemDE ->
+          let raw = "MID DEM F+ISn F+Ä+GSD DEÜ ʃG+EI/FEL +-"
+              txt = "Mit dem Wissen wächst der Zwei fel ."
 
-            el "p" $ do
-                text
-                    "Each word is one chord, except the word \"lazy\". You will \
-                    \have to strike "
-                el "code" $ text "LE^"
-                text " and "
-                el "code" $ text "S+I"
-                text
-                    " separately. For this reason, the steno code for \"lazy\" \
-                    \is typically denoted "
-                el "code" $ text "LE^/S+I"
-                text ", with a /."
-
-            el "p" $ do
-                text
-                    "You wonder why the steno code looks so weird? \
-                    \Some words are almost beyond recognition. \
-                    \No worries, we'll get to that."
-
-            pure evDone'
-        SystemDE -> do
-            el "p"
-                $ text
-                      "We can begin with actually typing sentences now. \
-                    \How about this quote from Goethe? In case you have trouble \
-                    \with keys that appear twice on the steno keyboard: There is \
-                    \always only exactly one correct key that results in the desired \
-                    \output."
-
-            -- TODO: punctuation
-            let raw = "MID DEM F+ISn F+Ä+GSD DEÜ ʃG+EI/FEL +-"
-                txt = "Mit dem Wissen wächst der Zwei fel ."
-
-            evDone' <- walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
-
-            el "p" $ do
-                text
-                    "Each word is one chord, except the word «Zweifel». You will \
-                    \have to strike "
-                el "code" $ text "ʃG+EI"
-                text " and "
-                el "code" $ text "FEL"
-                text
-                    " separately. For this reason, the steno code for «Zweifel» \
-                    \is typically denoted "
-                el "code" $ text "ʃG+EI/FEL"
-                text ", with a /."
-
-            pure evDone'
-
-    el "p" $ do
-        text "You will probably need an additional chord to clear this task: "
-        el "code" $ text $ showt $ KI.toRaw @key kiBackUp
-        text
-            ". It is the homerow of your right hand and deletes your last \
-            \input. Now you can correct your mistakes!"
+          in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-    pure envNavigation
+    widgetHold_ blank $ elPandoc defaultConfig <$> evPart2
 
 -- Ex 2.3
 
@@ -696,13 +610,14 @@ exercise3
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise3 = mdo
     Env {..} <- ask
 
     evParts <- elCMS 1 <&> mapMaybe \case
       [p] -> Just p
       _   -> Nothing
+
     widgetHold_ blank $ evParts <&> \part -> mdo
       elPandoc defaultConfig part
 
@@ -717,8 +632,7 @@ exercise3 = mdo
             taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
-
-    pure envNavigation
+    blank
 
 -- Ex 2.4
 
@@ -737,13 +651,14 @@ exercise4
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 exercise4 = mdo
     Env {..} <- ask
 
     evParts <- elCMS 3 <&> mapMaybe \case
       [p1, p2, p3] -> Just (p1, p2, p3)
       _        -> Nothing
+
     widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> mdo
       elPandoc defaultConfig part1
 
@@ -775,5 +690,3 @@ exercise4 = mdo
           elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
           elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
           elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
-
-    pure envNavigation

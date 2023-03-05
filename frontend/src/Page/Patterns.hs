@@ -93,7 +93,7 @@ overview
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )
-    => m Navigation
+    => m ()
 overview = do
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -175,5 +175,3 @@ overview = do
                     text ", "
 
             elPatterns $ Map.toList doc
-
-    pure envNavigation

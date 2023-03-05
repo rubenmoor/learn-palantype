@@ -283,7 +283,7 @@ numberMode
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 numberMode = mdo
     Env {..} <- ask
     let Navigation {..} = envNavigation
@@ -400,4 +400,4 @@ numberMode = mdo
 
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
-    pure envNavigation
+    blank

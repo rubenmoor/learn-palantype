@@ -16,7 +16,6 @@ module Page.Introduction where
 
 import           CMS                            ( elCMS )
 import           Common.Route                   ( FrontendRoute(..) )
-import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (.) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
@@ -88,7 +87,7 @@ introduction
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
-    => m Navigation
+    => m ()
 introduction = do
 
     Env {..} <- ask
@@ -129,5 +128,3 @@ introduction = do
             setRoute $ eStart $> stageUrl @key 1
 
         elPandoc defaultConfig part3
-
-    pure envNavigation

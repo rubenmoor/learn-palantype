@@ -1259,40 +1259,39 @@ elStages getLoadedAndBuilt = do
         navigation <- elClass "div" "row" $ mdo
             elTOC @key iCurrent
 
-            let setEnv page =
-                    let navMPrevious = Stage.mPrev iCurrent
-                        navCurrent = iCurrent
-                        navMNext = Stage.mNext @key iCurrent
-                        navPageName =
-                          maybe "stageindex-unknown" Stage.toPageName $
-                            Stage.fromIndex @key iCurrent
-                        navTextLang = TextEN
-                        navSystemLang = getSystemLang @key
-                     in mapRoutedT
-                            ( withReaderT $ \dynState ->
-                                  Env
-                                      { envDynState = dynState
-                                      , envEChord = eChord
-                                      , envNavigation = Navigation {..}
-                                      , envGetLoadedAndBuilt = getLoadedAndBuilt
-                                      }
-                            ) do
-                              dynRoute <- askRoute
-                              Env{..} <- ask
-                              evLoadedAndBuilt <- envGetLoadedAndBuilt
-                              void $ request $ postEventViewPage
-                                (getMaybeAuthData <$> envDynState)
-                                (Right . showRoute . stageUrl @key <$> dynRoute)
-                                evLoadedAndBuilt
-                              page
-            navigation <- elAttr "section" ("id" =: "content") $ do
+            let navMPrevious = Stage.mPrev iCurrent
+                navCurrent = iCurrent
+                navMNext = Stage.mNext @key iCurrent
+                navPageName =
+                  maybe "stageindex-unknown" Stage.toPageName $
+                    Stage.fromIndex @key iCurrent
+                navTextLang = TextEN
+                navSystemLang = getSystemLang @key
+                navigation = Navigation{..}
+
+            let setEnv page = mapRoutedT
+                  ( withReaderT $ \dynState -> Env
+                      { envDynState = dynState
+                      , envEChord = eChord
+                      , envNavigation = navigation
+                      , envGetLoadedAndBuilt = getLoadedAndBuilt
+                      }
+                  ) do
+                      dynRoute <- askRoute
+                      Env{..} <- ask
+                      evLoadedAndBuilt <- envGetLoadedAndBuilt
+                      void $ request $ postEventViewPage
+                        (getMaybeAuthData <$> envDynState)
+                        (Right . showRoute . stageUrl @key <$> dynRoute)
+                        evLoadedAndBuilt
+                      page
+            elAttr "section" ("id" =: "content") $ do
                 elClass "div" "scrollTop" $ text
                     $  "▲ "
                     <> showt (KI.toRaw @key kiUp)
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
-                nav <- elClass "div" "content" $ setEnv $ do
+                elClass "div" "content" $ setEnv $ do
                   let
-                      navigationNothing = Navigation (getSystemLang @key) Nothing 0 Nothing "" TextEN
                       elPageNotImplemented str = do
                         elClass "div" "small anthrazit" $
                           text ("Page not implemented: StageIndex " <> showt iCurrent)
@@ -1321,9 +1320,9 @@ elStages getLoadedAndBuilt = do
                       "Special Characters"        -> specialCharacters
                       "Pattern Overview"          -> Patterns.overview
                       _                           ->
-                        elPageNotImplemented "special page not found" $> navigationNothing
+                        elPageNotImplemented "special page not found"
                     Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
-                    Nothing -> elPageNotImplemented "index invalid" $> navigationNothing
+                    Nothing -> elPageNotImplemented "index invalid"
 
                 elClass "div" "scrollBottom"
                     $ text
@@ -1331,6 +1330,5 @@ elStages getLoadedAndBuilt = do
                     <> showt (KI.toRaw @key kiDown)
                     <> "  ↡ "
                     <> showt (KI.toRaw @key kiPageDown)
-                pure nav
             pure navigation
         elFooter @key navigation
