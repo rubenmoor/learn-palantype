@@ -248,7 +248,7 @@ getCMS
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
     -> Event t ()
-    -> m (Event t (ReqResult () [Pandoc]))
+    -> m (Event t (ReqResult () (UTCTime, [Pandoc])))
 
 -- | meant to be called from github.com only
 --   only implemented here to satisfy the API type
@@ -263,13 +263,22 @@ getCacheInvalidationData
     => Event t ()
     -> m (Event t (ReqResult () (Map (SystemLang, TextLang, Text) UTCTime)))
 
-postClearCache
+postClearCacheAll
     :: SupportsServantReflex t m
     => Dynamic t (Either Text (CompactJWT, Text))
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCache))
+postClearCache
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text (CompactJWT, Text))
+    -> Dynamic t (Either Text SystemLang)
+    -> Dynamic t (Either Text TextLang)
+    -> Dynamic t (Either Text Text)
+    -> Event t ()
+    -> m (Event t (ReqResult () ()))
+
+(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache))
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

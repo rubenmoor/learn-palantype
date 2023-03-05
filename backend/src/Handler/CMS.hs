@@ -20,7 +20,7 @@ import qualified Data.ByteString.Lazy.UTF8     as BLU
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..) )
 import           Data.Foldable                  ( for_ )
-import           Data.Function                  ( ($) )
+import           Data.Function                  ( ($), (&) )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 , Functor((<$))
@@ -48,10 +48,7 @@ import           Database.Gerippe               ( Entity(..)
                                                 , getBy
                                                 , insert, deleteAll
                                                 )
-import           DbAdapter                      ( CMSCache
-                                                    ( CMSCache
-                                                    , cMSCacheBlob
-                                                    )
+import           DbAdapter                      ( CMSCache ( ..)
                                                 , CMSCacheInvalidation
                                                     ( CMSCacheInvalidation
                                                     , cMSCacheInvalidationPageName
@@ -74,10 +71,13 @@ import           Servant.Server                 ( HasServer(ServerT)
 import qualified Text.Pandoc.Class             as Pandoc
 import           Text.Pandoc.Class              ( PandocIO )
 import           Text.Pandoc.Definition         ( Pandoc )
+import Text.Pandoc.Extensions (pandocExtensions)
 import qualified Text.Pandoc.Readers           as Pandoc
 import           Text.Read                      ( readMaybe )
 import           Text.Show                      ( Show(..) )
 import Auth (UserInfo (..))
+import Data.Generics.Product (field)
+import Control.Lens ((.~))
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
@@ -87,15 +87,16 @@ handlers =
          handleCMSGet
     :<|> handleInvalidateCache
     :<|> handleGetCacheInvalidationData
+    :<|> handleClearCacheAll
     :<|> handleClearCache
 
-handleCMSGet :: SystemLang -> TextLang -> Text -> Handler [Pandoc]
+handleCMSGet :: SystemLang -> TextLang -> Text -> Handler (UTCTime, [Pandoc])
 handleCMSGet systemLang textLang pageName = do
     let cacheDbKey = UPageContent systemLang textLang pageName
     mFromCache <- runDb (getBy cacheDbKey) >>= \case
         Just (Entity _ CMSCache {..}) -> case blobDecode cMSCacheBlob of
-            Nothing -> runDb (deleteBy cacheDbKey) $> Nothing
-            Just c  -> pure $ Just c
+            Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
+            Just lsDoc -> pure $ Just (cMSCacheTime, lsDoc)
         Nothing -> pure Nothing
     case mFromCache of
         Just c -> pure c
@@ -107,7 +108,14 @@ handleCMSGet systemLang textLang pageName = do
                             "Couldn't convert markdown"
                                 <> BLU.fromString (show err)
                         }
-                    Right ls -> ls <$ runDb ( insert $ CMSCache systemLang textLang pageName $ blobEncode ls)
+                    Right lsDoc -> do
+                      now <- liftIO getCurrentTime
+                      _ <- runDb $ insert $ CMSCache systemLang
+                                                     textLang
+                                                     pageName
+                                                     (blobEncode lsDoc)
+                                                     now
+                      pure (now, lsDoc)
             GithubApi.PageNotFound strFilename -> Servant.throwError $ err404
                 { errBody = "Missing file: " <> textToLazyBS strFilename
                 }
@@ -120,7 +128,8 @@ handleCMSGet systemLang textLang pageName = do
 
 convertMarkdown :: Text -> PandocIO [Pandoc]
 convertMarkdown str =
-    traverse (Pandoc.readMarkdown def) $ Text.splitOn separatorToken str
+  let opts = def & field @"readerExtensions" .~ pandocExtensions
+  in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
 
 handleInvalidateCache :: Text -> Handler ()
 handleInvalidateCache str = for_ (Text.words str) \filepath -> do
@@ -163,7 +172,13 @@ handleGetCacheInvalidationData = do
 textToLazyBS :: Text -> BL.ByteString
 textToLazyBS = LazyText.encodeUtf8 <<< LazyText.fromStrict
 
-handleClearCache :: UserInfo -> Handler ()
-handleClearCache UserInfo{..} = do
+handleClearCacheAll :: UserInfo -> Handler ()
+handleClearCacheAll UserInfo{..} = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   runDb $ deleteAll @CMSCache
+
+handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> Handler ()
+handleClearCache UserInfo{..} systemLang textLang pageName = do
+  unless uiIsSiteAdmin $ Servant.throwError err403
+  let cacheDbKey = UPageContent systemLang textLang pageName
+  runDb $ deleteBy cacheDbKey

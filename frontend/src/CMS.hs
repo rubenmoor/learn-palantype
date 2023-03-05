@@ -13,12 +13,12 @@ module CMS where
 
 import           Client                         ( getCMS
                                                 , postRender
-                                                , request, getAuthData, postClearCache
+                                                , request, getAuthData, postClearCache, postClearCacheAll
                                                 )
 import           Common.Model                   ( TextLang(TextEN) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<), (.) )
-import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
+import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
 import           Data.Either                    ( Either(..) )
 import           Data.Function                  ( ($) )
@@ -34,8 +34,8 @@ import           Data.Maybe                     ( Maybe(..)
                                                 )
 import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( Semigroup((<>)) )
-import           Data.Time                      ( getCurrentTime )
-import           Language.Javascript.JSaddle    ( liftJSM )
+import           Data.Time                      ( defaultTimeLocale )
+import           Language.Javascript.JSaddle    ( liftJSM, eval )
 import qualified LocalStorage                  as LS
 import           Reflex.Dom                     ( DomBuilder
                                                 , MonadHold
@@ -53,7 +53,7 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , tag
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, TriggerEvent, dyn, HasDomEvent (..), el', EventName (..)
+                                                , widgetHold_, TriggerEvent, dyn, HasDomEvent (..), el', EventName (..), elClass, elAttr, (=:), dyn_, elDynClass
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -71,7 +71,10 @@ import TextShow (TextShow(showt))
 import Data.Int (Int)
 import Control.Monad (Monad)
 import Common.Auth (SessionData(..))
-import Shared (dynSimple)
+import Shared (dynSimple, iFa', iFa)
+import qualified Data.Text as Text
+import qualified Data.Time.Format as Time
+import Data.Text (Text)
 
 elCMS
     :: forall key t (m :: * -> *)
@@ -102,18 +105,18 @@ elCMS numParts = do
         mMap <- liftJSM $ LS.retrieve LS.KeyCMSCache
         pure do
           map <- mMap
-          (time, contents) <- Map.lookup cacheKey map
+          cacheEntry@(time, _) <- Map.lookup cacheKey map
           if Just time > mLatest
-            then pure contents
+            then Just cacheEntry
             else Nothing
 
     let evNotFromCache = void $ filter isNothing evMFromCache
         evFromCache = catMaybes evMFromCache
 
     (evRespFail, evRespSucc) <- fmap fanEither $ request $
-      getCMS (constDyn $ Right navSystemLang       )
-             (constDyn $ Right navTextLang        )
-             (constDyn $ Right navPageName)
+      getCMS (constDyn $ Right navSystemLang)
+             (constDyn $ Right navTextLang  )
+             (constDyn $ Right navPageName  )
              evNotFromCache
 
     widgetHold_ blank $ evRespFail <&> \strError ->
@@ -121,11 +124,41 @@ elCMS numParts = do
 
     dynMParts <- widgetHold (pure Nothing) $
       leftmost [Just <$> evRespSucc, Just <$> evFromCache, Nothing <$ evRespFail] <&> \case
-        Just parts -> do
+        Just (timeUpdated, parts) -> do
           prerender_ blank $ do
-            now <- liftIO getCurrentTime
             liftJSM $ LS.update LS.KeyCMSCache $
-              Map.insert (navSystemLang, TextEN, navPageName) (now, parts) <<< fromMaybe Map.empty
+              Map.insert (navSystemLang, TextEN, navPageName) (timeUpdated, parts) <<< fromMaybe Map.empty
+          elClass "div" "small floatRight gray italic" $ do
+            text $ "Last update "
+              <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" timeUpdated)
+              <> " "
+            domSyncLocal <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear cache and reload") $ iFa' "fas fa-sync"
+            clearLocalCache $ domEvent Click domSyncLocal
+
+            let dynSession = stSession <$> envDynState
+            dyn_ $ dynSession <&> whenIsAdmin do
+                text " "
+
+                domSyncServer <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache") $
+                  iFa' "fas fa-server"
+                evResp <- request $ postClearCache (getAuthData <$> envDynState)
+                                         (constDyn $ Right navSystemLang)
+                                         (constDyn $ Right navTextLang)
+                                         (constDyn $ Right navPageName)
+                                         $ domEvent Click domSyncServer
+                widgetHold_ blank $ evResp <&> elClass "span" "verySmall" . \case
+                  Left  _ -> iFa "red fas fa-times"
+                  Right _ -> iFa "green fas fa-check"
+
+                text " "
+
+                domSyncServerAll <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache of all pages") $
+                  iFa' "fas fa-skull"
+                evRespAll <- request $ postClearCacheAll (getAuthData <$> envDynState)
+                                                         $ domEvent Click domSyncServerAll
+                widgetHold_ blank $ evRespAll <&> elClass "span" "verySmall" . \case
+                  Left  _ -> iFa "red fas fa-times"
+                  Right _ -> iFa "green fas fa-check"
           pure $ Just parts
         Nothing -> pure $ Just []
 
@@ -138,24 +171,17 @@ elCMS numParts = do
                        <> ", got "
                        <> showt (length parts)
           evResp <- el "p" $ do
-            text "Try to "
-            (elA, _) <- el' "a" $ text "clear the local cache"
-            let evClickA = domEvent Click elA
-            clearLocalCache evClickA
-            text " and refresh the page."
+            text "Try to clear the cache and reload."
             let dynSession = stSession <$> envDynState
             dynSimple $ dynSession <&> \case
               SessionUser SessionData{..} | sdIsSiteAdmin -> do
                 text " If that doesn't do the trick, "
                 (elB, _) <- el' "a" $ text "clear the server cache"
                 let evClickB = domEvent Click elB
-                evResp <- request $ postClearCache (getAuthData <$> envDynState) evClickB
+                evResp <- request $ postClearCacheAll (getAuthData <$> envDynState) evClickB
                 text " and refresh the page."
                 pure evResp
               _ -> pure never
-          widgetHold_ blank $ evResp <&> el "p" . text . \case
-             Left msg -> "Request failed: " <> showt msg
-             Right _  -> "Cache cleared"
           pure Nothing
 
 clearLocalCache
@@ -166,5 +192,10 @@ clearLocalCache
     )
   => Event t () -> m ()
 clearLocalCache ev =
-  prerender_ blank $ performEvent_ $ ev $>
-    liftJSM (LS.put LS.KeyCMSCache Map.empty)
+  prerender_ blank $ performEvent_ $ ev $> liftJSM do
+    LS.put LS.KeyCMSCache Map.empty
+    void $ eval ("window.location.reload(true)" :: Text)
+
+whenIsAdmin :: Monad m => m () -> Session -> m ()
+whenIsAdmin action (SessionUser SessionData{..}) | sdIsSiteAdmin = action
+whenIsAdmin _ _ = blank

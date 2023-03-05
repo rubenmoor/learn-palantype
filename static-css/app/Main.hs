@@ -703,6 +703,8 @@ main = putCss $ do
     ".bgLightgray" ? backgroundColor myLightgray
     ".fgTransparent" ? color transparent
     ".red" ? color red
+    ".green" ? color green
+    ".gray" ? color gray
     ".small" ? fontSize (pt 12)
     ".big" ? fontSize (pt 24)
     ".verySmall" ? fontSize (pt 10)

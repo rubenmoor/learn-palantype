@@ -75,6 +75,7 @@ CMSCache
   pageName         Text
   blob             ByteString
   UPageContent systemLang textLang pageName
+  time             UTCTime
 CMSCacheInvalidation
   time             UTCTime
   systemLang       SystemLang
