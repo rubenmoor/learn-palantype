@@ -21,7 +21,7 @@ However, whenever a German word does not solely exists as noun, the system will 
 | ,     | `A   ` | attach comma                      | {^,}            |
 | ;     | `NA  ` | attach semicolon                  | {^;}            |
 | -     | `~   ` | hyphen to attach words            | {^-^}           |
-| \t    | `DJ  ` | tab like t                        | {^\t^}          |
+| \\t   | `DJ  ` | tab like t                        | {^\t^}          |
 |       | `B-  ` | capitalize last word              | {\*-&#124;}     |
 |       | `D-  ` | capitalize next word              | {-&#124;}       |
 |       | `S-  ` | uncapitalize last word            | {\*&gt;}        |
@@ -63,18 +63,18 @@ among them I included my personal selection of ASCII emoticons.
 
 |         |               |
 |---------|---------------|
-| `SLNSD` | ¯\\\_(ツ)\_/¯     |
-| `BLNSD` | ʕ•ᴥ•ʔ         |
-| `GLNSD` | (´･_･`)       |
-| `HLNSD` | (⊃｡•́‿•̀｡)⊃   |
-| `DLNSD` | (╯°□°）╯︵ ┻━┻  |
-| `FLNSD` | (☞ﾟヮﾟ)☞       |
-| `MLNSD` | (๑•́ ₃ •̀๑)   |
-| `JLNSD` | ┬─┬⃰͡\ (ᵔᵕᵔ͜\ ) |
-| `WLNSD` | ( ˘ ³˘)♥      |
-| `LLNSD` | ( ͡° ͜ʖ ͡°)   |
-| `NLNSD` | ( ಠ ʖ̯ ಠ )    |
-| `RLNSD` | (ᵔᴥᵔ)         |
+| `SLNSD` | `¯\_(ツ)_/¯`     |
+| `BLNSD` | `ʕ•ᴥ•ʔ`         |
+| `GLNSD` | `(´･_･`)`       |
+| `HLNSD` | `(⊃｡•́‿•̀｡)⊃`   |
+| `DLNSD` | `(╯°□°）╯︵ ┻━┻`  |
+| `FLNSD` | `(☞ﾟヮﾟ)☞`       |
+| `MLNSD` | `(๑•́ ₃ •̀๑)`   |
+| `JLNSD` | `┬─┬⃰͡ (ᵔᵕᵔ͜ )` |
+| `WLNSD` | `( ˘ ³˘)♥`      |
+| `LLNSD` | `( ͡° ͜ʖ ͡°)`   |
+| `NLNSD` | `( ಠ ʖ̯ ಠ )`    |
+| `RLNSD` | `(ᵔᴥᵔ)`         |
 
 ### Plover application shortcuts
 
