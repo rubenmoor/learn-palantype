@@ -27,6 +27,7 @@ jobs:
         run: |
           set -x
           echo "Changed files:"
+          echo "${{steps.cms.outputs.all-changed-files}}
           for file in ${{ steps.cms.outputs.all-changed-files }}
           do
             echo $file
