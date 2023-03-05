@@ -126,7 +126,7 @@ overview = do
             iPatternDoc
             \(i, (p, _)) -> do
                 el "li"
-                    $  elAttr "a" ("href" =: (toUrlPiece navSystemLang <> "/" <> Text.pack (show navCurrent) <> "#" <> showt p))
+                    $  elAttr "a" ("href" =: ("DE/" <> Text.pack (show navCurrent) <> "#" <> showt p))
                     $  text
                     $  showt @Int i
                     <> " "
