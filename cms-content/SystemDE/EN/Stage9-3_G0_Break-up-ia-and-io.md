@@ -4,4 +4,9 @@
 
 ## Break up ia and io
 
-### G0
+### Greediness 0
+
+In order to accommodate *ia* and *io* at Greediness 0, we need to break these up
+into two chords.
+
+<!--separator-->

@@ -4,4 +4,6 @@
 
 ## Replacing a silent h
 
-### G3
+### Greediness 3
+
+<!--separator-->

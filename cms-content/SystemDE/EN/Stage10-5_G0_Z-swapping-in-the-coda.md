@@ -4,4 +4,9 @@
 
 ## Z-swapping in the coda
 
-### G0
+### Greediness 0
+
+As promised, the same principles apply.
+*-tz* is typed by swapping the *z* and the «impossible» combinations make use of `s`.
+
+<!--separator-->

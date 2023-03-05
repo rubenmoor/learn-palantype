@@ -4,4 +4,6 @@
 
 ## Multiple vowels
 
-### G0
+### Greediness 0
+
+<!--separator-->

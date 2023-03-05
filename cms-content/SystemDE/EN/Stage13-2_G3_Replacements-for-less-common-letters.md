@@ -4,4 +4,6 @@
 
 ## Replacements for less common letters
 
-### G3
+### Greediness 3
+
+<!--separator-->

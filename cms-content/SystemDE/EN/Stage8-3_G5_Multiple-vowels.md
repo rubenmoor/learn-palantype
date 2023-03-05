@@ -4,4 +4,9 @@
 
 ## Multiple vowels
 
-### G5
+### Greediness 5
+
+The rule *e|a* is different from the one before:
+The *|* denotes separation of syllables.
+
+<!--separator-->

@@ -4,4 +4,8 @@
 
 ## Double vowels
 
-### G1
+### Greediness 1
+
+Remember that `Ü` really is the stretch key of your right hand.
+
+<!--separator-->

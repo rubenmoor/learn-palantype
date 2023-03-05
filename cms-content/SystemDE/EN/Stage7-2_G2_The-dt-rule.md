@@ -4,4 +4,9 @@
 
 ## The dt-rule
 
-### G2
+### Greediness 2
+
+Greediness here means, in most cases you just type `-D`
+and let the Palantype system decide whether this means *d*, *t*, or *dt*.
+
+<!--separator-->

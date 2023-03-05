@@ -4,4 +4,9 @@
 
 ## Replacing a silent h
 
-### G0
+### Greediness 0
+
+While you can mostly ignore the silent *h*,
+first you learn how to explicitly type it.
+
+<!--separator-->

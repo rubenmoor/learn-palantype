@@ -4,4 +4,8 @@
 
 ## Vowels followed by r
 
-### G4
+### Greediness 4
+
+This rule needs to show up somewhere for completeness.
+
+<!--separator-->
