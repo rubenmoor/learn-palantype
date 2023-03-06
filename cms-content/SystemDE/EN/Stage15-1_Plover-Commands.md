@@ -49,12 +49,12 @@ Your fingers of your right hand take care of any thing that opens and closes.
 
 | Short | Description     | Key 1   | Key 2 | Plover code |
 |-------|-----------------|---------|-------|-------------|
-| «»    | Guillemets      | `+ `    | `-G`  | {«^},{^»}   |
-| „“    | German quotes   | `-L`    | `-N`  | {„^},{^“}   |
-| ‹›    | chevrons        | `-M`    | `-B`  | {‹^},{^›}   |
-| []    | square brackets | `-F`    | `s `  | {[^},{^]}   |
-| ()    | parenthesis     | `-S`    | `-D`  | {(^},{^)}   |
-| {}    | brackets        | `ʃ `    | `n `  | {\{^},{^\}} |
+| «»    | Guillemets      | `+ `    | `-G`  | {«&Hat;},{&Hat;»}   |
+| „“    | German quotes   | `-L`    | `-N`  | {„&Hat;},{&Hat;“}   |
+| ‹›    | chevrons        | `-M`    | `-B`  | {‹&Hat;},{&Hat;›}   |
+| []    | square brackets | `-F`    | `s `  | {[&Hat;},{&Hat;]}   |
+| ()    | parenthesis     | `-S`    | `-D`  | {(&Hat;},{&Hat;)}   |
+| {}    | brackets        | `ʃ `    | `n `  | {\\{&Hat;},{&Hat;\\}} |
 
 ### ASCII art
 
@@ -65,7 +65,7 @@ among them I included my personal selection of ASCII emoticons.
 |---------|---------------|
 | `SLNSD` | `¯\_(ツ)_/¯`     |
 | `BLNSD` | `ʕ•ᴥ•ʔ`         |
-| `GLNSD` | `(´･_･`)`       |
+| `GLNSD` | ```(´･_･`)```       |
 | `HLNSD` | `(⊃｡•́‿•̀｡)⊃`   |
 | `DLNSD` | `(╯°□°）╯︵ ┻━┻`  |
 | `FLNSD` | `(☞ﾟヮﾟ)☞`       |
