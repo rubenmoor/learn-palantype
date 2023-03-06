@@ -20,8 +20,8 @@ However, whenever a German word does not solely exists as noun, the system will 
 |-------|--------|-----------------------------------|-----------------|
 | ,     | `A   ` | attach comma                      | {^,}            |
 | ;     | `NA  ` | attach semicolon                  | {^;}            |
-| -     | `~   ` | hyphen to attach words            | {^-^}           |
-| \\t   | `DJ  ` | tab like t                        | {^\t^}          |
+| -     | `~   ` | hyphen to attach words            | {&Hat;-&Hat;}           |
+| \\t   | `DJ  ` | tab like t                        | {&Hat;\t&Hat;}          |
 |       | `B-  ` | capitalize last word              | {\*-&#124;}     |
 |       | `D-  ` | capitalize next word              | {-&#124;}       |
 |       | `S-  ` | uncapitalize last word            | {\*&gt;}        |
