@@ -247,6 +247,7 @@ getCMS
     => Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
+    -> Dynamic t Bool
     -> Event t ()
     -> m (Event t (ReqResult () (UTCTime, [Pandoc])))
 

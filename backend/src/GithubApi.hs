@@ -18,8 +18,6 @@ import           Network.Wreq                   ( auth
                                                 , header
                                                 , oauth2Token
                                                 , responseBody
-                                                , statusCode
-                                                , statusMessage
                                                 )
 import           Palantype.Common               ( SystemLang )
 import           Servant                        ( ToHttpApiData(toUrlPiece) )

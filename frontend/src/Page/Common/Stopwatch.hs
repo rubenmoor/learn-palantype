@@ -108,7 +108,6 @@ import           Reflex.Dom                     ( (=:)
                                                 )
 import           Shared                         ( formatTime )
 import           State                          ( Env(..)
-                                                , Navigation(..)
                                                 , State(..)
                                                 , updateState
                                                 )
@@ -153,7 +152,6 @@ elStopwatch dynStats dynStopwatch n = do
                                         }
 
     Env {..} <- ask
-    let Navigation {..} = envNavigation
 
     el "hr" blank
     elClass "div" "stats small" $ do

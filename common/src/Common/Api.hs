@@ -98,7 +98,11 @@ type RoutesAdmin =
   :<|> AuthRequired "jwt" :> "locally-create-missing-files" :> Get '[JSON] ()
 
 type RoutesCMS =
-       Capture "system" SystemLang :> Capture "lang" TextLang :> Capture "pagename" Text :> Get '[JSON] (UTCTime, [Pandoc])
+          Capture "system" SystemLang
+       :> Capture "lang" TextLang
+       :> Capture "pagename" Text
+       :> QueryFlag "refresh"
+       :> Get '[JSON] (UTCTime, [Pandoc])
   :<|> "invalidate-cache"        :> ReqBody '[JSON] Text :> Post '[JSON] ()
   :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
   :<|> AuthRequired "jwt" :> "clear-cache" :> "all" :> Post '[JSON] ()

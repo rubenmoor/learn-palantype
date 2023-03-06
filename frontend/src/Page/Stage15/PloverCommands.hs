@@ -11,9 +11,9 @@ module Page.Stage15.PloverCommands
     ) where
 
 import           CMS                            ( elCMS )
+import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
-import           Control.Monad.Reader.Class     ( MonadReader
-                                                )
+import           Control.Monad.Reader.Class     ( MonadReader )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( (<$>)
                                                 , (<&>)
@@ -31,13 +31,13 @@ import           Reflex.Dom                     ( DomBuilder
 import           Reflex.Dom.Pandoc              ( defaultConfig
                                                 , elPandoc
                                                 )
-import           State                          ( Env(..)
-                                                )
+import           State                          ( Env(..) )
 import           Witherable                     ( Filterable(..) )
 
 ploverCommands
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadReader (Env t key) m

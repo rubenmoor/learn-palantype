@@ -23,7 +23,6 @@ import           Data.Foldable                  ( for_ )
 import           Data.Function                  ( ($), (&) )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
-                                                , Functor((<$))
                                                 , void
                                                 )
 import qualified Data.Map.Strict               as Map
@@ -78,6 +77,7 @@ import           Text.Show                      ( Show(..) )
 import Auth (UserInfo (..))
 import Data.Generics.Product (field)
 import Control.Lens ((.~))
+import Data.Bool (Bool)
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
@@ -90,10 +90,13 @@ handlers =
     :<|> handleClearCacheAll
     :<|> handleClearCache
 
-handleCMSGet :: SystemLang -> TextLang -> Text -> Handler (UTCTime, [Pandoc])
-handleCMSGet systemLang textLang pageName = do
+handleCMSGet :: SystemLang -> TextLang -> Text -> Bool -> Handler (UTCTime, [Pandoc])
+handleCMSGet systemLang textLang pageName bRefresh = do
     let cacheDbKey = UPageContent systemLang textLang pageName
-    mFromCache <- runDb (getBy cacheDbKey) >>= \case
+    mFromCache <-
+      if bRefresh
+      then pure Nothing
+      else runDb (getBy cacheDbKey) >>= \case
         Just (Entity _ CMSCache {..}) -> case blobDecode cMSCacheBlob of
             Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
             Just lsDoc -> pure $ Just (cMSCacheTime, lsDoc)

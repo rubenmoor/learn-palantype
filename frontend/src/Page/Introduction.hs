@@ -20,11 +20,11 @@ import           Control.Category               ( (.) )
 import           Control.Lens                   ( (%~)
                                                 , (.~)
                                                 )
+import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Function                  ( ($)
-                                                )
+import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
                                                 , void
@@ -39,8 +39,8 @@ import qualified Data.Set                      as Set
 import           Obelisk.Route.Frontend         ( R
                                                 , SetRoute(setRoute)
                                                 )
-import           Palantype.Common               ( Palantype
-                                                )
+import           Page.Common                    ( chordStart )
+import           Palantype.Common               ( Palantype )
 import           Palantype.Common.TH            ( fromJust )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
@@ -69,14 +69,13 @@ import           State                          ( Env(..)
                                                 , stageUrl
                                                 , updateState
                                                 )
-import           Witherable                     ( Filterable(filter, mapMaybe)
-                                                )
-import Page.Common (chordStart)
+import           Witherable                     ( Filterable(filter, mapMaybe) )
 
 introduction
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
+       , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadReader (Env t key) m
