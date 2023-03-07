@@ -42,20 +42,20 @@ import           Database                       ( blobDecode
                                                 , runDb
                                                 )
 import           Database.Gerippe               ( Entity(..)
-                                                , PersistUniqueWrite(deleteBy)
+                                                , deleteAll
                                                 , getAll
                                                 , getBy
-                                                , insert, deleteAll
+                                                , insert
+                                                , PersistUniqueWrite(deleteBy)
                                                 )
-import           DbAdapter                      ( CMSCache ( ..)
-                                                , CMSCacheInvalidation
-                                                    ( CMSCacheInvalidation
-                                                    , cMSCacheInvalidationPageName
-                                                    , cMSCacheInvalidationSystemLang
-                                                    , cMSCacheInvalidationTextLang
-                                                    , cMSCacheInvalidationTime
-                                                    )
-                                                , Unique(UPage, UPageContent)
+import Database.Persist                         ( Update(..)
+                                                , PersistUpdate(Assign)
+                                                , upsert
+                                                )
+import           DbAdapter                      ( CMSCache ( .. )
+                                                , CMSCacheLatest ( .. )
+                                                , Unique(UCMSCacheLatest, UCMSCache)
+                                                , EntityField(..)
                                                 )
 import qualified GithubApi
 import           Palantype.Common               ( SystemLang )
@@ -85,14 +85,14 @@ separatorToken = "<!--separator-->"
 handlers :: ServerT RoutesCMS a Handler
 handlers =
          handleCMSGet
-    :<|> handleInvalidateCache
+    :<|> handlePostCacheInvalidation
     :<|> handleGetCacheInvalidationData
     :<|> handleClearCacheAll
     :<|> handleClearCache
 
 handleCMSGet :: SystemLang -> TextLang -> Text -> Bool -> Handler (UTCTime, [Pandoc])
 handleCMSGet systemLang textLang pageName bRefresh = do
-    let cacheDbKey = UPageContent systemLang textLang pageName
+    let cacheDbKey = UCMSCache systemLang textLang pageName
     mFromCache <-
       if bRefresh
       then pure Nothing
@@ -112,12 +112,13 @@ handleCMSGet systemLang textLang pageName bRefresh = do
                                 <> BLU.fromString (show err)
                         }
                     Right lsDoc -> do
+                      let blob = blobEncode lsDoc
                       now <- liftIO getCurrentTime
-                      _ <- runDb $ insert $ CMSCache systemLang
-                                                     textLang
-                                                     pageName
-                                                     (blobEncode lsDoc)
-                                                     now
+                      _ <- runDb $ upsert
+                        (CMSCache systemLang textLang pageName blob now)
+                        [ Update CMSCacheBlob blob Assign
+                        , Update CMSCacheTime now  Assign
+                        ]
                       pure (now, lsDoc)
             GithubApi.PageNotFound strFilename -> Servant.throwError $ err404
                 { errBody = "Missing file: " <> textToLazyBS strFilename
@@ -134,8 +135,8 @@ convertMarkdown str =
   let opts = def & field @"readerExtensions" .~ pandocExtensions
   in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
 
-handleInvalidateCache :: Text -> Handler ()
-handleInvalidateCache str = for_ (Text.words str) \filepath -> do
+handlePostCacheInvalidation :: Text -> Handler ()
+handlePostCacheInvalidation str = for_ (Text.words str) \filepath -> do
     (strSystemLang, strTextLang, pageName) <- case Text.splitOn "/" filepath of
         ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
         _ -> bail
@@ -150,11 +151,11 @@ handleInvalidateCache str = for_ (Text.words str) \filepath -> do
             bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
         Just s -> pure s
     time <- liftIO getCurrentTime
-    runDb $ deleteBy $ UPage systemLang textLang pageName
-    void $ runDb $ insert $ CMSCacheInvalidation time
-                                                 systemLang
-                                                 textLang
-                                                 pageName
+    runDb $ deleteBy $ UCMSCacheLatest systemLang textLang pageName
+    void $ runDb $ insert $ CMSCacheLatest time
+                                           systemLang
+                                           textLang
+                                           pageName
     where bail msg = Servant.throwError $ err400 { errBody = msg }
 
 handleGetCacheInvalidationData
@@ -164,12 +165,12 @@ handleGetCacheInvalidationData = do
     pure
         $   Map.fromList
         $   cacheData
-        <&> \(Entity _ CMSCacheInvalidation {..}) ->
-                ( ( cMSCacheInvalidationSystemLang
-                  , cMSCacheInvalidationTextLang
-                  , cMSCacheInvalidationPageName
+        <&> \(Entity _ CMSCacheLatest {..}) ->
+                ( ( cMSCacheLatestSystemLang
+                  , cMSCacheLatestTextLang
+                  , cMSCacheLatestPageName
                   )
-                , cMSCacheInvalidationTime
+                , cMSCacheLatestTime
                 )
 
 textToLazyBS :: Text -> BL.ByteString
@@ -183,5 +184,5 @@ handleClearCacheAll UserInfo{..} = do
 handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> Handler ()
 handleClearCache UserInfo{..} systemLang textLang pageName = do
   unless uiIsSiteAdmin $ Servant.throwError err403
-  let cacheDbKey = UPageContent systemLang textLang pageName
+  let cacheDbKey = UCMSCache systemLang textLang pageName
   runDb $ deleteBy cacheDbKey

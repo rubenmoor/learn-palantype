@@ -74,12 +74,12 @@ CMSCache
   textLang         TextLang
   pageName         Text
   blob             ByteString
-  UPageContent systemLang textLang pageName
+  UCMSCache systemLang textLang pageName
   time             UTCTime
-CMSCacheInvalidation
+CMSCacheLatest
   time             UTCTime
   systemLang       SystemLang
   textLang         TextLang
   pageName         Text
-  UPage systemLang textLang pageName
+  UCMSCacheLatest systemLang textLang pageName
 |]
