@@ -17,6 +17,7 @@ library
     , data-default
     , directory
     , either
+    , esqueleto
     , frontend
     , gerippe
     , generic-lens
@@ -83,6 +84,7 @@ library
     , BlockArguments
     , OverloadedStrings
     , ScopedTypeVariables
+    , StrictData
 
 executable backend
   main-is: main.hs

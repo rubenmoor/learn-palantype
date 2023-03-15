@@ -82,6 +82,7 @@ import           Common.Model                   (defaultAppState, Rank (..), Jou
 import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Control.Category ((<<<))
+import Snap.Core (modifyResponse, setHeader)
 
 default(Text)
 
@@ -94,42 +95,41 @@ handlers =
   :<|> handleLogout
 
 handleGrantAuthPwd :: LoginData -> Handler (Maybe (SessionData, AppState))
-handleGrantAuthPwd LoginData {..} =
-    runDb (getBy $ Db.UUserName ldUserName) >>= \case
-        Nothing -> pure Nothing
-        Just (Entity keyUser Db.User {..}) -> do
-            mAuth                    <- runDb (getBy $ Db.UAuthPwdFkUser keyUser)
-            Entity _ Db.AuthPwd {..} <- maybe
-                (throwError $ err400 { errBody = "not registered with password" })
-                pure
-                mAuth
-            Entity keyAlias alias <- case userFkDefaultAlias of
-                Just key -> runDb (get key) >>= \case
-                    Just alias -> pure $ Entity key alias
-                    Nothing    -> throwError $ err500 { errBody = "alias not found" }
-                Nothing -> runDb (getWhere Db.AliasFkUser keyUser) >>= \case
-                    [alias] -> pure alias
-                    _       -> throwError $ err500 { errBody = "alias not found" }
-            case checkPassword (mkPassword ldPassword) authPwdPassword of
-                PasswordCheckSuccess -> do
-                    now <- liftIO getCurrentTime
-                    let claims = mkClaims now ldUserName
-                    jwk <- asks envJwk
-                    let toServerError e = throwError
-                            $ err500 { errBody = BSU.fromString $ show e }
-                    sdJwt <-
-                        liftIO (runExceptT $ mkCompactJWT jwk claims)
-                            >>= either toServerError pure
-                    sdClearances <- getClearances keyAlias
-                    let sdIsSiteAdmin = userIsSiteAdmin
-                        sdUserName    = userName
-                        sdAliasName   = Db.aliasName alias
-                        sdAliasVisible = Db.aliasIsVisible alias
-                        appState = fromMaybe defaultAppState $ blobDecode userBlobAppState
+handleGrantAuthPwd LoginData {..} = runDb (getBy $ Db.UUserName ldUserName) >>= \case
+    Nothing -> pure Nothing
+    Just (Entity keyUser Db.User {..}) -> do
+        mAuth                    <- runDb (getBy $ Db.UAuthPwdFkUser keyUser)
+        Entity _ Db.AuthPwd {..} <- maybe
+            (throwError $ err400 { errBody = "not registered with password" })
+            pure
+            mAuth
+        Entity keyAlias alias <- case userFkDefaultAlias of
+            Just key -> runDb (get key) >>= \case
+                Just alias -> pure $ Entity key alias
+                Nothing    -> throwError $ err500 { errBody = "alias not found" }
+            Nothing -> runDb (getWhere Db.AliasFkUser keyUser) >>= \case
+                [alias] -> pure alias
+                _       -> throwError $ err500 { errBody = "alias not found" }
+        case checkPassword (mkPassword ldPassword) authPwdPassword of
+            PasswordCheckSuccess -> do
+                now <- liftIO getCurrentTime
+                let claims = mkClaims now ldUserName
+                jwk <- asks envJwk
+                let toServerError e = throwError
+                        $ err500 { errBody = BSU.fromString $ show e }
+                sdJwt <-
+                    liftIO (runExceptT $ mkCompactJWT jwk claims)
+                        >>= either toServerError pure
+                sdClearances <- getClearances keyAlias
+                let sdIsSiteAdmin = userIsSiteAdmin
+                    sdUserName    = userName
+                    sdAliasName   = Db.aliasName alias
+                    sdAliasVisible = Db.aliasIsVisible alias
+                    appState = fromMaybe defaultAppState $ blobDecode userBlobAppState
 
-                    DbJournal.insert (Just keyAlias) $ EventUser EventLogin
-                    pure $ Just (SessionData { .. }, appState)
-                PasswordCheckFail -> pure Nothing
+                DbJournal.insert (Just keyAlias) $ EventUser EventLogin
+                pure $ Just (SessionData { .. }, appState)
+            PasswordCheckFail -> pure Nothing
 
 handleUserNew :: UserNew -> Handler SessionData
 handleUserNew UserNew {..} = do

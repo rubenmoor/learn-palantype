@@ -71,6 +71,7 @@ import           GHC.Num                        ( Num((*))
                                                 , fromInteger
                                                 )
 import           TextShow                       ( TextShow(showt) )
+import Snap.Core (modifyResponse, setHeader)
 
 default(Text)
 
@@ -104,6 +105,7 @@ handleAliasRename UserInfo {..} new = do
 
 handleAliasGetAll :: UserInfo -> Handler [Text]
 handleAliasGetAll UserInfo {..} = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     mUser   <- runDb $ getBy $ Db.UUserName uiUserName
     keyUser <- maybe (throwError $ err500 { errBody = "user not found" })
                      (pure . entityKey)
@@ -138,6 +140,7 @@ handleAliasSetVisibility UserInfo {..} bVisible = do
 
 handleGetAppState :: UserInfo -> Handler AppState
 handleGetAppState UserInfo {..} = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     Db.User {..} <- runDb (getBy $ Db.UUserName uiUserName) >>= maybe
         (throwError $ err500 { errBody = "user not found" })
         (pure . entityVal)

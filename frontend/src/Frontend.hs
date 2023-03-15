@@ -234,7 +234,7 @@ frontendBody = mdo
           in  (Data.Maybe.Just fl', if frontendAllLoaded fl' then Data.Maybe.Just () else Data.Maybe.Nothing)
     (dynFrontendLoaded, evLoaded) <-
       mapAccumMaybeDyn accFunc (FrontendLoaded False False) $ mergeWith (.)
-        [ evSessionLoaded $> setSessionLoaded
+        [ evSessionLoaded         $> setSessionLoaded
         , evCacheInvalidationData $> setCacheInvalidationLoaded
         ]
 

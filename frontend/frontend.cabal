@@ -56,17 +56,6 @@ library
     , Page.Patterns
     , Page.Stage1
     , Page.Stage2
-    , Page.Stage3
-    , Page.Stage4
-    , Page.Stage5
-    , Page.Stage6
-    , Page.Stage7
-    , Page.Stage8
-    , Page.Stage9
-    , Page.Stage10
-    , Page.Stage11
-    , Page.Stage12
-    , Page.Stage13
     , Page.Stage14
     , Page.Stage15.PloverCommands
     , Page.Stage15.Fingerspelling
@@ -85,6 +74,7 @@ library
     , LambdaCase
     , ScopedTypeVariables
     , OverloadedStrings
+    , StrictData
 
 executable frontend
   main-is: main.hs

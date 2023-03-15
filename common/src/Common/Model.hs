@@ -29,10 +29,19 @@ import           Common.PloverConfig            ( PloverCfg
                                                 , defaultPloverCfg
                                                 )
 import           Web.HttpApiData                ( FromHttpApiData
-                                                    ( parseQueryParam
+                                                    ( parseQueryParam, parseUrlPiece
                                                     )
-                                                , ToHttpApiData(toQueryParam)
+                                                , ToHttpApiData(toQueryParam, toUrlPiece)
                                                 )
+import qualified Data.Text as Text
+
+newtype UTCTimeInUrl = UTCTimeInUrl { unUTCTimeInUrl :: UTCTime }
+
+instance ToHttpApiData UTCTimeInUrl where
+  toUrlPiece = Text.replace ":" "_" . toUrlPiece . unUTCTimeInUrl
+
+instance FromHttpApiData UTCTimeInUrl where
+  parseUrlPiece = fmap UTCTimeInUrl . parseUrlPiece . Text.replace "_" ":"
 
 -- frontend/Localstorage
 

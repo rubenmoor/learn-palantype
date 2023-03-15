@@ -19,7 +19,7 @@ import           Common.Auth                    ( AuthOptional
 import           Common.Model                   ( AppState
                                                 , Journal
                                                 , Stats
-                                                , TextLang
+                                                , TextLang, UTCTimeInUrl
                                                 )
 import           Common.PloverConfig            ( PloverSystemCfg )
 import           Data.Aeson                     ( FromJSON
@@ -97,19 +97,26 @@ type RoutesAdmin =
            :> Get '[JSON] [Journal]
   :<|> AuthRequired "jwt" :> "locally-create-missing-files" :> Get '[JSON] ()
 
-type RoutesCMS =
-          Capture "system" SystemLang
-       :> Capture "lang" TextLang
+Type RoutesCMS =
+          Capture "system"   SystemLang
+       :> Capture "lang"     TextLang
        :> Capture "pagename" Text
-       :> QueryFlag "refresh"
-       :> Get '[JSON] (UTCTime, [Pandoc])
-  :<|> "invalidate-cache"        :> ReqBody '[JSON] Text :> Post '[JSON] ()
+       -- :> Capture "time"     UTCTimeInUrl
+       :> Capture "time"     UTCTime
+       :> Get '[JSON] [Pandoc]
+
+  -- Route to be called by github action
+  :<|> "invalidate-cache"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
+
   :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
+
   :<|> AuthRequired "jwt" :> "clear-cache" :> "all" :> Post '[JSON] ()
+
   :<|> AuthRequired "jwt" :> "clear-cache"
-        :> Capture "system" SystemLang
-        :> Capture "lang" TextLang
+        :> Capture "system"   SystemLang
+        :> Capture "lang"     TextLang
         :> Capture "pagename" Text
+        :> Capture "time"     UTCTime
         :> Post '[JSON] ()
 
 type RoutesApi = "api" :>

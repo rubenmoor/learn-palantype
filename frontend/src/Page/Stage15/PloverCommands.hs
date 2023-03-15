@@ -26,17 +26,19 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , Prerender(..)
                                                 , TriggerEvent
                                                 , blank
-                                                , widgetHold_
+                                                , widgetHold_, EventWriter
                                                 )
 import           Reflex.Dom.Pandoc              ( defaultConfig
                                                 , elPandoc
                                                 )
-import           State                          ( Env(..) )
+import           State                          ( Env(..), State )
 import           Witherable                     ( Filterable(..) )
+import Data.Semigroup (Endo)
 
 ploverCommands
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)

@@ -21,7 +21,7 @@ import           Common.Auth                    ( CompactJWT
 import           Common.Model                   ( AppState
                                                 , Journal
                                                 , Stats
-                                                , TextLang
+                                                , TextLang, UTCTimeInUrl
                                                 )
 import           Common.PloverConfig            ( PloverSystemCfg )
 import           Control.Applicative            ( Applicative(pure) )
@@ -247,15 +247,16 @@ getCMS
     => Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
-    -> Dynamic t Bool
+    -- -> Dynamic t (Either Text UTCTimeInUrl)
+    -> Dynamic t (Either Text UTCTime)
     -> Event t ()
-    -> m (Event t (ReqResult () (UTCTime, [Pandoc])))
+    -> m (Event t (ReqResult () [Pandoc]))
 
 -- | meant to be called from github.com only
 --   only implemented here to satisfy the API type
 _cmsInvalidateCache
     :: SupportsServantReflex t m
-    => Dynamic t (Either Text Text)
+    => Dynamic t (Either Text [Text])
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
@@ -276,6 +277,7 @@ postClearCache
     -> Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
+    -> Dynamic t (Either Text UTCTime)
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 

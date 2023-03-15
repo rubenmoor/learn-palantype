@@ -10,7 +10,7 @@ module Handler.CMS
 
 import           AppData                        ( Handler )
 import           Common.Api                     ( RoutesCMS )
-import           Common.Model                   ( TextLang )
+import           Common.Model                   ( TextLang, UTCTimeInUrl (UTCTimeInUrl) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<) )
 import           Control.Monad                  ( Monad((>>=)), unless )
@@ -46,12 +46,15 @@ import           Database.Gerippe               ( Entity(..)
                                                 , getAll
                                                 , getBy
                                                 , insert
+                                                , from
+                                                , val
+                                                , where_
+                                                , (^.)
+                                                , (==.)
+                                                , (&&.)
                                                 , PersistUniqueWrite(deleteBy)
                                                 )
-import Database.Persist                         ( Update(..)
-                                                , PersistUpdate(Assign)
-                                                , upsert
-                                                )
+import qualified Database.Esqueleto.Experimental as Esqueleto
 import           DbAdapter                      ( CMSCache ( .. )
                                                 , CMSCacheLatest ( .. )
                                                 , Unique(UCMSCacheLatest, UCMSCache)
@@ -77,7 +80,7 @@ import           Text.Show                      ( Show(..) )
 import Auth (UserInfo (..))
 import Data.Generics.Product (field)
 import Control.Lens ((.~))
-import Data.Bool (Bool)
+import Snap.Core (modifyResponse, setHeader)
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
@@ -90,16 +93,21 @@ handlers =
     :<|> handleClearCacheAll
     :<|> handleClearCache
 
-handleCMSGet :: SystemLang -> TextLang -> Text -> Bool -> Handler (UTCTime, [Pandoc])
-handleCMSGet systemLang textLang pageName bRefresh = do
-    let cacheDbKey = UCMSCache systemLang textLang pageName
-    mFromCache <-
-      if bRefresh
-      then pure Nothing
-      else runDb (getBy cacheDbKey) >>= \case
+handleCMSGet
+  :: SystemLang
+  -> TextLang
+  -> Text
+  -- -> UTCTimeInUrl
+  -> UTCTime
+  -> Handler [Pandoc]
+-- handleCMSGet systemLang textLang pageName (UTCTimeInUrl time) = do
+handleCMSGet systemLang textLang pageName time = do
+    modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
+    let cacheDbKey = UCMSCache systemLang textLang pageName time
+    mFromCache <- runDb (getBy cacheDbKey) >>= \case
         Just (Entity _ CMSCache {..}) -> case blobDecode cMSCacheBlob of
             Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
-            Just lsDoc -> pure $ Just (cMSCacheTime, lsDoc)
+            Just lsDoc -> pure $ Just lsDoc
         Nothing -> pure Nothing
     case mFromCache of
         Just c -> pure c
@@ -112,14 +120,16 @@ handleCMSGet systemLang textLang pageName bRefresh = do
                                 <> BLU.fromString (show err)
                         }
                     Right lsDoc -> do
-                      let blob = blobEncode lsDoc
-                      now <- liftIO getCurrentTime
-                      _ <- runDb $ upsert
-                        (CMSCache systemLang textLang pageName blob now)
-                        [ Update CMSCacheBlob blob Assign
-                        , Update CMSCacheTime now  Assign
-                        ]
-                      pure (now, lsDoc)
+                      runDb $ Esqueleto.delete $ from $ \c ->
+                        where_ $ c ^. CMSCacheSystemLang ==. val systemLang
+                             &&. c ^. CMSCacheTextLang   ==. val textLang
+                             &&. c ^. CMSCachePageName   ==. val pageName
+                      _ <- runDb $ insert $ CMSCache systemLang
+                                                     textLang
+                                                     pageName
+                                                     (blobEncode lsDoc)
+                                                     time
+                      pure lsDoc
             GithubApi.PageNotFound strFilename -> Servant.throwError $ err404
                 { errBody = "Missing file: " <> textToLazyBS strFilename
                 }
@@ -135,20 +145,18 @@ convertMarkdown str =
   let opts = def & field @"readerExtensions" .~ pandocExtensions
   in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
 
-handlePostCacheInvalidation :: Text -> Handler ()
-handlePostCacheInvalidation str = for_ (Text.words str) \filepath -> do
+handlePostCacheInvalidation :: [Text] -> Handler ()
+handlePostCacheInvalidation filepaths = for_ filepaths \filepath -> do
     (strSystemLang, strTextLang, pageName) <- case Text.splitOn "/" filepath of
         ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
         _ -> bail
                 $ "required: cms-content/[systemLang]/[textLang]/[pageName]; got: "
                 <> textToLazyBS filepath
     systemLang <- case readMaybe $ Text.unpack strSystemLang of
-        Nothing ->
-            bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
+        Nothing -> bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
         Just s -> pure s
     textLang <- case readMaybe $ Text.unpack strTextLang of
-        Nothing ->
-            bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
+        Nothing -> bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
         Just s -> pure s
     time <- liftIO getCurrentTime
     runDb $ deleteBy $ UCMSCacheLatest systemLang textLang pageName
@@ -161,6 +169,7 @@ handlePostCacheInvalidation str = for_ (Text.words str) \filepath -> do
 handleGetCacheInvalidationData
     :: Handler (Map (SystemLang, TextLang, Text) UTCTime)
 handleGetCacheInvalidationData = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     cacheData <- runDb getAll
     pure
         $   Map.fromList
@@ -181,8 +190,8 @@ handleClearCacheAll UserInfo{..} = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   runDb $ deleteAll @CMSCache
 
-handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> Handler ()
-handleClearCache UserInfo{..} systemLang textLang pageName = do
+handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> UTCTime -> Handler ()
+handleClearCache UserInfo{..} systemLang textLang pageName time = do
   unless uiIsSiteAdmin $ Servant.throwError err403
-  let cacheDbKey = UCMSCache systemLang textLang pageName
+  let cacheDbKey = UCMSCache systemLang textLang pageName time
   runDb $ deleteBy cacheDbKey

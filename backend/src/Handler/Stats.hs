@@ -44,6 +44,7 @@ import qualified Palantype.EN as EN
 import Palantype.Common (SystemLang (..), StageIndex, toStageRepr)
 import Palantype.Common.TH (fromJust)
 import qualified Palantype.Common.Stage as Stage
+import Snap.Core (modifyResponse, setHeader)
 
 
 handlers :: ServerT RoutesStats a Handler
@@ -55,6 +56,7 @@ handlers =
 handleStatsGet
     :: Maybe UserInfo -> SystemLang -> StageIndex -> Handler [(Maybe Text, Stats)]
 handleStatsGet mUi lang iStage = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     let mStageRepr = case lang of
           SystemDE -> toStageRepr @DE.Key <$> Stage.fromIndex iStage
           SystemEN -> toStageRepr @EN.Key <$> Stage.fromIndex iStage

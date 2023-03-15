@@ -88,6 +88,7 @@ import           TextShow                       ( TextShow(showt) )
 import Control.Monad.Reader (MonadReader(ask))
 import Data.Eq (Eq((==)))
 import GHC.Enum (Enum(succ))
+import Snap.Core (modifyResponse, setHeader)
 
 handlers :: ServerT RoutesAdmin a Handler
 handlers = handleJournalGetAll :<|> handleCreateMissingFilesLocally
@@ -102,7 +103,16 @@ handleJournalGetAll
     -> Maybe Text
     -> Bool
     -> Handler [Journal]
-handleJournalGetAll UserInfo {..} mStart mEnd bExcludeAdmin mVisitorId mUser mAlias bAnonymous = do
+handleJournalGetAll
+  UserInfo{..}
+  mStart
+  mEnd
+  bExcludeAdmin
+  mVisitorId
+  mUser
+  mAlias
+  bAnonymous = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     unless uiIsSiteAdmin $ throwError err403
     now <- liftIO getCurrentTime
     let end   = fromMaybe (utctDay now) mEnd

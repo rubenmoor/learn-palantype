@@ -74,8 +74,8 @@ CMSCache
   textLang         TextLang
   pageName         Text
   blob             ByteString
-  UCMSCache systemLang textLang pageName
   time             UTCTime
+  UCMSCache systemLang textLang pageName time
 CMSCacheLatest
   time             UTCTime
   systemLang       SystemLang

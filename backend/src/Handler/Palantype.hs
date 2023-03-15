@@ -64,7 +64,7 @@ import           Servant.Server                 ( ServantErr(errBody)
                                                 )
 import qualified Servant.Server                as Snap
                                                 ( throwError )
-import           Snap.Core                      ( MonadSnap )
+import           Snap.Core                      ( MonadSnap, setHeader, modifyResponse )
 import qualified Data.ByteString.UTF8 as BSU
 
 handlers :: MonadSnap m => ServerT RoutesPalantype a m
@@ -90,6 +90,7 @@ instance FromJSON KeysMapJSON where
 
 handleConfigNew :: MonadSnap m => String -> m (SystemLang, PloverSystemCfg)
 handleConfigNew str = do
+    modifyResponse $ setHeader "Cache-Control" "no-store, must-revalidate"
     let eCfg = runExcept $ do
             parser <- CfgParser.readstring CfgParser.emptyCP str
             let parse = CfgParser.get parser

@@ -9,6 +9,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TupleSections #-}
 
 module CMS where
 
@@ -16,41 +18,34 @@ import           Client                         ( getAuthData
                                                 , getCMS
 
                                                 , postClearCacheAll
-                                                , postRender
-                                                , request
+
+                                                , request, getCacheInvalidationData
                                                 )
 import           Common.Auth                    ( SessionData(..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (.)
-                                                , (<<<)
+
                                                 )
 import           Control.Monad                  ( Monad )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
-import           Data.Bool                      ( Bool(..) )
 import           Data.Either                    ( Either(..) )
 import           Data.Foldable                  ( Foldable(length) )
 import           Data.Function                  ( ($) )
 import           Data.Functor                   ( ($>)
                                                 , (<$>)
                                                 , (<&>)
-                                                , Functor(fmap)
+
                                                 , void
                                                 )
 import           Data.Int                       ( Int )
 import qualified Data.Map.Strict               as Map
-import           Data.Maybe                     ( Maybe(..)
-                                                , fromMaybe
-                                                , isNothing
+import           Data.Maybe                     ( Maybe(..), fromMaybe
                                                 )
-import           Data.Ord                       ( Ord((>)) )
 import           Data.Semigroup                 ( Semigroup((<>)) )
 import qualified Data.Text                     as Text
-import           Data.Time                      ( defaultTimeLocale )
+import           Data.Time                      ( defaultTimeLocale, UTCTime (..), Day (ModifiedJulianDay), secondsToDiffTime )
 import qualified Data.Time.Format              as Time
-import           Language.Javascript.JSaddle    ( liftJSM
-                                                )
-import qualified LocalStorage                  as LS
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
                                                 , EventName(..)
@@ -63,7 +58,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , TriggerEvent
                                                 , blank
                                                 , constDyn
-                                                , current
+
 
                                                 , dyn_
                                                 , el
@@ -72,11 +67,11 @@ import           Reflex.Dom                     ( (=:)
                                                 , elClass
                                                 , fanEither
                                                 , leftmost
-                                                , prerender_
-                                                , tag
+
+
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, switchDyn
+                                                , widgetHold_, switchDyn, attachWith, EventWriter
                                                 )
 import           Shared                         ( iFa
                                                 , iFa'
@@ -84,21 +79,24 @@ import           Shared                         ( iFa
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Session(..)
-                                                , State(..)
+                                                , State(..), updateState
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
 import           TextShow                       ( TextShow(showt) )
-import           Witherable                     ( Filterable(filter)
-                                                , catMaybes
+import           Witherable                     ( catMaybes
                                                 )
-import Data.Time.Clock (UTCTime)
 import Data.Tuple (fst, snd)
 import Data.Eq (Eq((==)))
 import Control.Monad.Fix (MonadFix)
+import Control.Lens (set)
+import Data.Generics.Product (HasField(field))
+import Data.Monoid (Endo)
+import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
 
 elCMS
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
        , MonadIO (Performable m)
@@ -117,41 +115,35 @@ elCMS numParts = mdo
 
     let
         Navigation {..} = envNavigation
-        cacheInvalidation = current $ stCMSCacheInvalidationData <$> envDynState
-        cacheKey = (navSystemLang, navTextLang, navPageName)
+        dynLatest =
+              fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
+            . Map.lookup (navSystemLang, navTextLang, navPageName)
+            . stCMSCacheInvalidationData
+          <$> envDynState
 
-    evMFromCache <- Client.postRender $ performEvent $
-      tag cacheInvalidation evLoadedAndBuilt <&> \mapCacheInvalidation -> do
-        let mLatest = Map.lookup cacheKey mapCacheInvalidation
-        mMap <- liftJSM $ LS.retrieve LS.KeyCMSCache
-        pure do
-          map <- mMap
-          cacheEntry@(time, _) <- Map.lookup cacheKey map
-          if Just time > mLatest
-            then Just cacheEntry
-            else Nothing
-
-    let evNotFromCache = void $ filter isNothing evMFromCache
-        evFromCache = catMaybes evMFromCache
-
-    dynRefresh <- holdDyn False $ evRefresh $> True
-
-    (evRespFail, evRespSucc) <- fmap fanEither $ Client.request $
+    evRespCMS <- Client.request $
       Client.getCMS (constDyn $ Right navSystemLang)
-             (constDyn $ Right navTextLang  )
-             (constDyn $ Right navPageName  )
-             dynRefresh
-             $ leftmost [evNotFromCache, evRefresh]
+                    (constDyn $ Right navTextLang  )
+                    (constDyn $ Right navPageName  )
+                    -- (Right . UTCTimeInUrl <$> dynLatest)
+                    (Right  <$> dynLatest)
+                    $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
-    widgetHold_ blank $ evRespFail <&> \strError ->
-      el "span" $ text $ "CMS error: " <> strError
 
     dynPair <- el "div" $ widgetHold (text "loading content ..." $> (Nothing, never)) $
-      leftmost [Right <$> evRespSucc, Right <$> evFromCache, Left <$> evRespFail] <&> \case
-        Left str            -> text ("CMS error: " <> str) $> (Nothing, never)
-        Right (time, parts) -> elCMSMenu numParts time parts
+      attachWith (\mt e -> (mt,) <$> e) (current dynLatest) evRespCMS <&> \case
+        Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
+        Right (latest, parts) -> elCMSMenu numParts latest parts
 
     let evRefresh = switchDyn $ snd <$> dynPair
+    evRespCMSCache <-
+      request $ getCacheInvalidationData evRefresh
+    let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
+    updateState $ evSuccCMSCache <&> \ci ->
+      [ set (field @"stCMSCacheInvalidationData") ci ]
+    widgetHold_ blank $ evFailCMSCache <&> \msg ->
+      el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
+
     pure $ catMaybes $ updated $ fst <$> dynPair
 
 elCMSMenu
@@ -165,25 +157,20 @@ elCMSMenu
     -> UTCTime
     -> [Pandoc]
     -> m (Maybe [Pandoc], Event t ())
-elCMSMenu numParts time parts = do
+elCMSMenu numParts latest parts = do
     Env {..} <- ask
     let
-        Navigation {..} = envNavigation
         n = length parts
 
     mParts <- if n == numParts
-      then do
-        prerender_ blank $ liftJSM $ LS.update LS.KeyCMSCache $
-             Map.insert (navSystemLang, navTextLang, navPageName) (time, parts)
-               <<< fromMaybe Map.empty
-        pure $ Just parts
+      then pure $ Just parts
       else do
         text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> "expected parts."
         pure Nothing
 
     evRefresh <- elClass "div" "small floatRight gray italic" $ do
       text $ "Last update "
-        <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" time)
+        <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" latest)
         <> " "
       domRefresh <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Refresh") $ iFa' "fas fa-sync"
 

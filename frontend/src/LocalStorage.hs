@@ -9,7 +9,7 @@ module LocalStorage
   where
 
 import           Common.Model                   ( AppState
-                                                , Stats, TextLang
+                                                , Stats
                                                 )
 import           Control.Category               ( (<<<) )
 import           Data.Aeson                     ( FromJSON
@@ -33,21 +33,17 @@ import           State                          ( Session )
 import           TextShow                       ( TextShow(..)
                                                 , fromText
                                                 )
-import Text.Pandoc.Definition (Pandoc)
-import Data.Time (UTCTime)
 
 data Key a where
   KeyAppState :: Key AppState
   KeySession  :: Key Session
   KeyStats    :: Key (Map (SystemLang, StageIndex) [Stats])
-  KeyCMSCache :: Key (Map (SystemLang, TextLang, Text) (UTCTime, [Pandoc]))
 
 instance TextShow (Key a) where
   showb = fromText. \case
     KeyAppState -> "app-state"
     KeySession  -> "session"
     KeyStats    -> "stats"
-    KeyCMSCache -> "cms-cache"
 
 retrieve :: (MonadJSM m, FromJSON a) => Key a -> m (Maybe a)
 retrieve key =
