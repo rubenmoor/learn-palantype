@@ -114,7 +114,6 @@ type RoutesCMS =
         :> Capture "system"   SystemLang
         :> Capture "lang"     TextLang
         :> Capture "pagename" Text
-        :> Capture "time"     UTCTimeInUrl
         :> Post '[JSON] ()
 
 type RoutesApi = "api" :>

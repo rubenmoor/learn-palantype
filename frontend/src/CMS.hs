@@ -16,10 +16,7 @@ module CMS (elCMS, elCMSContent)where
 
 import           Client                         ( getAuthData
                                                 , getCMS
-
-                                                , postClearCacheAll
-
-                                                , request, getCacheInvalidationData
+                                                , request, getCacheInvalidationData, postClearCache
                                                 )
 import           Common.Auth                    ( SessionData(..) )
 import           Control.Applicative            ( Applicative(pure) )
@@ -192,10 +189,16 @@ elCMSMenu numParts latest parts = do
       dyn_ $ dynSession <&> whenIsAdmin do
           text " "
 
-          domSyncServerAll <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache of all pages") $
+          domSyncServerAll <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache") $
             iFa' "fas fa-skull"
-          evRespAll <- Client.request $ Client.postClearCacheAll (Client.getAuthData <$> envDynState)
-                                                    $ domEvent Click domSyncServerAll
+
+          let Navigation{..} = envNavigation
+          evRespAll <- Client.request $ Client.postClearCache
+            (Client.getAuthData <$> envDynState)
+            (constDyn $ Right navSystemLang)
+            (constDyn $ Right navTextLang  )
+            (constDyn $ Right navPageName  )
+            $ domEvent Click domSyncServerAll
           widgetHold_ blank $ evRespAll <&> elClass "span" "verySmall" . \case
             Left  _ -> iFa "red fas fa-times"
             Right _ -> iFa "green fas fa-check"
@@ -203,8 +206,6 @@ elCMSMenu numParts latest parts = do
       pure $ domEvent Click domRefresh
 
     pure (mParts, evRefresh)
-
-
 
 whenIsAdmin :: Monad m => m () -> Session -> m ()
 whenIsAdmin action (SessionUser SessionData{..}) | sdIsSiteAdmin = action

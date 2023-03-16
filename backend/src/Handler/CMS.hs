@@ -188,8 +188,15 @@ handleClearCacheAll UserInfo{..} = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   runDb $ deleteAll @CMSCache
 
-handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> UTCTimeInUrl -> Handler ()
-handleClearCache UserInfo{..} systemLang textLang pageName (UTCTimeInUrl time) = do
+handleClearCache
+  :: UserInfo
+  -> SystemLang
+  -> TextLang
+  -> Text
+  -> Handler ()
+handleClearCache UserInfo{..} systemLang textLang pageName = do
   unless uiIsSiteAdmin $ Servant.throwError err403
-  let cacheDbKey = UCMSCache systemLang textLang pageName time
-  runDb $ deleteBy cacheDbKey
+  runDb $ Esqueleto.delete $ from $ \c ->
+    where_ $ c ^. CMSCacheSystemLang ==. val systemLang
+         &&. c ^. CMSCacheTextLang   ==. val textLang
+         &&. c ^. CMSCachePageName   ==. val pageName
