@@ -22,6 +22,7 @@ jobs:
         with:
           files: cms-content/**
           json: true
+          since_last_remote_commit: "true"
 
       - name: web request to invalidate cache
         if: steps.cms.outputs.any_changed == 'true'
