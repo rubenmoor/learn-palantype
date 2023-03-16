@@ -45,7 +45,7 @@ Use `-L` and `-D` (SHIFT) in combination with the keys below, to start fingerspe
 
 | SHIFT | CTRL | WIN | ALT |
 |-------|------|-----|-----|
-| `-s`  | s    | D   | n   |
+| `-D`  | `-ʃ` | `-S`| `-F`|
 
 ### Fingerspelling literals
 
