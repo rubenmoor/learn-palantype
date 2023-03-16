@@ -39,7 +39,7 @@ In case you want to tap the `WIN` key, e.g. to open the Start menu on the
 Microsoft Windows operating system,
 the `WIN` key shows up among the keys in [Ex. 15.4 Command Keys](DE/57).
 
-Use `-L` and `-D` (SHIFT) in combination with the keys below, to start fingerspelling!
+Use `-+` and `-D` (SHIFT) in combination with the keys below, to start fingerspelling!
 
 ### Modifier keys
 
