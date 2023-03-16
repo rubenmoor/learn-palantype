@@ -247,8 +247,7 @@ getCMS
     => Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
-    -- -> Dynamic t (Either Text UTCTimeInUrl)
-    -> Dynamic t (Either Text UTCTime)
+    -> Dynamic t (Either Text UTCTimeInUrl)
     -> Event t ()
     -> m (Event t (ReqResult () [Pandoc]))
 
@@ -277,7 +276,7 @@ postClearCache
     -> Dynamic t (Either Text SystemLang)
     -> Dynamic t (Either Text TextLang)
     -> Dynamic t (Either Text Text)
-    -> Dynamic t (Either Text UTCTime)
+    -> Dynamic t (Either Text UTCTimeInUrl)
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 

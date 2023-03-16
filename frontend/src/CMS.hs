@@ -125,8 +125,7 @@ elCMS numParts = mdo
       Client.getCMS (constDyn $ Right navSystemLang)
                     (constDyn $ Right navTextLang  )
                     (constDyn $ Right navPageName  )
-                    -- (Right . UTCTimeInUrl <$> dynLatest)
-                    (Right  <$> dynLatest)
+                    (Right . UTCTimeInUrl <$> dynLatest)
                     $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
 

@@ -97,11 +97,9 @@ handleCMSGet
   :: SystemLang
   -> TextLang
   -> Text
-  -- -> UTCTimeInUrl
-  -> UTCTime
+  -> UTCTimeInUrl
   -> Handler [Pandoc]
--- handleCMSGet systemLang textLang pageName (UTCTimeInUrl time) = do
-handleCMSGet systemLang textLang pageName time = do
+handleCMSGet systemLang textLang pageName (UTCTimeInUrl time) = do
     modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
     let cacheDbKey = UCMSCache systemLang textLang pageName time
     mFromCache <- runDb (getBy cacheDbKey) >>= \case
@@ -190,8 +188,8 @@ handleClearCacheAll UserInfo{..} = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   runDb $ deleteAll @CMSCache
 
-handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> UTCTime -> Handler ()
-handleClearCache UserInfo{..} systemLang textLang pageName time = do
+handleClearCache :: UserInfo -> SystemLang -> TextLang -> Text -> UTCTimeInUrl -> Handler ()
+handleClearCache UserInfo{..} systemLang textLang pageName (UTCTimeInUrl time) = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   let cacheDbKey = UCMSCache systemLang textLang pageName time
   runDb $ deleteBy cacheDbKey

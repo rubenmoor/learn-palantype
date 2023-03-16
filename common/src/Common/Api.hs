@@ -26,8 +26,7 @@ import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
                                                 )
 import           Data.Text                      ( Text )
-import           Data.Time                      ( Day
-                                                , UTCTime
+import           Data.Time                      ( Day, UTCTime
                                                 )
 import           Palantype.Common               ( StageIndex
                                                 , SystemLang(..)
@@ -83,7 +82,7 @@ type RoutesStats =
   :<|> AuthOptional "jwt" :> "completed" :> ReqBody '[JSON] (SystemLang, StageIndex, Stats) :> Post '[JSON] ()
 
 type RouteStatsNew =
-       AuthRequired "jwt" :> Capture "created" UTCTime :> Delete '[JSON] ()
+       AuthRequired "jwt" :> Capture "created" UTCTimeInUrl :> Delete '[JSON] ()
 
 type RoutesAdmin =
        AuthRequired "jwt" :> "journal"
@@ -97,12 +96,11 @@ type RoutesAdmin =
            :> Get '[JSON] [Journal]
   :<|> AuthRequired "jwt" :> "locally-create-missing-files" :> Get '[JSON] ()
 
-Type RoutesCMS =
+type RoutesCMS =
           Capture "system"   SystemLang
        :> Capture "lang"     TextLang
        :> Capture "pagename" Text
-       -- :> Capture "time"     UTCTimeInUrl
-       :> Capture "time"     UTCTime
+       :> Capture "time"     UTCTimeInUrl
        :> Get '[JSON] [Pandoc]
 
   -- Route to be called by github action
@@ -116,7 +114,7 @@ Type RoutesCMS =
         :> Capture "system"   SystemLang
         :> Capture "lang"     TextLang
         :> Capture "pagename" Text
-        :> Capture "time"     UTCTime
+        :> Capture "time"     UTCTimeInUrl
         :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
