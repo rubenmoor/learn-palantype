@@ -23,6 +23,8 @@ Be sure to check out additional information on learning [Palantype](http://www.o
 > **Current state of the project**
 >
 > The steno dictionary for German contains 1,945,685 words. Additional words are added regularly. Among the quality-of-life features are: command keys (Home, End, Insert, Delete, ...), special characters, fingerspelling, and plover commands for actual text formatting.
+> Important work is currently done to add more briefs and thus add efficiency to
+some longish German words.
 
 <!--separator-->
 
