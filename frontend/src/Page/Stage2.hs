@@ -14,11 +14,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
 
 module Page.Stage2 where
 
-import           CMS                            ( elCMS )
+import           CMS                            ( elCMS, elCMSContent )
 import           Client                         ( postRender )
 import           Common.Model                   ( Stats )
 import           Common.Route                   ( FrontendRoute(..) )
@@ -146,9 +145,6 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold
                                                 , widgetHold_, splitE
                                                 )
-import           Reflex.Dom.Pandoc              ( defaultConfig
-                                                , elPandoc
-                                                )
 import           Shared                         ( whenJust )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -165,6 +161,7 @@ import           Witherable                     ( Filterable
                                                     , mapMaybe
                                                     )
                                                 )
+import Data.Bifunctor (Bifunctor(first))
 
 -- Ex. 2.1
 
@@ -310,33 +307,33 @@ exercise1
 exercise1 = mdo
     Env {..} <- ask
 
-    evParts <- elCMS 1 <&> mapMaybe \case
+    evContent <- elCMS 1 <&> mapMaybe \case
       [p1] -> Just p1
       _    -> Nothing
-    widgetHold_ blank $ evParts <&> \part1 -> mdo
-      elPandoc defaultConfig part1
 
-      let Navigation {..} = envNavigation
-      unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
+    elCMSContent evContent
 
-      let eChordBackUp =
-            void $ gate (not <$> current dynDone) $
-              filter (\c -> KI.fromChord c == kiBackUp) envEChord
+    let Navigation {..} = envNavigation
+    unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
-          (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
+    let eChordBackUp =
+          void $ gate (not <$> current dynDone) $
+            filter (\c -> KI.fromChord c == kiBackUp) envEChord
 
-      setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
-      updateState $ eChordBackUp $>
-        [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
-        ]
+        (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
+
+    setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
+    updateState $ eChordBackUp $>
+      [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+      ]
 
 
-      dynStatsAll <- getStatsLocalAndRemote evDone
-      let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-      evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
-      dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
+    dynStatsAll <- getStatsLocalAndRemote evDone
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-      pure ()
+    pure ()
 
 
 -- Ex 2.2
@@ -437,7 +434,7 @@ exercise2 = mdo
         [p1, p2] -> Just (p1, p2)
         _        -> Nothing
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart1
+    elCMSContent evPart1
 
     evDone <- case navSystemLang of
       SystemEN ->
@@ -454,7 +451,7 @@ exercise2 = mdo
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart2
+    elCMSContent evPart2
 
 -- Ex 2.3
 
@@ -614,12 +611,11 @@ exercise3
 exercise3 = mdo
     Env {..} <- ask
 
-    evParts <- elCMS 1 <&> mapMaybe \case
+    evContent <- elCMS 1 <&> mapMaybe \case
       [p] -> Just p
       _   -> Nothing
 
-    widgetHold_ blank $ evParts <&> \part -> mdo
-      elPandoc defaultConfig part
+    elCMSContent evContent
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
@@ -655,38 +651,37 @@ exercise4
 exercise4 = mdo
     Env {..} <- ask
 
-    evParts <- elCMS 3 <&> mapMaybe \case
-      [p1, p2, p3] -> Just (p1, p2, p3)
+    ((evPart1, evPart2), evPart3) <- elCMS 3 <&> first splitE . splitE . mapMaybe \case
+      [p1, p2, p3] -> Just ((p1, p2), p3)
       _        -> Nothing
 
-    widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> mdo
-      elPandoc defaultConfig part1
+    elCMSContent evPart1
 
-      dynStatsAll <- getStatsLocalAndRemote evDone
-      evDone      <- case getMapsForExercise PatSimpleMulti 0 of
-          Left str -> do
-              elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
-              pure never
-          Right (mSW, mWSs) -> taskWords
-              dynStatsAll
-              (gate (not <$> current dynDone) envEChord)
-              mSW
-              mWSs
+    dynStatsAll <- getStatsLocalAndRemote evDone
+    evDone      <- case getMapsForExercise PatSimpleMulti 0 of
+        Left str -> do
+            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            pure never
+        Right (mSW, mWSs) -> taskWords
+            dynStatsAll
+            (gate (not <$> current dynDone) envEChord)
+            mSW
+            mWSs
 
-      let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-      dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
+    let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
+    dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-      elPandoc defaultConfig part2
+    elCMSContent evPart2
 
-      elPatterns
-          $ Map.toList
-          $ Map.findWithDefault Map.empty 0
-          $ Map.findWithDefault Map.empty PatSimple patternDoc
+    elPatterns
+        $ Map.toList
+        $ Map.findWithDefault Map.empty 0
+        $ Map.findWithDefault Map.empty PatSimple patternDoc
 
-      elPandoc defaultConfig part3
+    elCMSContent evPart3
 
-      el "p" $ do
-          let styleHuge = "style" =: "font-size: 48pt"
-          elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
-          elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
-          elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
+    el "p" $ do
+        let styleHuge = "style" =: "font-size: 48pt"
+        elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
+        elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
+        elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"

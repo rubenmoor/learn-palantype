@@ -10,30 +10,27 @@ module Page.Stage15.PloverCommands
     ( ploverCommands
     ) where
 
-import           CMS                            ( elCMS )
+import           CMS                            ( elCMS
+                                                , elCMSContent
+                                                )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader.Class     ( MonadReader )
-import           Data.Function                  ( ($) )
-import           Data.Functor                   ( (<$>)
-                                                , (<&>)
-                                                )
+import           Data.Functor                   ( (<&>) )
 import           Data.Maybe                     ( Maybe(..) )
+import           Data.Semigroup                 ( Endo )
 import           Reflex.Dom                     ( DomBuilder
+                                                , EventWriter
                                                 , MonadHold
                                                 , PerformEvent(..)
                                                 , PostBuild
                                                 , Prerender(..)
                                                 , TriggerEvent
-                                                , blank
-                                                , widgetHold_, EventWriter
                                                 )
-import           Reflex.Dom.Pandoc              ( defaultConfig
-                                                , elPandoc
+import           State                          ( Env(..)
+                                                , State
                                                 )
-import           State                          ( Env(..), State )
 import           Witherable                     ( Filterable(..) )
-import Data.Semigroup (Endo)
 
 ploverCommands
     :: forall key t (m :: * -> *)
@@ -54,4 +51,4 @@ ploverCommands = do
         [p] -> Just p
         _   -> Nothing
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evContent
+    elCMSContent evContent

@@ -88,7 +88,7 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
                                                 , foldDyn
                                                 , performEvent
                                                 , text
-                                                , widgetHold_, TriggerEvent, PerformEvent, Performable
+                                                , widgetHold_, TriggerEvent, PerformEvent, Performable, splitE
 
                                                 )
 import           State                          ( Env(..)
@@ -98,8 +98,7 @@ import           State                          ( Env(..)
 import           System.Random.Shuffle          ( shuffleM )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( showt )
-import CMS (elCMS)
-import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+import CMS (elCMS, elCMSContent)
 import Palantype.EN.Keys (palanRank)
 import qualified Palantype.EN as EN
 import qualified Palantype.DE as DE
@@ -133,24 +132,24 @@ exercise1
        , TriggerEvent t m
        )
     => m ()
-exercise1 = do
+exercise1 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
 
-      elPandoc defaultConfig part2
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
   -- 1.2
 
@@ -174,19 +173,19 @@ exercise2 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      elPandoc defaultConfig part2
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
 -- 1.3
 
@@ -210,19 +209,20 @@ exercise3 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    elCMSContent evPart1
 
-      evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
-      elPandoc defaultConfig part2
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
+
 
 -- 1.4
 
@@ -246,19 +246,19 @@ exercise4 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-        elPandoc defaultConfig part1
 
-        evLoadedAndBuilt <- envGetLoadedAndBuilt
-        updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    elCMSContent evPart1
 
-        evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
-        dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
 
-        elPandoc defaultConfig part2
+    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
 {-|
 Pass through all the letters of the steno alphabet one by one
@@ -477,23 +477,23 @@ exercise5 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
-          leftHand =
-              filter (\k -> toFinger k `elem` fingersLeft) allKeys
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      evDone <- taskLetters (gate (not <$> current dynDone) envEChord) leftHand
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
+        leftHand =
+            filter (\k -> toFinger k `elem` fingersLeft) allKeys
 
-      elPandoc defaultConfig part2
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) leftHand
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
 exercise6
     :: forall key t (m :: * -> *)
@@ -515,24 +515,24 @@ exercise6 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      let fingersRight =
-              [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
-          rightHand =
-              filter (\k -> toFinger k `elem` fingersRight) allKeys
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      evDone <- taskLetters (gate (not <$> current dynDone) envEChord) rightHand
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    let fingersRight =
+            [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
+        rightHand =
+            filter (\k -> toFinger k `elem` fingersRight) allKeys
 
-      elPandoc defaultConfig part2
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) rightHand
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
 exercise7
     :: forall key t (m :: * -> *)
@@ -554,21 +554,21 @@ exercise7 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
-      elPandoc defaultConfig part2
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2
 
 exercise8
     :: forall key t (m :: * -> *)
@@ -590,16 +590,16 @@ exercise8 = mdo
 
     Env {..} <- ask
 
-    evParts <- elCMS 2 <&> mapMaybe \case
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
-    widgetHold_ blank $ evParts <&> \(part1, part2) -> mdo
-      elPandoc defaultConfig part1
 
-      evLoadedAndBuilt <- envGetLoadedAndBuilt
-      updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    elCMSContent evPart1
 
-      evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
-      dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
-      elPandoc defaultConfig part2
+    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
+    dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
+
+    elCMSContent evPart2

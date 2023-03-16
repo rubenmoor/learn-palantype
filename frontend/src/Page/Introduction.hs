@@ -14,7 +14,7 @@
 
 module Page.Introduction where
 
-import           CMS                            ( elCMS )
+import           CMS                            ( elCMS, elCMSContent )
 import           Common.Route                   ( FrontendRoute(..) )
 import           Control.Category               ( (.) )
 import           Control.Lens                   ( (%~)
@@ -58,10 +58,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elClass'
                                                 , leftmost
                                                 , text
-                                                , widgetHold_
-                                                )
-import           Reflex.Dom.Pandoc              ( defaultConfig
-                                                , elPandoc
+                                                , splitE
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -70,6 +67,7 @@ import           State                          ( Env(..)
                                                 , updateState
                                                 )
 import           Witherable                     ( Filterable(filter, mapMaybe) )
+import Data.Bifunctor (Bifunctor(first))
 
 introduction
     :: forall key t (m :: * -> *)
@@ -93,37 +91,36 @@ introduction = do
     let
         Navigation {..} = envNavigation
 
-    evParts <- elCMS 3 <&> mapMaybe \case
-      [p1, p2, p3] -> Just (p1, p2, p3)
+    ((evPart1, evPart2), evPart3) <- elCMS 3 <&> first splitE . splitE . mapMaybe \case
+      [p1, p2, p3] -> Just ((p1, p2), p3)
       _            -> Nothing
 
-    widgetHold_ blank $ evParts <&> \(part1, part2, part3) -> do
-        elPandoc defaultConfig part1
+    elCMSContent evPart1
 
-        elClass "p" "textAlign-center" $ elAttr
-            "iframe"
-            (  "width"
-            =: "640"
-            <> "height"
-            =: "480"
-            <> "src"
-            =: "https://www.youtube.com/embed/za1qxU4jdfg"
-            )
-            blank
+    elClass "p" "textAlign-center" $ elAttr
+        "iframe"
+        (  "width"
+        =: "640"
+        <> "height"
+        =: "480"
+        <> "src"
+        =: "https://www.youtube.com/embed/za1qxU4jdfg"
+        )
+        blank
 
-        elPandoc defaultConfig part2
+    elCMSContent evPart2
 
-        let eChordSTART = void $ filter (== chordStart) envEChord
+    let eChordSTART = void $ filter (== chordStart) envEChord
 
-        elClass "div" "start" $ do
-            (btn, _) <- elClass' "button" "small" $ text "Get Started!"
-            let eStart = leftmost [eChordSTART, domEvent Click btn]
-            updateState
-                $  eStart
-                $> [ field @"stApp" . field @"stProgress" %~ Map.insert navSystemLang ($fromJust navMNext)
-                  , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-                  , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
-                  ]
-            setRoute $ eStart $> stageUrl @key 1
+    elClass "div" "start" $ do
+        (btn, _) <- elClass' "button" "small" $ text "Get Started!"
+        let eStart = leftmost [eChordSTART, domEvent Click btn]
+        updateState
+            $  eStart
+            $> [ field @"stApp" . field @"stProgress" %~ Map.insert navSystemLang ($fromJust navMNext)
+              , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
+              , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
+              ]
+        setRoute $ eStart $> stageUrl @key 1
 
-        elPandoc defaultConfig part3
+    elCMSContent evPart3

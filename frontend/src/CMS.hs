@@ -12,7 +12,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 
-module CMS where
+module CMS (elCMS, elCMSContent)where
 
 import           Client                         ( getAuthData
                                                 , getCMS
@@ -74,7 +74,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold_, switchDyn, attachWith, EventWriter
                                                 )
 import           Shared                         ( iFa
-                                                , iFa'
+                                                , iFa', loadingScreen
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -92,6 +92,21 @@ import Control.Lens (set)
 import Data.Generics.Product (HasField(field))
 import Data.Monoid (Endo)
 import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
+import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+
+
+elCMSContent
+    :: forall t (m :: * -> *)
+     . ( DomBuilder t m
+       , MonadHold t m
+       )
+    => Event t Pandoc
+    -> m ()
+elCMSContent ev =
+    widgetHold_ elWaitingForCMS $ elPandoc defaultConfig <$> ev
+  where
+    elWaitingForCMS = elClass "span" "small italic" $
+      text "waiting for content-management-system"
 
 elCMS
     :: forall key t (m :: * -> *)
@@ -129,7 +144,7 @@ elCMS numParts = mdo
                     $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
 
-    dynPair <- el "div" $ widgetHold (text "loading content ..." $> (Nothing, never)) $
+    dynPair <- el "div" $ widgetHold (loadingScreen "" $> (Nothing, never)) $
       attachWith (\mt e -> (mt,) <$> e) (current dynLatest) evRespCMS <&> \case
         Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
         Right (latest, parts) -> elCMSMenu numParts latest parts
@@ -164,7 +179,7 @@ elCMSMenu numParts latest parts = do
     mParts <- if n == numParts
       then pure $ Just parts
       else do
-        text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> "expected parts."
+        text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> " expected parts."
         pure Nothing
 
     evRefresh <- elClass "div" "small floatRight gray italic" $ do
