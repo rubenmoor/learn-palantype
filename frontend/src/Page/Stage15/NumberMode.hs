@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -12,7 +11,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Page.Stage15.NumberMode
     ( numberMode
@@ -36,7 +34,7 @@ import           Data.Either                    ( Either(..) )
 import Data.Function ( ($), (&) )
 import Data.Functor ( ($>), (<&>), (<$>), Functor(fmap) )
 import           Data.Int                       ( Int )
-import Data.List ( (!!), repeat, take, filter, replicate )
+import Data.List ( (!!), filter )
 import           Data.Maybe                     (isNothing,  maybe
                                                 , Maybe(..)
                                                 )
@@ -44,22 +42,16 @@ import           Data.Semigroup                 ( Endo
                                                 , (<>)
                                                 )
 import           Obelisk.Route.Frontend         (R
-                                                , RouteToUrl
                                                 , SetRoute
-                                                , routeLink
                                                 )
-import           Page.Common                    (getStatsLocalAndRemote,  elNotImplemented
+import           Page.Common                    (getStatsLocalAndRemote
                                                 , elCongraz, chordStart
                                                 )
-import           Palantype.Common               ( mapStages
-                                                , SystemLang(SystemDE)
-                                                , renderPlover
+import           Palantype.Common               ( renderPlover
                                                 , kiBackUp
                                                 , Chord
                                                 , Palantype
                                                 , RawSteno
-                                                , StageSpecialGeneric (..)
-                                                , findStage
                                                 )
 import           Reflex.Dom                     (current, gate, Dynamic,  Performable
                                                 , PerformEvent
@@ -71,16 +63,13 @@ import           Reflex.Dom                     (current, gate, Dynamic,  Perfor
                                                 , never
                                                 , performEvent
                                                 , Event
-                                                , (=:)
                                                 , DomBuilder
                                                 , MonadHold
                                                 , PostBuild
                                                 , Prerender
                                                 , blank
-
                                                 , dyn_
                                                 , el
-                                                , elAttr
                                                 , elClass
                                                 , foldDyn
                                                 , getPostBuild
@@ -88,11 +77,9 @@ import           Reflex.Dom                     (current, gate, Dynamic,  Perfor
                                                 )
 import           State                          ( State
                                                 , Env(..)
-                                                , Navigation(..)
-                                                , stageUrl
+
                                                 )
 import           TextShow                       ( TextShow(showt) )
-import           Obelisk.Generated.Static       ( static )
 import           Control.Category               ( (.)
                                                 )
 import           Data.Text                      ( Text )
@@ -109,13 +96,11 @@ import           Data.Time                      ( defaultTimeLocale
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Safe                           ( initMay )
-import           Data.Traversable               ( Traversable(sequence) )
 import           Data.Eq                        ( Eq((==)) )
 import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
-import Data.Foldable ( Foldable(null), Foldable(elem) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Control.Monad                  ( unless, replicateM )
+import           Control.Monad                  ( replicateM )
 import           Control.Lens                   ( (<>~)
                                                 , (.~)
                                                 , (%~)
@@ -128,8 +113,9 @@ import           GHC.Generics                   ( Generic )
 import Data.Bool (Bool, not)
 import Data.Tuple (fst, snd)
 import PloverDict (eMapNumbersForExercise)
-import Palantype.Common.TH (fromJust)
-import qualified Palantype.DE as DE
+import CMS (elCMS, elCMSContent)
+import Witherable (Filterable(mapMaybe))
+import Data.Foldable (Foldable(null))
 
 data StateDates k
     = StatePause Int
@@ -279,116 +265,18 @@ numberMode
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
        )
     => m ()
 numberMode = mdo
     Env {..} <- ask
-    let Navigation {..} = envNavigation
-    unless (navSystemLang == SystemDE) elNotImplemented
 
-    el "h1" $ text "Typing numbers"
+    evContent <- elCMS 1 <&> mapMaybe \case
+      [c] -> Just c
+      _   -> Nothing
 
-    el "h2" $ text "Palantype number mode"
-
-    el "h3" $ text "Digits and related symbols"
-
-    elClass "div" "paragraph" $ do
-        text
-            "For typing numbers, the virtual keyboard above can assist \
-             \you quite a bit. Just hold down "
-        el "code" $ text "WN-"
-        text " and you can see, how to reach numbers and related symbols."
-
-    elClass "div" "paragraph" $ elAttr
-        "img"
-        (  "src"
-        =: $(static "numbermode.png")
-        <> "alt"
-        =: "Keyboard layout in number mode"
-        )
-        blank
-
-    elClass "div" "paragraph" $ do
-        text
-            "Note how, apart from the digits 0-9 for the fingers of your \
-             \right hand, the extra keys for the thumbs allow to input \
-             \even longer numbers all at once, in particular common dates \
-             \like "
-        el "em" $ text "1990"
-        text ", or "
-        el "em" $ text "2022"
-        text "."
-
-    elClass "div" "paragraph" $ do
-        text
-            "Also, the input of common shortcuts that involve numbers \
-             \is possible by adding a modifier key to any input. \
-             \The available modifiers are "
-        el "code" $ text "Control"
-        text ", "
-        el "code" $ text "Super"
-        text ", and "
-        el "code" $ text "Alt"
-        text ". "
-        el "code" $ text "Super"
-        text " is usually called the Windows-key."
-
-    el "h3" $ text "The special characters of number mode"
-
-    elClass "div" "paragraph"
-        $ text
-              "Following the standard US keyboard layout, you can reach \
-             \special characters using the Shift modifier key in combination \
-             \with a number key. \
-             \The virtual keyboard assists you here again."
-
-    elClass "div" "paragraph" $ elAttr
-        "img"
-        (  "src"
-        =: $(static "numbermode-shift.png")
-        <> "alt"
-        =: "Keyboard layout in number mode"
-        )
-        blank
-
-    elClass "div" "paragraph" $ do
-        text
-            "Note that access to these special chars via the number mode \
-             \shouldn't be usually necessary when typing regularly. \
-             \Rather, consider them part of the \
-             \extended finger spelling. \
-             \For the usual formatting, the "
-        let (iStage, iT, iS) =
-                $fromJust $ findStage $ StageSpecial @DE.Key "Plover Commands"
-        routeLink (stageUrl @key iStage)
-            $  text $  "Exercise " <> showt iT <> "." <> showt iS
-        text " should be all you ever need."
-
-    elClass "div" "paragraph" $ do
-        text
-            "Also, there are special characters missing. In number mode, \
-             \there are only those special characters that you reach via \
-             \the Shift modifier plus some number. The remaining \
-             \special characters can be found in "
-        let (iStage, iT, iS) = $fromJust $ findStage $ StageSpecial @DE.Key "Special Characters"
-        routeLink (stageUrl @key iStage)
-            $  text
-            $  "Exercise "
-            <> showt iT <> "." <> showt iS
-        text "."
-
-    el "h3" $ text "Practicing dates"
-
-    elClass "div" "paragraph" $
-        text
-        "Feel free to practice dates here. The format is fairly common \
-             \in Germany and you will learn numbers just fine this way. \
-             \There are alternative ways to reach the same output now: \
-             \Feel free to type digit by digit or use as many fingers as \
-             \possible at once."
+    elCMSContent evContent
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     evDone <- case eMapNumbersForExercise @key of

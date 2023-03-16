@@ -64,9 +64,7 @@ import           Data.Tuple                     ( fst
 import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((-)) )
 import           Obelisk.Route.Frontend         ( R
-                                                , RouteToUrl
                                                 , SetRoute
-
                                                 )
 import           Page.Common                    ( elCongraz
 
@@ -265,11 +263,9 @@ fingerspelling = mdo
     elCMSContent evPart1
 
     elClass "div" "patternTable" $ do
-        for_
-            keysLetterUS
-            \(c, steno) -> elClass "div" "floatLeft" $ do
-                elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
-                elAttr "code" ("class" =: "steno") $ text steno
+        for_ keysLetterUS \(c, steno) -> elClass "div" "floatLeft" $ do
+            elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
+            elAttr "code" ("class" =: "steno") $ text steno
         elClass "br" "clearBoth" blank
 
     elCMSContent evPart2

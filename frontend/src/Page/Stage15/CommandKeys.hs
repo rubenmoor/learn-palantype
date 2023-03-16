@@ -42,10 +42,10 @@ commandKeys = do
         el "code" $ text "WN-"
         text " and you can see, how to reach numbers and related symbols."
 
-    elClass "div" "paragraph" $
-        elAttr "img" (  "src" =: $(static "numbermode.png")
-                     <> "alt" =: "Keyboard layout in number mode"
-                     ) blank
+    -- elClass "div" "paragraph" $
+    --     elAttr "img" (  "src" =: $(static "numbermode.png")
+    --                  <> "alt" =: "Keyboard layout in number mode"
+    --                  ) blank
 
     elClass "div" "paragraph" $ do
         text "Note how, apart from the digits 0-9 for the fingers of your \
@@ -77,10 +77,10 @@ commandKeys = do
              \special characters using the Shift modifier key with numbers. \
              \The virtual keyboard assists you here again."
 
-    elClass "div" "paragraph" $
-        elAttr "img" (  "src" =: $(static "numbermode.png")
-                     <> "alt" =: "Keyboard layout in number mode"
-                     ) blank
+    -- elClass "div" "paragraph" $
+    --     elAttr "img" (  "src" =: $(static "numbermode.png")
+    --                  <> "alt" =: "Keyboard layout in number mode"
+    --                  ) blank
 
     elClass "div" "paragraph" $
         text "Note that access to these special chars via the number mode \
