@@ -16,9 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: get changed files in the folder cms-content
+      - name: Changed Files
         id: cms
-        uses: tj-actions/changed-files@v35.6.1
+        uses: tj-actions/changed-files@v35.7.1
         with:
           files: cms-content/**
           json: true
@@ -27,12 +27,6 @@ jobs:
         if: steps.cms.outputs.any_changed == 'true'
         run: |
           set -x
-          echo "Changed files:"
-          echo "${{steps.cms.outputs.all-changed-files}}"
-          for file in ${{steps.cms.outputs.all-changed-files}}
-          do
-            echo $file
-          done
           curl -X POST https://palantype.com/api/cms/invalidate-cache \
                -H "Content-Type: application/json" \
-               -d "\"${{steps.cms.outputs.all-changed-files}}\""
+               -d "\"${{steps.cms.outputs.all_changed_files}}\""
