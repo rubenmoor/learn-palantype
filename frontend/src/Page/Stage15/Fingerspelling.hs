@@ -209,7 +209,7 @@ taskLiterals dynStats evChord = do
         dyn_ $ dynLiterals <&> \case
             StatePause _ -> el "div" $ do
                 text "Type "
-                elClass "span" "btnSteno blinking" $ do
+                elClass "span" "rounded bg-teal-600 text-white blinking" $ do
                     text "Start "
                     el "code" $ text "SDAÜD"
                 text " to begin the exercise."
@@ -228,7 +228,7 @@ taskLiterals dynStats evChord = do
                 whenJust stMMistake $ \(_, w) ->
                     elClass "div" "red small paragraph" $ do
                         text $ "You typed " <> showt w <> " "
-                        elClass "span" "btnSteno blinking"
+                        elClass "span" "rounded bg-teal-600 text-white blinking"
                             $  text
                             $  "↤ "
                             <> showt (KI.toRaw @key Palantype.Common.kiBackUp) -- U+21A4

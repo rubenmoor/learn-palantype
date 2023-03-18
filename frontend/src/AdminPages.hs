@@ -132,7 +132,7 @@ import           Servant.Reflex                 ( QParam(..) )
 import           Shared                         ( elLoginSignup
                                                 , formatTime
                                                 , iFa'
-                                                , loadingScreen
+                                                , elLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -272,7 +272,7 @@ journal dynHasLoaded = mdo
 
         el "hr" blank
 
-        widgetHold_ (loadingScreen "Checking your access rights ...") $ evResp <&> \case
+        widgetHold_ (elLoading "Checking your access rights ...") $ evResp <&> \case
 
             Left strErr     ->
               elClass "p" "red small" $

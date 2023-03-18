@@ -71,7 +71,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold_, switchDyn, attachWith, EventWriter
                                                 )
 import           Shared                         ( iFa
-                                                , iFa', loadingScreen
+                                                , iFa', elLoading
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -141,7 +141,7 @@ elCMS numParts = mdo
                     $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
 
-    dynPair <- el "div" $ widgetHold (loadingScreen "" $> (Nothing, never)) $
+    dynPair <- el "div" $ widgetHold (elLoading "" $> (Nothing, never)) $
       attachWith (\mt e -> (mt,) <$> e) (current dynLatest) evRespCMS <&> \case
         Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
         Right (latest, parts) -> elCMSMenu numParts latest parts

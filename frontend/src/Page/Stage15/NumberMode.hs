@@ -211,7 +211,7 @@ taskDates dynStats evChord map = do
                 dyn_ $ dynStenoDates <&> \case
                     StatePause _ -> el "div" $ do
                         text "Type "
-                        elClass "span" "btnSteno blinking" $ do
+                        elClass "span" "rounded bg-teal-600 text-white blinking" $ do
                             text "Start "
                             el "code" $ text "SDAÜD"
                         text " to begin the exercise."
@@ -230,7 +230,7 @@ taskDates dynStats evChord map = do
                             <> " …"
 
                         el "span" $ do
-                            elClass "span" "btnSteno" $ text $ "↤ " <> showt
+                            elClass "span" "rounded bg-teal-600 text-white" $ text $ "↤ " <> showt
                                 (KI.toRaw @key kiBackUp) -- U+21A4
                             elClass "span" "small" $ text $ if null stChords
                                 then " to show hint"

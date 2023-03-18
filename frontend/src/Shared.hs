@@ -222,8 +222,10 @@ elFatalError strMessage = elClass "div" "mkOverlay" do
       iFa "fas fa-bomb"
     unless (Text.null strMessage) $ el "p" $ text strMessage
 
-loadingScreen :: DomBuilder t m => Text -> m ()
-loadingScreen strMessage = elClass "div" "mkOverlay" do
+elLoading :: DomBuilder t m => Text -> m ()
+elLoading strMessage =
+  elClass "div" "p-6 fixed z-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-lg \
+                \text-center bg-white shadow-lg" do
     el "div" $ do
       iFa "fas fa-spinner fa-spin"
       text " Loading"
@@ -303,15 +305,20 @@ elLoginSignup
     )
   => Dynamic t (R FrontendRoute)
   -> m ()
-elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
+elLoginSignup dynRedirectRoute =
+  elClass "div" "float-right text-lg px-2 pt-1" do
     dynSession  <- asks $ fmap stSession
     dyn_ $ dynSession <&> \case
         SessionAnon -> do
-          (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
+          (domLogin, _) <- elClass' "a" "hover:underline text-blue-600 \
+                                        \cursor-pointer"
+                           $ text "Log in"
           let evLogin = domEvent Click domLogin
           setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
           el "span" $ text " or "
-          (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
+          (domSignup, _) <- elClass' "a" "hover:underline text-blue-600 \
+                                         \cursor-pointer"
+                            $ text "sign up"
           let evSignup = domEvent Click domSignup
           setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
           updateState $
@@ -320,13 +327,16 @@ elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
               [ field @"stRedirectUrl" .~ r ]
         SessionUser SessionData{..} -> do
           el "span" $ text "Logged in as "
-          el "span" $ text sdAliasName
+          elClass "span" "font-bold" $ text sdAliasName
           el "span" $ text " ("
-          (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
+          (domLogout, _) <- elClass' "a" "hover:underline text-blue-600 \
+                                         \cursor-pointer"
+                            $ text "log out"
           el "span" $ text ")"
           when sdIsSiteAdmin $ do
             el "span" $ text " "
-            domAdmin <- elClass "span" "icon-link small" $ iFa' "fas fa-lock"
+            domAdmin <- elClass "span" "text-zinc-500 cursor-pointer text-sm"
+              $ iFa' "fas fa-lock"
             let evClickAdmin = domEvent Click domAdmin
             setRoute $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
             updateState $ tag (current dynRedirectRoute) evClickAdmin <&> \r ->

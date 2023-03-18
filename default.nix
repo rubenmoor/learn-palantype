@@ -22,7 +22,7 @@ in
     # ios.bundleIdentifier = "systems.obsidian.obelisk.examples.minimal";
     # ios.bundleName = "Palantype";
 
-    staticFiles = import ./static.nix { inherit pkgs; };
+    staticFiles = import ./static { inherit pkgs; };
 
     shellToolOverrides = self: super: {
       inherit (pkgs.haskellPackages) cabal-plan cabal-install;

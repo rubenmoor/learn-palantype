@@ -120,7 +120,7 @@ import           Data.Functor.Misc              ( Const2(Const2) )
 import           Data.Ord                       ( Ord((>=)) )
 import qualified LocalStorage                  as LS
 import           Palantype.Common.TH            ( failure )
-import           Shared                         ( loadingScreen
+import           Shared                         ( elLoading
                                                 , redirectToWikipedia
                                                 , requestPostViewPage
                                                 )
@@ -255,7 +255,7 @@ frontendBody = mdo
             strLoadingCacheInvalidation = if not flCacheInvalidation
               then "Loading cache invalidation data ...\n"
               else ""
-        in  loadingScreen $ strLoadingSession <> "\n" <> strLoadingCacheInvalidation
+        in  elLoading $ strLoadingSession <> "\n" <> strLoadingCacheInvalidation
 
     dynState <- foldDyn appEndo defaultState $ mergeWith (<>)
       [ evSessionLoaded
@@ -346,7 +346,7 @@ frontendHead = do
     elAttr
         "link"
         (  "href"
-        =: $(static "main.css")
+        =: $(static "styles.css")
         <> "type"
         =: "text/css"
         <> "rel"

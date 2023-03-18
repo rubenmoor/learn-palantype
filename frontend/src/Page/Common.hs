@@ -205,9 +205,11 @@ elFooter
        )
     => Navigation
     -> m ()
-elFooter Navigation {..} = elClass "footer" "stage" $ do
+elFooter Navigation {..} =
+  elClass "footer" "grow-0 shrink shadow-lg text-xl p-3 \
+                   \text-center z-10" do
     whenJust navMPrevious $ \prv ->
-        elClass "div" "floatLeft" $ do
+        elClass "div" "float-left" $ do
         text "< "
         routeLink (stageUrl @key prv) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
@@ -215,16 +217,11 @@ elFooter Navigation {..} = elClass "footer" "stage" $ do
     text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
 
     whenJust navMNext $ \nxt ->
-        elClass "div" "floatRight" $ do
+        elClass "div" "float-right" $ do
         routeLink (stageUrl @key nxt) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
         text " >"
-    elClass "br" "clearBoth" blank
-
-elBackUp
-    :: forall key (m :: * -> *) t . (DomBuilder t m, Palantype key) => m ()
-elBackUp =
-    elClass "span" "btnSteno" $ text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+    elClass "br" "clear-both" blank
 
 elCongraz
     :: forall key t (m :: * -> *)
@@ -292,7 +289,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                 whenJust navMNext $ \nxt -> do
                     elACont <- elClass "div" "anthrazit" $ do
                         text "Type "
-                        elClass "span" "btnSteno" $ do
+                        elClass "span" "rounded bg-teal-600 text-white" $ do
                             el "em" $ text "Enter "
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
@@ -321,7 +318,8 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     el "span" $ text "("
                     (elABack, _) <- elClass' "a" "normalLink" $ text "back"
                     text " "
-                    elBackUp @key
+                    elClass "span" "rounded bg-teal-600 text-white" $
+                      text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                     el "span" $ text ")"
                     pure $ leftmost [eChordBackUp, domEvent Click elABack]
     pure $ isJust <$> dynDone
@@ -459,7 +457,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             dyn_ $ dynStateWords <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "btnSteno blinking" $ do
+                    elClass "span" "rounded bg-teal-600 text-white blinking" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
@@ -479,7 +477,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                         <> [" …"]
 
                     el "span" $ do
-                        elClass "span" "btnSteno" $ text $ "↤ " <> showt
+                        elClass "span" "rounded bg-teal-600 text-white" $ text $ "↤ " <> showt
                             (KI.toRaw @key kiBackUp) -- U+21A4
                         elClass "span" "small" $ text $ if null stChords
                             then " to show hint"
