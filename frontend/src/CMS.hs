@@ -90,6 +90,7 @@ import Data.Generics.Product (HasField(field))
 import Data.Monoid (Endo)
 import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+import Servant.API (ToHttpApiData(toUrlPiece))
 
 
 elCMSContent
@@ -102,7 +103,7 @@ elCMSContent
 elCMSContent ev =
     widgetHold_ elWaitingForCMS $ elPandoc defaultConfig <$> ev
   where
-    elWaitingForCMS = elClass "span" "small italic" $
+    elWaitingForCMS = elClass "span" "text-xs italic" $
       text "waiting for content-management-system"
 
 elCMS
@@ -172,6 +173,7 @@ elCMSMenu numParts latest parts = do
     Env {..} <- ask
     let
         n = length parts
+        Navigation{..} = envNavigation
 
     mParts <- if n == numParts
       then pure $ Just parts
@@ -179,29 +181,39 @@ elCMSMenu numParts latest parts = do
         text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> " expected parts."
         pure Nothing
 
-    evRefresh <- elClass "div" "small floatRight gray italic" $ do
-      text $ "Last update "
-        <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" latest)
-        <> " "
-      domRefresh <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Refresh") $ iFa' "fas fa-sync"
+    evRefresh <- elClass "div" "text-xs float-right text-zinc-500 italic" $ do
+      elClass "span" "pr-1" $ text
+        $ "Last update " <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" latest)
+      domRefresh <- elAttr "span"
+        (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+        <> "title" =: "Refresh"
+        ) $ iFa' "fas fa-sync"
+
+      elAttr "a" (  "href" =: (  "https://github.com/rubenmoor/learn-palantype/blob/main/cms-content/"
+                              <> toUrlPiece navSystemLang <> "/"
+                              <> toUrlPiece navTextLang   <> "/"
+                              <> navPageName              <> ".md"
+                              )
+                  <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
+                  ) $ iFa "fas fa-edit"
 
       let dynSession = stSession <$> envDynState
       dyn_ $ dynSession <&> whenIsAdmin do
-          text " "
 
-          domSyncServerAll <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache") $
-            iFa' "fas fa-skull"
+          domSyncServerAll <- elAttr "span"
+            (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+            <> "title" =: "Clear server cache"
+            ) $ iFa' "fas fa-skull"
 
-          let Navigation{..} = envNavigation
           evRespAll <- Client.request $ Client.postClearCache
             (Client.getAuthData <$> envDynState)
             (constDyn $ Right navSystemLang)
             (constDyn $ Right navTextLang  )
             (constDyn $ Right navPageName  )
             $ domEvent Click domSyncServerAll
-          widgetHold_ blank $ evRespAll <&> elClass "span" "verySmall" . \case
-            Left  _ -> iFa "red fas fa-times"
-            Right _ -> iFa "green fas fa-check"
+          widgetHold_ blank $ evRespAll <&> \case
+            Left  _ -> iFa "text-red-500 fas fa-times"
+            Right _ -> iFa "text-green-500 fas fa-check"
 
       pure $ domEvent Click domRefresh
 

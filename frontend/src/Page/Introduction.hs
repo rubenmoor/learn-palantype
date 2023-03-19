@@ -112,15 +112,14 @@ introduction = do
 
     let eChordSTART = void $ filter (== chordStart) envEChord
 
-    elClass "div" "start" $ do
-        (btn, _) <- elClass' "button" "small" $ text "Get Started!"
+    elClass "div" "steno-action" $ do
+        (btn, _) <- elClass' "button" "" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
-        updateState
-            $  eStart
-            $> [ field @"stApp" . field @"stProgress" %~ Map.insert navSystemLang ($fromJust navMNext)
-              , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-              , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
-              ]
+        updateState $  eStart $>
+          [ field @"stApp" . field @"stProgress"     %~ Map.insert navSystemLang ($fromJust navMNext)
+          , field @"stApp" . field @"stCleared"      %~ Set.insert navCurrent
+          , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
+          ]
         setRoute $ eStart $> stageUrl @key 1
 
     elCMSContent evPart3

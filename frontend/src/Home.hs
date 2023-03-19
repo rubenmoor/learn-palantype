@@ -257,10 +257,7 @@ elSettings
     , SetRoute t (R FrontendRoute) m
     )
   => m ()
-elSettings = elClass
-    "div"
-    "shadow-md p-1"
-    do
+elSettings = elClass "div" "shadow-md p-1" do
     dynState <- ask
     let dynAppState = stApp <$> dynState
         lang = if
@@ -792,12 +789,16 @@ elStages getLoadedAndBuilt = do
                       page
             elClass "section" "overflow-y-auto scroll-smooth px-2 w-full h-full \
                               \relative" do
-                elClass "div" "w-max sticky top-[2px] steno-navigation mx-auto opacity-50" $ text
-                    $  "▲ "
-                    <> showt (KI.toRaw @key kiUp)
+                elClass "div" "w-max sticky top-[2px] steno-navigation mx-auto \
+                              \opacity-50" $ text
+                    $  "▲ " <> showt (KI.toRaw @key kiUp)
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
-                elClass "div" "before:content-none before:w-4/5 before:bg-white \
-                              \before:absolute before:top-1 before:h-[31px]"
+                elClass "div" "before:content-[\"\"] before:w-4/5 before:bg-white \
+                              \before:absolute before:top-0 before:h-[31px] \
+                              \after:content-[\"\"] after:w-4/5 after:bg-white \
+                              \after:absolute after:h-[31px] after:z-10 \
+                              \after:h-[320px] \
+                              \p-4 prose"
                   $ setEnv do
                   let
                       elPageNotImplemented str = do

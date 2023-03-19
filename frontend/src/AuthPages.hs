@@ -155,17 +155,17 @@ signup
        , MonadReader (Dynamic t State) m
        )
     => m ()
-signup = elClass "div" "auth" $ mdo
+signup = elClass "div" "p-2 max-w-fit min-w-1/2 mx-auto" $ mdo
 
     dynState <- ask
 
-    el "h1" $ text "Sign up"
+    elClass "h1" "text-2xl py-4" $ text "Sign up"
 
     (dynMUserName, inputUserName) <- elLabelInput def "User name" 64 "username"
 
     dynUserExists                 <- holdDyn False evUserExists
     dyn_ $ dynUserExists <&> \userExists -> if userExists
-        then elClass "p" "red small" (text "This user name already exists.")
+        then elClass "p" "text-red-500 text-sm" (text "This user name already exists.")
         else blank
 
     let behNotAlphanumeric = current $ dynMUserName <&> \case
@@ -174,7 +174,7 @@ signup = elClass "div" "auth" $ mdo
     dynNotAlphaNumeric <- holdDyn False
         $ attachWith const behNotAlphanumeric evFocusLostUser
     dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric -> if notAlphaNumeric
-        then elClass "p" "red small"
+        then elClass "p" "text-red-500 text-sm"
             $ text "The user name can only contain A-Z, a-z, 0-9."
         else blank
 
@@ -199,7 +199,7 @@ signup = elClass "div" "auth" $ mdo
     dynAliasExists <- holdDyn False evAliasExists
     dyn_ $ dynAliasExists <&> \aliasExists ->
       if aliasExists
-      then elClass "p" "red small" $ text "This alias is already in use."
+      then elClass "p" "text-red-500 text-sm" $ text "This alias is already in use."
       else blank
 
     el "p" $ text "Your alias is your public identity, maximum 16 characters."
@@ -209,35 +209,30 @@ signup = elClass "div" "auth" $ mdo
         eAlias = maybe (Left "alias empty") Right <$> dynMAlias
     (_, evAliasExists) <- fanEither <$> request (postDoesAliasExist eAlias evFocusLostAlias)
 
-    el "h3" $ text "Public visibility"
+    el "h3 text-lg py-2" $ text "Public visibility"
     dynCheckedVisible <- elLabelCheckbox False "Show my scores" "scores-visible"
 
-    el "p"
-        $ text
-              "If you check this, your scores will be publicly visible. \
+    el "p" $ text "If you check this, your scores will be publicly visible. \
                   \If not, nothing will be shown, not even your alias."
 
     let conf =
-            def
-                &  inputElementConfig_elementConfig
-                .  elementConfig_modifyAttributes
-                .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
-                   <$> evCheckedHidePassword
-                   )
+          def &  inputElementConfig_elementConfig
+              .  elementConfig_modifyAttributes
+              .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
+                 <$> evCheckedHidePassword
+                 )
     (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
     let evPressEnter = keypress Enter inputPassword
     el "br" blank
     evCheckedHidePassword <- updated
         <$> elLabelCheckbox False "Hide password input" "hide-password"
 
-    el "p"
-        $ text
-              "You enter your password only once. There are \
-                    \no invalid passwords except for an empty one."
+    el "p" $ text "You enter your password only once. There are \
+                  \no invalid passwords except for an empty one."
 
     el "hr" blank
 
-    evSubmit <- elButtonSubmit "small" $ text "Submit"
+    evSubmit <- elButtonSubmit "text-sm" $ text "Submit"
 
     let dynEUserNew =
           zipDyn dynState (
@@ -265,11 +260,10 @@ signup = elClass "div" "auth" $ mdo
                 "Your account was registered successfully."
             ]
 
-    el "h2" $ text "Why register?"
+    elClass "h2" "text-xl py-2"$ text "Why register?"
 
-    el "p"
-        $ text
-              "You don't have to register to practice on Palantype.com. \
+    el "p" $ text
+         "You don't have to register to practice on Palantype.com. \
          \For an unregistered, anonymous user the progress and configuration \
          \data is stored in the local storage of your browser. \
          \At any time, you can delete all the data \
@@ -277,9 +271,8 @@ signup = elClass "div" "auth" $ mdo
          \Palantype.com from another browser (e.g. on a different computer), \
          \you won't have access to your data."
 
-    el "p"
-        $ text
-              "As soon as you create an account, your progress and configuration \
+    el "p" $ text
+         "As soon as you create an account, your progress and configuration \
          \data will be stored on the Palantype.com server. \
          \You can access your account from any computer and any browser to \
          \continue where you left off. \
@@ -302,11 +295,11 @@ login
        , SetRoute t (R FrontendRoute) m
        )
     => m ()
-login = elClass "div" "auth" $ mdo
+login = elClass "div" "p-2 max-w-fit min-w-1/2 mx-auto" $ mdo
 
     dynState <- ask
 
-    el "h1" $ text "Log in"
+    elClass "h1" "text-2xl py-4" $ text "Log in"
 
     (dynMUserName, _) <- elLabelInput def "User name" 64 "username"
 
@@ -328,11 +321,11 @@ login = elClass "div" "auth" $ mdo
 
     widgetHold_ blank $ evWrongInput $> elClass
         "p"
-        "red small"
+        "text-red-500 text-sm"
         (text "Wrong user name or password.")
 
     el "hr" blank
-    evSubmit <- elButtonSubmit "small" $ text "Submit"
+    evSubmit <- elButtonSubmit "text-sm" $ text "Submit"
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
             (Just ldUserName, Just ldPassword) -> Right LoginData { .. }
@@ -378,16 +371,19 @@ settings getLoadedAndBuilt = do
 
     evLoadedAndBuilt <- getLoadedAndBuilt
 
-    elClass "div" "topmenu" $ do
-        elClass "div" "floatLeft" $ do
-            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
+    elClass "div" "shadow-md p-1" $ do
+        elClass "div" "float-left" $ do
+            domBack <-
+              elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                             \cursor-pointer"
+              $ iFa' "fas fa-arrow-circle-left"
             setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $
               domEvent Click domBack
         elLoginSignup $ stRedirectUrl <$> dynState
-        elClass "br" "clearBoth" blank
+        elClass "br" "clear-both" blank
 
-    elClass "div" "auth" $ mdo
-        el "h1" $ text "Settings"
+    elClass "div" "p-2 max-w-fit min-w-1/2 mx-auto" $ mdo
+        elClass "h1" "text-2xl py-4" $ text "Settings"
 
         let dynCurrentAlias = dynState <&> fromMaybe "" . preview
               (   field @"stSession"
@@ -413,7 +409,7 @@ settings getLoadedAndBuilt = do
                                evFocusLostAlias
 
         let evPressEnter = keypress Enter inputAliasNew
-        evSubmit <- elButtonSubmit "small" $ text "Submit"
+        evSubmit <- elButtonSubmit "text-sm" $ text "Submit"
         (evRespAliasRenameFail, evRespAliasRename) <-
           fanEither <$> request (postAliasRename (getAuthData <$> dynState)
                                                  dynEAliasNew

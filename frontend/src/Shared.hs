@@ -145,7 +145,7 @@ elLabelInput
            , InputElement e (DomBuilderSpace m) t
            )
 elLabelInput conf label maxlength id = do
-    elAttr "label" ("for" =: id) $ el "h3" $ text label
+    elAttr "label" ("for" =: id) $ elClass "h3" "text-lg py-2" $ text label
     i <-
         inputElement
         $  conf
