@@ -261,7 +261,7 @@ taskLetters dynStats evChord = do
             dyn_ $ dynSingletons <&> \case
                 StateLettersPause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "rounded bg-teal-600 text-white animate-pulse" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
@@ -397,9 +397,9 @@ walkWords evChord words raw = do
             el "td" $ do
                 let eMistake = wsMMistake <$> updated dynWalk
                 widgetHold_ blank $ eMistake <&> \case
-                    Just _ -> elClass "code" "animate-pulse" $ do
+                    Just _ -> el "code" $ do
                         text " "
-                        elClass "span" "rounded bg-teal-600 text-white" $
+                        elClass "span" "steno-action" $
                           text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                     Nothing -> blank
 
@@ -562,7 +562,7 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
             dyn_ $ dynSingletons <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "rounded bg-teal-600 text-white animate-pulse" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."

@@ -9,7 +9,10 @@ in pkgs.stdenv.mkDerivation {
   installPhase = ''
     mkdir -p $out
 
-    tailwind-run '${frontendSrcFiles}/**/*.hs' --output $out/styles.css --theme theme.json
+    tailwind-run '${frontendSrcFiles}/**/*.hs' \
+                 --output $out/styles.css \
+                 --theme theme.js \
+                 --css input.css
 
     cd ./files
     if [ "$(ls -A)" ]

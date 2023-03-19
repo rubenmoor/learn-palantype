@@ -116,7 +116,7 @@ import           Reflex.Dom                     ( (&)
                                                 , leftmost
                                                 , switchHold
                                                 , tag
-                                                , text
+                                                , text, el'
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -224,8 +224,7 @@ elFatalError strMessage = elClass "div" "mkOverlay" do
 
 elLoading :: DomBuilder t m => Text -> m ()
 elLoading strMessage =
-  elClass "div" "p-6 fixed z-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-lg \
-                \text-center bg-white shadow-lg" do
+  elClass "div" "overlay" do
     el "div" $ do
       iFa "fas fa-spinner fa-spin"
       text " Loading"
@@ -310,15 +309,11 @@ elLoginSignup dynRedirectRoute =
     dynSession  <- asks $ fmap stSession
     dyn_ $ dynSession <&> \case
         SessionAnon -> do
-          (domLogin, _) <- elClass' "a" "hover:underline text-blue-600 \
-                                        \cursor-pointer"
-                           $ text "Log in"
+          (domLogin, _) <- el' "a" $ text "Log in"
           let evLogin = domEvent Click domLogin
           setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
           el "span" $ text " or "
-          (domSignup, _) <- elClass' "a" "hover:underline text-blue-600 \
-                                         \cursor-pointer"
-                            $ text "sign up"
+          (domSignup, _) <- el' "a" $ text "sign up"
           let evSignup = domEvent Click domSignup
           setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
           updateState $
@@ -329,9 +324,7 @@ elLoginSignup dynRedirectRoute =
           el "span" $ text "Logged in as "
           elClass "span" "font-bold" $ text sdAliasName
           el "span" $ text " ("
-          (domLogout, _) <- elClass' "a" "hover:underline text-blue-600 \
-                                         \cursor-pointer"
-                            $ text "log out"
+          (domLogout, _) <- el' "a" $ text "log out"
           el "span" $ text ")"
           when sdIsSiteAdmin $ do
             el "span" $ text " "

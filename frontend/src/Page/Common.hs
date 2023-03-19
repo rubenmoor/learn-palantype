@@ -174,7 +174,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , switchDyn
                                                 , text
                                                 , updated
-                                                , widgetHold
+                                                , widgetHold, el'
                                                 )
 import           Safe                           ( initMay )
 import           Shared                         ( dynSimple
@@ -273,29 +273,30 @@ elCongraz evDone dynStats Navigation {..} = mdo
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
         Just mNewStats ->
-            elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
+
+            elClass "div" "overlay" $ elClass "div" "text-center" $ do
                 el "div" $ text "Task cleared!"
-                elClass "div" "check" $ iFa "fas fa-check-circle"
+                elClass "div" "text-3xl text-green p-8" $ iFa "fas fa-check-circle"
                 whenJust mNewStats $ \newStats -> dyn_ $ dynStats <&> \lsStats -> do
                     -- let lsStatsPersonal = filter (isNothing . fst . snd) lsStats
                     when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats))
-                        $ elClass "div" "paragraph newBest" $ do
-                              iFa "fa-solid fa-star-sharp"
+                        $ el "p" $ do
+                              elClass "span" "text-yellow px-2 shadow" $ iFa "fa-solid fa-star-sharp"
                               el "strong" $ text $ "New personal best: " <> formatTime
                                   (statsTime newStats)
                               iFa "fa-solid fa-star-sharp"
                     elStatisticsPersonalShort lsStats
-                    elClass "hr" "visibilityHidden" blank
+                    elClass "hr" "invisible" blank
                 whenJust navMNext $ \nxt -> do
-                    elACont <- elClass "div" "anthrazit" $ do
+                    elACont <- elClass "div" "text-grayishblue-900" $ do
                         text "Type "
-                        elClass "span" "rounded bg-teal-600 text-white" $ do
+                        elClass "span" "steno-action" $ do
                             el "em" $ text "Enter "
                             el "code" $ text $ showt $ KI.toRaw @key kiEnter
                         text " to continue to "
-                        elClass "div" "paragraph" $ do
-                            (e, _) <- elClass' "a" "normalLink" $
-                                text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
+                        el "p" do
+                            (e, _) <- el' "a" $ text $ maybe "" Stage.showShort
+                              $ Stage.fromIndex @key nxt
                             text "."
                             pure e
                     let eContinue =
@@ -316,9 +317,9 @@ elCongraz evDone dynStats Navigation {..} = mdo
 
                 el "div" $ do
                     el "span" $ text "("
-                    (elABack, _) <- elClass' "a" "normalLink" $ text "back"
+                    (elABack, _) <- el' "a" $ text "back"
                     text " "
-                    elClass "span" "rounded bg-teal-600 text-white" $
+                    elClass "span" "steno-navigation" $
                       text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                     el "span" $ text ")"
                     pure $ leftmost [eChordBackUp, domEvent Click elABack]
@@ -457,7 +458,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             dyn_ $ dynStateWords <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "rounded bg-teal-600 text-white blinking" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
@@ -477,7 +478,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                         <> [" …"]
 
                     el "span" $ do
-                        elClass "span" "rounded bg-teal-600 text-white" $ text $ "↤ " <> showt
+                        elClass "span" "steno-navigation" $ text $ "↤ " <> showt
                             (KI.toRaw @key kiBackUp) -- U+21A4
                         elClass "span" "small" $ text $ if null stChords
                             then " to show hint"

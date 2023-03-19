@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  a {
+    @apply text-grayishblue-800;
+    @apply cursor-pointer;
+  }
+  a:hover {
+    @apply underline;
+  }
+}
+
+@layer components {
+  .steno-navigation {
+    @apply bg-grayishblue-300;
+    @apply text-xs;
+    @apply font-bold;
+    @apply rounded-lg;
+    @apply text-white;
+    @apply p-1;
+  }
+  .steno-action {
+    @apply bg-grayishblue-900;
+    @apply animate-flashing;
+    @apply rounded-lg;
+    @apply text-white;
+    @apply py-1;
+    @apply px-2;
+  }
+  .overlay {
+    @apply p-6;
+    @appy fixed;
+    @apply z-30;
+    @apply top-1/2;
+    @apply left-1/2;
+    @apply -translate-x-1/2;
+    @apply -translate-y-1/2;
+    @apply max-w-lg;
+    @apply text-center;
+    @apply bg-white;
+    @apply shadow-lg;
+  }
+}

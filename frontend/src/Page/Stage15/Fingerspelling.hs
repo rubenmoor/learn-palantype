@@ -209,9 +209,9 @@ taskLiterals dynStats evChord = do
         dyn_ $ dynLiterals <&> \case
             StatePause _ -> el "div" $ do
                 text "Type "
-                elClass "span" "rounded bg-teal-600 text-white blinking" $ do
+                elClass "span" "steno-action" $ do
                     text "Start "
-                    el "code" $ text "SDAÜD"
+                    el "code" $ text $ showt $ chordStart @key
                 text " to begin the exercise."
             StateRun Run {..} -> do
                 elClass "div" "exerciseField multiline"
@@ -228,10 +228,10 @@ taskLiterals dynStats evChord = do
                 whenJust stMMistake $ \(_, w) ->
                     elClass "div" "red small paragraph" $ do
                         text $ "You typed " <> showt w <> " "
-                        elClass "span" "rounded bg-teal-600 text-white blinking"
+                        elClass "span" "steno-navigation"
                             $  text
                             $  "↤ "
-                            <> showt (KI.toRaw @key Palantype.Common.kiBackUp) -- U+21A4
+                            <> showt (KI.toRaw @key kiBackUp) -- U+21A4
 
                 text $ showt stCounter <> " / " <> showt len
 

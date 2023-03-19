@@ -138,7 +138,7 @@ elStopwatch
     -> m (Event t Stats)
 elStopwatch dynStats dynStopwatch n = do
     evStats <-
-        elClass "span" "stopwatch"
+        elClass "span" "text-lg text-slate-400 font-mono px-3"
         $   fmap catMaybes
         $   dyn
         $   dynStopwatch <&> \case
@@ -247,28 +247,24 @@ elStatistics flag ls = do
   let lsShow = snd <$> case flag of
         ElStatsPublic   -> filter fst ls
         ElStatsPersonal -> ls
-  elClass "table" "statistics" $
+  elClass "table" "border-collapse text-sm mx-auto" $
     for_ lsShow \(mAlias, Stats {..}) -> el "tr" $ do
-          elClass "td" "date" $ text $ Text.pack $ Time.formatTime
-              defaultTimeLocale
-              "%F %R"
-              statsDate
-          elClass "td" "time" $ text $ formatTime statsTime
-          case flag of
-              ElStatsPersonal -> blank
-              ElStatsPublic   -> elClass "td" "alias" $ case mAlias of
-                  Just alias -> el "strong" $ text alias
-                  Nothing    -> el "em" $ text "you"
-          elClass "td" "nMistakes" $ do
-              if statsNErrors == 0
-                  then elAttr "strong" ("title" =: "0 mistakes")
-                      $ text "flawless"
-                  else text $ showt statsNErrors <> " mistakes"
-          elClass "td" "wpm"
-              $  text
-              $  showt @Int
-                     (round $ fromIntegral statsLength / toMinutes statsTime)
-              <> " wpm"
+      elClass "td" "text-slate-400 italic" $ text $ Text.pack $ Time.formatTime
+          defaultTimeLocale
+          "%F %R"
+          statsDate
+      elClass "td" "px-2 font-mono" $ text $ formatTime statsTime
+      case flag of
+          ElStatsPersonal -> blank
+          ElStatsPublic   -> elClass "td" "pr-2" $ case mAlias of
+              Just alias -> el "strong" $ text alias
+              Nothing    -> el "em" $ text "you"
+      elClass "td" "pr-2 text-right" $ do
+          if statsNErrors == 0
+              then elAttr "strong" ("title" =: "0 mistakes")
+                  $ text "flawless"
+              else text $ showt statsNErrors <> " mistakes"
+      el "td" $  text $  showt @Int (round $ fromIntegral statsLength / toMinutes statsTime) <> " wpm"
 
 elStatisticsPersonalShort
     :: forall t (m :: * -> *)
@@ -276,20 +272,16 @@ elStatisticsPersonalShort
     => [Stats]
     -> m ()
 elStatisticsPersonalShort ls =
-  elClass "table" "statistics" $
+  elClass "table" "first:bg-yellow-200" $
     for_ (take 3 ls) \Stats {..} -> el "tr" $ do
-            elClass "td" "date" $ text $ Text.pack $ Time.formatTime
-                defaultTimeLocale
-                "%F %R"
-                statsDate
-            elClass "td" "time" $ text $ formatTime statsTime
-            elClass "td" "nMistakes" $
-                if statsNErrors == 0
-                    then elAttr "strong" ("title" =: "0 mistakes")
-                        $ text "flawless"
-                    else text $ showt statsNErrors <> " mistakes"
-            elClass "td" "wpm"
-                $  text
-                $  showt @Int
-                       (round $ fromIntegral statsLength / toMinutes statsTime)
-                <> " wpm"
+      elClass "td" "text-slate-400 italic" $ text $ Text.pack $ Time.formatTime
+          defaultTimeLocale
+          "%F %R"
+          statsDate
+      elClass "td" "px-2 font-mono" $ text $ formatTime statsTime
+      elClass "td" "pr-2 text-right" $
+          if statsNErrors == 0
+              then elAttr "strong" ("title" =: "0 mistakes")
+                  $ text "flawless"
+              else text $ showt statsNErrors <> " mistakes"
+      el "td" $  text $ showt @Int (round $ fromIntegral statsLength / toMinutes statsTime) <> " wpm"

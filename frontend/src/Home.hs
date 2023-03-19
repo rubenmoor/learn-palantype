@@ -359,7 +359,7 @@ elSettings = elClass
                                   then text "✓ "
                                   else blank
 
-                  elClass "span" "px-4 pt-2 block text-grayishblue-900 text-sm \
+                  elClass "span" "px-4 pt-2 block text-black text-sm \
                                 \font-bold border-b"
                     $ text "Keyboard layout"
 
@@ -399,7 +399,7 @@ elSettings = elClass
                       elFileInput "opacity-0 absolute h-full top-0 left-0"
                         $ leftmost [eQwerty, eQwertz] $> ""
 
-                  elClass "span" "px-2 pt-1 block text-grayishblue-900 text-sm \
+                  elClass "span" "px-2 pt-1 block text-black text-sm \
                                 \font-bold border-b"
                     $ text "Progress"
 
@@ -414,7 +414,7 @@ elSettings = elClass
                     SessionAnon -> blank
                     SessionUser _ -> do
                       dynStage <- askRoute
-                      elClass "span" "px-2 pt-1 block text-grayishblue-900 text-sm \
+                      elClass "span" "px-2 pt-1 block text-black text-sm \
                                     \font-bold border-b" $ text "Account"
                       (domSettings, _) <-
                         elClass' "span" "px-4 py-2 hover:bg-zinc-300 block text-base text-black"
@@ -432,11 +432,11 @@ elSettings = elClass
             elClass "span" "group text-zinc-500 hover:text-grayishblue-800 \
                            \text-3xl font-serif cursor-pointer" do
               text $ showSymbol lang
-              elClass "div" "group-hover:block hidden absolute bg-gray-100 \
-                            \shadow-md z-20" do
+              elClass "div" "group-hover:block hidden w-max absolute bg-gray-50 \
+                            \shadow-lg -mt-1 z-20" do
                   (eRL, _) <- elClass' "span" "px-4 py-2 hover:bg-zinc-300 block \
-                                              \text-base font-sans"
-                              $ text "Back to landing page"
+                                              \text-base font-sans text-black"
+                              $ text "Back to system selection"
                   let eClickRL = domEvent Click eRL
                   updateState $ eClickRL $> [ field @"stApp" . field @"stMLang" .~ Nothing]
                   setRoute $ eClickRL $> FrontendRoute_Main :/ ()
@@ -487,10 +487,10 @@ elSettings = elClass
         -- button to toggle keyboard
 
         let dynClass = dynAppState <&> \st ->
-                "px-3 h-8 text-zinc-500 hover:text-grayishblue-800 cursor-pointer inline-block text-2xl"
-                    <> if stShowKeyboard st
-                        then " text-grayish-blue-800"
-                        else ""
+                "px-3 h-8 hover:text-grayishblue-800 cursor-pointer inline-block text-2xl"
+                    <> " " <> if stShowKeyboard st
+                        then "text-grayish-blue-800"
+                        else "text-zinc-500"
         (s, _) <- elDynClass' "div" dynClass $ elClass "div" "inline-flex" do
             iFa "fas fa-keyboard"
             elClass "code" "p-1 text-xs" $ text $ showt $ case lang of
@@ -560,7 +560,7 @@ data StateInput key = StateInput
   , stiMChord      :: Maybe (Chord key)
   }
 
-stenoInput
+elStenoInput
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
        , EventWriter t (Endo State) (Client m)
@@ -572,7 +572,7 @@ stenoInput
        )
     => GetLoadedAndBuilt t
     -> m (Event t (Chord key))
-stenoInput getLoadedAndBuilt = do
+elStenoInput getLoadedAndBuilt = do
     let lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
@@ -584,10 +584,10 @@ stenoInput getLoadedAndBuilt = do
             view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
     dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
         \(pcfg, showQwerty) -> postRender
-                     $ elClass "div" "stenoInput"
-                     $ stenoInput' lang pcfg showQwerty dynShowKeyboard
+                     $ elClass "div" "mx-auto border-b border-dotted"
+                     $ elStenoInput' lang pcfg showQwerty dynShowKeyboard
   where
-    stenoInput' lang PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
+    elStenoInput' lang PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
         let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
                 [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
                 , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
@@ -631,7 +631,7 @@ stenoInput getLoadedAndBuilt = do
                 eKeyChange
 
         let
-            dynClass = bool "displayNone" "" <$> dynShowKeyboard
+            dynClass = bool "hidden" "" <$> dynShowKeyboard
         elDynClass "div" dynClass $ case lang of
             -- a bit of a hack to switch to the original Palantype
             -- keyboard layout for English
@@ -651,7 +651,7 @@ stenoInput getLoadedAndBuilt = do
 
         kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
         (elPowerOff, _) <- elAttr' "span"
-          (  "class" =: "icon-link-power-off"
+          (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
           <> "title" =: "Switch off interactive input"
           ) $ iFa "fas fa-power-off"
         updateState $ domEvent Click elPowerOff $>
@@ -700,7 +700,6 @@ stenoInput getLoadedAndBuilt = do
 
         pure eChordOther
 
-
 elKeyboard
   :: forall key t (m :: * -> *)
   .  ( DomBuilder t m
@@ -715,8 +714,8 @@ elKeyboard
   -> Bool
   -> m ()
 elKeyboard cfgName stenoKeys dynPressedKeys lang showQwerty =
-    elClass "div" "keyboard" $ do
-        el "table" $ do
+    elClass "div" "w-[650px] h-[271px] relative mx-auto" do
+        elClass "table" "border-spacing-1 rounded-lg bg-gray-400 w-full h-full p-3" do
             el "tr" $ do
                 elCell showQwerty stenoKeys dynPressedKeys 1 "1" "pinkyYOffset"
                 elCell showQwerty stenoKeys dynPressedKeys 4 "1" ""
@@ -856,60 +855,66 @@ elCell
   -> Text
   -> m1 ()
 elCell showQwerty stenoKeys dynPressedKeys i colspan strCls =
-  -- -- | whether or not number input mode is active
-  --, stiNumberMode  :: Bool
-  -- -- check if the mode keys (DE: W, N) are being pressed
     case Map.lookup i stenoKeys of
-        Nothing -> elAttr "td" ("colspan" =: colspan <> "class" =: "inactive") blank
-        Just qwerties -> do
-            let k = fromIndex i
-                (strNumberMode, strNumberModeShift) = case Numbers.fromIndex i of
-                    Nothing -> ("", "")
-                    Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
-                attrs = dynPressedKeys <&> \set' ->
-                    let
-                        isNumberMode = setModeKeys `Set.isSubsetOf` set'
-                                     && not (fromIndex 2 `Set.member` set')
-                        isNumberModeShift = setModeKeys `Set.isSubsetOf` set'
-                                         && fromIndex 2 `Set.member` set'
-                        noNumberMode = Text.null strNumberMode
-                        noNumberModeShift = Text.null strNumberModeShift
-                        lsClass = catMaybes
-                            [ if k `Set.member` set' then Just "pressed" else Nothing
-                            , if isNumberMode then Just "numberMode" else Nothing
-                            , if isNumberModeShift then Just "numberModeShift" else Nothing
-                            , if     keyCode k == '_'
-                                  || (isNumberMode && noNumberMode)
-                                  || (isNumberModeShift && noNumberModeShift)
-                                  then Just "inactive"
-                                  else Nothing
-                            , if isNumberMode
-                                then
-                                    if Text.length strNumberMode >= 3
-                                        then Just "verySmall"
-                                        else if Text.length strNumberMode >= 2
-                                            then Just "small"
-                                            else Nothing
-                                else Nothing
-                            , if isNumberModeShift
-                                then
-                                    if Text.length strNumberModeShift >= 3
-                                        then Just "verySmall"
-                                        else if Text.length strNumberModeShift >= 2
-                                            then Just "small"
-                                            else Nothing
-                                else Nothing
-                            ]
-                     in
-                           "colspan" =: colspan
-                        <> "class"   =: unwords (strCls : lsClass)
-            elDynAttr "td" attrs $ do
-                elClass "div" "steno" $ text $ Text.singleton $ keyCode k
-                elClass "div" "numberMode" $ text strNumberMode
-                elClass "div" "numberModeShift" $ text strNumberModeShift
-                when showQwerty $ elClass "div" "qwerty" $ text $ Text.unwords qwerties
+      Nothing       -> elInactiveKey
+      Just qwerties -> elActiveKey qwerties
   where
     setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
+    elInactiveKey = elAttr "td"
+      (  "colspan" =: colspan
+      <> "class" =: "bg-gray-300 text-grayishblue-900"
+      ) blank
+    elActiveKey qwerties =
+      let k = fromIndex i
+          (strNumberMode, strNumberModeShift) = case Numbers.fromIndex i of
+              Nothing -> ("", "")
+              Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
+          attrs = dynPressedKeys <&> \set' ->
+              let
+                  isNumberMode = setModeKeys `Set.isSubsetOf` set'
+                                && not (fromIndex 2 `Set.member` set')
+                  isNumberModeShift = setModeKeys `Set.isSubsetOf` set'
+                                    && fromIndex 2 `Set.member` set'
+                  noNumberMode = Text.null strNumberMode
+                  noNumberModeShift = Text.null strNumberModeShift
+                  lsClass = catMaybes
+                      -- TODO: replace with function that maps all possibilities to a definite class string
+                      [ if k `Set.member` set' then Just "text-grayishblue-800 shadow-none" else Nothing
+                      , if isNumberMode then Just "show-number" else Nothing
+                      -- alternative to [.show-number_&]:block
+                      -- , if isNumberMode then Just "[&>*:nth-child(2)]:block" else Nothing
+                      -- where to put hidden? e.g. [&>*]:hidden
+                      , if isNumberModeShift then Just "show-shifted-number" else Nothing
+                      , if     keyCode k == '_'
+                            || (isNumberMode && noNumberMode)
+                            || (isNumberModeShift && noNumberModeShift)
+                            then Just "inactive"
+                            else Nothing
+                      , if isNumberMode
+                          then
+                              if Text.length strNumberMode >= 3
+                                  then Just "verySmall"
+                                  else if Text.length strNumberMode >= 2
+                                      then Just "small"
+                                      else Nothing
+                          else Nothing
+                      , if isNumberModeShift
+                          then
+                              if Text.length strNumberModeShift >= 3
+                                  then Just "verySmall"
+                                  else if Text.length strNumberModeShift >= 2
+                                      then Just "small"
+                                      else Nothing
+                          else Nothing
+                      ]
+                in
+                      "colspan" =: colspan
+                  <> "class"   =: unwords (strCls : lsClass)
+      in  elDynAttr "td" attrs $ do
+            elClass "div" "steno" $ text $ Text.singleton $ keyCode k
+            elClass "div" "hidden [.show-number_&]:block" $ text strNumberMode
+            elClass "div" "hidden [.show-shifted-number_&]:block" $ text strNumberModeShift
+            when showQwerty $ elClass "div" "qwerty" $ text $ Text.unwords qwerties
 
 elStenoOutput
   :: forall key t (m :: * -> *)
@@ -920,9 +925,11 @@ elStenoOutput
   => Dynamic t (Set key)
   -> m (InputElement EventResult (DomBuilderSpace m) t)
 elStenoOutput dynDownKeys = mdo
-    let eFocus = updated (_inputElement_hasFocus i) <&> \case
-            True  -> ("Type!"    , "class" =: Just "anthrazit")
-            False -> ("Click me!", "class" =: Just "red"      )
+    let
+        strClass = "w-[650px] text-center text-3xl p-2"
+        eFocus = updated (_inputElement_hasFocus i) <&> \case
+            True  -> ("Type!"    , "class" =: Just (strClass <> " " <> "focus:outline-none text-grayishblue-900"))
+            False -> ("Click me!", "class" =: Just (strClass <> " " <> "text-red-500"      ))
         eTyping = updated dynDownKeys <&> \downKeys ->
             if Set.null downKeys
                 then ("...", "class" =: Nothing)
@@ -944,8 +951,7 @@ elStenoOutput dynDownKeys = mdo
                     . elementConfig_initialAttributes
                 .~ ( "readonly"  =: "readonly"
                   <> "autofocus" =: "autofocus"
-                  <> "class"     =: "red"
-                  <> "id"        =: "stenoOutput"
+                  <> "class"     =: "text-red-500"
                    )
                 & inputElementConfig_elementConfig . elementConfig_eventSpec
                     %~ addEventSpecFlags
@@ -969,7 +975,7 @@ elTOC ::
     ) =>
     StageIndex ->
     m ()
-elTOC stageCurrent = elClass "section" "toc" $ do
+elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
         dynShowStage i = Set.member i . stTOCShowStage <$> dynState
@@ -979,31 +985,31 @@ elTOC stageCurrent = elClass "section" "toc" $ do
         (s, _) <- if showTOC
             then
                 elAttr' "span"
-                    (  "class" =: "btn TOCVisible"
+                    (  "class" =: "text-zinc-400 text-2xl"
                     <> "title" =: "Hide Table of Contents"
                     ) $ iFa "fas fa-times"
             else
                 elAttr' "span"
-                    (  "class" =: "btn TOCHidden"
+                    (  "class" =: "text-zinc-400 text-2xl"
                     <> "title" =: "Show Table of Contents"
                     ) $ iFa "fas fa-bars"
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowTOC" %~ not]
 
-    let dynClassDisplay = bool "displayNone" "" <$> dynShowTOC
+    let dynClassDisplay = bool "hidden" "mr-3" <$> dynShowTOC
     elDynClass "div" dynClassDisplay $ do
         let dynCleared = stCleared <$> dynState
         dyn_ $ dynCleared <&> \cleared -> do
 
             let
                 elLi iSubstage = do
-                    let cls =
+                    let cls = "whitespace-nowrap leading-7" <> " " <>
                             if iSubstage == stageCurrent
-                                then "bgLightgray"
+                                then "bg-gray-200"
                                 else ""
                     elClass "li" cls $ do
-                        if iSubstage `Set.member` cleared
-                            then elClass "span" "toc-checkmark" $ iFa "fas fa-check"
+                        elClass "span" "w-4 inline-block px-0.5" $ if iSubstage `Set.member` cleared
+                            then elClass "span" "text-green-500 text-xs" $ iFa "fas fa-check"
                             else el "span" $ text "○"
                         routeLink (stageUrl @key iSubstage) $ do
                             let (str1, mg, str2) = Stage.toTOCString $
@@ -1011,19 +1017,19 @@ elTOC stageCurrent = elClass "section" "toc" $ do
                                     Nothing -> $failure $ "index invalid: " <> show iSubstage
                                     Just s  -> s
                             text str1
-                            whenJust mg \g -> elClass "strong" "greediness" $ text $ "G" <> showt g <> " "
+                            whenJust mg \g -> el "strong" $ text $ "G" <> showt g <> " "
                             text str2
 
                 elStage :: Int -> Text -> [StageIndex] -> m ()
                 elStage i stageTitle iSubstages = do
-                    (s, _) <- elClass' "li" "stage" $ do
+                    (s, _) <- elClass' "li" "cursor-pointer pt-1" $ do
                         let dynClass =
-                                bool "fas fa-caret-right" "fas fa-caret-down"
-                                    <$> dynShowStage i
-                        elClass "span" "caret" $ elDynClass "i" dynClass blank
+                                bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage i
+                        elClass "span" "text-grayishblue-900 text-lg w-4 inline-block"
+                          $ elDynClass "i" dynClass blank
                         text $ "Stage " <> showt i <> ": " <> stageTitle
 
-                        let dynClassUl = bool "displayNone" "" <$> dynShowStage i
+                        let dynClassUl = bool "hidden" "" <$> dynShowStage i
                         elDynClass "ul" dynClassUl $ traverse_ elLi iSubstages
 
                     let eClickS = domEvent Click s
@@ -1121,7 +1127,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
                             text "Missing a language? Checkout the "
                             elAttr "a"
                               (  "href" =: "https://github.com/rubenmoor/palantype-tools"
-                              <> "class" =: "hover:underline text-blue-600"
                               ) $ text "source on Github"
                             text " to create your own Palantype-style steno system."
                         pure elEN
@@ -1186,7 +1191,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
             elClass "div" "text-lg" $ do
                 text "You will need a keyboard that supports "
                 elAttr "a" (  "href" =: "https://en.wikipedia.org/wiki/Rollover_(keyboard)"
-                           <> "class" =: "hover:underline text-blue-600"
                            ) $ text "N-key roll-over"
                 text ", to register all the keys that you press simultaneously, and \
                      \optionally an ortho-linear key layout."
@@ -1203,7 +1207,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
                 text "Find the code on Github and contribute by reporting bugs \
                      \and requesting features in the "
                 elAttr "a" (  "href"  =: "https://github.com/rubenmoor/learn-palantype/issues"
-                           <> "class" =: "hover:underline text-blue-600"
                            ) $ text "issue tracker"
                 text "."
 
@@ -1211,7 +1214,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
         text "Want to reach out? Join the "
         elAttr "a"
           (  "href"  =: "https://discord.gg/spymr5aCr5"
-          <> "class" =: "hover:underline text-blue-600"
           ) $ text "Plover Discord Server"
         text " and find me in #palantype, @gurubm."
 
@@ -1226,7 +1228,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
           text "Functional reactive programming for web and mobile—a sublime experience, find the "
           elAttr "a"
             (  "href" =: "https://github.com/obsidiansystems/obelisk"
-            <> "class" =: "text-blue-600 hover:underline"
             ) $ text "code on GitHub"
           text "."
         elClass "dt" twTerm $ text "GHCJS"
@@ -1234,7 +1235,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
           text "Let the JavaScript be generated and stay type-safe and functional all the way, cf. "
           elAttr "a"
             (  "href" =: "https://github.com/ghcjs/ghcjs"
-            <> "class" =: "text-blue-600 hover:underline"
             ) $ text "GHCJS on GitHub"
           text "."
         elClass "dt" twTerm $ text "Haskell"
@@ -1242,7 +1242,6 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
           text "Category theory, lazy evaluation, purely functional programming since 1990. "
           elAttr "a"
             (  "href" =: "https://en.wikipedia.org/wiki/Haskell"
-            <> "class" =: "text-blue-600 hover:underline"
             ) $ text "Read more on Wikipedia"
           text "."
 
@@ -1276,7 +1275,7 @@ elStages getLoadedAndBuilt = do
         dynState' <- ask
         let dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
         eChord <- dynSimple $ dynKeyboardActive <&> \case
-          True  -> stenoInput @key getLoadedAndBuilt
+          True  -> elStenoInput @key getLoadedAndBuilt
           False -> do
             elClass "div" "p-2 text-center mx-auto text-gray-500 border border-solid border-gray-200 \
                           \rounded-lg" do
@@ -1320,9 +1319,7 @@ elStages getLoadedAndBuilt = do
                       page
             elClass "section" "overflow-y-auto scroll-smooth px-2 w-full h-full \
                               \relative" do
-                elClass "div" "w-max h-[29px] sticky top-[2px] text-lg font-bold \
-                              \mx-auto bg-teal-600 bg-opacity-70 text-white \
-                              \rounded-lg p-1" $ text
+                elClass "div" "w-max sticky top-[2px] steno-navigation mx-auto opacity-50" $ text
                     $  "▲ "
                     <> showt (KI.toRaw @key kiUp)
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
@@ -1361,9 +1358,7 @@ elStages getLoadedAndBuilt = do
                     Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
                     Nothing -> elPageNotImplemented "index invalid"
 
-                elClass "div" "w-max h-[29px] sticky bottom-4 text-lg font-bold \
-                              \mx-auto bg-teal-600 bg-opacity-70 text-white \
-                              \rounded-lg p-1"
+                elClass "div" "w-max sticky bottom-4 steno-navigation mx-auto opacity-50"
                   $ text $ "▼ "
                     <> showt (KI.toRaw @key kiDown)
                     <> "  ↡ "
