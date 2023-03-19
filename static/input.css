@@ -10,11 +10,16 @@
   a:hover {
     @apply underline;
   }
+  input[type=checkbox] {
+    @apply text-grayishblue-700;
+    @apply mr-1;
+    @apply rounded;
+  }
 }
 
 @layer components {
   .steno-navigation {
-    @apply bg-grayishblue-300;
+    @apply bg-grayishblue-500;
     @apply text-xs;
     @apply font-bold;
     @apply rounded-lg;

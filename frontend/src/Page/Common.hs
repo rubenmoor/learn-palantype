@@ -206,7 +206,7 @@ elFooter
     => Navigation
     -> m ()
 elFooter Navigation {..} =
-  elClass "footer" "grow-0 shrink shadow-lg text-xl p-3 \
+  elClass "footer" "grow-0 shrink shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-xl p-3 \
                    \text-center z-10" do
     whenJust navMPrevious $ \prv ->
         elClass "div" "float-left" $ do

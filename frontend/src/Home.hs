@@ -34,7 +34,6 @@ import           Common.Model                   ( AppState(..)
 import           Common.PloverConfig            ( CfgName(..)
                                                 , PloverSystemCfg(..)
                                                 , defaultPloverCfg
-                                                , defaultPloverSystemCfg
                                                 , keyMapToPloverCfg
                                                 , lsStenoQwerty
                                                 , lsStenoQwertyOrig
@@ -45,14 +44,11 @@ import           Common.Route                   ( FrontendRoute(..)
                                                 , showRoute
                                                 )
 import           Control.Applicative            ( Applicative(..) )
-import           Control.Category               ( (<<<)
-                                                , (>>>)
-                                                , Category((.), id)
+import           Control.Category               ( Category((.), id), (>>>)
                                                 )
 import           Control.Lens                   ( At(at)
                                                 , Ixed(ix)
                                                 , (^.)
-                                                , non
                                                 , view
                                                 )
 import           Control.Lens.Setter            ( (%~)
@@ -60,10 +56,7 @@ import           Control.Lens.Setter            ( (%~)
                                                 , (?~)
                                                 )
 import           Control.Lens.Wrapped           ( _Wrapped' )
-import           Control.Monad                  ( (<=<)
-                                                , guard
-                                                , when, (=<<)
-                                                )
+import           Control.Monad                  ( (<=<))
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader
@@ -72,22 +65,16 @@ import           Control.Monad.Reader           ( MonadReader
                                                 , asks
                                                 , withReaderT
                                                 )
-import           Data.Bool                      ( (&&)
-                                                , Bool(..)
-                                                , bool
+import           Data.Bool                      ( bool
                                                 , not
-                                                , otherwise
-                                                , (||)
+                                                , otherwise, Bool (..)
                                                 )
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..)
                                                 , either
                                                 )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Foldable                  ( Foldable(foldl', null)
-                                                , concat
-                                                , traverse_
-                                                )
+import           Data.Foldable                  ( traverse_, Foldable (null))
 import           Data.Function                  ( ($)
                                                 , (&)
                                                 , const
@@ -98,45 +85,15 @@ import           Data.Functor                   ( ($>)
                                                 , fmap
                                                 , void
                                                 )
-import           Data.Functor.Misc              ( Const2(Const2) )
-import           Data.Generics.Product          ( field )
 import           Data.Int                       ( Int )
-import           Data.Map.Strict                ( Map )
-import qualified Data.Map.Strict               as Map
 import           Data.Maybe                     ( Maybe(..)
-                                                , fromMaybe
                                                 , listToMaybe
                                                 , maybe
                                                 )
 import           Data.Monoid                    ( (<>) )
-import           Data.Ord                       ( (>=)
-                                                , Ord
-                                                )
-import           Data.Proxy                     ( Proxy(..) )
-import           Data.Semigroup                 ( Endo(..) )
-import           Data.Set                       ( Set )
-import qualified Data.Set                      as Set
-import           Data.String                    ( String )
-import           Data.Text                      ( Text
-                                                , unwords
-                                                )
 import qualified Data.Text                     as Text
-import           Data.Tuple                     ( fst
-                                                , snd
-                                                )
-import           Data.Word                      ( Word )
-import           GHC.Real                       ( fromIntegral )
-import           GHCJS.DOM.EventM               ( on )
-import           GHCJS.DOM.FileReader           ( getResult
-                                                , load
-                                                , newFileReader
-                                                , readAsText
-                                                )
-import           GHCJS.DOM.HTMLElement          ( focus )
-import           GHCJS.DOM.Types                ( File )
 import           Language.Javascript.JSaddle    ( FromJSVal(fromJSVal)
                                                 , ToJSVal(toJSVal)
-                                                , eval
                                                 , liftJSM
                                                 )
 import           Obelisk.Generated.Static       ( static )
@@ -161,60 +118,33 @@ import           Page.Stage15.PloverCommands    ( ploverCommands )
 import           Page.Stage15.SpecialCharacters ( specialCharacters )
 import qualified Page.Stage2                   as Stage2
 import           Page.StageGeneric              ( getGenericExercise )
-import           Palantype.Common               ( Chord(..)
-                                                , KeyIndex
-                                                , Palantype(keyCode)
-                                                , Stage(..)
-                                                , StageIndex
+import           Palantype.Common               ( StageIndex
                                                 , StageSpecialGeneric(..)
                                                 , SystemLang(..)
-                                                , fromChord
-                                                , fromIndex
                                                 , kiDown
                                                 , kiInsert
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord
-                                                , mkStageIndex, getSystemLang
+
+                                                , mkStageIndex, getSystemLang, Palantype, Stage (..)
                                                 )
-import qualified Palantype.Common.Dictionary.Numbers
-                                               as Numbers
-import qualified Palantype.Common.Indices      as KI
-import qualified Palantype.Common.Stage        as Stage
 import           Palantype.Common.TH            ( failure
                                                 , fromJust
                                                 )
 import qualified Palantype.DE                  as DE
 import qualified Palantype.EN                  as EN
 import           Reflex.Dom                     ( (=:)
-                                                , DomBuilder
-                                                    ( DomBuilderSpace
-                                                    , inputElement
-                                                    )
-                                                , DomSpace(addEventSpecFlags)
-                                                , EventName
-                                                    ( Click
-                                                    , Keydown
-                                                    , Keyup
-                                                    )
-                                                , EventResult
-                                                , EventSelector(select)
-                                                , EventTag(KeydownTag, KeyupTag)
+                                                , DomBuilder (..)
+                                                , EventName ( Click)
                                                 , EventWriter
                                                 , EventWriterT
-                                                , HasDomEvent
-                                                    ( DomEventType
-                                                    , domEvent
-                                                    )
                                                 , InputElement(..)
-                                                , InputElementConfig
-                                                , KeyCode
                                                 , MonadHold(holdDyn)
                                                 , PerformEvent(performEvent_)
                                                 , Performable
                                                 , PostBuild
-                                                , Prerender(Client)
+                                                , Prerender
                                                 , Reflex
                                                     ( Dynamic
                                                     , Event
@@ -224,35 +154,22 @@ import           Reflex.Dom                     ( (=:)
                                                 , attachPromptlyDynWithMaybe
                                                 , blank
                                                 , current
-
                                                 , dyn_
                                                 , el
-
                                                 , elAttr
                                                 , elAttr'
                                                 , elClass
                                                 , elClass'
-                                                , elDynAttr
                                                 , elDynClass
                                                 , elDynClass'
-                                                , elementConfig_eventSpec
                                                 , elementConfig_initialAttributes
-                                                , elementConfig_modifyAttributes
-                                                , fanMap
-                                                , fmapMaybe
-                                                , foldDyn
                                                 , inputElementConfig_elementConfig
-                                                , inputElementConfig_initialChecked
-                                                , inputElementConfig_initialValue
                                                 , inputElementConfig_setValue
                                                 , leftmost
-                                                , mergeWith
                                                 , never
-                                                , preventDefault
                                                 , tag
                                                 , text
-                                                , wrapDomEvent
-                                                , zipDyn, delay
+                                                , wrapDomEvent, HasDomEvent (..)
                                                 )
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
@@ -274,10 +191,22 @@ import           Type.Reflection                ( (:~~:)(HRefl)
                                                 )
 import           Witherable                     ( Filterable
                                                     ( catMaybes
-                                                    , filter
+
                                                     , mapMaybe
                                                     )
                                                 )
+import Data.Text (Text)
+import GHCJS.DOM.Types (File)
+import GHCJS.DOM.EventM (on)
+import GHCJS.DOM.FileReader ( getResult, load, newFileReader, readAsText )
+import Data.Semigroup (Endo)
+import Data.String (String)
+import qualified Palantype.Common as KI
+import qualified Data.Set as Set
+import qualified Palantype.Common.Stage as Stage
+import qualified Data.Map.Strict as Map
+import Data.Generics.Product (HasField(field))
+import StenoInput (elStenoInput)
 
 default (Text)
 
@@ -489,7 +418,7 @@ elSettings = elClass
         let dynClass = dynAppState <&> \st ->
                 "px-3 h-8 hover:text-grayishblue-800 cursor-pointer inline-block text-2xl"
                     <> " " <> if stShowKeyboard st
-                        then "text-grayish-blue-800"
+                        then "text-grayishblue-800"
                         else "text-zinc-500"
         (s, _) <- elDynClass' "div" dynClass $ elClass "div" "inline-flex" do
             iFa "fas fa-keyboard"
@@ -503,462 +432,6 @@ elSettings = elClass
     elLoginSignup dynRedirectRoute
 
     elClass "br" "clear-both" blank
-
-data KeyState key
-    = KeyStateDown key
-    | KeyStateUp key
-
-{-# INLINEABLE keydown #-}
-keydown ::
-    ( Reflex t,
-      HasDomEvent t e 'KeydownTag,
-      DomEventType e 'KeydownTag ~ Word
-    ) =>
-    KeyCode ->
-    e ->
-    Event t ()
-keydown keycode =
-    fmapMaybe (\n -> guard $ fromIntegral n == keycode)
-        . domEvent Keydown
-
-{-# INLINEABLE keyup #-}
-keyup ::
-    ( Reflex t,
-      HasDomEvent t e 'KeyupTag,
-      DomEventType e 'KeyupTag ~ Word
-    ) =>
-    KeyCode ->
-    e ->
-    Event t ()
-keyup keycode =
-    fmapMaybe (\n -> guard $ fromIntegral n == keycode)
-        . domEvent Keyup
-
-data FanChord
-    = FanToggle
-    | FanDown
-    | FanUp
-    | FanPageUp
-    | FanPageDown
-    | FanOther
-    deriving (Eq, Ord)
-
-data StateInput key = StateInput
-  {
-    -- | the set of keys that are currently pressed
-    stiKeysPressed :: Set key
-
-  -- | the set of keys that have been pressed since the last
-  --   release; a release is the event of no key pressed
-  , stiKeysDown    :: Set key
-
-  -- | a key chord, made from the set of keys that have been
-  -- pressed since the last release
-  -- the difference to `dynDownKeys`: dynChord changes
-  -- state upon release, whereas dynDownKeys changes state
-  -- every time a new key is pushed down AND upon release
-  , stiMChord      :: Maybe (Chord key)
-  }
-
-elStenoInput
-    :: forall key t (m :: * -> *)
-     . ( DomBuilder t m
-       , EventWriter t (Endo State) (Client m)
-       , MonadHold t m
-       , MonadReader (Dynamic t State) m
-       , Palantype key
-       , PostBuild t m
-       , Prerender t m
-       )
-    => GetLoadedAndBuilt t
-    -> m (Event t (Chord key))
-elStenoInput getLoadedAndBuilt = do
-    let lang = if
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
-          | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
-          | otherwise -> $failure "Key not implemented"
-    dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
-    dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
-    dynShowKeyboard <- asks $ fmap $ stApp >>> stShowKeyboard
-    let dynSystemCfg =
-            view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
-    dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
-        \(pcfg, showQwerty) -> postRender
-                     $ elClass "div" "mx-auto border-b border-dotted"
-                     $ elStenoInput' lang pcfg showQwerty dynShowKeyboard
-  where
-    elStenoInput' lang PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
-        let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
-                [ keydown qwertyKey kbInput $> [KeyStateDown $ fromIndex kI]
-                , keyup   qwertyKey kbInput $> [KeyStateUp   $ fromIndex kI]
-                ]
-            eKeyChange = mergeWith (<>) $ concat keyChanges
-
-            register
-              :: [KeyState key]
-              -> StateInput key
-              -> StateInput key
-            register es StateInput{ stiKeysPressed, stiKeysDown } =
-                let
-                    stiKeysPressed' = foldl' accDownUp stiKeysPressed es
-                    (stiKeysDown', stiMChord) =
-                        if Set.null stiKeysPressed'
-                        then
-                            ( Set.empty
-                            , Just $ mkChord $ Set.elems stiKeysDown
-                            )
-                        else
-                            ( foldl' accDown stiKeysDown es
-                            , Nothing
-                            )
-
-                in  StateInput
-                      { stiKeysPressed = stiKeysPressed'
-                      , stiKeysDown    = stiKeysDown'
-                      , stiMChord
-                      }
-                 -- in (setKeys', word', release')
-                where
-                    accDownUp s (KeyStateDown k) = Set.insert k s
-                    accDownUp s (KeyStateUp   k) = Set.delete k s
-                    accDown   s (KeyStateDown k) = Set.insert k s
-                    accDown   s (KeyStateUp   _) = s
-
-        dynInput <-
-            foldDyn
-                register
-                (StateInput Set.empty Set.empty Nothing)
-                eKeyChange
-
-        let
-            dynClass = bool "hidden" "" <$> dynShowKeyboard
-        elDynClass "div" dynClass $ case lang of
-            -- a bit of a hack to switch to the original Palantype
-            -- keyboard layout for English
-            -- that original layout I will consider the exception
-            SystemEN ->
-                elKeyboardEN
-                    pcfgName
-                    pcfgMapStenoKeys
-                    (stiKeysPressed <$> dynInput)
-            _ ->
-                elKeyboard
-                    pcfgName
-                    pcfgMapStenoKeys
-                    (stiKeysPressed <$> dynInput)
-                    lang
-                    showQwerty
-
-        kbInput <- elStenoOutput $ stiKeysDown <$> dynInput
-        (elPowerOff, _) <- elAttr' "span"
-          (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
-          <> "title" =: "Switch off interactive input"
-          ) $ iFa "fas fa-power-off"
-        updateState $ domEvent Click elPowerOff $>
-          [field @"stApp" . field @"stKeyboardActive" .~ False]
-
-        -- TODO: doesn't seem to have the desired effect
-        let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
-        performEvent_ $ eLostFocus $> focus (_inputElement_raw kbInput)
-
-        -- post build auto focus: the post build event happens before the element
-        -- is mounted. postmount event waits for pull request to be accepted
-        -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
-        evLoadedAndBuilt <- delay 0.1 =<< getLoadedAndBuilt
-        performEvent_ $ evLoadedAndBuilt $> focus (_inputElement_raw kbInput)
-
-        let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
-            selector = fanMap $ eChordAll <&> \c -> if
-                | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanToggle c
-                | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
-                | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
-                | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
-                | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
-                | otherwise                             -> Map.singleton FanOther c
-            eChordToggle   = select selector (Const2 FanToggle)
-            eChordDown     = select selector (Const2 FanDown  )
-            eChordUp       = select selector (Const2 FanUp    )
-            eChordOther    = select selector (Const2 FanOther )
-            eChordPageDown = select selector (Const2 FanPageDown  )
-            eChordPageUp   = select selector (Const2 FanPageUp    )
-
-        updateState $
-            eChordToggle $> [field @"stApp" . field @"stShowKeyboard" %~ not]
-
-        -- this is a workaround
-        -- scroll, like focus, is not available in reflex dom
-        -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
-        -- GhcjsDomSpace requires the elements to be build post render
-        let jsScroll :: Int -> Text
-            jsScroll x =
-                "let el = document.getElementById(\"content\"); \
-                \el.scrollBy(0," <> showt x <> ")"
-        performEvent_ $ eChordDown     $> void (liftJSM $ eval $ jsScroll 100)
-        performEvent_ $ eChordUp       $> void (liftJSM $ eval $ jsScroll (-100))
-        performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
-        performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
-
-        pure eChordOther
-
-elKeyboard
-  :: forall key t (m :: * -> *)
-  .  ( DomBuilder t m
-     , EventWriter t (Endo State) m
-     , Palantype key
-     , PostBuild t m
-     )
-  => CfgName
-  -> Map KeyIndex [Text]
-  -> Dynamic t (Set key)
-  -> SystemLang
-  -> Bool
-  -> m ()
-elKeyboard cfgName stenoKeys dynPressedKeys lang showQwerty =
-    elClass "div" "w-[650px] h-[271px] relative mx-auto" do
-        elClass "table" "border-spacing-1 rounded-lg bg-gray-400 w-full h-full p-3" do
-            el "tr" $ do
-                elCell showQwerty stenoKeys dynPressedKeys 1 "1" "pinkyYOffset"
-                elCell showQwerty stenoKeys dynPressedKeys 4 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 7 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 10 "1" ""
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell showQwerty stenoKeys dynPressedKeys 21 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 24 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 27 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 30 "1" "pinkyYOffset"
-            el "tr" $ do
-                elCell showQwerty stenoKeys dynPressedKeys 2 "1" "homerow pinkyYOffset"
-                elCell showQwerty stenoKeys dynPressedKeys 5 "1" "homerow"
-                elCell showQwerty stenoKeys dynPressedKeys 8 "1" "homerow"
-                elCell showQwerty stenoKeys dynPressedKeys 11 "1" "homerow"
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell showQwerty stenoKeys dynPressedKeys 22 "1" "homerow"
-                elCell showQwerty stenoKeys dynPressedKeys 25 "1" "homerow"
-                elCell showQwerty stenoKeys dynPressedKeys 28 "1" "homerow"
-                elCell showQwerty stenoKeys dynPressedKeys 31 "1" "homerow pinkyYOffset"
-            el "tr" $ do
-                elCell showQwerty stenoKeys dynPressedKeys 3 "1" "pinkyYOffset"
-                elCell showQwerty stenoKeys dynPressedKeys 6 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 9 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 12 "1" ""
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-                elCell showQwerty stenoKeys dynPressedKeys 23 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 26 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 29 "1" ""
-                elCell showQwerty stenoKeys dynPressedKeys 32 "1" "pinkyYOffset"
-            el "tr" $ do
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-
-                -- left thumb
-                elCell showQwerty stenoKeys dynPressedKeys 13 "1" "thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 14 "1" "thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 15 "1" "homerow thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 16 "1" "thumbrow"
-
-                elAttr "td" ("colspan" =: "1" <> "class" =: "handgap") blank
-
-                -- right thumb
-                elCell showQwerty stenoKeys dynPressedKeys 17 "1" "thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 18 "1" "homerow thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 19 "1" "thumbrow"
-                elCell showQwerty stenoKeys dynPressedKeys 20 "1" "thumbrow"
-
-                elAttr "td" ("colspan" =: "2" <> "class" =: "gap") blank
-        elClass "div" "configuration" $ do
-            el "div" $ text $ showt lang
-            el "div" $ text $ showt cfgName
-
-            ev <- _inputElement_checkedChange <$> inputElement
-                ( def & inputElementConfig_initialChecked .~ showQwerty
-                      & inputElementConfig_elementConfig
-                          . elementConfig_initialAttributes
-                              .~ (  "id"   =: "showQwerties"
-                                 <> "type" =: "checkbox"
-                                 )
-                )
-            updateState $ ev $> [field @"stApp" . field @"stKeyboardShowQwerty" %~ not]
-            elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
-
--- | original Palantype keyboard layout
--- | unfortunately the keys don't follow the simple order
--- | of top row, home row, bottom row
--- | therefore, I treat the original palantype layout as the exception
-elKeyboardEN ::
-    forall key t (m :: * -> *).
-    (DomBuilder t m, Palantype key, PostBuild t m) =>
-    CfgName ->
-    Map KeyIndex [Text] ->
-    Dynamic t (Set key) ->
-    m ()
-elKeyboardEN cfgName stenoKeys dynPressedKeys = elClass "div" "keyboard" $ do
-    el "table" $ do
-        el "tr" $ do
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell True stenoKeys dynPressedKeys 4 "1" ""
-            elCell True stenoKeys dynPressedKeys 7 "1" ""
-            elCell True stenoKeys dynPressedKeys 10 "1" ""
-            -- elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-            elCell True stenoKeys dynPressedKeys 21 "1" ""
-            elCell True stenoKeys dynPressedKeys 24 "1" ""
-            elCell True stenoKeys dynPressedKeys 27 "1" ""
-            elAttr "td" ("colspan" =: "1" <> "class" =: "gap") blank
-        el "tr" $ do
-            elCell True stenoKeys dynPressedKeys 1 "1" ""
-            elCell True stenoKeys dynPressedKeys 5 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 8 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 11 "1" "homerow"
-            elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell True stenoKeys dynPressedKeys 22 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 25 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 28 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 30 "1" ""
-        el "tr" $ do
-            elCell True stenoKeys dynPressedKeys 2 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 6 "1" ""
-            elCell True stenoKeys dynPressedKeys 9 "1" ""
-            elCell True stenoKeys dynPressedKeys 12 "1" ""
-            elAttr "td" ("colspan" =: "4" <> "class" =: "gap") blank
-            elCell True stenoKeys dynPressedKeys 23 "1" ""
-            elCell True stenoKeys dynPressedKeys 26 "1" ""
-            elCell True stenoKeys dynPressedKeys 29 "1" ""
-            elCell True stenoKeys dynPressedKeys 31 "1" "homerow"
-        el "tr" $ do
-            elCell True stenoKeys dynPressedKeys 3 "3" ""
-            elCell True stenoKeys dynPressedKeys 14 "1" ""
-            elCell True stenoKeys dynPressedKeys 15 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 18 "2" ""
-            elCell True stenoKeys dynPressedKeys 19 "1" "homerow"
-            elCell True stenoKeys dynPressedKeys 20 "1" ""
-            elCell True stenoKeys dynPressedKeys 32 "3" ""
-    elClass "div" "configuration" $ do
-        el "div" $ text $ showt SystemEN
-        el "div" $ text $ showt cfgName
-
-elCell
-  :: forall key t (m1 :: * -> *)
-  . (DomBuilder t m1, Palantype key, PostBuild t m1)
-  => Bool
-  -> Map KeyIndex [Text]
-  -> Dynamic t (Set key)
-  -> KeyIndex
-  -> Text
-  -> Text
-  -> m1 ()
-elCell showQwerty stenoKeys dynPressedKeys i colspan strCls =
-    case Map.lookup i stenoKeys of
-      Nothing       -> elInactiveKey
-      Just qwerties -> elActiveKey qwerties
-  where
-    setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
-    elInactiveKey = elAttr "td"
-      (  "colspan" =: colspan
-      <> "class" =: "bg-gray-300 text-grayishblue-900"
-      ) blank
-    elActiveKey qwerties =
-      let k = fromIndex i
-          (strNumberMode, strNumberModeShift) = case Numbers.fromIndex i of
-              Nothing -> ("", "")
-              Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
-          attrs = dynPressedKeys <&> \set' ->
-              let
-                  isNumberMode = setModeKeys `Set.isSubsetOf` set'
-                                && not (fromIndex 2 `Set.member` set')
-                  isNumberModeShift = setModeKeys `Set.isSubsetOf` set'
-                                    && fromIndex 2 `Set.member` set'
-                  noNumberMode = Text.null strNumberMode
-                  noNumberModeShift = Text.null strNumberModeShift
-                  lsClass = catMaybes
-                      -- TODO: replace with function that maps all possibilities to a definite class string
-                      [ if k `Set.member` set' then Just "text-grayishblue-800 shadow-none" else Nothing
-                      , if isNumberMode then Just "show-number" else Nothing
-                      -- alternative to [.show-number_&]:block
-                      -- , if isNumberMode then Just "[&>*:nth-child(2)]:block" else Nothing
-                      -- where to put hidden? e.g. [&>*]:hidden
-                      , if isNumberModeShift then Just "show-shifted-number" else Nothing
-                      , if     keyCode k == '_'
-                            || (isNumberMode && noNumberMode)
-                            || (isNumberModeShift && noNumberModeShift)
-                            then Just "inactive"
-                            else Nothing
-                      , if isNumberMode
-                          then
-                              if Text.length strNumberMode >= 3
-                                  then Just "verySmall"
-                                  else if Text.length strNumberMode >= 2
-                                      then Just "small"
-                                      else Nothing
-                          else Nothing
-                      , if isNumberModeShift
-                          then
-                              if Text.length strNumberModeShift >= 3
-                                  then Just "verySmall"
-                                  else if Text.length strNumberModeShift >= 2
-                                      then Just "small"
-                                      else Nothing
-                          else Nothing
-                      ]
-                in
-                      "colspan" =: colspan
-                  <> "class"   =: unwords (strCls : lsClass)
-      in  elDynAttr "td" attrs $ do
-            elClass "div" "steno" $ text $ Text.singleton $ keyCode k
-            elClass "div" "hidden [.show-number_&]:block" $ text strNumberMode
-            elClass "div" "hidden [.show-shifted-number_&]:block" $ text strNumberModeShift
-            when showQwerty $ elClass "div" "qwerty" $ text $ Text.unwords qwerties
-
-elStenoOutput
-  :: forall key t (m :: * -> *)
-  .  ( DomBuilder t m
-     , MonadFix m
-     , Palantype key
-     )
-  => Dynamic t (Set key)
-  -> m (InputElement EventResult (DomBuilderSpace m) t)
-elStenoOutput dynDownKeys = mdo
-    let
-        strClass = "w-[650px] text-center text-3xl p-2"
-        eFocus = updated (_inputElement_hasFocus i) <&> \case
-            True  -> ("Type!"    , "class" =: Just (strClass <> " " <> "focus:outline-none text-grayishblue-900"))
-            False -> ("Click me!", "class" =: Just (strClass <> " " <> "text-red-500"      ))
-        eTyping = updated dynDownKeys <&> \downKeys ->
-            if Set.null downKeys
-                then ("...", "class" =: Nothing)
-                else
-                    ( showt $ mkChord $ Set.elems downKeys,
-                      "class" =: Nothing
-                    )
-        eChange = leftmost [eFocus, eTyping]
-        eSetValue = fst <$> eChange
-
-    i <-
-        inputElement $
-            (def :: InputElementConfig EventResult t (DomBuilderSpace m))
-                & inputElementConfig_setValue .~ eSetValue
-                & inputElementConfig_elementConfig . elementConfig_modifyAttributes
-                    .~ (snd <$> eChange)
-                & inputElementConfig_initialValue .~ "Click me!"
-                & inputElementConfig_elementConfig
-                    . elementConfig_initialAttributes
-                .~ ( "readonly"  =: "readonly"
-                  <> "autofocus" =: "autofocus"
-                  <> "class"     =: "text-red-500"
-                   )
-                & inputElementConfig_elementConfig . elementConfig_eventSpec
-                    %~ addEventSpecFlags
-                        (Proxy :: Proxy (DomBuilderSpace m))
-                        Keydown
-                        (const preventDefault)
-    pure i
 
 -- Table of Contents
 
@@ -1073,7 +546,7 @@ landingPage
     , SetRoute t (R FrontendRoute) m
     )
   => m ()
-landingPage = elClass "div" "bg-grayishblue-500" $ do
+landingPage = elClass "div" "bg-grayishblue-300" $ do
     elClass "div" "w-full h-28 pt-8 pl-8 text-6xl text-grayishblue-900 font-serif" $ text "Palantype DE"
     elClass "div" "bg-grayishblue-200 w-full text-center p-8" $ do
         elClass "div" "flex flex-wrap items-center justify-center" $ do
@@ -1110,7 +583,7 @@ landingPage = elClass "div" "bg-grayishblue-500" $ do
                             elClass "div" "m-1 text-5xl font-bold" $ text "Start"
 
                     elEN <- elClass "div" "other" $ do
-                        (elEN, _) <- elClass' "button" "h-[100px] w-[296px] m-1 bg-grayishblue-300 rounded-3xl cursor-pointer"$
+                        (elEN, _) <- elClass' "button" "h-[100px] w-[296px] m-1 bg-grayishblue-500 rounded-3xl cursor-pointer"$
                             elClass "div" "flex items-center m-1" $ do
                                 elClass "div" "flex-grow shrink-0 m-1" $
                                     elAttr "img" ("src" =: $(static "palantype.png")) blank
