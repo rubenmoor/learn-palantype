@@ -2,13 +2,29 @@
 
 ## Why Palantype
 
-Palantype allows you to type with lightning speed. It's a stenographic system in the wider sense. The most widespread of these systems is simply called steno. Any steno-style system requires quite a bit of learning. Palantype has the advantage that it's more suitable for regular keyboards. There are limitations, though.
+Palantype allows you to type with lightning speed.
+It's a stenographic system in the wider sense.
+The most widespread of these systems is simply called steno.
+Any steno-style system requires quite a bit of learning.
+Palantype has the advantage that it's more suitable for regular keyboards.
+There are limitations, though.
 
 ## Requirements
 
 ### Hardware
 
-You can get started with your regular keyboard. However, keyboards usually have limit of how many keys register at the same time. Long term, you will need a keyboard that supports *N-Key roll-over (NKRO)* to type chords of up to ten keys. In addition, a ortho-linear layout as well as very sensitive keys are preferable.
+You can get started with your regular keyboard.
+However, keyboards usually have limit of how many keys register at the same time.
+Long term, you will need a keyboard that supports *N-Key roll-over (NKRO)* to type chords of up to ten keys.
+In addition, a ortho-linear layout as well as very sensitive keys are preferable.
+
+Here are keyboard models that include the thumb and work quite well with Palantype:
+
+* [Keyboardio Model 100](https://shop.keyboard.io/products/model-100)
+* [Keyboardio Atreus](https://shop.keyboard.io/collections/keyboardio-atreus/products/keyboardio-atreus)
+* [ZSA Moonlander Mark I](https://www.zsa.io/moonlander/)
+* [Ergodox EZ](https://ergodox-ez.com/)
+* [YAEMK](https://karlk90.github.io/yaemk-split-kb/)
 
 You can play around with the keyboard above to see how much keys register at the same time with your hardware.
 
