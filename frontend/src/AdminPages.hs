@@ -142,6 +142,7 @@ import           Text.Read                      ( readEither )
 import           Text.Show                      ( Show(show) )
 import           Witherable                     ( mapMaybe )
 import Data.Traversable (Traversable(traverse))
+import Control.Lens (At(at), (?~), (%~), non)
 
 data JournalReqConfig = JournalReqConfig
     { jrcExcludeAdmin :: Bool
@@ -170,12 +171,14 @@ journal dynHasLoaded = mdo
 
     dynState <- ask
 
-    elClass "div" "topmenu" $ do
-        elClass "div" "floatLeft" $ do
-            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
-            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $ domEvent Click domBack
+    elClass "div" "shadow-md p-1" $ do
+        elClass "div" "float-left" $ do
+            domBack <- elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                               \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
+            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl"))
+              $ domEvent Click domBack
         elLoginSignup $ constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()
-        elClass "br" "clearBoth" blank
+        elClass "br" "clear-both" blank
 
     let
         logout st = case st ^. field @"stSession" of
@@ -213,23 +216,30 @@ journal dynHasLoaded = mdo
             dynFilterAnon evLoad
 
     (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias, dynFilterAnon) <-
-      elClass "div" "journal" do
-        params <- elClass "div" "filters" $ do
+      elClass "div" "p-4" do
+        params <- elClass "div" "flex justify-center items-center flex-wrap" $ do
             dynENow <- prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
 
             let
+                setClass = inputElementConfig_elementConfig
+                         . elementConfig_initialAttributes
+                         . at "class" . non "" %~ (<> " p-0 rounded my-1 mr-2")
                 evEDayEnd = updated dynENow <&> fmap utctDay
                 evEDayStart = evEDayEnd <&> fmap (addDays (-7))
                 eDayToStr = either id (Text.pack <<< show)
                 confStart = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayStart)
+                                & setClass
                 confEnd   = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayEnd)
+                                & setClass
 
             dynMStart' <- el "span" $ elLabelInputDate confStart "Start " "date-start"
-            dynMEnd'   <- el "span" $ elLabelInputDate confEnd   "End " "date-end"
+            dynMEnd'   <- el "span" $ elLabelInputDate confEnd   "End "   "date-end"
 
             let elemId = "exclude-admin"
                 confCbx = def
-                  & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "type" =: "checkbox" <> "id" =: elemId
+                  & inputElementConfig_elementConfig
+                  . elementConfig_initialAttributes
+                  %~ (at "type" ?~ "checkbox") . (at "id" ?~ elemId)
                   & inputElementConfig_initialChecked .~ True
             dynExclAdmin' <- el "span" do
               domCbx <- inputElement confCbx
@@ -243,15 +253,15 @@ journal dynHasLoaded = mdo
                 text " "
               pure $ _inputElement_checked domCbx
 
-            dynEId' <- el "span" $ elLabelInputWord def "Visitor ID " "filter-visitor"
+            dynEId' <- el "span" $ elLabelInputWord (setClass def) "Visitor ID " "filter-visitor"
 
-            dynMUser' <- el "span" $ elLabelInput def "User name " "filter-user"
+            dynMUser' <- el "span" $ elLabelInput (setClass def) "User name " "filter-user"
 
-            dynMAlias' <- el "span" $ elLabelInput def "Alias " "filter-alias"
+            dynMAlias' <- el "span" $ elLabelInput (setClass def) "Alias " "filter-alias"
 
             let elemIdAnon = "filter-anonymous"
-                confCbxAnon = def &
-                  inputElementConfig_elementConfig
+                confCbxAnon = def
+                  & inputElementConfig_elementConfig
                   . elementConfig_initialAttributes
                   .~ "type" =: "checkbox" <> "id" =: elemIdAnon
             dynFilterAnon' <- el "span" do
@@ -274,21 +284,20 @@ journal dynHasLoaded = mdo
 
         widgetHold_ (elLoading "Checking your access rights ...") $ evResp <&> \case
 
-            Left strErr     ->
-              elClass "p" "red small" $
-                text $ "Error: " <> strErr
+            Left  strErr    -> elClass "p" "text-red-500 text-xs"
+                $ text $ "Error: " <> strErr
 
             Right lsJournal -> do
 
               let n = length lsJournal
-              el "p" $ text $ "Fetched " <> showt n <> " journal entries."
+              elClass "p" "text-xs" $ el "em" $ text $ "Fetched " <> showt n <> " journal entries."
               when (n > 0) $ el "table" $ do
                   el "tr" do
-                      el "th" $ text "Time"
-                      el "th" $ text "User"
-                      el "th" $ text "Alias"
-                      el "th" $ text "VID"
-                      el "th" $ text "Event"
+                      elClass "th" "text-left" $ text "Time"
+                      elClass "th" "text-left" $ text "User"
+                      elClass "th" "text-left" $ text "Alias"
+                      elClass "th" "text-left" $ text "VID"
+                      elClass "th" "text-left" $ text "Event"
                   for_ lsJournal \Journal {..} -> el "tr" do
                       elClass "td" "date" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" journalTime
                       case journalMAliasUser of
@@ -350,7 +359,9 @@ elLabelInputDate conf label elemId = do
     elAttr "label" ("for" =: elemId) $ text label
     i <-
         inputElement
-        $  conf & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "id" =: elemId <> "type" =: "date"
+        $  conf & inputElementConfig_elementConfig
+                . elementConfig_initialAttributes
+                %~ (at "id" ?~ elemId) . (at "type" ?~ "date")
     pure $ _inputElement_value i <&> \str ->
           parseTimeM True defaultTimeLocale "%Y-%m-%d" (Text.unpack str)
 
@@ -365,7 +376,7 @@ elLabelInput conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ "id" =: elemId <> "type" =: "text" <> "maxlength" =: "64"
+           %~ (at "id" ?~ elemId) . (at "type" ?~ "text") . (at "maxlength" ?~ "64")
     pure $ _inputElement_value i <&> \str ->
       if Text.null str then Nothing else Just str
 
@@ -380,7 +391,7 @@ elLabelInputWord conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ "id" =: elemId <> "type" =: "number" <> "patern" =: "\\d+"
+           %~ (at "id" ?~ elemId) . (at "type" ?~ "number") . (at "pattern" ?~ "\\d+")
     let toMaybe str = if null str then Nothing else Just str
     pure $ traverse (mapLeft Text.pack . readEither) . toMaybe
          . Text.unpack

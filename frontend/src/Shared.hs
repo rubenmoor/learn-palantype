@@ -134,62 +134,6 @@ iFa = void . iFa'
 iFaAttr :: DomBuilder t m => Text -> Map Text Text -> m ()
 iFaAttr class' attrs = void $ elAttr "i" ("class" =: class' <> attrs) blank
 
-elLabelInput
-    :: DomBuilder t m
-    => InputElementConfig e t (DomBuilderSpace m)
-    -> Text
-    -> Int
-    -> Text
-    -> m
-           ( Dynamic t (Maybe Text)
-           , InputElement e (DomBuilderSpace m) t
-           )
-elLabelInput conf label maxlength id = do
-    elAttr "label" ("for" =: id) $ elClass "h3" "text-lg py-2" $ text label
-    i <-
-        inputElement
-        $  conf
-        &  inputElementConfig_elementConfig
-        .  elementConfig_initialAttributes
-        .~ "id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength
-    let dynStr  = _inputElement_value i
-        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
-    pure (dynMStr, i)
-
-elLabelPasswordInput
-    :: DomBuilder t m
-    => InputElementConfig e t (DomBuilderSpace m)
-    -> Text
-    -> Text
-    -> m
-           ( Dynamic t (Maybe Text)
-           , InputElement e (DomBuilderSpace m) t
-           )
-elLabelPasswordInput conf label id = do
-    elAttr "label" ("for" =: id) $ el "h3" $ text label
-    i <-
-        inputElement
-        $  conf
-        &  inputElementConfig_elementConfig
-        .  elementConfig_initialAttributes
-        .~ "id" =: id <> "type" =: "password" <> "maxlength" =: "64"
-    let dynStr  = _inputElement_value i
-        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
-    pure (dynMStr, i)
-
-elButtonSubmit
-  :: DomBuilder t m
-  => Text
-  -> m ()
-  -> m (Event t ())
-elButtonSubmit cls inner = do
-    (e, _) <- elAttr' "button"
-                      (  "type" =: "submit"
-                      <> "class" =: cls
-                      )
-                      inner
-    pure $ domEvent Click e
-
 whenJust :: forall a t . Applicative t => Maybe a -> (a -> t ()) -> t ()
 whenJust (Just x) a = a x
 whenJust Nothing  _ = pure ()

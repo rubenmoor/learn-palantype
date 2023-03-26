@@ -235,14 +235,13 @@ message ::
     m ()
 message = do
     dynMsg <- asks (fmap $ stApp >>> stMsg)
-    dyn_ $
-        dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} -> do
-            (elClose, _) <- elClass' "span" "close" $ iFa "fas fa-times"
-            elClass "div" "msgOverlay" $ do
-                let eClose = domEvent Click elClose
-                updateState $ eClose $> [field @"stApp" . field @"stMsg" .~ Nothing]
-                el "div" $ text msgCaption
-                el "span" $ text msgBody
+    dyn_ $ dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
+      elClass "div" "overlay" $ do
+        (elClose, _) <- elClass' "span" "float-right" $ iFa "fas fa-times"
+        let eClose = domEvent Click elClose
+        updateState $ eClose $> [field @"stApp" . field @"stMsg" .~ Nothing]
+        el "div" $ text msgCaption
+        el "span" $ text msgBody
 
 elSettings
   :: forall key t (m :: * -> *)
@@ -787,8 +786,10 @@ elStages getLoadedAndBuilt = do
                         (Right . showRoute . stageUrl @key <$> dynRoute)
                         evLoadedAndBuilt
                       page
-            elClass "section" "overflow-y-auto scroll-smooth px-2 w-full h-full \
-                              \relative" do
+            elAttr "section" (  "class" =: "overflow-y-auto scroll-smooth px-2 \
+                                           \w-full h-full relative"
+                             <> "id" =: "content"
+                             ) do
                 elClass "div" "w-max sticky top-[2px] steno-navigation mx-auto \
                               \opacity-50" $ text
                     $  "▲ " <> showt (KI.toRaw @key kiUp)
@@ -798,7 +799,7 @@ elStages getLoadedAndBuilt = do
                               \after:content-[\"\"] after:w-4/5 after:bg-white \
                               \after:absolute after:h-[31px] after:z-10 \
                               \after:h-[320px] \
-                              \p-4 prose"
+                              \p-4"
                   $ setEnv do
                   let
                       elPageNotImplemented str = do

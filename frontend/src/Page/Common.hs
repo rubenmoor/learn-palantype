@@ -161,7 +161,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elAttr
                                                 , elAttr'
                                                 , elClass
-                                                , elClass'
+
                                                 , fanEither
                                                 , foldDyn
                                                 , gate
@@ -274,9 +274,9 @@ elCongraz evDone dynStats Navigation {..} = mdo
         Nothing -> pure never
         Just mNewStats ->
 
-            elClass "div" "overlay" $ elClass "div" "text-center" $ do
-                el "div" $ text "Task cleared!"
-                elClass "div" "text-3xl text-green p-8" $ iFa "fas fa-check-circle"
+            elClass "div" "overlay" $ elClass "div" "text-center text-md" $ do
+                elClass "div" "text-2xl" $ text "Task cleared!"
+                elClass "div" "text-[72pt] text-green-500" $ iFa "fas fa-check-circle"
                 whenJust mNewStats $ \newStats -> dyn_ $ dynStats <&> \lsStats -> do
                     -- let lsStatsPersonal = filter (isNothing . fst . snd) lsStats
                     when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats))
@@ -287,42 +287,38 @@ elCongraz evDone dynStats Navigation {..} = mdo
                               iFa "fa-solid fa-star-sharp"
                     elStatisticsPersonalShort lsStats
                     elClass "hr" "invisible" blank
-                whenJust navMNext $ \nxt -> do
-                    elACont <- elClass "div" "text-grayishblue-900" $ do
-                        text "Type "
-                        elClass "span" "steno-action" $ do
-                            el "em" $ text "Enter "
-                            el "code" $ text $ showt $ KI.toRaw @key kiEnter
-                        text " to continue to "
-                        el "p" do
-                            (e, _) <- el' "a" $ text $ maybe "" Stage.showShort
-                              $ Stage.fromIndex @key nxt
-                            text "."
-                            pure e
-                    let eContinue =
-                            leftmost [eChordEnter, domEvent Click elACont]
+
+                elClass "div" "text-grayishblue-900" $ do
+                  whenJust navMNext \nxt -> do
+                    text "Type "
+                    elClass "span" "steno-action" $ do
+                        text "Enter "
+                        el "code" $ text $ showt $ KI.toRaw @key kiEnter
+                    text " to continue to "
+                    (domNextStage, _) <- el' "a" $ text $ maybe "" Stage.showShort
+                        $ Stage.fromIndex @key nxt
+                    text " or "
+
+                    let eContinue = leftmost [eChordEnter, domEvent Click domNextStage]
 
                     updateState $ eContinue $>
-                      [ field @"stApp" .  field @"stProgress" %~ Map.update
-                                  (\s -> if nxt > s then Just nxt else Just s)
-                                  navSystemLang
-                      , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
-                          Nothing -> []
-                          Just  t ->
-                            [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t
-                            ]
+                        [ field @"stApp" .  field @"stProgress" %~ Map.update
+                                    (\s -> if nxt > s then Just nxt else Just s)
+                                    navSystemLang
+                        , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
+                        ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
+                            Nothing -> []
+                            Just  t -> [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t]
 
                     setRoute $ eContinue $> stageUrl @key nxt
 
-                el "div" $ do
-                    el "span" $ text "("
-                    (elABack, _) <- el' "a" $ text "back"
-                    text " "
-                    elClass "span" "steno-navigation" $
+                  text "go "
+                  (elABack, _) <- el' "a" $ text "back"
+                  text " "
+                  elClass "span" "steno-navigation" $
                       text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
-                    el "span" $ text ")"
-                    pure $ leftmost [eChordBackUp, domEvent Click elABack]
+                  text " to repeat the exercise."
+                  pure $ leftmost [eChordBackUp, domEvent Click elABack]
     pure $ isJust <$> dynDone
 
 chordStart :: forall key. Palantype key => Chord key

@@ -120,8 +120,6 @@ instance (HasClient t m api tag, Reflex t)
             in  addHeaderOptional "Authorization" token $
                     addHeaderOptional "X-Alias" alias req
 
-
-
 data SessionData = SessionData
   { sdJwt :: CompactJWT
   , sdIsSiteAdmin :: Bool

@@ -112,7 +112,7 @@ introduction = do
 
     let eChordSTART = void $ filter (== chordStart) envEChord
 
-    elClass "div" "steno-action" $ do
+    elClass "div" "prose" $ elClass "div" "mx-auto steno-action" $ do
         (btn, _) <- elClass' "button" "" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState $  eStart $>

@@ -37,15 +37,15 @@
   }
   .steno-action {
     @apply bg-grayishblue-900;
-    @apply animate-flashing;
     @apply rounded-lg;
     @apply text-white;
     @apply py-1;
     @apply px-2;
+    @apply w-fit;
   }
   .overlay {
     @apply p-6;
-    @appy fixed;
+    @apply fixed;
     @apply z-30;
     @apply top-1/2;
     @apply left-1/2;
@@ -57,4 +57,73 @@
     @apply shadow-lg;
   }
 
+  section#user-form {
+    @apply p-8;
+    @apply max-w-5xl;
+    @apply mx-auto;
+  }
+
+  section#user-form p {
+    @apply py-1;
+  }
+
+  section#user-form hr {
+    @apply border-grayishblue-200;
+    @apply my-4;
+  }
+
+  section#user-form > h1 {
+    @apply text-4xl;
+    @apply font-bold;
+    @apply py-6;
+  }
+
+  section#user-form > h2 {
+    @apply text-3xl;
+    @apply font-bold;
+    @apply text-grayishblue-900;
+    @apply py-4;
+  }
+
+  section#user-form h3 {
+    @apply text-2xl;
+    @apply text-grayishblue-800;
+    @apply pt-4;
+    @apply pb-3;
+  }
+
+  section#user-form input {
+    @apply border;
+    @apply border-solid;
+    @apply border-grayishblue-500;
+    @apply text-lg;
+  }
+
+  section#user-form input:focus {
+    @apply outline-none;
+    box-shadow: 0px 0px 10px 0px rgba(13,83,181,0.8);
+    @apply shadow-grayishblue-800;
+  }
+
+  .input-text-password {
+    @apply rounded-lg;
+    @apply p-2;
+    @apply outline-none;
+    @apply border;
+    @apply border-solid;
+    @apply border-grayishblue-500;
+  }
+
+  section#user-form input[type="text"] {
+    @apply input-text-password;
+  }
+  section#user-form input[type="password"] {
+
+    @apply input-text-password;
+  }
+
+  section#user-form input[type="checkbox"] {
+    @apply rounded;
+    @apply p-1;
+  }
 }
