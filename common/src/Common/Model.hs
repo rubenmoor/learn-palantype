@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Common.Model
     ( module Common.Model
@@ -34,6 +33,11 @@ import           Web.HttpApiData                ( FromHttpApiData
                                                 , ToHttpApiData(toQueryParam, toUrlPiece)
                                                 )
 import qualified Data.Text as Text
+import Text.Read (Read(readPrec))
+import qualified Text.ParserCombinators.ReadPrec as ReadPrec
+import Text.ParserCombinators.ReadP (string)
+import Data.Foldable (asum)
+import Data.Functor (($>))
 
 newtype UTCTimeInUrl = UTCTimeInUrl { unUTCTimeInUrl :: UTCTime }
 
@@ -171,10 +175,16 @@ instance FromJSON EventApp
 data TextLang
   = TextDE
   | TextEN
-  deriving (Eq, Generic, Ord, Read)
+  deriving (Eq, Generic, Ord)
 
 instance ToJSON TextLang
 instance FromJSON TextLang
+
+instance Read TextLang where
+  readPrec = ReadPrec.lift $ asum $ (\(str, lang) -> string str $> lang) <$>
+    [ ("DE", TextDE)
+    , ("EN", TextEN)
+    ]
 
 instance ToHttpApiData TextLang where
   toQueryParam = \case

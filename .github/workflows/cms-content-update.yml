@@ -30,4 +30,4 @@ jobs:
           set -x
           curl -X POST https://palantype.com/api/cms/invalidate-cache \
                -H "Content-Type: application/json" \
-               -d "\"${{steps.cms.outputs.all_changed_files}}\""
+               -d ${{steps.cms.outputs.all_changed_files}}
