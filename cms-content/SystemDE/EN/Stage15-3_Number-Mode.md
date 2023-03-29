@@ -7,7 +7,7 @@
 For typing numbers, the virtual keyboard above can assist you quite a bit.
 Just hold down `B+-` and you can see, how to reach numbers and related symbols.
 
-![The palantype virtual keyboard in number mode](https://github.com/rubenmoor/learn-palantype/raw/main/cms-content/SystemDE/media/numbermode.png)
+![The palantype virtual keyboard in number mode](https://raw.githubusercontent.com/rubenmoor/learn-palantype/main/cms-content/SystemDE/media/numbermode.png)
 
 Note how, apart from the digits 0-9 for the fingers of your right hand,
 the extra keys for the thumbs allow to input even longer numbers all at once,
@@ -25,7 +25,7 @@ you can reach special characters using the Shift modifier key
 in combination with a number key.
 The virtual keyboard assists you here again.
 
-![The palantype virtual keyboard in number mode](https://github.com/rubenmoor/learn-palantype/raw/main/cms-content/SystemDE/media/numbermode-shift.png)
+![The palantype virtual keyboard in number mode](https://raw.githubusercontent.com/rubenmoor/learn-palantype/main/cms-content/SystemDE/media/numbermode-shift.png)
 
 Note that access to these special chars via the number mode
 shouldn't be usually necessary when typing regularly.
