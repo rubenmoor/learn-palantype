@@ -181,9 +181,7 @@ elCMSMenu numParts latest parts = do
         pure Nothing
 
     evRefresh <- elClass "div" "small floatRight gray italic" $ do
-      text $ "Last update "
-        <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" latest)
-        <> " "
+      text $ Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" latest) <> " "
       domRefresh <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Refresh") $ iFa' "fas fa-sync"
 
       let dynSession = stSession <$> envDynState
