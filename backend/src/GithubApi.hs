@@ -40,6 +40,7 @@ import Network.HTTP.Types (status404)
 import Data.Aeson.Lens (key, _String, _Array)
 import Data.Aeson (object, Value, KeyValue ((.=)))
 import Data.Bool (bool)
+import Data.Maybe (mapMaybe)
 
 data Response t
   = Success      t
@@ -110,4 +111,14 @@ getFileList ext = do
       Left (InvalidUrlException u msg)      ->
         Error 500 $ "Url " <> Text.pack u <> " invalid: " <> Text.pack msg
       Right resp                            ->
-        Success $ resp ^.. responseBody . key "tree" . _Array . each . _MarkdownFile ext
+        Success $ mapMaybe maybeCMSFile $
+          resp ^.. responseBody . key "tree" . _Array . each
+  where
+    maybeCMSFile o =
+        case o ^. key "type" . _String of
+          "blob" -> let path = o ^. key "path" . _String
+                    in  bool Nothing (Just path) $ checkStr path
+          _ -> Nothing
+    checkStr str =
+         "cms-content/" `Text.isPrefixOf` str
+      && ext            `Text.isSuffixOf` str
