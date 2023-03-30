@@ -127,16 +127,17 @@ elCMS numParts = mdo
 
     let
         Navigation {..} = envNavigation
+        filename = navPageName <> ".md"
         dynLatest =
               fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
-            . Map.lookup (navSystemLang, navTextLang, navPageName)
+            . Map.lookup (navSystemLang, navTextLang, filename)
             . stCMSCacheInvalidationData
           <$> envDynState
 
     evRespCMS <- Client.request $
       Client.getCMS (constDyn $ Right navSystemLang)
                     (constDyn $ Right navTextLang  )
-                    (constDyn $ Right navPageName  )
+                    (constDyn $ Right filename     )
                     (Right . UTCTimeInUrl <$> dynLatest)
                     $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 

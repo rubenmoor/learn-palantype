@@ -99,7 +99,7 @@ type RoutesAdmin =
 type RoutesCMS =
           Capture "system"   SystemLang
        :> Capture "lang"     TextLang
-       :> Capture "pagename" Text
+       :> Capture "filename" Text
        :> Capture "time"     UTCTimeInUrl
        :> Get '[JSON] [Pandoc]
 
@@ -113,8 +113,9 @@ type RoutesCMS =
   :<|> AuthRequired "jwt" :> "clear-cache"
         :> Capture "system"   SystemLang
         :> Capture "lang"     TextLang
-        :> Capture "pagename" Text
+        :> Capture "filename" Text
         :> Post '[JSON] ()
+  :<|> AuthRequired "jwt" :> "update-all" :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype
