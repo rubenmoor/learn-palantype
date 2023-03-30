@@ -82,6 +82,7 @@ import Data.Generics.Product (field)
 import Control.Lens ((.~))
 import Snap.Core (modifyResponse, setHeader)
 import Data.Int (Int)
+import qualified Data.Text.IO as Text
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
@@ -102,6 +103,7 @@ handleCMSGet
   -> UTCTimeInUrl
   -> Handler [Pandoc]
 handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
+    liftIO $ Text.putStrLn $ "filename: " <> filename
     modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
     let cacheDbKey = UCMSCache systemLang textLang filename time
     mFromCache <- runDb (getBy cacheDbKey) >>= \case

@@ -9,7 +9,7 @@ module GithubApi
 
 import           Common.Model                   ( TextLang )
 import           Control.Lens                   ( (.~)
-                                                , (^.), (^..), Prism, prism
+                                                , (^.), (^..), Prism, prism, each
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Data.Function                  ( (&) )
@@ -37,8 +37,9 @@ import Control.Exception (try)
 import Network.HTTP.Client (HttpException (..), HttpExceptionContent (StatusCodeException), responseStatus)
 import Data.Functor ((<&>))
 import Network.HTTP.Types (status404)
-import Data.Aeson.Lens (key, _String)
+import Data.Aeson.Lens (key, _String, _Array)
 import Data.Aeson (object, Value, KeyValue ((.=)))
+import Data.Bool (bool)
 
 data Response t
   = Success      t
@@ -88,13 +89,12 @@ _MarkdownFile ext = prism fromFile toFile
       , "path" .= ("cms-content" <> str)
       ]
     toFile   o   = case o ^. key "type" . _String of
-      "blob" -> case checkStr $ o ^. key "path" . _String of
-        Just str -> Right str
-        Nothing  -> Left o
+      "blob" -> let path = o ^. key "path" . _String
+                in  bool (Left o) (Right path) $ checkStr path
       _ -> Left o
-    checkStr str = if "cms-content/" `Text.isPrefixOf` str
-      then Text.stripSuffix ext str
-      else Nothing
+    checkStr str =
+         "cms-content/" `Text.isPrefixOf` str
+      && ext            `Text.isSuffixOf` str
 
 getFileList :: Text -> Handler (Response [Text])
 getFileList ext = do
@@ -110,4 +110,4 @@ getFileList ext = do
       Left (InvalidUrlException u msg)      ->
         Error 500 $ "Url " <> Text.pack u <> " invalid: " <> Text.pack msg
       Right resp                            ->
-        Success $ resp ^.. responseBody . key "tree" . _MarkdownFile ext
+        Success $ resp ^.. responseBody . key "tree" . _Array . each . _MarkdownFile ext

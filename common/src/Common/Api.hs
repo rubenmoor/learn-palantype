@@ -104,9 +104,9 @@ type RoutesCMS =
        :> Get '[JSON] [Pandoc]
 
   -- Route to be called by github action
-  :<|> "invalidate-cache"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
+  :<|> "cache" :> "invalidate"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
 
-  :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
+  :<|> "cache" :> "invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
 
   :<|> AuthRequired "jwt" :> "clear-cache" :> "all" :> Post '[JSON] ()
 
@@ -115,7 +115,7 @@ type RoutesCMS =
         :> Capture "lang"     TextLang
         :> Capture "filename" Text
         :> Post '[JSON] ()
-  :<|> AuthRequired "jwt" :> "update-all" :> Post '[JSON] ()
+  :<|> AuthRequired "jwt" :> "cache" :> "invalidate" :> "all" :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype
