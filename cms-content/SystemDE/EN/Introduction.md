@@ -1,6 +1,4 @@
 # Introduction
-
- hi Xiomara
  
 ## Why Palantype
 
