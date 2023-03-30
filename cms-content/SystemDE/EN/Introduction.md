@@ -1,5 +1,7 @@
 # Introduction
 
+ hi Xiomara
+ 
 ## Why Palantype
 
 Palantype allows you to type with lightning speed.
