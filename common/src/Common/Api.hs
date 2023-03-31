@@ -99,22 +99,23 @@ type RoutesAdmin =
 type RoutesCMS =
           Capture "system"   SystemLang
        :> Capture "lang"     TextLang
-       :> Capture "pagename" Text
+       :> Capture "filename" Text
        :> Capture "time"     UTCTimeInUrl
        :> Get '[JSON] [Pandoc]
 
   -- Route to be called by github action
-  :<|> "invalidate-cache"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
+  :<|> "cache" :> "invalidate"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
 
-  :<|> "cache-invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
+  :<|> "cache" :> "invalidation-data" :> Get '[JSON] (Map (SystemLang, TextLang, Text) UTCTime)
 
   :<|> AuthRequired "jwt" :> "clear-cache" :> "all" :> Post '[JSON] ()
 
   :<|> AuthRequired "jwt" :> "clear-cache"
         :> Capture "system"   SystemLang
         :> Capture "lang"     TextLang
-        :> Capture "pagename" Text
+        :> Capture "filename" Text
         :> Post '[JSON] ()
+  :<|> AuthRequired "jwt" :> "cache" :> "invalidate" :> "all" :> Post '[JSON] ()
 
 type RoutesApi = "api" :>
     (      RoutesPalantype

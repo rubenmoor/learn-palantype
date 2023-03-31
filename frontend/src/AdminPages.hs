@@ -92,7 +92,7 @@ import           TextShow                       ( TextShow(showt) )
 
 import           Client                         ( getAuthData
                                                 , getJournalAll
-                                                , request
+                                                , request, postCacheUpdateAll
                                                 )
 import           Common.Model                   ( EventApp(..)
                                                 , EventUser(..)
@@ -177,6 +177,17 @@ journal dynHasLoaded = mdo
                                \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
             setRoute $ tag (current dynState <&> view (field @"stRedirectUrl"))
               $ domEvent Click domBack
+
+            domCacheUpdateAll <- elClass "span" "text-zinc-500 \
+                                                \hover:text-grayishblue-800 \
+                                                \text-3xl cursor-pointer"
+                                 $ iFa' "fas fa-sync-alt"
+            evResp <- request $ postCacheUpdateAll (getAuthData <$> dynState)
+              $ domEvent Click domCacheUpdateAll
+            widgetHold_ blank $ evResp <&> \case
+              Left strErr -> text strErr
+              Right ()    -> elClass "span" "px-1 text-green-500" $ text "✓"
+
         elLoginSignup $ constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()
         elClass "br" "clear-both" blank
 

@@ -196,3 +196,9 @@ instance FromHttpApiData TextLang where
     "DE" -> Right TextDE
     "EN" -> Right TextEN
     str     -> Left $ "FromHttpApiData: Couldn't parse TextLang: " <> str
+
+data CacheContentType = CacheContentMarkdown
+  deriving (Eq, Generic, Ord)
+
+instance ToJSON CacheContentType
+instance FromJSON CacheContentType

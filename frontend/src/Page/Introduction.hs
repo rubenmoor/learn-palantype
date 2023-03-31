@@ -58,7 +58,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elClass'
                                                 , leftmost
                                                 , text
-                                                , splitE
+                                                , splitE, el
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)

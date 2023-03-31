@@ -129,16 +129,17 @@ elCMS numParts = mdo
 
     let
         Navigation {..} = envNavigation
+        filename = navPageName <> ".md"
         dynLatest =
               fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
-            . Map.lookup (navSystemLang, navTextLang, navPageName)
+            . Map.lookup (navSystemLang, navTextLang, filename)
             . stCMSCacheInvalidationData
           <$> envDynState
 
     evRespCMS <- Client.request $
       Client.getCMS (constDyn $ Right navSystemLang)
                     (constDyn $ Right navTextLang  )
-                    (constDyn $ Right navPageName  )
+                    (constDyn $ Right filename     )
                     (Right . UTCTimeInUrl <$> dynLatest)
                     $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
@@ -183,11 +184,14 @@ elCMSMenu numParts latest parts = do
         pure Nothing
 
     evRefresh <- elClass "div" "text-xs float-right text-zinc-500 italic" $ do
-      elClass "span" "pr-1" $ text
-        $ "Last update " <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" latest)
+      elAttr "span" (  "class" =: "pr-1"
+                    <> "title" =: "Latest update"
+                    )
+        $ text $ Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" latest) <> " "
+
       domRefresh <- elAttr "span"
         (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
-        <> "title" =: "Refresh"
+        <> "title" =: "Refresh contents"
         ) $ iFa' "fas fa-sync"
 
       elAttr "a" (  "href" =: (  "https://github.com/rubenmoor/learn-palantype/blob/main/cms-content/"
@@ -195,6 +199,7 @@ elCMSMenu numParts latest parts = do
                               <> toUrlPiece navTextLang   <> "/"
                               <> navPageName              <> ".md"
                               )
+                  <> "title" =: "Edit this page on Github"
                   <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
                   ) $ iFa "fas fa-edit"
 

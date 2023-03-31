@@ -4,7 +4,7 @@
 
 module DbAdapter.Instances where
 
-import Common.Model (Rank, TextLang)
+import Common.Model (Rank, TextLang, CacheContentType)
 import Palantype.Common (StageRepr, SystemLang)
 import Database.Persist.TH (derivePersistFieldJSON)
 
@@ -14,3 +14,5 @@ derivePersistFieldJSON "StageRepr"
 derivePersistFieldJSON "TextLang"
 
 derivePersistFieldJSON "SystemLang"
+
+derivePersistFieldJSON "CacheContentType"

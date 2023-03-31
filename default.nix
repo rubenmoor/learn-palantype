@@ -140,13 +140,9 @@ in
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "servant-reflex";
-        rev = "06bd09d0777c658da5269840be60d6cb24a264e8";
-        sha256 = "sha256-Jxjx0kJrgVh8e+tIeAbcXheOk6Ek2fE5R7yN9BnBQ2g=";
+        rev = "00b101c46fb3ecb3d35fa55080b4b32455cee66e";
+        sha256 = "1gghpfgsw8p2v6msz17sr5nn30pkg2c59pz7gvazqrv80v8102bb";
       }) {};
-
-
-      #  sha256 = "1gghpfgsw8p2v6msz17sr5nn30pkg2c59pz7gvazqrv80v8102bb";
-      #}) {};
 
       #servant-snap = self.callCabal2nix "servant-snap" ../servant-snap {};
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
@@ -156,13 +152,13 @@ in
         sha256 = "0p1h1a1rnrg5c63cpir8i26w93af6hqwxgqc6w2h94wjz2fbxp4c";
       }) {};
 
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      #my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-      #  owner = "rubenmoor";
-      #  repo = "my-palantype";
-      #  rev = "a0a10c93736f30aa74dfb758e84dca3e88a3eb63";
-      #  sha256 = "1v9zsrmz1zwn0hanb09kg8w78xk9jns1f2r38wmyzn5v2h9hvqmm";
-      #}) {};
+      #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "my-palantype";
+        rev = "5e70776e5c7489af739d2ead5de9db160e33ff91";
+        sha256 = "1zjzxaq9a61l4z91hs5lcr2c51j24dj2rkq8b7cx7gc1rfw7ndvb";
+      }) {};
 
       bytestring-trie = self.callHackage "bytestring-trie" "0.2.7" {};
     };
