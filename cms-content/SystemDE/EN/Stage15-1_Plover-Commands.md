@@ -14,30 +14,31 @@ Rather, learn them as you feel the necessity.
 Most importantly, use `A` for comma, `N-` for full stop, and `B-` to capitalize last word retroactively.
 This last one is important because Plover will try to handle capitalization for you.
 This means the first word of each sentence will be capitalized and usually nouns will be.
-However, whenever a German word does not solely exists as noun, the system will output the word uncapitalized and leave the decision to you.
+However, whenever a German word does not solely exists as noun,
+the system will output the word uncapitalized and leave the decision to you.
 
 | Short | Key    | Description                       | Plover code     |
 |-------|--------|-----------------------------------|-----------------|
 | ,     | `A   ` | attach comma                      | {^,}            |
-| ;     | `NA  ` | attach semicolon                  | {^;}            |
+| ;     | `+A  ` | attach semicolon                  | {^;}            |
 | -     | `~   ` | hyphen to attach words            | {&Hat;-&Hat;}           |
-| \\t   | `DJ  ` | tab like t                        | {&Hat;\t&Hat;}          |
-|       | `B-  ` | capitalize last word              | {\*-&#124;}     |
-|       | `D-  ` | capitalize next word              | {-&#124;}       |
-|       | `S-  ` | uncapitalize last word            | {\*&gt;}        |
-| ␣     | `G-  ` | retroactively add space           | {\*?}           |
-|       | `J   ` | paragraph: period, two newlines   | {^. ^}{-&#124;} |
+| \\t   | `D+- ` | tab like t                        | {&Hat;\t&Hat;}          |
+|       | `D-  ` | capitalize last word              | {\*-&#124;}     |
+|       | `S-  ` | capitalize next word              | {-&#124;}       |
+|       | `v   ` | uncapitalize last word            | {\*&gt;}        |
+| ␣     | `b   ` | retroactively add space           | {\*?}           |
+|       | `N-  ` | paragraph: period, two newlines   | {^. ^}{-&#124;} |
 |       | `F-  ` | retroactively delete space        | {*!}            |
-| .     | `N-  ` | full stop: period                 | {^.}{-&#124;}   |
-| :     | `L-  ` | attach colon                      | {^:}            |
-| :     | `JL- ` | colon and capitalize              | {^:}{-&#124;}   |
-| ?     | `JN- ` | question mark and capitalize      | {^?}{-&#124;}   |
-| !     | `JR  ` | exclamation mark and capitalize   | {^!}{-&#124;}   |
-| #     | `H   ` | hash with next word attached      | {\#^}           |
-| §     | `BD- ` | legal paragraph symbol            | §               |
-| °     | `GD- ` | attach degree symbol              | {^°}            |
+| .     | `+-  ` | full stop: period                 | {^.}{-&#124;}   |
+| :     | `M-  ` | attach colon                      | {^:}            |
+| :     | `NM- ` | colon and capitalize              | {^:}{-&#124;}   |
+| ?     | `N+- ` | question mark and capitalize      | {^?}{-&#124;}   |
+| !     | `NL  ` | exclamation mark and capitalize   | {^!}{-&#124;}   |
+| #     | `N+  ` | hash with next word attached      | {\#^}           |
+| §     | `B+- ` | legal paragraph symbol            | §               |
+| °     | `G-  ` | attach degree symbol              | {^°}            |
 | ™     | `DM- ` | attach trademark symbol           | {^™}            |
-| ©     | `GDM-` | attach copyright symbol           | {^©}            |
+| ©     | `DʃG-` | attach copyright symbol           | {^©}            |
 | €     | `E   ` | euro symbol                       | €               |
 | —     | `~Ü  ` | em dash                           | —               |
 | s     | `s   ` | attach s and attach the next word | {^s^}           |
@@ -47,14 +48,14 @@ However, whenever a German word does not solely exists as noun, the system will 
 The commands that follow adhere to a strict logic and thus aren't that scary.
 Your fingers of your right hand take care of any thing that opens and closes.
 
-| Short | Description     | Key 1   | Key 2 | Plover code |
-|-------|-----------------|---------|-------|-------------|
-| «»    | Guillemets      | `+ `    | `-G`  | {«&Hat;},{&Hat;»}   |
-| „“    | German quotes   | `-L`    | `-N`  | {„&Hat;},{&Hat;“}   |
-| ‹›    | chevrons        | `-M`    | `-B`  | {‹&Hat;},{&Hat;›}   |
-| []    | square brackets | `-F`    | `s `  | {[&Hat;},{&Hat;]}   |
-| ()    | parenthesis     | `-S`    | `-D`  | {(&Hat;},{&Hat;)}   |
-| {}    | brackets        | `ʃ `    | `n `  | {\\{&Hat;},{&Hat;\\}} |
+| Short | Description     | Key 1   | Key 2 | Plover code           |
+|-------|-----------------|---------|-------|-----------------------|
+| «»    | Guillemets      | `-MG `  | `-ʃn` | {«&Hat;},{&Hat;»}     |
+| „“    | German quotes   | `-+`    | `-N`  | {„&Hat;},{&Hat;“}     |
+| ‹›    | chevrons        | `-L`    | `-B`  | {‹&Hat;},{&Hat;›}     |
+| []    | square brackets | `-F`    | `n`   | {[&Hat;},{&Hat;]}     |
+| ()    | parenthesis     | `-S`    | `-D`  | {(&Hat;},{&Hat;)}     |
+| {}    | brackets        | `-M`    | `-G`  | {\\{&Hat;},{&Hat;\\}} |
 
 ### ASCII art
 
