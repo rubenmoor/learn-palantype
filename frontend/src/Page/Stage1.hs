@@ -317,32 +317,35 @@ taskAlphabet evChord showAlphabet = do
     dynWalk <- foldDyn step stepInitial evChord
     let eDone = catMaybes $ wsDone <$> updated dynWalk
 
-    elClass "div" "exerciseField" $ el "code" $ do
-        let clsLetter = if showAlphabet then "" else "fgTransparent"
+    elClass "div" "my-2 bg-zinc-200 rounded w-fit p-1 text-lg"
+      $ elClass "code" "font-mono" $ do
+        let clsLetter = if showAlphabet then "" else "text-transparent"
         for_ (zip [0 :: Int ..] keys) $ \(i, c) -> do
             let
                 dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
-                    Just (j, _) -> if i == j then "bgRed" else clsLetter
+                    Just (j, _) -> if i == j then "bg-red-500" else clsLetter
                     Nothing ->
-                        if wsCounter > i then "bgGreen" else clsLetter
-            elDynClass "span" dynCls $ text $ Text.singleton $ keyCode c
+                        if wsCounter > i then "bg-green-500" else clsLetter
+            elDynClass "span" dynCls $ elClass "span" "px-0.5"
+              $ text $ Text.singleton $ keyCode c
     el "p" $ do
         dynText $ dynWalk <&> \WalkState {..} -> Text.pack $ show wsCounter
         text $ " / " <> Text.pack (show len)
 
     let eMistake = wsMMistake <$> updated dynWalk
-    widgetHold_ blank $ eMistake <&> \case
+        elEmptyLine = elClass "p" "text-sm mb-2" $ text " "
+    widgetHold_  elEmptyLine $ eMistake <&> \case
         Just (_, w) ->
-            elClass "div" "red small paragraph"
+            elClass "p" "text-red-500 text-sm mb-2"
                 $  text
                 $  "You typed "
                 <> showt w
                 <> ". Any key to start over."
-        Nothing -> blank
+        Nothing -> elEmptyLine
 
     dynDone <- holdDyn False eDone
     dyn_ $ dynDone <&> \bDone ->
-        when bDone $ elClass "div" "small anthrazit" $ text
+        when bDone $ elClass "div" "text-sm text-grayishblue-900" $ text
             "Cleared. Press any key to start over."
 
     pure $ void $ filter id eDone
@@ -428,9 +431,9 @@ taskLetters evChord letters = do
             dyn_ $ dynStenoLetters <&> \StenoLettersState {..} -> do
                 let clsMistake = case slsMMistake of
                         Nothing -> ""
-                        Just _  -> "bgRed"
+                        Just _  -> "bg-red-500"
                 when (slsCounter < len)
-                    $  elClass "div" "exerciseField"
+                    $  elClass "div" "my-2 bg-zinc-200 rounded w-fit p-1 text-lg"
                     $  elClass "code" clsMistake
                     $  text
                     $  showt
@@ -441,18 +444,19 @@ taskLetters evChord letters = do
                     text (Text.pack $ show len)
 
             let eMMistake = slsMMistake <$> updated dynStenoLetters
-            widgetHold_ blank $ eMMistake <&> \case
+                elEmptyLine = elClass "p" "text-sm mb-2" $ text " "
+            widgetHold_ elEmptyLine $ eMMistake <&> \case
                 Just (_, chord) ->
-                    elClass "div" "red small"
+                    elClass "div" "text-red-500 text-sm"
                         $  text
                         $  "You typed "
                         <> showt chord
                         <> ". Any key to start over."
-                Nothing -> blank
+                Nothing -> elEmptyLine
 
             dynDone <- holdDyn False eDone
             dyn_ $ dynDone <&> \bDone ->
-                when bDone $ elClass "div" "small anthrazit" $ text
+                when bDone $ elClass "div" "text-sm text-grayishblue-900" $ text
                     "Cleared. Press any key to start over."
 
             pure $ void $ filter id eDone

@@ -91,7 +91,7 @@ getGenericExercise patternGroup greediness = mdo
 
     evDone <- case getMapsForExercise patternGroup greediness of
         Left str -> do
-            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            elClass "p" "text-sm text-red-500" $ text $ "Couldn't load exercise: " <> str
             pure never
         Right (mSW, mWSs) -> taskWords
             dynStatsAll

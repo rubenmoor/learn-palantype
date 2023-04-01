@@ -115,7 +115,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord
+                                                , mkChord, kiLeft, kiRight
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -180,10 +180,10 @@ import           Reflex.Dom                     ( (=:)
                                                 , zipDyn, delay, constDyn
                                                 )
 import           Shared                         ( dynSimple
-                                                , iFa
+                                                , iFa, whenJust
                                                 )
 import           State                          ( State(..)
-                                                , updateState, GetLoadedAndBuilt
+                                                , updateState, GetLoadedAndBuilt, Navigation (..), stageUrl
                                                 )
 import           TextShow                       ( TextShow(showt) )
 import           Type.Reflection                ( (:~~:)(HRefl)
@@ -196,6 +196,8 @@ import           Witherable                     ( Filterable
 
                                                     )
                                                 )
+import Obelisk.Route.Frontend (SetRoute(setRoute), R)
+import Common.Route (FrontendRoute)
 
 default (Text)
 
@@ -233,6 +235,8 @@ data FanChord
     = FanToggle
     | FanDown
     | FanUp
+    | FanLeft
+    | FanRight
     | FanPageUp
     | FanPageDown
     | FanOther
@@ -264,10 +268,12 @@ elStenoInput
        , Palantype key
        , PostBuild t m
        , Prerender t m
+       , SetRoute t (R FrontendRoute) (Client m)
        )
-    => GetLoadedAndBuilt t
+    => Navigation
+    -> GetLoadedAndBuilt t
     -> m (Event t (Chord key))
-elStenoInput getLoadedAndBuilt = do
+elStenoInput Navigation{..} getLoadedAndBuilt = do
     let lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
@@ -367,12 +373,16 @@ elStenoInput getLoadedAndBuilt = do
                 | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanToggle c
                 | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
                 | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+                | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft c
+                | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight c
                 | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
                 | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
                 | otherwise                             -> Map.singleton FanOther c
             eChordToggle   = select selector (Const2 FanToggle)
             eChordDown     = select selector (Const2 FanDown  )
             eChordUp       = select selector (Const2 FanUp    )
+            eChordLeft     = select selector (Const2 FanLeft  )
+            eChordRight    = select selector (Const2 FanRight )
             eChordOther    = select selector (Const2 FanOther )
             eChordPageDown = select selector (Const2 FanPageDown  )
             eChordPageUp   = select selector (Const2 FanPageUp    )
@@ -393,6 +403,8 @@ elStenoInput getLoadedAndBuilt = do
         performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
         performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
 
+        whenJust navMNext     $ \nxt -> setRoute $ eChordRight $> stageUrl @key nxt
+        whenJust navMPrevious $ \prv -> setRoute $ eChordLeft  $> stageUrl @key prv
         pure eChordOther
 
 -- steno virtual keyboard
@@ -434,7 +446,7 @@ mkClassStr (Positional yOffset bHomerow) enabled =
   where
     strAll = "rounded border border-solid border-gray-400 w-[8.11%] h-[25%] text-center"
 
-    strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-300 \
+    strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-200 \
                           \[&>*:nth-child(1)]:hidden [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
     strKeyState (Enabled bPressed mode) =
       unwords ["bg-white", strPressed bHomerow bPressed, strMode mode]
@@ -444,7 +456,7 @@ mkClassStr (Positional yOffset bHomerow) enabled =
     strPressed IsHomerow  NotPressed = "shadow-[3px_3px_5px_0_#081430,_inset_0_0_8px_6px_#dcdcff]"
     strPressed IsHomerow  IsPressed  = "text-grayishblue-700 shadow-[_inset_0_0_8px_6px_#dcdcff]"
 
-    strMode Inactive         = "text-2xl bg-zinc-300 text-grayishblue-900 [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
+    strMode Inactive         = "text-2xl bg-zinc-200 text-grayishblue-900 [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
     strMode (Active submode size) = unwords ["bg-white", strSubmode submode, strSize size]
 
     strSubmode ModeNormal = unwords ["[&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"]
@@ -475,7 +487,7 @@ elKeyboard
 elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty =
     let cc = CellContext{..}
     in  elClass "div" "w-[650px] h-[271px] relative mx-auto" do
-          elClass "table" "border-separate border-spacing-1 rounded-lg bg-zinc-300 w-full h-full px-3 pt-3 pb-[24px]" do
+          elClass "table" "border-separate border-spacing-1 rounded-lg bg-zinc-200 w-full h-full px-3 pt-3 pb-[24px]" do
             el "tr" $ do
                 elCell cc 1 1 posYOffset
                 elCell cc 4 1 def

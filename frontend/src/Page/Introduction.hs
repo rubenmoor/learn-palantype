@@ -112,6 +112,7 @@ introduction = do
 
     let eChordSTART = void $ filter (== chordStart) envEChord
 
+    -- prose class: to center within prose text-flow
     elClass "div" "prose" $ elClass "div" "mx-auto steno-action" $ do
         (btn, _) <- elClass' "button" "" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
@@ -121,5 +122,6 @@ introduction = do
           , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
           ]
         setRoute $ eStart $> stageUrl @key 1
+    el "br" blank
 
     elCMSContent evPart3

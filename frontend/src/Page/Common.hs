@@ -128,12 +128,12 @@ import           Page.Common.Stopwatch          ( elStatisticsPersonalShort
                                                 )
 import           Palantype.Common               ( Chord
                                                 , Palantype
-                                                , PatternPos
+                                                , PatternPos (..)
                                                 , RawSteno
                                                 , kiBackUp
                                                 , kiEnter
                                                 , showPretty
-                                                , unparts, SystemLang (..), parseChordMaybe, getSystemLang
+                                                , unparts, SystemLang (..), parseChordMaybe, getSystemLang, kiLeft, kiRight
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import qualified Palantype.Common.RawSteno     as Raw
@@ -209,15 +209,19 @@ elFooter Navigation {..} =
   elClass "footer" "grow-0 shrink shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-xl p-3 \
                    \text-center z-10" do
     whenJust navMPrevious $ \prv ->
-        elClass "div" "float-left" $ do
+      elClass "div" "float-left" do
         text "< "
         routeLink (stageUrl @key prv) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
+        elClass "span" "steno-navigation ml-2 p-2" $ text
+          $ "⯇ " <> showt (KI.toRaw @key kiLeft)
 
     text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
 
     whenJust navMNext $ \nxt ->
-        elClass "div" "float-right" $ do
+      elClass "div" "float-right" do
+        elClass "span" "steno-navigation mr-2 p-2" $ text
+          $ "⯈ " <> showt (KI.toRaw @key kiRight)
         routeLink (stageUrl @key nxt) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
         text " >"
@@ -275,18 +279,19 @@ elCongraz evDone dynStats Navigation {..} = mdo
         Just mNewStats ->
 
             elClass "div" "overlay" $ elClass "div" "text-center text-md" $ do
-                elClass "div" "text-2xl" $ text "Task cleared!"
+                elClass "div" "text-4xl" $ text "Task cleared!"
                 elClass "div" "text-[72pt] text-green-500" $ iFa "fas fa-check-circle"
                 whenJust mNewStats $ \newStats -> dyn_ $ dynStats <&> \lsStats -> do
-                    -- let lsStatsPersonal = filter (isNothing . fst . snd) lsStats
-                    when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats))
-                        $ el "p" $ do
-                              elClass "span" "text-yellow px-2 shadow" $ iFa "fa-solid fa-star-sharp"
+                    when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats)) do
+                      elClass "p" "text-shadow" $ do
+                              elClass "span" "px-2 text-yellow-500" $ iFa "fas fa-star"
                               el "strong" $ text $ "New personal best: " <> formatTime
                                   (statsTime newStats)
-                              iFa "fa-solid fa-star-sharp"
+                              elClass "span" "px-2 text-yellow-500" $ iFa "fas fa-star"
+                      el "br" blank
+
                     elStatisticsPersonalShort lsStats
-                    elClass "hr" "invisible" blank
+                    el "br" blank
 
                 elClass "div" "text-grayishblue-900" $ do
                   whenJust navMNext \nxt -> do
@@ -313,12 +318,12 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     setRoute $ eContinue $> stageUrl @key nxt
 
                   text "go "
-                  (elABack, _) <- el' "a" $ text "back"
+                  (domABack, _) <- el' "a" $ text "back"
                   text " "
-                  elClass "span" "steno-navigation" $
+                  elClass "span" "steno-navigation p-1" $
                       text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                   text " to repeat the exercise."
-                  pure $ leftmost [eChordBackUp, domEvent Click elABack]
+                  pure $ leftmost [eChordBackUp, domEvent Click domABack]
     pure $ isJust <$> dynDone
 
 chordStart :: forall key. Palantype key => Chord key
@@ -443,7 +448,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             StateRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
-        elClass "div" "taskWords" $ do
+        elClass "div" "mt-8 text-lg" $ do
 
             evTrigger <- void . updated <$> holdUniqDyn
               ( dynStateWords <&> fromMaybe 0
@@ -496,14 +501,15 @@ elPatterns
      . DomBuilder t m
     => [(PatternPos, [(Text, RawSteno)])]
     -> m ()
-elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
+elPatterns doc = elClass "div" "my-4" $ traverse_ elPatterns' doc
   where
     elPatterns' (pPos, pairs) = do
-        elClass "hr" (showt pPos) blank
-        elClass "span" ("patternPosition " <> showt pPos) $ text $ showPretty
-            pPos
-        elClass "br" "clearBoth" blank
-        for_ pairs $ \(orig, steno) -> elClass "div" "floatLeft" $ do
+        elClass "hr" ("mt-2 h-[1px] bg-" <> strColor pPos) blank
+        elClass "span" ("float-right text-sm font-bold relative top-[20px] \
+                        \text-" <> strColor pPos
+                       ) $ text $ showPretty pPos
+        elClass "br" "clear-both" blank
+        for_ pairs $ \(orig, steno) -> elClass "div" "float-left" $ do
             let lOrig :: Double = fromIntegral $ length orig
                 styleOrig       = if lOrig > 6
                     then
@@ -518,10 +524,21 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
                     then
                         "style" =: ("font-size: " <> showt (6 / lSteno) <> "em")
                     else mempty
-            elAttr "div" ("class" =: "orig" <> styleOrig) $ text orig
-            elAttr "code" ("class" =: "steno" <> styleSteno) $ text $ showt
+            elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-24 h-8 text-right text-xl \
+                                     \border border-white inline-block" <> styleOrig
+                         ) $ text orig
+            elAttr "code" ("class" =: "w-24 pl-1 text-left inline-block text-lg"
+                           <> styleSteno
+                          ) $ text $ showt
                 steno
-        elClass "br" "clearBoth" blank
+        elClass "br" "clear-both" blank
+
+    strColor = \case
+      Onset        -> "rose-400"
+      Nucleus      -> "green-400"
+      Coda         -> "blue-400"
+      Multiple     -> "violet-400"
+      OnsetAndCoda -> "orange-400"
 
 -- | get the statistics for the score board for the current page
 --   'evNewStats': an event stream of new stats records
@@ -615,7 +632,7 @@ elBtnSound evTrigger = do
       performEvent_ $ evPlaySound $> play audioEl
 
     (domSound, _) <- elAttr' "span"
-      (  "class" =: "floatRight icon-link"
+      (  "class" =: "float-right text-zinc-500 hover:text-grayishblue-800 cursor-pointer"
       <> "title" =: "toggle sound"
       ) $ dyn_ $ dynSound <&> \case
         True  -> iFa "fas fa-volume-down"

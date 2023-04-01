@@ -144,7 +144,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , PerformEvent(performEvent_)
                                                 , Performable
                                                 , PostBuild
-                                                , Prerender
+                                                , Prerender (Client)
                                                 , Reflex
                                                     ( Dynamic
                                                     , Event
@@ -474,7 +474,7 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
                 elLi iSubstage = do
                     let cls = "whitespace-nowrap leading-7" <> " " <>
                             if iSubstage == stageCurrent
-                                then "bg-gray-200"
+                                then "bg-zinc-200"
                                 else ""
                     elClass "li" cls $ do
                         elClass "span" "w-4 inline-block px-0.5" $ if iSubstage `Set.member` cleared
@@ -726,6 +726,7 @@ elStages
        , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) (Client m)
        , TriggerEvent t m
        )
     => GetLoadedAndBuilt t
@@ -739,12 +740,12 @@ elStages getLoadedAndBuilt = do
         StageIndex ->
         RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
     stages' iCurrent =
-      elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" do
+      elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" mdo
 
         dynState' <- ask
         let dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
         eChord <- dynSimple $ dynKeyboardActive <&> \case
-          True  -> elStenoInput @key getLoadedAndBuilt
+          True  -> elStenoInput @key navigation getLoadedAndBuilt
           False -> do
             elClass "div" "p-2 text-center mx-auto text-gray-500 border border-solid border-gray-200 \
                           \rounded-lg" do
@@ -757,7 +758,7 @@ elStages getLoadedAndBuilt = do
                   [ field @"stApp" . field @"stKeyboardActive" .~ True ]
             pure never
 
-        navigation <- elClass "div" "flex flex-row flex-nowrap overflow-y-hidden" $ mdo
+        navigation <- elClass "div" "flex flex-grow flex-row flex-nowrap overflow-y-hidden" $ mdo
             elTOC @key iCurrent
 
             let navMPrevious = Stage.mPrev iCurrent
@@ -790,9 +791,9 @@ elStages getLoadedAndBuilt = do
                                            \w-full h-full relative"
                              <> "id" =: "content"
                              ) do
-                elClass "div" "w-max sticky top-[2px] steno-navigation mx-auto \
+                elClass "div" "w-max sticky top-[2px] text-xs p-1 steno-navigation mx-auto \
                               \opacity-50" $ text
-                    $  "▲ " <> showt (KI.toRaw @key kiUp)
+                    $  "⯅ " <> showt (KI.toRaw @key kiUp)
                     <> "  ↟ " <> showt (KI.toRaw @key kiPageUp)
                 elClass "div" "before:content-[\"\"] before:w-4/5 before:bg-white \
                               \before:absolute before:top-0 before:h-[31px] \
@@ -833,8 +834,8 @@ elStages getLoadedAndBuilt = do
                     Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
                     Nothing -> elPageNotImplemented "index invalid"
 
-                elClass "div" "w-max sticky bottom-4 steno-navigation mx-auto opacity-50"
-                  $ text $ "▼ "
+                elClass "div" "w-max sticky bottom-4 text-xs p-1 steno-navigation mx-auto opacity-50"
+                  $ text $ "⯆ "
                     <> showt (KI.toRaw @key kiDown)
                     <> "  ↡ "
                     <> showt (KI.toRaw @key kiPageDown)

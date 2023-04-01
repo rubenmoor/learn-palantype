@@ -12,7 +12,8 @@ in pkgs.stdenv.mkDerivation {
     tailwind-run '${frontendSrcFiles}/**/*.hs' \
                  --output $out/styles.css \
                  --theme theme.js \
-                 --css input.css
+                 --css input.css \
+                 --custom-plugins plugins.js
 
     cd ./files
     if [ "$(ls -A)" ]

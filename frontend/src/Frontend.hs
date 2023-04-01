@@ -388,7 +388,7 @@ frontendHead = do
         (  "rel"
         =: "stylesheet"
         <> "href"
-        =: $(static "FontAwesome/css/all.min.css")
+        =: $(static "FontAwesome/css/all.min.css") -- FontAwesome 5.15.1
         )
         blank
     elAttr

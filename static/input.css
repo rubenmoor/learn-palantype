@@ -29,11 +29,11 @@
 @layer components {
   .steno-navigation {
     @apply bg-grayishblue-500;
-    @apply text-xs;
+    @apply text-sm;
     @apply font-bold;
+    @apply font-mono;
     @apply rounded-lg;
     @apply text-white;
-    @apply p-1;
   }
   .steno-action {
     @apply bg-grayishblue-900;
@@ -42,6 +42,7 @@
     @apply py-1;
     @apply px-2;
     @apply w-fit;
+    @apply font-mono;
   }
   .overlay {
     @apply p-6;
@@ -54,7 +55,7 @@
     @apply max-w-lg;
     @apply text-center;
     @apply bg-white;
-    @apply shadow-lg;
+    box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.5);
   }
 
   section#user-form {
@@ -102,7 +103,6 @@
   section#user-form input:focus {
     @apply outline-none;
     box-shadow: 0px 0px 10px 0px rgba(13,83,181,0.8);
-    @apply shadow-grayishblue-800;
   }
 
   .input-text-password {
