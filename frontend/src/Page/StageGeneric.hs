@@ -5,7 +5,7 @@ module Page.StageGeneric
     ( getGenericExercise
     ) where
 
-import           CMS                            ( elCMS )
+import           CMS                            ( elCMS, elCMSContent )
 import           Common.Route                   ( FrontendRoute )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
@@ -78,14 +78,14 @@ getGenericExercise patternGroup greediness = mdo
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart1
+    elCMSContent evPart1
 
     elPatterns
         $ Map.toList
         $ Map.findWithDefault Map.empty greediness
         $ Map.findWithDefault Map.empty patternGroup patternDoc
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart2
+    elCMSContent evPart2
 
     dynStatsAll <- getStatsLocalAndRemote evDone
 

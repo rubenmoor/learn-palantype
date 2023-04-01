@@ -100,7 +100,7 @@ import           Data.Eq                        ( Eq((==)) )
 import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
 import qualified Palantype.Common.RawSteno     as Raw
-import           Control.Monad                  ( replicateM )
+import           Control.Monad                  ( replicateM, unless )
 import           Control.Lens                   ( (<>~)
                                                 , (.~)
                                                 , (%~)
@@ -168,15 +168,11 @@ taskDates dynStats evChord map = do
                     StateRun Run {..}
                         | Raw.fromChord c == KI.toRaw @key kiBackUp ->
                         -- undo last input
-                                                                       case
-                                initMay stChords
-                            of
-                                Just cs ->
-                                    st
-                                        &  _As @"StateRun"
-                                        %~ (field @"stChords" .~ cs)
-                                        .  (field @"stNMistakes" +~ 1)
-                                Nothing -> st
+                          case initMay stChords of
+                            Just cs -> st & _As @"StateRun"
+                                            %~ (field @"stChords" .~ cs)
+                                            .  (field @"stNMistakes" +~ 1)
+                            Nothing -> st
 
                     StateRun Run {..} ->
                         if renderDate (stDates !! stCounter)
@@ -207,7 +203,7 @@ taskDates dynStats evChord map = do
 
             dynStopwatch <- mkStopwatch evStartStop
 
-            elClass "div" "taskWords" $ do
+            elClass "div" "mt-8 text-lg" do
                 dyn_ $ dynStenoDates <&> \case
                     StatePause _ -> el "div" $ do
                         text "Type "
@@ -217,27 +213,25 @@ taskDates dynStats evChord map = do
                         text " to begin the exercise."
                     StateRun Run {..} -> do
                         elClass "span" "word"
-                            $  elClass "div" "exerciseField multiline"
+                            $  elClass "div" "bg-zinc-200 rounded p-1 break-all"
                             $  el "code"
                             $  text
                             $  renderDate
                             $  stDates
                             !! stCounter
 
-                        elClass "span" "input"
+                        elClass "span" "mx-2"
                             $  text
                             $  renderPlover map stChords
-                            <> " …"
+                            <> "…"
 
-                        el "span" $ do
-                            elClass "span" "steno-navigation" $ text $ "↤ " <> showt
+                        unless (null stChords) do
+                            elClass "span" "steno-navigation p-1" $ text $ "↤ " <> showt
                                 (KI.toRaw @key kiBackUp) -- U+21A4
-                            elClass "span" "small" $ text $ if null stChords
-                                then " to show hint"
-                                else " to back up"
+                            elClass "span" "text-sm" $ text " to back up"
 
-                        elClass "hr" "visibilityHidden" blank
-
+                        el "br" blank
+                        el "br" blank
                         el "strong" $ text $ showt stCounter
                         text $ " / " <> showt numDates
 
@@ -281,7 +275,7 @@ numberMode = mdo
     dynStatsAll <- getStatsLocalAndRemote evDone
     evDone <- case eMapNumbersForExercise @key of
         Left str  -> do
-          elClass "p" "small red" $ text $ "Couldn't load resource: " <> str
+          elClass "p" "text-sm text-red-500" $ text $ "Couldn't load resource: " <> str
           pure never
         Right map ->
           taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map

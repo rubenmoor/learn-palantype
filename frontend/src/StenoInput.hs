@@ -198,6 +198,8 @@ import           Witherable                     ( Filterable
                                                 )
 import Obelisk.Route.Frontend (SetRoute(setRoute), R)
 import Common.Route (FrontendRoute)
+import qualified Palantype.Common.Dictionary.Commands as Commands
+import Data.List (delete)
 
 default (Text)
 
@@ -422,7 +424,7 @@ data TextSize = NormalSize | Small | ExtraSmall
 data KeyState = Disabled | Enabled BPressed Mode
 data BPressed = IsPressed | NotPressed
 data Mode = Inactive | Active Submode TextSize
-data Submode = ModeNormal | NumberMode | ShiftMode
+data Submode = ModeNormal | NumberMode | ShiftMode | CommandMode
 
 -- y-offset for the keys for the pinky
 data YOffset = HasOffset | NoOffset | ThumbColumn
@@ -447,7 +449,10 @@ mkClassStr (Positional yOffset bHomerow) enabled =
     strAll = "rounded border border-solid border-gray-400 w-[8.11%] h-[25%] text-center"
 
     strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-200 \
-                          \[&>*:nth-child(1)]:hidden [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
+                          \[&>*:nth-child(1)]:hidden \
+                          \[&>*:nth-child(2)]:hidden \
+                          \[&>*:nth-child(3)]:hidden \
+                          \[&>*:nth-child(4)]:hidden"
     strKeyState (Enabled bPressed mode) =
       unwords ["bg-white", strPressed bHomerow bPressed, strMode mode]
 
@@ -456,12 +461,16 @@ mkClassStr (Positional yOffset bHomerow) enabled =
     strPressed IsHomerow  NotPressed = "shadow-[3px_3px_5px_0_#081430,_inset_0_0_8px_6px_#dcdcff]"
     strPressed IsHomerow  IsPressed  = "text-grayishblue-700 shadow-[_inset_0_0_8px_6px_#dcdcff]"
 
-    strMode Inactive         = "text-2xl bg-zinc-200 text-grayishblue-900 [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
+    strMode Inactive         = "text-2xl bg-zinc-200 text-grayishblue-900 \
+                               \[&>*:nth-child(2)]:hidden \
+                               \[&>*:nth-child(3)]:hidden \
+                               \[&>*:nth-child(4)]:hidden"
     strMode (Active submode size) = unwords ["bg-white", strSubmode submode, strSize size]
 
-    strSubmode ModeNormal = unwords ["[&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"]
-    strSubmode NumberMode = unwords ["[&>*:nth-child(1)]:hidden [&>*:nth-child(3)]:hidden"]
-    strSubmode ShiftMode  = unwords ["[&>*:nth-child(1)]:hidden [&>*:nth-child(2)]:hidden"]
+    strSubmode ModeNormal  = cssHideAllButNthChild 1
+    strSubmode NumberMode  = cssHideAllButNthChild 2
+    strSubmode ShiftMode   = cssHideAllButNthChild 3
+    strSubmode CommandMode = cssHideAllButNthChild 4
 
     strSize NormalSize = "text-2xl"
     strSize Small      = "text-lg"
@@ -470,6 +479,10 @@ mkClassStr (Positional yOffset bHomerow) enabled =
     strYOffset HasOffset   = "relative top-[16px]"
     strYOffset NoOffset    = ""
     strYOffset ThumbColumn = "relative top-[12px]"
+
+    cssHideAllButNthChild :: Int -> Text
+    cssHideAllButNthChild d =
+      Text.unwords $ delete d [1..4] <&> \i -> "[&>*:nth-child(" <> showt i <> ")]:hidden"
 
 elKeyboard
   :: forall key t (m :: * -> *)
@@ -651,6 +664,7 @@ elCell CellContext{..} i colspan positional =
             elClass "div" strClass $ text $ Text.singleton $ keyCode k
             elClass "div" strClass $ text strNumberMode
             elClass "div" strClass $ text strShiftMode
+            elClass "div" strClass $ text strCommandMode
             when ccShowQwerty $ elClass "div" "text-xs text-zinc-500 -mt-1"
               $ text $ Text.unwords qwerties
   where
@@ -659,17 +673,20 @@ elCell CellContext{..} i colspan positional =
     (strNumberMode, strShiftMode) = case Numbers.fromIndex i of
         Nothing -> ("", "")
         Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
+    strCommandMode = fromMaybe "" $ Commands.fromIndex i
 
     bPressed s = bool NotPressed IsPressed $ k `Set.member` s
     mode setPressedKeys =
       let
-          setModeKeys = Set.fromList $ fromIndex <$> [9, 11]
-          isModeActive = setModeKeys `Set.isSubsetOf` setPressedKeys
+          setNumberModeKeys = Set.fromList $ fromIndex <$> [9, 11]
+          isModeActive = setNumberModeKeys `Set.isSubsetOf` setPressedKeys
+          setCommandModekeys = Set.fromList $ fromIndex <$> [8, 11]
+          isCommandModeActive = setCommandModekeys `Set.isSubsetOf` setPressedKeys
 
           isShiftPressed = fromIndex 2 `Set.member` setPressedKeys
 
-          isNumberModeActive = isModeActive && not isShiftPressed
-          isShiftModeActive  = isModeActive && isShiftPressed
+          isNumberModeActive  = isModeActive && not isShiftPressed
+          isShiftModeActive   = isModeActive && isShiftPressed
 
           notANumber = Text.null strNumberMode
           notAShift  = Text.null strShiftMode
@@ -683,9 +700,10 @@ elCell CellContext{..} i colspan positional =
               || keyCode k == '_'
             then Inactive
             else if
-              | isNumberModeActive -> Active  NumberMode (size strNumberMode)
-              | isShiftModeActive  -> Active  ShiftMode  (size strShiftMode )
-              | otherwise          -> Active  ModeNormal (size "")
+              | isNumberModeActive  -> Active NumberMode  (size strNumberMode)
+              | isShiftModeActive   -> Active ShiftMode   (size strShiftMode )
+              | isCommandModeActive -> Active CommandMode (size strCommandMode)
+              | otherwise           -> Active ModeNormal  (size "")
 
 elShowSteno
   :: forall key t (m :: * -> *)

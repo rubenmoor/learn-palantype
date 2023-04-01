@@ -190,7 +190,7 @@ elStopwatch dynStats dynStopwatch n = do
                   (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPublic ls
 
-
+    el "br" blank
     pure evStats
 
 mkStopwatch

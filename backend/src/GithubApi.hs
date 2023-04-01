@@ -9,7 +9,7 @@ module GithubApi
 
 import           Common.Model                   ( TextLang )
 import           Control.Lens                   ( (.~)
-                                                , (^.), (^..), Prism, prism, each
+                                                , (^.), (^..), Prism, prism, each, filteredBy, only, filtered
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Data.Function                  ( (&) )
@@ -40,7 +40,6 @@ import Network.HTTP.Types (status404)
 import Data.Aeson.Lens (key, _String, _Array)
 import Data.Aeson (object, Value, KeyValue ((.=)))
 import Data.Bool (bool)
-import Data.Maybe (mapMaybe)
 
 data Response t
   = Success      t
@@ -111,14 +110,10 @@ getFileList ext = do
       Left (InvalidUrlException u msg)      ->
         Error 500 $ "Url " <> Text.pack u <> " invalid: " <> Text.pack msg
       Right resp                            ->
-        Success $ mapMaybe maybeCMSFile $
-          resp ^.. responseBody . key "tree" . _Array . each
+        Success $ resp ^.. responseBody . key "tree" . _Array . each
+          . filteredBy (key "type" . _String . only "blob")
+          . key "path" . _String . filtered checkStr
   where
-    maybeCMSFile o =
-        case o ^. key "type" . _String of
-          "blob" -> let path = o ^. key "path" . _String
-                    in  bool Nothing (Just path) $ checkStr path
-          _ -> Nothing
     checkStr str =
          "cms-content/" `Text.isPrefixOf` str
       && ext            `Text.isSuffixOf` str

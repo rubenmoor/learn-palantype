@@ -736,14 +736,28 @@ elStages getLoadedAndBuilt = do
     dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
   where
+    mkNavigation si =
+      let navMPrevious = Stage.mPrev si
+          navCurrent = si
+          navMNext = Stage.mNext @key si
+          navPageName = maybe "stageindex-unknown" Stage.toPageName
+            $ Stage.fromIndex @key si
+          navTextLang = TextEN
+          navSystemLang = getSystemLang @key
+      in  Navigation{..}
+
     stages' ::
         StageIndex ->
         RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
     stages' iCurrent =
-      elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" mdo
+      elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" do
 
         dynState' <- ask
-        let dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
+
+        let
+            navigation = mkNavigation iCurrent
+            dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
+
         eChord <- dynSimple $ dynKeyboardActive <&> \case
           True  -> elStenoInput @key navigation getLoadedAndBuilt
           False -> do
@@ -758,18 +772,8 @@ elStages getLoadedAndBuilt = do
                   [ field @"stApp" . field @"stKeyboardActive" .~ True ]
             pure never
 
-        navigation <- elClass "div" "flex flex-grow flex-row flex-nowrap overflow-y-hidden" $ mdo
+        elClass "div" "flex flex-grow flex-row flex-nowrap overflow-y-hidden" $ mdo
             elTOC @key iCurrent
-
-            let navMPrevious = Stage.mPrev iCurrent
-                navCurrent = iCurrent
-                navMNext = Stage.mNext @key iCurrent
-                navPageName =
-                  maybe "stageindex-unknown" Stage.toPageName $
-                    Stage.fromIndex @key iCurrent
-                navTextLang = TextEN
-                navSystemLang = getSystemLang @key
-                navigation = Navigation{..}
 
             let setEnv page = mapRoutedT
                   ( withReaderT $ \dynState -> Env
@@ -839,5 +843,4 @@ elStages getLoadedAndBuilt = do
                     <> showt (KI.toRaw @key kiDown)
                     <> "  ↡ "
                     <> showt (KI.toRaw @key kiPageDown)
-            pure navigation
         elFooter @key navigation

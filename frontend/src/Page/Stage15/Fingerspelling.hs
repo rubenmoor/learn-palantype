@@ -205,33 +205,34 @@ taskLiterals dynStats evChord = do
 
     dynStopwatch <- mkStopwatch evStartStop
 
-    elClass "div" "paragraph" $ do
+    elClass "div" "mt-8 text-lg" do
         dyn_ $ dynLiterals <&> \case
-            StatePause _ -> el "div" $ do
+            StatePause _ -> el "div" do
                 text "Type "
-                elClass "span" "steno-action" $ do
+                elClass "span" "steno-action" do
                     text "Start "
                     el "code" $ text $ showt $ chordStart @key
                 text " to begin the exercise."
             StateRun Run {..} -> do
-                elClass "div" "exerciseField multiline"
-                    $ el "code"
-                    $ for_ (zip [0 :: Int ..] dictLiterals)
-                    $ \(i, (_, lit)) ->
-                          let
-                              cls = case stMMistake of
-                                  Just (j, _) -> if i == j then "bgRed" else ""
-                                  Nothing ->
-                                      if stCounter > i then "bgGreen" else ""
-                          in  elClass "span" cls $ text lit
+                elClass "div" "bg-zinc-200 rounded p-1 break-all"
+                  $ for_ (zip [0 :: Int ..] dictLiterals) \(i, (_, lit)) -> do
+                    let
+                        clsBase = "p-1"
+                        clsBg = case stMMistake of
+                            Just (j, _) -> if i == j        then "bg-red-500"   else ""
+                            Nothing     -> if stCounter > i then "bg-green-500" else ""
+                    elClass "code" (Text.unwords [clsBase, clsBg]) $ text lit
 
-                whenJust stMMistake $ \(_, w) ->
-                    elClass "div" "red small paragraph" $ do
-                        text $ "You typed " <> showt w <> " "
-                        elClass "span" "steno-navigation"
-                            $  text
-                            $  "↤ "
-                            <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                el "br" blank
+                whenJust stMMistake $ \(_, w) -> do
+                  elClass "p" "text-red-500 text-sm ml-1" do
+                      text "You typed "
+                      el "code" $ text $ showt w
+                      elClass "span" "steno-navigation p-1 ml-2"
+                          $  text
+                          $  "↤ "
+                          <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                  el "br" blank
 
                 text $ showt stCounter <> " / " <> showt len
 
@@ -262,21 +263,27 @@ fingerspelling = mdo
 
     elCMSContent evPart1
 
-    elClass "div" "patternTable" $ do
-        for_ keysLetterUS \(c, steno) -> elClass "div" "floatLeft" $ do
-            elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
-            elAttr "code" ("class" =: "steno") $ text steno
-        elClass "br" "clearBoth" blank
+    elClass "div" "my-4" $ do
+        for_ keysLetterUS \(c, steno) -> elClass "div" "float-left" $ do
+            elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-16 h-8 text-right \
+                                     \text-xl border border-white inline-block"
+                         ) $ text $ Text.singleton c
+            elAttr "code" ("class" =: "w-16 pl-1 text-left inline-block text-lg"
+                          ) $ text steno
+        elClass "br" "clear-both" blank
 
     elCMSContent evPart2
 
-    elClass "div" "patternTable" $ do
+    elClass "div" "my-4" $ do
         for_
             keysLetterOther
-            \(c, steno) -> elClass "div" "floatLeft" $ do
-                elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
-                elAttr "code" ("class" =: "steno") $ text steno
-        elClass "br" "clearBoth" blank
+            \(c, steno) -> elClass "div" "float-left" $ do
+                elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-16 h-8 text-right \
+                                         \text-xl border border-white inline-block"
+                             ) $ text $ Text.singleton c
+                elAttr "code" ("class" =: "w-16 pl-1 text-left inline-block text-lg"
+                              ) $ text steno
+        elClass "br" "clear-both" blank
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEChord

@@ -575,7 +575,7 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
                         $  _stWords
                         !! _stCounter
 
-                    whenJust _stMMistake $ elClass "span" "ml-i text-sm" . \case
+                    whenJust _stMMistake $ elClass "span" "ml-1 text-sm" . \case
                         MistakeOne raw -> do
                             elClass "code" "text-red-500" $ text $ showt raw
                             text " try again!"

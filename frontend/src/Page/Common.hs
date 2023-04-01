@@ -54,7 +54,7 @@ import           Control.Monad.Reader           ( MonadReader
 import           Data.Bifunctor                 ( Bifunctor(second) )
 import           Data.Bool                      ( Bool(..)
                                                 , not
-                                                , (||)
+                                                , (||), (&&)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
@@ -86,7 +86,7 @@ import           Data.Map.Strict                ( Map )
 import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
                                                 , isJust
-                                                , maybe
+                                                , maybe, isNothing
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Ord                       ( Down(Down)
@@ -464,33 +464,33 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateRun Run {..} -> do
-                    -- TODO: what is span ".word"?
-                    elClass "span" "word"
-                        $  elClass "span" "exerciseField"
+                    elClass "span" "bg-zinc-200 rounded w-fit p-1 mx-2"
                         $  el "code"
                         $  text
                         $  stWords
                         !! stCounter
 
-                    elClass "span" "input"
+                    elClass "span" "mx-2"
                         $  traverse_ (el "code" <<< text)
                         $  intersperse "/"
                         $  (showt <$> stChords)
-                        <> [" …"]
+                        <> ["…"]
 
-                    el "span" $ do
-                        elClass "span" "steno-navigation" $ text $ "↤ " <> showt
+                    el "span" do
+                        elClass "span" "steno-navigation p-1" $ text $ "↤ " <> showt
                             (KI.toRaw @key kiBackUp) -- U+21A4
-                        elClass "span" "small" $ text $ if null stChords
+                        elClass "span" "text-sm" $ text
+                          $ if null stChords && isNothing stMHint
                             then " to show hint"
                             else " to back up"
 
                     whenJust stMHint $ \hint ->
-                        elClass "span" "small" $ for_ hint $ \r -> do
-                            text $ showt r
-                            el "br" blank
+                        elClass "span" "text-sm" $ for_ hint $ \r -> do
+                            text "hint: "
+                            elClass "code" "text-md" $ text $ showt r
 
-                    elClass "hr" "visibilityHidden" blank
+                    el "br" blank
+                    el "br" blank
                     el "strong" $ text $ showt stCounter
                     text $ " / " <> showt len
 
@@ -504,11 +504,11 @@ elPatterns
 elPatterns doc = elClass "div" "my-4" $ traverse_ elPatterns' doc
   where
     elPatterns' (pPos, pairs) = do
-        elClass "hr" ("mt-2 h-[1px] bg-" <> strColor pPos) blank
-        elClass "span" ("float-right text-sm font-bold relative top-[20px] \
+        elDummy
+        elClass "hr" ("my-2 border-none h-[1px] bg-" <> strColor pPos) blank
+        elClass "span" ("float-right text-sm font-bold relative \
                         \text-" <> strColor pPos
                        ) $ text $ showPretty pPos
-        elClass "br" "clear-both" blank
         for_ pairs $ \(orig, steno) -> elClass "div" "float-left" $ do
             let lOrig :: Double = fromIntegral $ length orig
                 styleOrig       = if lOrig > 6
@@ -539,6 +539,16 @@ elPatterns doc = elClass "div" "my-4" $ traverse_ elPatterns' doc
       Coda         -> "blue-400"
       Multiple     -> "violet-400"
       OnsetAndCoda -> "orange-400"
+      PPException  -> "grayishblue-900"
+
+    -- make sure tailwind classes show up explicitly somewhere
+    elDummy = elClass "div" "hidden" do
+      elClass "span" "text-rose-400 bg-rose-400" blank
+      elClass "span" "text-green-400 bg-green-400" blank
+      elClass "span" "text-blue-400 bg-blue-400" blank
+      elClass "span" "text-violet-400 bg-violet-400" blank
+      elClass "span" "text-orange-400 bg-orange-400" blank
+      elClass "span" "text-grayishblue-900 bg-grayishblue-900" blank
 
 -- | get the statistics for the score board for the current page
 --   'evNewStats': an event stream of new stats records

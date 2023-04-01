@@ -127,13 +127,13 @@ in
       skylighting-core = self.callHackage "skylighting-core" "0.9" {};
       skylighting = self.callHackage "skylighting" "0.9" {};
 
-      #reflex-dom-pandoc = self.callHackage "reflex-dom-pandoc" "1.0.0.0" {};
+      #reflex-dom-pandoc = self.callCabal2nix "reflex-dom-pandoc" ../reflex-dom-pandoc {};
       # waiting for my pull request to make it into upstream
       reflex-dom-pandoc = self.callCabal2nix "reflex-dom-pandoc" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "reflex-dom-pandoc";
-        rev = "7878b040d15ba9d327a56e673231c6467d7c5973";
-        sha256 = "111x4qs958jq38vrm56m4jl4jrww3jjw2kyd2l2clwmxp7wipkz0";
+        rev = "050388e68dbae52043e0d633f854eb98257fc223";
+        sha256 = "sha256-6UViAujrl7odTPvnseIx+x+/9HBhoKFbeM8Yo2P3iwQ=";
       }) {};
 
       #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex {};

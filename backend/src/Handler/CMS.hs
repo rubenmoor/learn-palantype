@@ -103,7 +103,6 @@ handleCMSGet
   -> UTCTimeInUrl
   -> Handler [Pandoc]
 handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
-    liftIO $ Text.putStrLn $ "filename: " <> filename
     modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
     let cacheDbKey = UCMSCache systemLang textLang filename time
     mFromCache <- runDb (getBy cacheDbKey) >>= \case
@@ -115,7 +114,9 @@ handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
             -- TODO: other content types
         Nothing -> pure Nothing
     case mFromCache of
-      Just c -> pure c
+      Just c -> do
+        liftIO $ Text.putStrLn "Retrieved page from cache"
+        pure c
       Nothing -> GithubApi.getTextFile systemLang textLang filename >>= \case
         GithubApi.Success str -> liftIO (Pandoc.runIO $ convertMarkdown str) >>= \case
           Left err -> Servant.throwError $ err500
@@ -124,6 +125,7 @@ handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
                       <> BLU.fromString (show err)
               }
           Right lsDoc -> do
+            liftIO $ Text.putStrLn "Fetched from GitHub"
             runDb $ Esqueleto.delete $ from $ \c ->
               where_ $ c ^. CMSCacheSystemLang ==. val systemLang
                    &&. c ^. CMSCacheTextLang   ==. val textLang
