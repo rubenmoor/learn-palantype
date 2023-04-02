@@ -200,6 +200,8 @@ import Obelisk.Route.Frontend (SetRoute(setRoute), R)
 import Common.Route (FrontendRoute)
 import qualified Palantype.Common.Dictionary.Commands as Commands
 import Data.List (delete)
+import qualified Palantype.Common.Dictionary.CommandsFKeys as FKeys
+import qualified Palantype.Common.Dictionary.Special as Special
 
 default (Text)
 
@@ -282,15 +284,16 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
           | otherwise -> $failure "Key not implemented"
     dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
     dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
+    dynKeyboardModes <- asks $ fmap $ stApp >>> stKeyboardModes
     dynShowKeyboard <- asks $ fmap $ stApp >>> stShowKeyboard
     let dynSystemCfg =
             view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
-    dynSimple $ zipDyn dynSystemCfg dynKeyboardShowQwerty <&>
-        \(pcfg, showQwerty) -> postRender
+    dynSimple $ zipDyn dynSystemCfg (zipDyn dynKeyboardShowQwerty dynKeyboardModes) <&>
+        \(pcfg, (showQwerty, specialModes)) -> postRender
                      $ elClass "div" "mx-auto border-b border-dotted"
-                     $ elStenoInput' lang pcfg showQwerty dynShowKeyboard
+                     $ elStenoInput' lang pcfg showQwerty specialModes dynShowKeyboard
   where
-    elStenoInput' lang PloverSystemCfg{..} showQwerty dynShowKeyboard = mdo
+    elStenoInput' lang PloverSystemCfg{..} showQwerty specialModes dynShowKeyboard = mdo
         let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
                 [ keydown qwertyKey kbInput $> [KeyDown $ fromIndex kI]
                 , keyup   qwertyKey kbInput $> [KeyUp   $ fromIndex kI]
@@ -351,6 +354,7 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
                     (stiKeysPressed <$> dynInput)
                     lang
                     showQwerty
+                    specialModes
 
         kbInput <- elShowSteno $ stiKeysDown <$> dynInput
         (elPowerOff, _) <- elAttr' "span"
@@ -413,6 +417,7 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
 
 data CellContext t key = CellContext
   { ccShowQwerty     :: Bool
+  , ccModes          :: Bool
   , ccStenoKeys      :: Map KeyIndex [Text]
   , ccDynPressedKeys :: Dynamic t (Set key)
   }
@@ -424,7 +429,15 @@ data TextSize = NormalSize | Small | ExtraSmall
 data KeyState = Disabled | Enabled BPressed Mode
 data BPressed = IsPressed | NotPressed
 data Mode = Inactive | Active Submode TextSize
-data Submode = ModeNormal | NumberMode | ShiftMode | CommandMode
+data Submode
+  = ModeNormal
+  | NumberMode
+  | ShiftMode
+  | CommandMode
+  | FKeysMode
+  | SpecialMode
+  | SpecialShiftMode
+data SpecialSwitch = SpecialActive | SpecialInactive
 
 -- y-offset for the keys for the pinky
 data YOffset = HasOffset | NoOffset | ThumbColumn
@@ -441,36 +454,52 @@ posYOffset :: Positional
 posYOffset = Positional HasOffset NotHomerow
 
 mkClassStr
-  :: Positional -> KeyState -> Text
--- mkClassStr Inactive _ _ _ = "bg-gray-400 text-grayishblue-900 [&>*:nth-child(1)]:hidden [&>*:nth-child(2)]:hidden [&>*:nth-child(3)]:hidden"
-mkClassStr (Positional yOffset bHomerow) enabled =
+  :: Positional -> KeyState -> SpecialSwitch -> Text
+mkClassStr (Positional yOffset bHomerow) enabled sswitch =
     unwords [strAll, strKeyState enabled, strYOffset yOffset]
   where
     strAll = "rounded border border-solid border-gray-400 w-[8.11%] h-[25%] text-center"
 
-    strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-200 \
-                          \[&>*:nth-child(1)]:hidden \
-                          \[&>*:nth-child(2)]:hidden \
-                          \[&>*:nth-child(3)]:hidden \
-                          \[&>*:nth-child(4)]:hidden"
+    strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-200 "
+      <> case sswitch of
+           SpecialActive ->
+             "[&>*:nth-child(1)]:hidden \
+             \[&>*:nth-child(2)]:hidden \
+             \[&>*:nth-child(3)]:hidden \
+             \[&>*:nth-child(4)]:hidden \
+             \[&>*:nth-child(5)]:hidden \
+             \[&>*:nth-child(6)]:hidden \
+             \[&>*:nth-child(7)]:hidden"
+           SpecialInactive -> ""
     strKeyState (Enabled bPressed mode) =
-      unwords ["bg-white", strPressed bHomerow bPressed, strMode mode]
+      unwords [strPressed bHomerow bPressed, strMode mode]
 
     strPressed NotHomerow NotPressed = "shadow-[3px_3px_5px_0_#081430]"
     strPressed NotHomerow IsPressed  = "text-grayishblue-700"
     strPressed IsHomerow  NotPressed = "shadow-[3px_3px_5px_0_#081430,_inset_0_0_8px_6px_#dcdcff]"
     strPressed IsHomerow  IsPressed  = "text-grayishblue-700 shadow-[_inset_0_0_8px_6px_#dcdcff]"
 
-    strMode Inactive         = "text-2xl bg-zinc-200 text-grayishblue-900 \
-                               \[&>*:nth-child(2)]:hidden \
-                               \[&>*:nth-child(3)]:hidden \
-                               \[&>*:nth-child(4)]:hidden"
-    strMode (Active submode size) = unwords ["bg-white", strSubmode submode, strSize size]
+    strMode Inactive = "bg-zinc-200 text-2xl "
+      <> case sswitch of
+           SpecialActive ->
+             "[&>*:nth-child(1)]:invisible \
+             \[&>*:nth-child(2)]:hidden \
+             \[&>*:nth-child(3)]:hidden \
+             \[&>*:nth-child(4)]:hidden \
+             \[&>*:nth-child(5)]:hidden \
+             \[&>*:nth-child(6)]:hidden \
+             \[&>*:nth-child(7)]:hidden"
+           SpecialInactive -> ""
+    strMode (Active submode size) = unwords ["bg-white", strSubmode sswitch submode, strSize size]
 
-    strSubmode ModeNormal  = cssHideAllButNthChild 1
-    strSubmode NumberMode  = cssHideAllButNthChild 2
-    strSubmode ShiftMode   = cssHideAllButNthChild 3
-    strSubmode CommandMode = cssHideAllButNthChild 4
+    strSubmode SpecialInactive _                = ""
+    strSubmode SpecialActive   ModeNormal       = cssHideAllButNthChild 1
+    strSubmode SpecialActive   NumberMode       = cssHideAllButNthChild 2
+    strSubmode SpecialActive   ShiftMode        = cssHideAllButNthChild 3
+    strSubmode SpecialActive   CommandMode      = cssHideAllButNthChild 4
+    strSubmode SpecialActive   FKeysMode        = cssHideAllButNthChild 5
+    strSubmode SpecialActive   SpecialMode      = cssHideAllButNthChild 6
+    strSubmode SpecialActive   SpecialShiftMode = cssHideAllButNthChild 7
 
     strSize NormalSize = "text-2xl"
     strSize Small      = "text-lg"
@@ -482,7 +511,7 @@ mkClassStr (Positional yOffset bHomerow) enabled =
 
     cssHideAllButNthChild :: Int -> Text
     cssHideAllButNthChild d =
-      Text.unwords $ delete d [1..4] <&> \i -> "[&>*:nth-child(" <> showt i <> ")]:hidden"
+      Text.unwords $ delete d [1..7] <&> \i -> "[&>*:nth-child(" <> showt i <> ")]:hidden"
 
 elKeyboard
   :: forall key t (m :: * -> *)
@@ -496,8 +525,9 @@ elKeyboard
   -> Dynamic t (Set key)
   -> SystemLang
   -> Bool
+  -> Bool
   -> m ()
-elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty =
+elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
     let cc = CellContext{..}
     in  elClass "div" "w-[650px] h-[271px] relative mx-auto" do
           elClass "table" "border-separate border-spacing-1 rounded-lg bg-zinc-200 w-full h-full px-3 pt-3 pb-[24px]" do
@@ -562,20 +592,32 @@ elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty =
               el "div" $ text $ showt lang
               el "div" $ text $ showt cfgName
 
-              ev <- _inputElement_checkedChange <$> inputElement
+              evToggleQwerties <- _inputElement_checkedChange <$> inputElement
                   ( def & inputElementConfig_initialChecked .~ ccShowQwerty
                         & inputElementConfig_elementConfig
                             . elementConfig_initialAttributes
-                                .~ (  "id"   =: "showQwerties"
+                                .~ (  "id"  =: "showQwerties"
                                   <> "type" =: "checkbox"
                                   )
                   )
-
-              updateState $ ev $>
+              elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
+              updateState $ evToggleQwerties $>
                 [ field @"stApp" . field @"stKeyboardShowQwerty" %~ not
                 ]
 
-              elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
+              el "br" blank
+              evToggleModes <- _inputElement_checkedChange <$> inputElement
+                  ( def & inputElementConfig_initialChecked .~ ccModes
+                        & inputElementConfig_elementConfig
+                            . elementConfig_initialAttributes
+                                .~ (  "id"   =: "modes"
+                                   <> "type" =: "checkbox"
+                                   )
+                  )
+              elAttr "label" ("for" =: "modes") $ text "Show special modes"
+              updateState $ evToggleModes $>
+                [ field @"stApp" . field @"stKeyboardModes" %~ not
+                ]
 
 -- | original Palantype keyboard layout
 -- | unfortunately the keys don't follow the simple order
@@ -590,6 +632,7 @@ elKeyboardEN ::
     m ()
 elKeyboardEN cfgName ccStenoKeys ccDynPressedKeys =
   let ccShowQwerty = True
+      ccModes = False
       cc = CellContext{..}
   in  elClass "div" "keyboard" $ do
         _ <- el "table" $ do
@@ -655,16 +698,20 @@ elCell CellContext{..} i colspan positional =
             Enabled (bPressed s) (mode s)
 
         dynAttrs = dynKeyState <&> \keyState ->
-             "class"   =: mkClassStr positional keyState
+             "class"   =: mkClassStr positional keyState (bool SpecialInactive SpecialActive ccModes)
           <> "colspan" =: showt colspan
 
     in
         elDynAttr "td" dynAttrs $ do
             let strClass = "font-bold h-[32px] flex justify-center items-center"
             elClass "div" strClass $ text $ Text.singleton $ keyCode k
-            elClass "div" strClass $ text strNumberMode
-            elClass "div" strClass $ text strShiftMode
-            elClass "div" strClass $ text strCommandMode
+            when ccModes do
+              elClass "div" strClass $ text strNumberMode
+              elClass "div" strClass $ text strShiftMode
+              elClass "div" strClass $ text strCommandMode
+              elClass "div" strClass $ text strFKeysMode
+              elClass "div" strClass $ text strSpecialMode
+              elClass "div" strClass $ text strSpecialShiftMode
             when ccShowQwerty $ elClass "div" "text-xs text-zinc-500 -mt-1"
               $ text $ Text.unwords qwerties
   where
@@ -674,36 +721,49 @@ elCell CellContext{..} i colspan positional =
         Nothing -> ("", "")
         Just (str, mStrShift) -> (str, fromMaybe "" mStrShift)
     strCommandMode = fromMaybe "" $ Commands.fromIndex i
+    strFKeysMode   = fromMaybe "" $ FKeys.fromIndex i
+    (strSpecialMode, strSpecialShiftMode) = fromMaybe ("", "") $ Special.fromIndex i
 
     bPressed s = bool NotPressed IsPressed $ k `Set.member` s
     mode setPressedKeys =
       let
-          setNumberModeKeys = Set.fromList $ fromIndex <$> [9, 11]
-          isModeActive = setNumberModeKeys `Set.isSubsetOf` setPressedKeys
-          setCommandModekeys = Set.fromList $ fromIndex <$> [8, 11]
-          isCommandModeActive = setCommandModekeys `Set.isSubsetOf` setPressedKeys
+          isNumberModeAnyActive = Set.fromList (fromIndex <$> [9, 11])
+            `Set.isSubsetOf` setPressedKeys
+          isCommandModeActive = Set.fromList (fromIndex <$> [8, 11])
+            `Set.isSubsetOf` setPressedKeys
+          isFKeysModeActive = Set.fromList (fromIndex <$> [7, 11])
+            `Set.isSubsetOf` setPressedKeys
+          isLeftShiftPressed = fromIndex 2 `Set.member` setPressedKeys
+          isSpecialModeAnyActive = fromIndex 25 `Set.member` setPressedKeys
+          isRightShiftPressed = fromIndex 31 `Set.member` setPressedKeys
 
-          isShiftPressed = fromIndex 2 `Set.member` setPressedKeys
+          isNumberModeActive  = isNumberModeAnyActive && not isLeftShiftPressed
+          isNumberShiftModeActive   = isNumberModeAnyActive && isLeftShiftPressed
 
-          isNumberModeActive  = isModeActive && not isShiftPressed
-          isShiftModeActive   = isModeActive && isShiftPressed
-
-          notANumber = Text.null strNumberMode
-          notAShift  = Text.null strShiftMode
+          isSpecialModeActive = isSpecialModeAnyActive && not isRightShiftPressed
+          isSpecialModeShiftActive = isSpecialModeAnyActive && isRightShiftPressed
 
           size str | Text.length str >= 3  = ExtraSmall
           size str | Text.length str >= 2  = Small
           size _                           = NormalSize
       in
-          if isNumberModeActive && notANumber
-              || isShiftModeActive  && notAShift
+          if     (isNumberModeActive       && Text.null strNumberMode      )
+              || (isNumberShiftModeActive  && Text.null strShiftMode       )
+              || (isCommandModeActive      && Text.null strCommandMode     )
+              || (isFKeysModeActive        && Text.null strFKeysMode       )
+              || (isSpecialModeActive      && Text.null strSpecialMode     )
+              || (isSpecialModeShiftActive && Text.null strSpecialShiftMode)
               || keyCode k == '_'
             then Inactive
             else if
-              | isNumberModeActive  -> Active NumberMode  (size strNumberMode)
-              | isShiftModeActive   -> Active ShiftMode   (size strShiftMode )
-              | isCommandModeActive -> Active CommandMode (size strCommandMode)
-              | otherwise           -> Active ModeNormal  (size "")
+              | not ccModes              -> Active ModeNormal  (size "")
+              | isNumberModeActive       -> Active NumberMode  (size strNumberMode)
+              | isNumberShiftModeActive  -> Active ShiftMode   (size strShiftMode )
+              | isCommandModeActive      -> Active CommandMode (size strCommandMode)
+              | isFKeysModeActive        -> Active FKeysMode   (size strFKeysMode)
+              | isSpecialModeActive      -> Active SpecialMode (size strSpecialMode)
+              | isSpecialModeShiftActive -> Active SpecialShiftMode (size strSpecialShiftMode)
+              | otherwise                -> Active ModeNormal  (size "")
 
 elShowSteno
   :: forall key t (m :: * -> *)

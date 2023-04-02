@@ -56,6 +56,7 @@ data AppState = AppState
     , stPloverCfg     :: PloverCfg
     , stShowKeyboard  :: Bool
     , stKeyboardShowQwerty :: Bool
+    , stKeyboardModes :: Bool
     , stKeyboardActive :: Bool
     , stShowTOC       :: Bool
     , stProgress      :: Map SystemLang StageIndex
@@ -76,6 +77,7 @@ defaultAppState = AppState
   , stPloverCfg          = defaultPloverCfg
   , stShowKeyboard       = True
   , stKeyboardShowQwerty = True
+  , stKeyboardModes      = False
   , stKeyboardActive     = True
   , stShowTOC            = False
   , stProgress           = defaultProgress

@@ -2,8 +2,8 @@
 
 ## Palantype command-key mode
 
-Just like with the number mode, you can hold down `N+-` to have a look
-at the available command keys.
+Just like with the number mode, you can activate "Show special modes"
+and hold down `N+-` to have a look at the available command keys.
 
 ![The palantype virtual keyboard in command-key mode](https://github.com/rubenmoor/learn-palantype/raw/main/cms-content/SystemDE/media/commandmode.png)
 
@@ -49,3 +49,22 @@ In Microsoft PowerPoint (and some other programs),
 `CTRL + SHIFT + UP/DOWN` is used to move a bullet point up or down the list.
 Of course, having a steno mindset, you can reconfigure shortcuts of any application that you use intensively.
 With the Palantype command keys, you don't have to.
+
+### Function keys
+
+As a bonus, hold down `G+-` to get access to the F-keys, too.
+
+![The palantype virtual keyboard in function-key mode](https://github.com/rubenmoor/learn-palantype/raw/main/cms-content/SystemDE/media/fkeysmode.png)
+
+Now you can reach `ALT + F4` to close an application and `F5` to reload your browser.
+
+### Unreachable combinations
+
+The layout for the modifier keys does not allow to combine any of `CTRL`, `ALT`, and `SUPER`.
+There exists one essential key combination that thus remains unreachable:
+`CTRL + ALT + DEL`.
+Of course, given the fact that arbitrary key combinations can be entered in the plover dictionary,
+this isn't really any strict limit.
+For this particular key combination, there exists already a steno code in the command keys:
+
+`N++NSD`
