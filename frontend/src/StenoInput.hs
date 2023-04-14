@@ -23,22 +23,18 @@
 
 module StenoInput where
 
-import           Client                         ( postRender
-                                                )
-import           Common.Model                   ( AppState(..)
+import           Common.Model                   ( StateKeyboard (..)
                                                 )
 import           Common.PloverConfig            ( CfgName(..)
                                                 , PloverSystemCfg(..)
                                                 , defaultPloverSystemCfg
                                                 )
 import           Control.Applicative            ( Applicative(..) )
-import           Control.Category               ( (<<<)
-                                                , (>>>)
-                                                , Category((.))
+import           Control.Category               ( Category((.))
                                                 )
 import           Control.Lens                   ( At(at)
                                                 , non
-                                                , view
+                                                , (^.)
                                                 )
 import           Control.Lens.Setter            ( (%~)
                                                 , (.~)
@@ -48,9 +44,6 @@ import           Control.Monad                  ( guard
                                                 , when, (=<<)
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
-import           Control.Monad.Reader           ( MonadReader
-                                                , asks
-                                                )
 import           Data.Bool                      ( (&&)
                                                 , Bool(..)
                                                 , bool
@@ -100,9 +93,9 @@ import           Data.Tuple                     ( fst
                                                 )
 import           Data.Word                      ( Word )
 import           GHC.Real                       ( fromIntegral )
-import           GHCJS.DOM.HTMLElement          ( focus )
+import           GHCJS.DOM.HTMLElement          ( focus, IsHTMLElement )
 import           Language.Javascript.JSaddle    ( eval
-                                                , liftJSM
+                                                , liftJSM, MonadJSM
                                                 )
 import           Palantype.Common               ( Chord(..)
                                                 , KeyIndex
@@ -129,7 +122,7 @@ import           Reflex.Dom                     ( (=:)
                                                     ( DomBuilderSpace
                                                     , inputElement
                                                     )
-                                                , DomSpace(addEventSpecFlags)
+                                                , DomSpace(addEventSpecFlags, RawInputElement)
                                                 , EventName
                                                     ( Click
                                                     , Keydown
@@ -146,11 +139,11 @@ import           Reflex.Dom                     ( (=:)
                                                 , InputElement(..)
                                                 , InputElementConfig
                                                 , KeyCode
-                                                , MonadHold
-                                                , PerformEvent(performEvent_)
+
+                                                , PerformEvent(..)
 
                                                 , PostBuild
-                                                , Prerender(Client)
+
                                                 , Reflex
                                                     ( Dynamic
                                                     , Event
@@ -162,7 +155,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elAttr'
                                                 , elClass
                                                 , elDynAttr
-                                                , elDynClass
+
                                                 , elementConfig_eventSpec
                                                 , elementConfig_initialAttributes
                                                 , elementConfig_modifyAttributes
@@ -177,13 +170,12 @@ import           Reflex.Dom                     ( (=:)
                                                 , mergeWith
                                                 , preventDefault
                                                 , text
-                                                , zipDyn, delay, constDyn, holdUniqDyn
+                                                , delay, constDyn, holdUniqDyn, MonadHold, TriggerEvent
                                                 )
-import           Shared                         ( dynSimple
-                                                , iFa, whenJust
+import           Shared                         ( iFa, whenJust
                                                 )
 import           State                          ( State(..)
-                                                , updateState, GetLoadedAndBuilt, Navigation (..), stageUrl
+                                                , updateState, Navigation (..), stageUrl
                                                 )
 import           TextShow                       ( TextShow(showt) )
 import           Type.Reflection                ( (:~~:)(HRefl)
@@ -264,165 +256,168 @@ data StateInput key = StateInput
   , stiMChord      :: Maybe (Chord key)
   }
 
-elStenoInput
-    :: forall key t (m :: * -> *)
-     . ( DomBuilder t m
-       , EventWriter t (Endo State) (Client m)
-       , MonadHold t m
-       , MonadReader (Dynamic t State) m
-       , Palantype key
-       , PostBuild t m
-       , Prerender t m
-       , SetRoute t (R FrontendRoute) (Client m)
-       )
-    => Navigation
-    -> GetLoadedAndBuilt t
-    -> m (Event t (Chord key))
-elStenoInput Navigation{..} getLoadedAndBuilt = do
+-- elStenoInput
+--     :: forall key t (m :: * -> *)
+--      . ( DomBuilder t (Client m)
+--        , EventWriter t (Endo State) (Client m)
+--        , MonadFix (Client m)
+--        , MonadHold t (Client m)
+--        , Prerender t m
+--        , Palantype key
+--        , SetRoute t (R FrontendRoute) (Client m)
+--        )
+--     => StateKeyboard
+--     -> Navigation
+--     -> GetLoadedAndBuilt t
+--     -> Client m (Event t (Chord key))
+elStenoInput :: forall key (m :: * -> *) t a.
+  ( PerformEvent t m
+  , IsHTMLElement (RawInputElement (DomBuilderSpace m))
+  , MonadJSM (Performable m)
+  , Palantype key
+  , PostBuild t m
+  , DomBuilder t m
+  , EventWriter t (Endo State) m
+  , TriggerEvent t m
+  , SetRoute t (R FrontendRoute) m, MonadHold t m, MonadFix m
+  )
+  => StateKeyboard
+  -> Navigation
+  -> m (Event t a)
+  -> m (Event t (Chord key))
+elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
     let lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
           | otherwise -> $failure "Key not implemented"
-    dynPloverCfg <- asks $ fmap $ stApp >>> stPloverCfg
-    dynKeyboardShowQwerty <- asks $ fmap $ stApp >>> stKeyboardShowQwerty
-    dynKeyboardModes <- asks $ fmap $ stApp >>> stKeyboardModes
-    dynShowKeyboard <- asks $ fmap $ stApp >>> stShowKeyboard
-    let dynSystemCfg =
-            view (_Wrapped' <<< at lang <<< non defaultPloverSystemCfg) <$> dynPloverCfg
-    dynSimple $ zipDyn dynSystemCfg (zipDyn dynKeyboardShowQwerty dynKeyboardModes) <&>
-        \(pcfg, (showQwerty, specialModes)) -> postRender
-                     $ elClass "div" "mx-auto border-b border-dotted"
-                     $ elStenoInput' lang pcfg showQwerty specialModes dynShowKeyboard
-  where
-    elStenoInput' lang PloverSystemCfg{..} showQwerty specialModes dynShowKeyboard = mdo
-        let keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
-                [ keydown qwertyKey kbInput $> [KeyDown $ fromIndex kI]
-                , keyup   qwertyKey kbInput $> [KeyUp   $ fromIndex kI]
-                ]
-            eKeyChange = mergeWith (<>) $ concat keyChanges
 
+        PloverSystemCfg{..} = stPloverCfg ^. _Wrapped' . at lang . non defaultPloverSystemCfg
+
+        keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
+            [ keydown qwertyKey kbInput $> [KeyDown $ fromIndex kI]
+            , keyup   qwertyKey kbInput $> [KeyUp   $ fromIndex kI]
+            ]
+        eKeyChange = mergeWith (<>) $ concat keyChanges
+
+        register
+          :: [KeyUpDown key]
+          -> StateInput key
+          -> StateInput key
+        register es StateInput{ stiKeysPressed, stiKeysDown } =
+            let
+                stiKeysPressed' = foldl' accDownUp stiKeysPressed es
+                (stiKeysDown', stiMChord) =
+                    if Set.null stiKeysPressed'
+                    then
+                        ( Set.empty
+                        , Just $ mkChord $ Set.elems stiKeysDown
+                        )
+                    else
+                        ( foldl' accDown stiKeysDown es
+                        , Nothing
+                        )
+
+            in  StateInput
+                  { stiKeysPressed = stiKeysPressed'
+                  , stiKeysDown    = stiKeysDown'
+                  , stiMChord
+                  }
+            where
+                accDownUp s (KeyDown k) = Set.insert k s
+                accDownUp s (KeyUp   k) = Set.delete k s
+                accDown   s (KeyDown k) = Set.insert k s
+                accDown   s (KeyUp   _) = s
+
+    dynInput <-
+        foldDyn
             register
-              :: [KeyUpDown key]
-              -> StateInput key
-              -> StateInput key
-            register es StateInput{ stiKeysPressed, stiKeysDown } =
-                let
-                    stiKeysPressed' = foldl' accDownUp stiKeysPressed es
-                    (stiKeysDown', stiMChord) =
-                        if Set.null stiKeysPressed'
-                        then
-                            ( Set.empty
-                            , Just $ mkChord $ Set.elems stiKeysDown
-                            )
-                        else
-                            ( foldl' accDown stiKeysDown es
-                            , Nothing
-                            )
+            (StateInput Set.empty Set.empty Nothing)
+            eKeyChange
 
-                in  StateInput
-                      { stiKeysPressed = stiKeysPressed'
-                      , stiKeysDown    = stiKeysDown'
-                      , stiMChord
-                      }
-                 -- in (setKeys', word', release')
-                where
-                    accDownUp s (KeyDown k) = Set.insert k s
-                    accDownUp s (KeyUp   k) = Set.delete k s
-                    accDown   s (KeyDown k) = Set.insert k s
-                    accDown   s (KeyUp   _) = s
+    elClass "div" (bool "hidden" "" stShow) $ case lang of
+        -- a bit of a hack to switch to the original Palantype
+        -- keyboard layout for English
+        -- that original layout I will consider the exception
+        SystemEN ->
+            elKeyboardEN
+                pcfgName
+                pcfgMapStenoKeys
+                (stiKeysPressed <$> dynInput)
+        _ ->
+            elKeyboard
+                pcfgName
+                pcfgMapStenoKeys
+                (stiKeysPressed <$> dynInput)
+                lang
+                stShowQwerty
+                stModes
 
-        dynInput <-
-            foldDyn
-                register
-                (StateInput Set.empty Set.empty Nothing)
-                eKeyChange
+    let
+        dynKeysDown = stiKeysDown <$> dynInput
 
-        let
-            dynClass = bool "hidden" "" <$> dynShowKeyboard
-        elDynClass "div" dynClass $ case lang of
-            -- a bit of a hack to switch to the original Palantype
-            -- keyboard layout for English
-            -- that original layout I will consider the exception
-            SystemEN ->
-                elKeyboardEN
-                    pcfgName
-                    pcfgMapStenoKeys
-                    (stiKeysPressed <$> dynInput)
-            _ ->
-                elKeyboard
-                    pcfgName
-                    pcfgMapStenoKeys
-                    (stiKeysPressed <$> dynInput)
-                    lang
-                    showQwerty
-                    specialModes
+    evCtrlNumber <- fmap updated $ holdUniqDyn $ dynKeysDown <&> \s ->
+      fromChord (mkChord $ Set.elems s) == KI.toRaw @key kiCtrlNumber
 
-        let
-            dynKeysDown = stiKeysDown <$> dynInput
+    kbInput <- elShowSteno dynKeysDown
+    updateState $ evCtrlNumber <&> \b -> [ field @"stApp" . field @"stToc" . field @"stShowToplevelSteno" .~ b ]
 
-        evCtrlNumber <- fmap updated $ holdUniqDyn $ dynKeysDown <&> \s ->
-          fromChord (mkChord $ Set.elems s) == KI.toRaw @key kiCtrlNumber
+    (elPowerOff, _) <- elAttr' "span"
+      (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
+      <> "title" =: "Switch off interactive input"
+      ) $ iFa "fas fa-power-off"
+    updateState $ domEvent Click elPowerOff $>
+      [field @"stApp" . field @"stKeyboard". field @"stActive" .~ False]
 
-        kbInput <- elShowSteno dynKeysDown
-        updateState $ evCtrlNumber <&> \b -> [ field @"stApp" . field @"stShowTOCToplevelSteno" .~ b ]
+    -- TODO: doesn't seem to have the desired effect
+    let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
+    performEvent_ $ eLostFocus $> focus (_inputElement_raw kbInput)
 
-        (elPowerOff, _) <- elAttr' "span"
-          (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
-          <> "title" =: "Switch off interactive input"
-          ) $ iFa "fas fa-power-off"
-        updateState $ domEvent Click elPowerOff $>
-          [field @"stApp" . field @"stKeyboardActive" .~ False]
+    -- post build auto focus: the post build event happens before the element
+    -- is mounted. postmount event waits for pull request to be accepted
+    -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
+    evLoadedAndBuilt <- delay 0.1 =<< getLoadedAndBuilt
+    performEvent_ $ evLoadedAndBuilt $> focus (_inputElement_raw kbInput)
 
-        -- TODO: doesn't seem to have the desired effect
-        let eLostFocus = filter not $ updated $ _inputElement_hasFocus kbInput
-        performEvent_ $ eLostFocus $> focus (_inputElement_raw kbInput)
+    let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
+        selector = fanMap $ eChordAll <&> \c -> if
+            | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanInsert c
+            | fromChord c == KI.toRaw @key kiDelete -> Map.singleton FanDelete c
+            | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
+            | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
+            | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft c
+            | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight c
+            | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
+            | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
+            | otherwise                             -> Map.singleton FanOther c
+        eChordToggle   = select selector (Const2 FanInsert)
+        evChordToc     = select selector (Const2 FanDelete)
+        eChordDown     = select selector (Const2 FanDown  )
+        eChordUp       = select selector (Const2 FanUp    )
+        eChordLeft     = select selector (Const2 FanLeft  )
+        eChordRight    = select selector (Const2 FanRight )
+        eChordOther    = select selector (Const2 FanOther )
+        eChordPageDown = select selector (Const2 FanPageDown  )
+        eChordPageUp   = select selector (Const2 FanPageUp    )
 
-        -- post build auto focus: the post build event happens before the element
-        -- is mounted. postmount event waits for pull request to be accepted
-        -- https://github.com/reflex-frp/reflex-dom-semui/issues/18
-        evLoadedAndBuilt <- delay 0.1 =<< getLoadedAndBuilt
-        performEvent_ $ evLoadedAndBuilt $> focus (_inputElement_raw kbInput)
+    updateState $ eChordToggle $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
+    updateState $ evChordToc $>   [field @"stApp" . field @"stToc" . field @"stVisible" %~ not ]
 
-        let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
-            selector = fanMap $ eChordAll <&> \c -> if
-                | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanInsert c
-                | fromChord c == KI.toRaw @key kiDelete -> Map.singleton FanDelete c
-                | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
-                | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
-                | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft c
-                | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight c
-                | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
-                | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
-                | otherwise                             -> Map.singleton FanOther c
-            eChordToggle   = select selector (Const2 FanInsert)
-            evChordToc     = select selector (Const2 FanDelete)
-            eChordDown     = select selector (Const2 FanDown  )
-            eChordUp       = select selector (Const2 FanUp    )
-            eChordLeft     = select selector (Const2 FanLeft  )
-            eChordRight    = select selector (Const2 FanRight )
-            eChordOther    = select selector (Const2 FanOther )
-            eChordPageDown = select selector (Const2 FanPageDown  )
-            eChordPageUp   = select selector (Const2 FanPageUp    )
+    -- this is a workaround
+    -- scroll, like focus, is not available in reflex dom
+    -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
+    -- GhcjsDomSpace requires the elements to be build post render
+    let jsScroll :: Int -> Text
+        jsScroll x =
+            "let el = document.getElementById(\"content\"); \
+            \el.scrollBy(0," <> showt x <> ")"
+    performEvent_ $ eChordDown     $> void (liftJSM $ eval $ jsScroll 100)
+    performEvent_ $ eChordUp       $> void (liftJSM $ eval $ jsScroll (-100))
+    performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
+    performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
 
-        updateState $ eChordToggle $> [field @"stApp" . field @"stShowKeyboard" %~ not]
-        updateState $ evChordToc $> [ field @"stApp" . field @"stShowTOC" %~ not ]
-
-        -- this is a workaround
-        -- scroll, like focus, is not available in reflex dom
-        -- GHCJS.DOM.Element.scroll relies on GhcjsDomSpace
-        -- GhcjsDomSpace requires the elements to be build post render
-        let jsScroll :: Int -> Text
-            jsScroll x =
-                "let el = document.getElementById(\"content\"); \
-                \el.scrollBy(0," <> showt x <> ")"
-        performEvent_ $ eChordDown     $> void (liftJSM $ eval $ jsScroll 100)
-        performEvent_ $ eChordUp       $> void (liftJSM $ eval $ jsScroll (-100))
-        performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
-        performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
-
-        whenJust navMNext     $ \nxt -> setRoute $ eChordRight $> stageUrl @key nxt
-        whenJust navMPrevious $ \prv -> setRoute $ eChordLeft  $> stageUrl @key prv
-        pure eChordOther
+    whenJust navMNext     $ \nxt -> setRoute $ eChordRight $> stageUrl @key nxt
+    whenJust navMPrevious $ \prv -> setRoute $ eChordLeft  $> stageUrl @key prv
+    pure eChordOther
 
 -- steno virtual keyboard
 
@@ -613,7 +608,7 @@ elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
                   )
               elAttr "label" ("for" =: "showQwerties") $ text "Show qwerty keys"
               updateState $ evToggleQwerties $>
-                [ field @"stApp" . field @"stKeyboardShowQwerty" %~ not
+                [ field @"stApp" . field @"stKeyboard" . field @"stShowQwerty" %~ not
                 ]
 
               el "br" blank
@@ -627,7 +622,7 @@ elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
                   )
               elAttr "label" ("for" =: "modes") $ text "Show special modes"
               updateState $ evToggleModes $>
-                [ field @"stApp" . field @"stKeyboardModes" %~ not
+                [ field @"stApp" . field @"stKeyboard" . field @"stModes" %~ not
                 ]
 
 -- | original Palantype keyboard layout

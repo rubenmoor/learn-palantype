@@ -50,20 +50,12 @@ instance FromHttpApiData UTCTimeInUrl where
 -- frontend/Localstorage
 
 data AppState = AppState
-    { stCleared       :: Set StageIndex
-    , stMLang         :: Maybe SystemLang
-    , stMsg           :: Maybe Message
-    , stPloverCfg     :: PloverCfg
-    , stShowKeyboard  :: Bool
-    , stKeyboardShowQwerty :: Bool
-    , stKeyboardModes :: Bool
-    , stKeyboardActive :: Bool
-    , stShowTOC       :: Bool
-    , stShowTOCToplevelSteno :: Bool
-    , stProgress      :: Map SystemLang StageIndex
-    , stTOCShowStage  :: Set Int
-    , stShowStats     :: ShowStats
-    , stSound         :: Bool
+    { stMLang     :: Maybe SystemLang
+    , stMsg       :: Maybe Message
+    , stKeyboard  :: StateKeyboard
+    , stToc       :: StateToc
+    , stShowStats :: ShowStats
+    , stSound     :: Bool
     }
     deriving (Eq, Generic, Show)
 
@@ -72,20 +64,54 @@ instance ToJSON AppState
 
 defaultAppState :: AppState
 defaultAppState = AppState
-  { stCleared            = Set.empty
-  , stMLang              = Nothing
-  , stMsg                = Nothing
-  , stPloverCfg          = defaultPloverCfg
-  , stShowKeyboard       = True
-  , stKeyboardShowQwerty = True
-  , stKeyboardModes      = False
-  , stKeyboardActive     = True
-  , stShowTOC            = False
-  , stShowTOCToplevelSteno = False
-  , stProgress           = defaultProgress
-  , stTOCShowStage       = Set.empty
-  , stShowStats          = ShowStatsHide
-  , stSound              = False
+  { stMLang     = Nothing
+  , stMsg       = Nothing
+  , stKeyboard  = defaultStateKeyboard
+  , stToc       = defaultStateToc
+  , stShowStats = ShowStatsHide
+  , stSound     = False
+  }
+
+data StateKeyboard = StateKeyboard
+    { stShow       :: Bool
+    , stPloverCfg  :: PloverCfg
+    , stShowQwerty :: Bool
+    , stModes      :: Bool
+    , stActive     :: Bool
+    }
+    deriving (Eq, Generic, Show)
+
+instance FromJSON StateKeyboard
+instance ToJSON   StateKeyboard
+
+defaultStateKeyboard :: StateKeyboard
+defaultStateKeyboard = StateKeyboard
+    { stShow       = True
+    , stPloverCfg  = defaultPloverCfg
+    , stShowQwerty = True
+    , stModes      = False
+    , stActive     = True
+    }
+
+data StateToc = StateToc
+    { stVisible       :: Bool
+    , stCleared       :: Set StageIndex
+    , stShowToplevelSteno :: Bool
+    , stProgress      :: Map SystemLang StageIndex
+    , stShowStage     :: Set Int
+    }
+    deriving (Eq, Generic, Show)
+
+instance FromJSON StateToc
+instance ToJSON   StateToc
+
+defaultStateToc :: StateToc
+defaultStateToc = StateToc
+  { stVisible           = False
+  , stCleared           = Set.empty
+  , stShowToplevelSteno = False
+  , stProgress          = defaultProgress
+  , stShowStage         = Set.empty
   }
 
 data Message = Message

@@ -143,7 +143,7 @@ exercise1 = mdo
     elCMSContent evPart1
 
     evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ True]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
 
@@ -179,9 +179,6 @@ exercise2 = mdo
 
     elCMSContent evPart1
 
-    evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
-
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
@@ -216,7 +213,7 @@ exercise3 = mdo
     elCMSContent evPart1
 
     evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
@@ -253,7 +250,7 @@ exercise4 = mdo
     elCMSContent evPart1
 
     evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ False]
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ False]
 
     evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
@@ -488,7 +485,7 @@ exercise5 = mdo
     elCMSContent evPart1
 
     evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
+    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ True]
 
     let fingersLeft = [LeftPinky, LeftRing, LeftMiddle, LeftIndex, LeftThumb]
         leftHand =
@@ -524,9 +521,6 @@ exercise6 = mdo
       _        -> Nothing
 
     elCMSContent evPart1
-
-    evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     let fingersRight =
             [RightPinky, RightRing, RightMiddle, RightIndex, RightThumb]
@@ -564,9 +558,6 @@ exercise7 = mdo
 
     elCMSContent evPart1
 
-    evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
-
     let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
@@ -599,9 +590,6 @@ exercise8 = mdo
       _        -> Nothing
 
     elCMSContent evPart1
-
-    evLoadedAndBuilt <- envGetLoadedAndBuilt
-    updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stShowKeyboard" .~ True]
 
     evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation

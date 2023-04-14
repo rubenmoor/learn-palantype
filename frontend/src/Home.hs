@@ -29,7 +29,7 @@ import           Client                         ( getMaybeAuthData
                                                 )
 import           Common.Api                     ( showSymbol )
 import           Common.Model                   ( AppState(..)
-                                                , Message(..), TextLang (TextEN)
+                                                , Message(..), TextLang (TextEN), StateKeyboard (..), StateToc (..)
                                                 )
 import           Common.PloverConfig            ( CfgName(..)
                                                 , PloverSystemCfg(..)
@@ -168,7 +168,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , never
                                                 , tag
                                                 , text
-                                                , wrapDomEvent, HasDomEvent (..)
+                                                , wrapDomEvent, HasDomEvent (..), holdUniqDyn
                                                 )
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
@@ -274,7 +274,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                   let dynMCfgName =
                           fmap pcfgName
                               . view (at lang >>> _Wrapped')
-                              . stPloverCfg
+                              . stPloverCfg . stKeyboard
                               <$> dynAppState
                       elCheckmark co =
                           dyn_ $ dynMCfgName <&> \cfgName ->
@@ -294,7 +294,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                   let eQwertz = domEvent Click elQwertz
                   updateState $
                       eQwertz
-                          $> [ field @"stApp" . field @"stPloverCfg"
+                          $> [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg"
                                   . _Wrapped'
                                   . ix lang
                                   .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
@@ -309,7 +309,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                           _        -> lsStenoQwerty
                   updateState $
                       eQwerty
-                          $> [ field @"stApp" . field @"stPloverCfg"
+                          $> [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg"
                                   . _Wrapped'
                                   . ix lang
                                   .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
@@ -331,7 +331,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                                               \text-base text-black"
                               $ text "Reset"
                   updateState $ domEvent Click eRP $>
-                      [ field @"stApp" . field @"stProgress" .~ def
+                      [ field @"stApp" . field @"stToc" . field @"stProgress" .~ def
                       ]
 
                   dyn_ $ dynState <&> \State{..} -> case stSession of
@@ -382,12 +382,12 @@ elSettings = elClass "div" "shadow-md p-1" do
                 let msgCaption = "Error when loading file"
                     msgBody = "Did you upload a proper .cfg file?\n" <> str
                  in [ field @"stApp" . field @"stMsg" ?~ Message {..}
-                    , field @"stApp" . field @"stPloverCfg" .~ defaultPloverCfg
+                    , field @"stApp" . field @"stKeyboard" . field @"stPloverCfg" .~ defaultPloverCfg
                     ]
 
         updateState $ mapMaybe (either (const Nothing) Just) evRespConfigNew <&>
             \(ln, systemCfg@PloverSystemCfg {..}) ->
-                [ field @"stApp" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
+                [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
                   if null pcfgUnrecognizedQwertys
                       then id
                       else
@@ -412,14 +412,14 @@ elSettings = elClass "div" "shadow-md p-1" do
 
         let dynClass = dynAppState <&> \st ->
                 "px-3 h-8 hover:text-grayishblue-800 cursor-pointer inline-block text-2xl"
-                    <> " " <> if stShowKeyboard st
+                    <> " " <> if stShow $ stKeyboard st
                         then "text-grayishblue-800"
                         else "text-zinc-500"
         (s, _) <- elDynClass' "div" dynClass $ elClass "div" "inline-flex" do
             iFa "fas fa-keyboard"
             elClass "code" "p-1 text-xs" $ text $ showt $ KI.toRaw @key kiInsert
 
-        updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
+        updateState $ domEvent Click s $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
 
     dynRedirectRoute <- fmap (stageUrl @key) <$> askRoute
     elLoginSignup dynRedirectRoute
@@ -428,30 +428,31 @@ elSettings = elClass "div" "shadow-md p-1" do
 
 -- Table of Contents
 
-elTOC ::
+elToc ::
     forall key t (m :: * -> *).
     ( DomBuilder t m,
       EventWriter t (Endo State) m,
-      MonadReader (Dynamic t State) m,
+      MonadFix m,
+      MonadHold t m,
       Palantype key,
       Prerender t m,
       PostBuild t m,
       RouteToUrl (R FrontendRoute) m,
       SetRoute t (R FrontendRoute) m
-    ) =>
-    StageIndex ->
-    m ()
-elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
-    dynState <- asks $ fmap stApp
-    let dynShowTOC = stShowTOC <$> dynState
-        dynShowStage i = Set.member i . stTOCShowStage <$> dynState
-        dynClassDisplay = bool "hidden" "" <$> dynShowTOC
-        dynClsToplevelSteno = bool "hidden" "" . stShowTOCToplevelSteno <$> dynState
+    )
+    => StageIndex
+    -> Dynamic t StateToc
+    -> m ()
+elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto" do
+    dynVisible <- holdUniqDyn $ stVisible <$> dynStateToc
+    let dynShowStage i = Set.member i . stShowStage <$> dynStateToc
+        dynClassDisplay = bool "hidden" "" <$> dynVisible
+        dynClsToplevelSteno = bool "hidden" "" . stShowToplevelSteno <$> dynStateToc
 
     -- button to toggle TOC
     elClass "div" "flex items-center" do
-        dyn_ $ dynShowTOC <&> \showTOC -> do
-            (s, _) <- if showTOC
+        dyn_ $ dynVisible <&> \bVisible -> do
+            (s, _) <- if bVisible
                 then
                     elAttr' "span"
                         (  "class" =: "text-zinc-400 text-2xl"
@@ -463,7 +464,7 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
                         <> "title" =: "Show Table of Contents"
                         ) $ iFa "fas fa-bars"
 
-            updateState $ domEvent Click s $> [field @"stApp" . field @"stShowTOC" %~ not]
+            updateState $ domEvent Click s $> [field @"stApp" . field @"stToc" . field @"stVisible" %~ not]
 
         elClass "span" "steno-navigation text-xs p-1 ml-1"
           $ text $ showt $ KI.toRaw @key kiDelete
@@ -477,7 +478,7 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
 
     elDynClass "div" (fmap ("mr-3 border-top " <>) dynClassDisplay) $ do
 
-        let dynCleared = stCleared <$> dynState
+        let dynCleared = stCleared <$> dynStateToc
         dyn_ $ dynCleared <&> \cleared -> do
 
             let
@@ -517,7 +518,7 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
 
                     let eClickS = domEvent Click s
                     updateState $ eClickS $>
-                        [ field @"stApp" . field @"stTOCShowStage" . at i %~
+                        [ field @"stApp" . field @"stToc" . field @"stShowStage" . at i %~
                             maybe (Just ()) (const Nothing)
                         ]
 
@@ -625,13 +626,13 @@ landingPage = elClass "div" "bg-grayishblue-300" $ do
                                   SystemDE -> mkStageIndex @DE.Key 0
                             in  [ field @"stApp" . field @"stMLang" ?~ lang,
                                 -- if no progress in map, insert "Introduction"
-                                field @"stApp" . field @"stProgress"
+                                field @"stApp" . field @"stToc" . field @"stProgress"
                                     %~ Map.insertWith (\_ o -> o) lang ($fromJust mSi)
                                 ]
                     dynState <- ask
                     let toMNewRoute st _ = do
                           lang <- st ^. field @"stApp" . field @"stMLang"
-                          stage <- st ^. field @"stApp" . field @"stProgress" . at lang
+                          stage <- st ^. field @"stApp" . field @"stToc" . field @"stProgress" . at lang
                           pure $ case lang of
                             SystemDE -> stageUrl @DE.Key stage
                             SystemEN -> stageUrl @EN.Key stage
@@ -770,10 +771,15 @@ elStages getLoadedAndBuilt = do
 
         let
             navigation = mkNavigation iCurrent
-            dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
+            -- dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
+            dynActive = stActive . stKeyboard . stApp <$> dynState'
 
-        eChord <- dynSimple $ dynKeyboardActive <&> \case
-          True  -> elStenoInput @key navigation getLoadedAndBuilt
+        eChord <- dynSimple $ dynActive <&> \case
+          True  -> do
+            dynKeyboard <- holdUniqDyn $ stKeyboard . stApp <$> dynState'
+            dynSimple $ dynKeyboard <&> \st ->
+              elClass "div" "mx-auto border-b border-dotted"
+              $ postRender $ elStenoInput @key st navigation getLoadedAndBuilt
           False -> do
             elClass "div" "p-2 text-center mx-auto text-gray-500 border border-solid border-gray-200 \
                           \rounded-lg" do
@@ -783,11 +789,12 @@ elStages getLoadedAndBuilt = do
                     <> "title" =: "Switch on interactive input"
                     ) $ iFa "fas fa-power-off"
                 updateState $ domEvent Click elPowerOn $>
-                  [ field @"stApp" . field @"stKeyboardActive" .~ True ]
+                  [ field @"stApp" . field @"stKeyboard" . field @"stActive" .~ True ]
             pure never
 
-        elClass "div" "flex flex-grow flex-row flex-nowrap overflow-y-hidden" $ mdo
-            elTOC @key iCurrent
+        elClass "div" "flex flex-grow flex-row flex-nowrap overflow-y-hidden" mdo
+            dynTocState <- holdUniqDyn $ stToc . stApp <$> dynState'
+            elToc @key iCurrent dynTocState
 
             let setEnv page = mapRoutedT
                   ( withReaderT $ \dynState -> Env

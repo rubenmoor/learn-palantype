@@ -117,9 +117,9 @@ introduction = do
         (btn, _) <- elClass' "button" "" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
         updateState $  eStart $>
-          [ field @"stApp" . field @"stProgress"     %~ Map.insert navSystemLang ($fromJust navMNext)
-          , field @"stApp" . field @"stCleared"      %~ Set.insert navCurrent
-          , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
+          [ field @"stApp" . field @"stToc" . field @"stProgress"  %~ Map.insert navSystemLang ($fromJust navMNext)
+          , field @"stApp" . field @"stToc" . field @"stCleared"   %~ Set.insert navCurrent
+          , field @"stApp" . field @"stToc" . field @"stShowStage" .~ Set.singleton 1
           ]
         setRoute $ eStart $> stageUrl @key 1
     el "br" blank

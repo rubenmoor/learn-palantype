@@ -324,7 +324,7 @@ exercise1 = mdo
 
     setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
     updateState $ eChordBackUp $>
-      [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+      [ field @"stApp" . field @"stToc" . field @"stProgress" . at navSystemLang ?~ stage1_1
       ]
 
 

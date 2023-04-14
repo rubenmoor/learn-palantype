@@ -307,13 +307,16 @@ elCongraz evDone dynStats Navigation {..} = mdo
                     let eContinue = leftmost [eChordEnter, domEvent Click domNextStage]
 
                     updateState $ eContinue $>
-                        [ field @"stApp" .  field @"stProgress" %~ Map.update
+                        [ field @"stApp" . field @"stToc" . field @"stProgress" %~ Map.update
                                     (\s -> if nxt > s then Just nxt else Just s)
                                     navSystemLang
-                        , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
+                        , field @"stApp" . field @"stToc" . field @"stCleared" %~ Set.insert navCurrent
                         ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
                             Nothing -> []
-                            Just  t -> [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t]
+                            Just  t ->
+                              [   field @"stApp" . field @"stToc"
+                                . field @"stShowStage" .~ Set.singleton t
+                              ]
 
                     setRoute $ eContinue $> stageUrl @key nxt
 
