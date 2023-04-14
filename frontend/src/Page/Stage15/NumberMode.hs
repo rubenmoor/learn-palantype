@@ -76,7 +76,7 @@ import           Reflex.Dom                     (current, gate, Dynamic,  Perfor
                                                 , text
                                                 )
 import           State                          ( State
-                                                , Env(..), updateState
+                                                , Env(..)
 
                                                 )
 import           TextShow                       ( TextShow(showt) )
@@ -108,7 +108,7 @@ import           Control.Lens                   ( (<>~)
                                                 )
 import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
-import           Common.Model                   ( Stats, AppState (stKeyboardModes) )
+import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
 import Data.Bool (Bool (..), not)
 import Data.Tuple (fst, snd)

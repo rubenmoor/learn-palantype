@@ -115,7 +115,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord, kiLeft, kiRight
+                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -177,7 +177,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , mergeWith
                                                 , preventDefault
                                                 , text
-                                                , zipDyn, delay, constDyn
+                                                , zipDyn, delay, constDyn, holdUniqDyn
                                                 )
 import           Shared                         ( dynSimple
                                                 , iFa, whenJust
@@ -236,7 +236,8 @@ keyup keycode =
         . domEvent Keyup
 
 data FanChord
-    = FanToggle
+    = FanInsert
+    | FanDelete
     | FanDown
     | FanUp
     | FanLeft
@@ -257,8 +258,8 @@ data StateInput key = StateInput
 
   -- | a key chord, made from the set of keys that have been
   -- pressed since the last release
-  -- the difference to `dynDownKeys`: dynChord changes
-  -- state upon release, whereas dynDownKeys changes state
+  -- the difference to `stiKeysDown`: stiMChord changes
+  -- state upon release, whereas `stiKeysDown` changes state
   -- every time a new key is pushed down AND upon release
   , stiMChord      :: Maybe (Chord key)
   }
@@ -356,7 +357,15 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
                     showQwerty
                     specialModes
 
-        kbInput <- elShowSteno $ stiKeysDown <$> dynInput
+        let
+            dynKeysDown = stiKeysDown <$> dynInput
+
+        evCtrlNumber <- fmap updated $ holdUniqDyn $ dynKeysDown <&> \s ->
+          fromChord (mkChord $ Set.elems s) == KI.toRaw @key kiCtrlNumber
+
+        kbInput <- elShowSteno dynKeysDown
+        updateState $ evCtrlNumber <&> \b -> [ field @"stApp" . field @"stShowTOCToplevelSteno" .~ b ]
+
         (elPowerOff, _) <- elAttr' "span"
           (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
           <> "title" =: "Switch off interactive input"
@@ -376,7 +385,8 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
 
         let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
             selector = fanMap $ eChordAll <&> \c -> if
-                | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanToggle c
+                | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanInsert c
+                | fromChord c == KI.toRaw @key kiDelete -> Map.singleton FanDelete c
                 | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
                 | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
                 | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft c
@@ -384,7 +394,8 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
                 | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
                 | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
                 | otherwise                             -> Map.singleton FanOther c
-            eChordToggle   = select selector (Const2 FanToggle)
+            eChordToggle   = select selector (Const2 FanInsert)
+            evChordToc     = select selector (Const2 FanDelete)
             eChordDown     = select selector (Const2 FanDown  )
             eChordUp       = select selector (Const2 FanUp    )
             eChordLeft     = select selector (Const2 FanLeft  )
@@ -393,8 +404,8 @@ elStenoInput Navigation{..} getLoadedAndBuilt = do
             eChordPageDown = select selector (Const2 FanPageDown  )
             eChordPageUp   = select selector (Const2 FanPageUp    )
 
-        updateState $
-            eChordToggle $> [field @"stApp" . field @"stShowKeyboard" %~ not]
+        updateState $ eChordToggle $> [field @"stApp" . field @"stShowKeyboard" %~ not]
+        updateState $ evChordToc $> [ field @"stApp" . field @"stShowTOC" %~ not ]
 
         -- this is a workaround
         -- scroll, like focus, is not available in reflex dom
@@ -747,16 +758,18 @@ elCell CellContext{..} i colspan positional =
           size str | Text.length str >= 2  = Small
           size _                           = NormalSize
       in
-          if     (isNumberModeActive       && Text.null strNumberMode      )
+          if  ccModes &&
+              (
+                 (isNumberModeActive       && Text.null strNumberMode      )
               || (isNumberShiftModeActive  && Text.null strShiftMode       )
               || (isCommandModeActive      && Text.null strCommandMode     )
               || (isFKeysModeActive        && Text.null strFKeysMode       )
               || (isSpecialModeActive      && Text.null strSpecialMode     )
               || (isSpecialModeShiftActive && Text.null strSpecialShiftMode)
               || keyCode k == '_'
+              )
             then Inactive
             else if
-              | not ccModes              -> Active ModeNormal  (size "")
               | isNumberModeActive       -> Active NumberMode  (size strNumberMode)
               | isNumberShiftModeActive  -> Active ShiftMode   (size strShiftMode )
               | isCommandModeActive      -> Active CommandMode (size strCommandMode)

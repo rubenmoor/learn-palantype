@@ -59,6 +59,7 @@ data AppState = AppState
     , stKeyboardModes :: Bool
     , stKeyboardActive :: Bool
     , stShowTOC       :: Bool
+    , stShowTOCToplevelSteno :: Bool
     , stProgress      :: Map SystemLang StageIndex
     , stTOCShowStage  :: Set Int
     , stShowStats     :: ShowStats
@@ -80,6 +81,7 @@ defaultAppState = AppState
   , stKeyboardModes      = False
   , stKeyboardActive     = True
   , stShowTOC            = False
+  , stShowTOCToplevelSteno = False
   , stProgress           = defaultProgress
   , stTOCShowStage       = Set.empty
   , stShowStats          = ShowStatsHide

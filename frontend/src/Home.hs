@@ -126,8 +126,7 @@ import           Palantype.Common               ( StageIndex
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-
-                                                , mkStageIndex, getSystemLang, Palantype, Stage (..)
+                                                , mkStageIndex, getSystemLang, Palantype, Stage (..), kiDelete, kiFromSmallNumber
                                                 )
 import           Palantype.Common.TH            ( failure
                                                 , fromJust
@@ -418,9 +417,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                         else "text-zinc-500"
         (s, _) <- elDynClass' "div" dynClass $ elClass "div" "inline-flex" do
             iFa "fas fa-keyboard"
-            elClass "code" "p-1 text-xs" $ text $ showt $ case lang of
-              SystemDE -> KI.toRaw @DE.Key kiInsert
-              SystemEN -> KI.toRaw @EN.Key kiInsert
+            elClass "code" "p-1 text-xs" $ text $ showt $ KI.toRaw @key kiInsert
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stShowKeyboard" %~ not]
 
@@ -448,25 +445,38 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
     dynState <- asks $ fmap stApp
     let dynShowTOC = stShowTOC <$> dynState
         dynShowStage i = Set.member i . stTOCShowStage <$> dynState
+        dynClassDisplay = bool "hidden" "" <$> dynShowTOC
+        dynClsToplevelSteno = bool "hidden" "" . stShowTOCToplevelSteno <$> dynState
 
     -- button to toggle TOC
-    dyn_ $ dynShowTOC <&> \showTOC -> do
-        (s, _) <- if showTOC
-            then
-                elAttr' "span"
-                    (  "class" =: "text-zinc-400 text-2xl"
-                    <> "title" =: "Hide Table of Contents"
-                    ) $ iFa "fas fa-times"
-            else
-                elAttr' "span"
-                    (  "class" =: "text-zinc-400 text-2xl"
-                    <> "title" =: "Show Table of Contents"
-                    ) $ iFa "fas fa-bars"
+    elClass "div" "flex items-center" do
+        dyn_ $ dynShowTOC <&> \showTOC -> do
+            (s, _) <- if showTOC
+                then
+                    elAttr' "span"
+                        (  "class" =: "text-zinc-400 text-2xl"
+                        <> "title" =: "Hide Table of Contents"
+                        ) $ iFa "fas fa-times"
+                else
+                    elAttr' "span"
+                        (  "class" =: "text-zinc-400 text-2xl"
+                        <> "title" =: "Show Table of Contents"
+                        ) $ iFa "fas fa-bars"
 
-        updateState $ domEvent Click s $> [field @"stApp" . field @"stShowTOC" %~ not]
+            updateState $ domEvent Click s $> [field @"stApp" . field @"stShowTOC" %~ not]
 
-    let dynClassDisplay = bool "hidden" "mr-3" <$> dynShowTOC
-    elDynClass "div" dynClassDisplay $ do
+        elClass "span" "steno-navigation text-xs p-1 ml-1"
+          $ text $ showt $ KI.toRaw @key kiDelete
+
+        elClass "span" "flex-grow" $ text " "
+
+        elDynClass "span" dynClassDisplay do
+          text "Go to stage "
+          elClass "span" "steno-navigation text-xs p-1"
+            $ text $ showt $ KI.toRaw @key KI.kiCtrlNumber
+
+    elDynClass "div" (fmap ("mr-3 border-top " <>) dynClassDisplay) $ do
+
         let dynCleared = stCleared <$> dynState
         dyn_ $ dynCleared <&> \cleared -> do
 
@@ -496,7 +506,11 @@ elTOC stageCurrent = elClass "section" "p-3 shrink-0 overflow-y-auto" do
                                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage i
                         elClass "span" "text-grayishblue-900 text-lg w-4 inline-block"
                           $ elDynClass "i" dynClass blank
-                        text $ "Stage " <> showt i <> ": " <> stageTitle
+                        text "Stage "
+                        elDynClass "span" ( fmap ("steno-navigation text-xs p-1 " <>) dynClsToplevelSteno) do
+                            text $ showt $ KI.toRaw @key $ $fromJust $ kiFromSmallNumber i
+                            text " "
+                        text $ showt i <> ": " <> stageTitle
 
                         let dynClassUl = bool "hidden" "" <$> dynShowStage i
                         elDynClass "ul" dynClassUl $ traverse_ elLi iSubstages
