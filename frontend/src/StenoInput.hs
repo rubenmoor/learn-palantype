@@ -194,6 +194,8 @@ import qualified Palantype.Common.Dictionary.Commands as Commands
 import Data.List (delete)
 import qualified Palantype.Common.Dictionary.CommandsFKeys as FKeys
 import qualified Palantype.Common.Dictionary.Special as Special
+import Text.Read (readMaybe)
+import Text.Show (Show(..))
 
 default (Text)
 
@@ -236,8 +238,14 @@ data FanChord
     | FanRight
     | FanPageUp
     | FanPageDown
+    | FanSmallNumber
     | FanOther
     deriving (Eq, Ord)
+
+data ChordContent k
+    = ContentNone
+    | ContentAnyChord (Chord k)
+    | ContentSmallNumber Int
 
 data StateInput key = StateInput
   {
@@ -380,27 +388,30 @@ elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
 
     let eChordAll = catMaybes $ updated $ stiMChord <$> dynInput
         selector = fanMap $ eChordAll <&> \c -> if
-            | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanInsert c
-            | fromChord c == KI.toRaw @key kiDelete -> Map.singleton FanDelete c
-            | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp c
-            | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown c
-            | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft c
-            | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight c
-            | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp c
-            | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown c
-            | otherwise                             -> Map.singleton FanOther c
-        eChordToggle   = select selector (Const2 FanInsert)
-        evChordToc     = select selector (Const2 FanDelete)
-        eChordDown     = select selector (Const2 FanDown  )
-        eChordUp       = select selector (Const2 FanUp    )
-        eChordLeft     = select selector (Const2 FanLeft  )
-        eChordRight    = select selector (Const2 FanRight )
-        eChordOther    = select selector (Const2 FanOther )
-        eChordPageDown = select selector (Const2 FanPageDown  )
-        eChordPageUp   = select selector (Const2 FanPageUp    )
+            | fromChord c == KI.toRaw @key kiInsert -> Map.singleton FanInsert     ContentNone
+            | fromChord c == KI.toRaw @key kiDelete -> Map.singleton FanDelete     ContentNone
+            | fromChord c == KI.toRaw @key kiUp     -> Map.singleton FanUp         ContentNone
+            | fromChord c == KI.toRaw @key kiDown   -> Map.singleton FanDown       ContentNone
+            | fromChord c == KI.toRaw @key kiLeft   -> Map.singleton FanLeft       ContentNone
+            | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight      ContentNone
+            | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp     ContentNone
+            | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown ContentNone
+            | Just n <- readMaybe (show $ fromChord c) -> Map.singleton FanSmallNumber $ ContentSmallNumber n
+            | otherwise                             -> Map.singleton FanOther      $ ContentAnyChord c
+        eChordToggle      = select selector (Const2 FanInsert     )
+        evChordToc        = select selector (Const2 FanDelete     )
+        eChordDown        = select selector (Const2 FanDown       )
+        eChordUp          = select selector (Const2 FanUp         )
+        eChordLeft        = select selector (Const2 FanLeft       )
+        eChordRight       = select selector (Const2 FanRight      )
+        eChordOther       = select selector (Const2 FanOther      ) <&> \(ContentAnyChord    c) -> c
+        eChordPageDown    = select selector (Const2 FanPageDown   )
+        eChordPageUp      = select selector (Const2 FanPageUp     )
+        eChordSmallNumber = select selector (Const2 FanSmallNumber) <&> \(ContentSmallNumber n) -> n
 
     updateState $ eChordToggle $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
-    updateState $ evChordToc $>   [field @"stApp" . field @"stToc" . field @"stVisible" %~ not ]
+    updateState $ evChordToc   $> [field @"stApp" . field @"stToc" . field @"stVisible" %~ not ]
+    updateState $ eChordSmallNumber <&> \n -> [field @"stApp" . field @"stToc" . field @"stShowStage" .~ Set.singleton n]
 
     -- this is a workaround
     -- scroll, like focus, is not available in reflex dom

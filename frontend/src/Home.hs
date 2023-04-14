@@ -476,7 +476,7 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
           elClass "span" "steno-navigation text-xs p-1"
             $ text $ showt $ KI.toRaw @key KI.kiCtrlNumber
 
-    elDynClass "div" (fmap ("mr-3 border-top " <>) dynClassDisplay) $ do
+    elDynClass "div" (fmap ("border-t " <>) dynClassDisplay) $ do
 
         let dynCleared = stCleared <$> dynStateToc
         dyn_ $ dynCleared <&> \cleared -> do
@@ -769,10 +769,8 @@ elStages getLoadedAndBuilt = do
 
         dynState' <- ask
 
-        let
-            navigation = mkNavigation iCurrent
-            -- dynKeyboardActive = dynState' <&> view (field @"stApp" . field @"stKeyboardActive")
-            dynActive = stActive . stKeyboard . stApp <$> dynState'
+        let navigation = mkNavigation iCurrent
+        dynActive <- holdUniqDyn $ stActive . stKeyboard . stApp <$> dynState'
 
         eChord <- dynSimple $ dynActive <&> \case
           True  -> do
