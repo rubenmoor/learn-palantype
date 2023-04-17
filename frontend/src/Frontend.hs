@@ -27,7 +27,7 @@ import           State                          ( Session(..)
                                                 )
 
 import           Common.Route                   ( FrontendRoute(..)
-                                                , FrontendRoute_AuthPages(..), FrontendRoute_AdminPages (..)
+                                                , FrontendRoute_AuthPages(..), FrontendRoute_AdminPages (..), FrontendRoute_TextLang (..)
                                                 )
 import           Control.Monad.Reader           ( ReaderT(runReaderT) )
 import           Data.Function                  ( ($)
@@ -60,7 +60,7 @@ import           Obelisk.Route                  ( pattern (:/)
                                                 , R
                                                 )
 import           Obelisk.Route.Frontend         ( RoutedT
-                                                , SetRoute(setRoute)
+
                                                 , mapRoutedT
                                                 , subRoute_
                                                 )
@@ -122,7 +122,7 @@ import qualified LocalStorage                  as LS
 import           Palantype.Common.TH            ( failure )
 import           Shared                         ( elLoading
                                                 , redirectToWikipedia
-                                                , requestPostViewPage
+                                                , requestPostViewPage, setRouteAndLoading
                                                 )
 import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
@@ -163,29 +163,29 @@ frontendBody
      . (ObeliskWidget t (R FrontendRoute) m)
     => RoutedT t (R FrontendRoute) m ()
 frontendBody = mdo
-    (evSessionInitial :: Event t (Data.Maybe.Maybe (Session, AppState))) <-
+    (evSessionInitial :: Event t (Maybe (Session, AppState))) <-
       updated <$> prerender (pure $ $failure "unexpected") do
             mSession <- liftJSM $ LS.retrieve LS.KeySession
             appState <- Data.Maybe.fromMaybe defaultAppState <$> liftJSM (LS.retrieve LS.KeyAppState)
             pure $ (,appState) <$> mSession
 
     let evMaybeLocal = evSessionInitial <&> \case
-          Data.Maybe.Just (SessionUser _, _       ) -> Data.Maybe.Nothing
-          Data.Maybe.Just (SessionAnon  , appState) -> Data.Maybe.Just (Data.Maybe.Just appState)
-          Data.Maybe.Nothing                        -> Data.Maybe.Just Data.Maybe.Nothing
+          Just (SessionUser _, _       ) -> Nothing
+          Just (SessionAnon  , appState) -> Just (Just appState)
+          Nothing                        -> Just Nothing
 
         evMaybeFromServer = evSessionInitial <&> \case
-          Data.Maybe.Just (SessionUser sd, _) -> Data.Maybe.Just sd
-          Data.Maybe.Just (SessionAnon   , _) -> Data.Maybe.Nothing
-          Data.Maybe.Nothing                  -> Data.Maybe.Nothing
+          Just (SessionUser sd, _) -> Just sd
+          Just (SessionAnon   , _) -> Nothing
+          Nothing                  -> Nothing
 
         evSessionFromServer = catMaybes evMaybeFromServer
 
-    dynSessionData <- holdDyn Data.Maybe.Nothing $ Data.Maybe.Just <$> evSessionFromServer
+    dynSessionData <- holdDyn Nothing $ Just <$> evSessionFromServer
 
     let dynAuthData = dynSessionData <&> \case
-          Data.Maybe.Nothing -> Left "not logged in"
-          Data.Maybe.Just SessionData{..} -> Right (sdJwt, sdAliasName)
+          Nothing -> Left "not logged in"
+          Just SessionData{..} -> Right (sdJwt, sdAliasName)
 
     evRespServerSession <-
       request $ getAppState dynAuthData $ void evSessionFromServer
@@ -198,17 +198,17 @@ frontendBody = mdo
 
     let evSessionLocal = leftmost
           [ catMaybes evMaybeLocal
-          , evAppStateInvalid $> Data.Maybe.Nothing
+          , evAppStateInvalid $> Nothing
           ]
 
         (evLoadedFromServer :: Event t (Endo State)) =
            attach (current dynSessionData) evAppState <&> \case
-             (Data.Maybe.Just sd, stApp) -> Endo $ \st -> st
+             (Just sd, stApp) -> Endo $ \st -> st
                 { stApp = stApp
                 , stRedirectUrl = FrontendRoute_Main :/ ()
                 , stSession = SessionUser sd
                 }
-             (Data.Maybe.Nothing, _) -> $failure "impossible"
+             (Nothing, _) -> $failure "impossible"
 
         evLoadedLocal = evSessionLocal <&> \mAppState -> Endo $ \st -> st
             { stApp         = Data.Maybe.fromMaybe defaultAppState mAppState
@@ -231,7 +231,7 @@ frontendBody = mdo
 
         accFunc fl func =
           let fl' = func fl
-          in  (Data.Maybe.Just fl', if frontendAllLoaded fl' then Data.Maybe.Just () else Data.Maybe.Nothing)
+          in  (Just fl', if frontendAllLoaded fl' then Just () else Nothing)
     (dynFrontendLoaded, evLoaded) <-
       mapAccumMaybeDyn accFunc (FrontendLoaded False False) $ mergeWith (.)
         [ evSessionLoaded         $> setSessionLoaded
@@ -245,6 +245,7 @@ frontendBody = mdo
           evPb <- delay 0 =<< getPostBuild
           headE $ leftmost [gate (current dynHasLoaded) evPb, evLoaded]
 
+    -- TODO remove
     dyn_ $ dynFrontendLoaded <&> \fl@FrontendLoaded{..} ->
       if frontendAllLoaded fl
       then blank
@@ -285,13 +286,14 @@ frontendBody = mdo
     (_, evStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 
         message
-        subRoute_ $ \r -> do
-          case r of
+        subRoute_ \case
             FrontendRoute_Main -> do
               getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
-            FrontendRoute_EN -> elStages @EN.Key getLoadedAndBuilt
-            FrontendRoute_DE -> elStages @DE.Key getLoadedAndBuilt
+            FrontendRoute_SystemEN -> subRoute_ \case
+                FrontendRoute_TextEN -> elStages @EN.Key getLoadedAndBuilt
+            FrontendRoute_SystemDE -> subRoute_ \case
+                FrontendRoute_TextEN -> elStages @DE.Key getLoadedAndBuilt
             FrontendRoute_Auth -> subRoute_ \case
                 AuthPage_SignUp -> do
                   getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
@@ -305,7 +307,7 @@ frontendBody = mdo
                     (True , bLoggedIn) -> Just bLoggedIn
                   let evToLogin    = filter (== Just False) $ updated dynSettings
                       evToSettings = filter (== Just True) $ updated dynSettings
-                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  setRouteAndLoading $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
 
                   requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
                   dyn_ $ dynSettings <&> \case
@@ -330,7 +332,7 @@ frontendBody = mdo
                       evAccess = select selector $ Const2 FanAdminAccess
                       evForbidden = select selector $ Const2 FanAdminForbidden
 
-                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  setRouteAndLoading $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
                   prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
                   requestPostViewPage (constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()) evAccess

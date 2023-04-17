@@ -149,47 +149,40 @@ taskLiterals
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Palantype.Common.Chord key)
+    -> Event t (Maybe (Chord key))
     -> m (Event t Stats)
-taskLiterals dynStats evChord = do
+taskLiterals dynStats evMChord = do
     --Env {..} <- ask
     let
         --Navigation {..} = envNavigation
         len             = length dictLiterals
 
-        step :: Palantype.Common.Chord key -> StateLiterals key -> StateLiterals key
-        step c st = case st of
-            StatePause _ ->
-                if c == chordStart
-                    then stepStart
-                    else st
-            StateRun Run {..} ->
+        step :: Maybe (Chord key) -> StateLiterals key -> StateLiterals key
+        step mChord st = case (st, mChord) of
+            (StatePause _, Just c) | c == chordStart -> stepStart
+            (StatePause _, _) -> st
+            (StateRun Run {..}, mc) ->
                 let currentLetter = KI.toRaw @key $ fst $ dictLiterals !! stCounter
                 in
-                    case stMMistake of
+                    case (stMMistake, mc) of
 
                         -- mistake mode ...
                         -- ... back up
-                        Just _ | Raw.fromChord c == KI.toRaw @key Palantype.Common.kiBackUp ->
+                        (_, Nothing) ->
                             st & _As @"StateRun" . field @"stMMistake" .~ Nothing
                         -- ... or do nothing
-                        Just _ -> st
+                        (Just _, Just _) -> st
 
                         -- correct
-                        Nothing | Raw.fromChord c == currentLetter ->
+                        (Nothing, Just c) | Raw.fromChord c == currentLetter ->
                             if stCounter == len - 1
                                 then StatePause stNMistakes
                                 else st & _As @"StateRun" . field @"stCounter" +~ 1
 
                         -- mistake
-                        Nothing ->
-                            st
-                                &  _As @"StateRun"
-                                .  field @"stMMistake"
-                                ?~ (stCounter, c)
-                                &  _As @"StateRun"
-                                .  field @"stNMistakes"
-                                +~ 1
+                        (Nothing, Just c) ->
+                            st &  _As @"StateRun" .  field @"stMMistake" ?~ (stCounter, c)
+                               &  _As @"StateRun" .  field @"stNMistakes" +~ 1
 
         stepStart = StateRun Run { stCounter   = 0
                                  , stMMistake  = Nothing
@@ -197,7 +190,7 @@ taskLiterals dynStats evChord = do
                                  }
         stateInitial = StatePause 0
 
-    dynLiterals <- foldDyn step stateInitial evChord
+    dynLiterals <- foldDyn step stateInitial evMChord
 
     evStartStop <- fmap updated $ holdUniqDyn $ dynLiterals <&> \case
         StatePause nMistakes -> nMistakes
@@ -286,7 +279,7 @@ fingerspelling = mdo
         elClass "br" "clear-both" blank
 
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEChord
+    evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEvMChord
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 

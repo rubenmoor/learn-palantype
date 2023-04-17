@@ -75,8 +75,6 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , RouteToUrl
                                                 , SetRoute
-                                                , routeLink
-                                                , setRoute
                                                 )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder (DomBuilderSpace)
@@ -136,7 +134,7 @@ import           Control.Monad.Reader           ( MonadReader
 import           Data.Char                      ( isAlphaNum )
 import           Shared                         ( elLabelCheckbox
                                                 , elLoginSignup
-                                                , iFa', iFa
+                                                , iFa', elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -211,7 +209,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
     (_, evAliasExists) <- fanEither <$> request (postDoesAliasExist eAlias evFocusLostAlias)
 
     el "h3" $ text "Public visibility"
-    dynCheckedVisible <- elLabelCheckbox False "Show my scores" "scores-visible"
+    dynCheckedVisible <- Shared.elLabelCheckbox False "Show my scores" "scores-visible"
 
     el "p" $ text "If you check this, your scores will be publicly visible. \
                   \If not, nothing will be shown, not even your alias."
@@ -226,7 +224,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
     let evPressEnter = keypress Enter inputPassword
     el "br" blank
     evCheckedHidePassword <- updated
-        <$> elLabelCheckbox False "Hide password input" "hide-password"
+        <$> Shared.elLabelCheckbox False "Hide password input" "hide-password"
 
     el "p" $ text "You enter your password only once. There are \
                   \no invalid passwords except for an empty one."
@@ -283,7 +281,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
          \delete option right on this website."
 
     dyn_ $ dynState <&> \State {..} ->
-        setRoute $ filter isRight evRespNew $> stRedirectUrl
+        setRouteAndLoading $ filter isRight evRespNew $> stRedirectUrl
 
 login
     :: forall t (m :: * -> *)
@@ -315,7 +313,7 @@ login = elAttr "section" ("id" =: "user-form") mdo
                    )
     (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
     evCheckedHidePassword <- el "p" $ updated
-        <$> elLabelCheckbox False "Hide password input" "hide-password"
+        <$> Shared.elLabelCheckbox False "Hide password input" "hide-password"
 
     let evPressEnter = keypress Enter inputPassword
         evWrongInput =
@@ -341,13 +339,13 @@ login = elAttr "section" ("id" =: "user-form") mdo
       ]
 
     dyn_ $ dynState <&> \State {..} ->
-        setRoute $ evLogin $> stRedirectUrl
+        setRouteAndLoading $ evLogin $> stRedirectUrl
 
     el "br" blank
     el "br" blank
     el "p" do
             text "Don't have an account yet? "
-            routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+            Shared.elRouteLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                 $ text "Sign up"
             text " here."
 
@@ -378,10 +376,10 @@ settings getLoadedAndBuilt = do
             domBack <-
               elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
                              \cursor-pointer"
-              $ iFa' "fas fa-arrow-circle-left"
-            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $
+              $ Shared.iFa' "fas fa-arrow-circle-left"
+            setRouteAndLoading $ tag (current dynState <&> view (field @"stRedirectUrl")) $
               domEvent Click domBack
-        elLoginSignup $ stRedirectUrl <$> dynState
+        Shared.elLoginSignup $ stRedirectUrl <$> dynState
         elClass "br" "clear-both" blank
 
     elAttr "section" ("id" =: "user-form") mdo

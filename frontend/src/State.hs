@@ -19,7 +19,7 @@ import           Common.Auth                    ( SessionData )
 import           Common.Model                   ( AppState
                                                 , defaultAppState, TextLang
                                                 )
-import           Common.Route                   ( FrontendRoute(..) )
+import           Common.Route                   ( FrontendRoute(..), FrontendRoute_TextLang (..))
 import           Control.Applicative            ( (<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
@@ -53,6 +53,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import qualified Data.Map.Strict as Map
 import Control.Monad.IO.Class (MonadIO)
+import Data.Eq (Eq)
 
 type GetLoadedAndBuilt t =
   forall m
@@ -68,28 +69,33 @@ type GetLoadedAndBuilt t =
 
 data Env t key = Env
     { envDynState          :: Dynamic t State
-    , envEChord            :: Event t (Chord key)
+      -- | Just c: a chord
+      --   Nothing: the back-up chord
+    , envEvMChord            :: Event t (Maybe (Chord key))
     , envNavigation        :: Navigation
     , envGetLoadedAndBuilt :: GetLoadedAndBuilt t
     }
 
 data Navigation = Navigation
-    { navSystemLang      :: SystemLang
-    , navMPrevious :: Maybe StageIndex
-    , navCurrent   :: StageIndex
-    , navMNext     :: Maybe StageIndex
-    , navPageName  :: Text
-    , navTextLang  :: TextLang
+    { navSystemLang :: SystemLang
+    , navMPrevious  :: Maybe StageIndex
+    , navCurrent    :: StageIndex
+    , navMNext      :: Maybe StageIndex
+    , navPageName   :: Text
+    , navTextLang   :: TextLang
     }
 
 -- State
 
+data Loading = LoadingDone | LoadingStill | LoadingError Text
+  deriving (Eq, Generic)
 
 data State = State
     { stSession     :: Session
     , stApp         :: AppState
     , stRedirectUrl :: R FrontendRoute
     , stCMSCacheInvalidationData :: Map (SystemLang, TextLang, Text) UTCTime
+    , stLoading     :: Loading
     }
     deriving Generic
 
@@ -98,6 +104,7 @@ defaultState = State { stSession     = SessionAnon
                      , stApp         = defaultAppState
                      , stRedirectUrl = FrontendRoute_Main :/ ()
                      , stCMSCacheInvalidationData = Map.empty
+                     , stLoading     = LoadingStill
                      }
 
 updateState
@@ -118,6 +125,6 @@ instance ToJSON Session
 
 stageUrl :: forall key. Palantype key => StageIndex -> R FrontendRoute
 stageUrl iStage
-    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key = FrontendRoute_DE :/ iStage
-    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key = FrontendRoute_EN :/ iStage
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key = FrontendRoute_SystemDE :/ FrontendRoute_TextEN :/ iStage
+    | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key = FrontendRoute_SystemEN :/ FrontendRoute_TextEN :/ iStage
     | otherwise = $failure "key not implemented"

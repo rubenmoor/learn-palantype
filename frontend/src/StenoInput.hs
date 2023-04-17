@@ -23,11 +23,11 @@
 
 module StenoInput where
 
-import           Common.Model                   ( StateKeyboard (..)
+import           Common.Model                   ( StateKeyboard (..), TocNavigation (..)
                                                 )
 import           Common.PloverConfig            ( CfgName(..)
                                                 , PloverSystemCfg(..)
-                                                , defaultPloverSystemCfg
+                                                , defaultPloverSystemCfg, PloverCfg
                                                 )
 import           Control.Applicative            ( Applicative(..) )
 import           Control.Category               ( Category((.))
@@ -41,7 +41,7 @@ import           Control.Lens.Setter            ( (%~)
                                                 )
 import           Control.Lens.Wrapped           ( _Wrapped' )
 import           Control.Monad                  ( guard
-                                                , when, (=<<)
+                                                , (=<<)
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Data.Bool                      ( (&&)
@@ -54,7 +54,7 @@ import           Data.Bool                      ( (&&)
 import           Data.Default                   ( Default(def) )
 import           Data.Eq                        ( Eq((==)) )
 import           Data.Foldable                  ( Foldable(foldl')
-                                                , concat
+                                                , concat, traverse_
                                                 )
 import           Data.Function                  ( ($)
                                                 , (&)
@@ -64,7 +64,7 @@ import           Data.Functor                   ( ($>)
                                                 , (<$>)
                                                 , (<&>)
                                                 , fmap
-                                                , void
+                                                , void, (<$)
                                                 )
 import           Data.Functor.Misc              ( Const2(Const2) )
 import           Data.Generics.Product          ( field )
@@ -108,7 +108,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber
+                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber, kiChordToInt, mapHierarchyStageIndex, kiBackUp
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -163,19 +163,19 @@ import           Reflex.Dom                     ( (=:)
                                                 , fmapMaybe
                                                 , foldDyn
                                                 , inputElementConfig_elementConfig
-                                                , inputElementConfig_initialChecked
+
                                                 , inputElementConfig_initialValue
                                                 , inputElementConfig_setValue
                                                 , leftmost
                                                 , mergeWith
                                                 , preventDefault
                                                 , text
-                                                , delay, constDyn, holdUniqDyn, MonadHold, TriggerEvent
+                                                , delay, constDyn, holdUniqDyn, MonadHold, TriggerEvent, elDynClass, inputElementConfig_setChecked, tag, current, zipDyn, gate, attach
                                                 )
-import           Shared                         ( iFa, whenJust
+import           Shared                         ( iFa, whenJust, setRouteAndLoading
                                                 )
 import           State                          ( State(..)
-                                                , updateState, Navigation (..), stageUrl
+                                                , updateState, Navigation (..), stageUrl, GetLoadedAndBuilt
                                                 )
 import           TextShow                       ( TextShow(showt) )
 import           Type.Reflection                ( (:~~:)(HRefl)
@@ -188,14 +188,13 @@ import           Witherable                     ( Filterable
 
                                                     )
                                                 )
-import Obelisk.Route.Frontend (SetRoute(setRoute), R)
+import Obelisk.Route.Frontend (SetRoute, R)
 import Common.Route (FrontendRoute)
 import qualified Palantype.Common.Dictionary.Commands as Commands
 import Data.List (delete)
 import qualified Palantype.Common.Dictionary.CommandsFKeys as FKeys
 import qualified Palantype.Common.Dictionary.Special as Special
-import Text.Read (readMaybe)
-import Text.Show (Show(..))
+import Control.Monad.IO.Class (MonadIO)
 
 default (Text)
 
@@ -239,6 +238,7 @@ data FanChord
     | FanPageUp
     | FanPageDown
     | FanSmallNumber
+    | FanBackUp
     | FanOther
     deriving (Eq, Ord)
 
@@ -264,21 +264,7 @@ data StateInput key = StateInput
   , stiMChord      :: Maybe (Chord key)
   }
 
--- elStenoInput
---     :: forall key t (m :: * -> *)
---      . ( DomBuilder t (Client m)
---        , EventWriter t (Endo State) (Client m)
---        , MonadFix (Client m)
---        , MonadHold t (Client m)
---        , Prerender t m
---        , Palantype key
---        , SetRoute t (R FrontendRoute) (Client m)
---        )
---     => StateKeyboard
---     -> Navigation
---     -> GetLoadedAndBuilt t
---     -> Client m (Event t (Chord key))
-elStenoInput :: forall key (m :: * -> *) t a.
+elStenoInput :: forall key (m :: * -> *) t.
   ( PerformEvent t m
   , IsHTMLElement (RawInputElement (DomBuilderSpace m))
   , MonadJSM (Performable m)
@@ -289,17 +275,18 @@ elStenoInput :: forall key (m :: * -> *) t a.
   , TriggerEvent t m
   , SetRoute t (R FrontendRoute) m, MonadHold t m, MonadFix m
   )
-  => StateKeyboard
+  => Dynamic t StateKeyboard
+  -> PloverCfg
   -> Navigation
-  -> m (Event t a)
-  -> m (Event t (Chord key))
-elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
+  -> GetLoadedAndBuilt t
+  -> m (Event t (Maybe (Chord key)))
+elStenoInput dynStateKeyboard ploverCfg Navigation{..} getLoadedAndBuilt = mdo
     let lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
           | otherwise -> $failure "Key not implemented"
 
-        PloverSystemCfg{..} = stPloverCfg ^. _Wrapped' . at lang . non defaultPloverSystemCfg
+        PloverSystemCfg{..} = ploverCfg ^. _Wrapped' . at lang . non defaultPloverSystemCfg
 
         keyChanges = pcfgLsKeySteno <&> \(qwertyKey, kI) ->
             [ keydown qwertyKey kbInput $> [KeyDown $ fromIndex kI]
@@ -342,7 +329,7 @@ elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
             (StateInput Set.empty Set.empty Nothing)
             eKeyChange
 
-    elClass "div" (bool "hidden" "" stShow) $ case lang of
+    elDynClass "div" (bool "hidden" "" . stShow <$> dynStateKeyboard) $ case lang of
         -- a bit of a hack to switch to the original Palantype
         -- keyboard layout for English
         -- that original layout I will consider the exception
@@ -354,20 +341,19 @@ elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
         _ ->
             elKeyboard
                 pcfgName
+                getLoadedAndBuilt
+                dynStateKeyboard
                 pcfgMapStenoKeys
                 (stiKeysPressed <$> dynInput)
                 lang
-                stShowQwerty
-                stModes
 
     let
         dynKeysDown = stiKeysDown <$> dynInput
 
     evCtrlNumber <- fmap updated $ holdUniqDyn $ dynKeysDown <&> \s ->
-      fromChord (mkChord $ Set.elems s) == KI.toRaw @key kiCtrlNumber
+      Text.init (showt $ KI.toRaw @key kiCtrlNumber) `Text.isPrefixOf` showt (fromChord $ mkChord $ Set.elems s)
 
     kbInput <- elShowSteno dynKeysDown
-    updateState $ evCtrlNumber <&> \b -> [ field @"stApp" . field @"stToc" . field @"stShowToplevelSteno" .~ b ]
 
     (elPowerOff, _) <- elAttr' "span"
       (  "class" =: "text-gray-400 cursor-pointer hover:text-red-500"
@@ -396,22 +382,50 @@ elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
             | fromChord c == KI.toRaw @key kiRight  -> Map.singleton FanRight      ContentNone
             | fromChord c == KI.toRaw @key kiPageUp -> Map.singleton FanPageUp     ContentNone
             | fromChord c == KI.toRaw @key kiPageDown -> Map.singleton FanPageDown ContentNone
-            | Just n <- readMaybe (show $ fromChord c) -> Map.singleton FanSmallNumber $ ContentSmallNumber n
+            | Just n <- (kiChordToInt $ KI.fromChord c) -> Map.singleton FanSmallNumber $ ContentSmallNumber n
+            | KI.fromChord c == kiBackUp            -> Map.singleton FanBackUp     ContentNone
             | otherwise                             -> Map.singleton FanOther      $ ContentAnyChord c
-        eChordToggle      = select selector (Const2 FanInsert     )
-        evChordToc        = select selector (Const2 FanDelete     )
-        eChordDown        = select selector (Const2 FanDown       )
-        eChordUp          = select selector (Const2 FanUp         )
-        eChordLeft        = select selector (Const2 FanLeft       )
-        eChordRight       = select selector (Const2 FanRight      )
-        eChordOther       = select selector (Const2 FanOther      ) <&> \(ContentAnyChord    c) -> c
-        eChordPageDown    = select selector (Const2 FanPageDown   )
-        eChordPageUp      = select selector (Const2 FanPageUp     )
+        eChordToggle      = select selector (Const2 FanInsert     ) $> ()
+        evChordToc        = select selector (Const2 FanDelete     ) $> ()
+        eChordDown        = select selector (Const2 FanDown       ) $> ()
+        eChordUp          = select selector (Const2 FanUp         ) $> ()
+        eChordLeft        = select selector (Const2 FanLeft       ) $> ()
+        eChordRight       = select selector (Const2 FanRight      ) $> ()
+        eChordPageDown    = select selector (Const2 FanPageDown   ) $> ()
+        eChordPageUp      = select selector (Const2 FanPageUp     ) $> ()
         eChordSmallNumber = select selector (Const2 FanSmallNumber) <&> \(ContentSmallNumber n) -> n
+        evBackUp          = select selector (Const2 FanBackUp     ) $> ()
+        eChordOther       = select selector (Const2 FanOther      ) <&> \(ContentAnyChord    c) -> c
 
     updateState $ eChordToggle $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
     updateState $ evChordToc   $> [field @"stApp" . field @"stToc" . field @"stVisible" %~ not ]
-    updateState $ eChordSmallNumber <&> \n -> [field @"stApp" . field @"stToc" . field @"stShowStage" .~ Set.singleton n]
+
+    let
+        behTocNav = stTocNavigation <$> current dynStateKeyboard
+        behTocNavIsToplevel = (TocNavToplevel ==) <$> behTocNav
+    updateState $ gate behTocNavIsToplevel evCtrlNumber <&> \b ->
+      [ field @"stApp" . field @"stToc" . field @"stShowToplevelSteno" .~ b ]
+
+    updateState $ gate (not <$> behTocNavIsToplevel) evBackUp $>
+      [ field @"stApp" . field @"stToc"      . field @"stShowSublevelSteno" .~ False
+      , field @"stApp" . field @"stKeyboard" . field @"stTocNavigation"     .~ TocNavToplevel
+      ]
+    let evGotoStage = catMaybes $ attach behTocNav eChordSmallNumber <&> \case
+          (TocNavSublevel t, i) -> Map.lookup (t, Just i) $ mapHierarchyStageIndex @key
+          (TocNavToplevel  , i) -> Map.lookup (i, Nothing) $ mapHierarchyStageIndex @key
+
+    updateState $ evGotoStage $>
+      [ field @"stApp" . field @"stToc"      . field @"stShowSublevelSteno" .~ False
+      , field @"stApp" . field @"stKeyboard" . field @"stTocNavigation"     .~ TocNavToplevel
+      ]
+    setRouteAndLoading $ stageUrl @key <$> evGotoStage
+
+    updateState $ gate behTocNavIsToplevel eChordSmallNumber <&> \n ->
+      [ field @"stApp" . field @"stToc" %~ ( field @"stShowStage" .~ Set.singleton n)
+                                         . ( field @"stShowSublevelSteno" .~ True)
+                                         . ( field @"stShowToplevelSteno" .~ False)
+      , field @"stApp" . field @"stKeyboard" . field @"stTocNavigation" .~ TocNavSublevel n
+      ]
 
     -- this is a workaround
     -- scroll, like focus, is not available in reflex dom
@@ -426,15 +440,15 @@ elStenoInput StateKeyboard{..} Navigation{..} getLoadedAndBuilt = mdo
     performEvent_ $ eChordPageDown $> void (liftJSM $ eval $ jsScroll 600)
     performEvent_ $ eChordPageUp   $> void (liftJSM $ eval $ jsScroll (-600))
 
-    whenJust navMNext     $ \nxt -> setRoute $ eChordRight $> stageUrl @key nxt
-    whenJust navMPrevious $ \prv -> setRoute $ eChordLeft  $> stageUrl @key prv
-    pure eChordOther
+    whenJust navMNext     $ \nxt -> setRouteAndLoading $ eChordRight $> stageUrl @key nxt
+    whenJust navMPrevious $ \prv -> setRouteAndLoading $ eChordLeft  $> stageUrl @key prv
+    pure $ leftmost [Just <$> eChordOther, Nothing <$ evBackUp]
 
 -- steno virtual keyboard
 
 data CellContext t key = CellContext
-  { ccShowQwerty     :: Bool
-  , ccModes          :: Bool
+  { ccDynShowQwerty  :: Dynamic t QwertySwitch
+  , ccDynModes       :: Dynamic t SpecialSwitch
   , ccStenoKeys      :: Map KeyIndex [Text]
   , ccDynPressedKeys :: Dynamic t (Set key)
   }
@@ -455,6 +469,9 @@ data Submode
   | SpecialMode
   | SpecialShiftMode
 data SpecialSwitch = SpecialActive | SpecialInactive
+  deriving (Eq)
+
+data QwertySwitch = QwertyVisible | QwertyHidden
 
 -- y-offset for the keys for the pinky
 data YOffset = HasOffset | NoOffset | ThumbColumn
@@ -471,23 +488,29 @@ posYOffset :: Positional
 posYOffset = Positional HasOffset NotHomerow
 
 mkClassStr
-  :: Positional -> KeyState -> SpecialSwitch -> Text
-mkClassStr (Positional yOffset bHomerow) enabled sswitch =
-    unwords [strAll, strKeyState enabled, strYOffset yOffset]
+  :: Positional -> KeyState -> SpecialSwitch -> QwertySwitch -> Text
+mkClassStr (Positional yOffset bHomerow) enabled sswitch qwertySwitch =
+    unwords
+      [ strAll
+      , strKeyState enabled
+      , strYOffset yOffset
+      , strShowQwerty
+      ]
   where
+    strShowQwerty = case qwertySwitch of
+      QwertyVisible -> ""
+      QwertyHidden  -> "[&>*:nth-child(8)]:hidden"
+
     strAll = "rounded border border-solid border-gray-400 w-[8.11%] h-[25%] text-center"
 
     strKeyState Disabled = "shadow-[3px_3px_5px_0_#081430] bg-zinc-200 "
-      <> case sswitch of
-           SpecialActive ->
-             "[&>*:nth-child(1)]:hidden \
-             \[&>*:nth-child(2)]:hidden \
-             \[&>*:nth-child(3)]:hidden \
-             \[&>*:nth-child(4)]:hidden \
-             \[&>*:nth-child(5)]:hidden \
-             \[&>*:nth-child(6)]:hidden \
-             \[&>*:nth-child(7)]:hidden"
-           SpecialInactive -> ""
+      <> "[&>*:nth-child(1)]:hidden \
+         \[&>*:nth-child(2)]:hidden \
+         \[&>*:nth-child(3)]:hidden \
+         \[&>*:nth-child(4)]:hidden \
+         \[&>*:nth-child(5)]:hidden \
+         \[&>*:nth-child(6)]:hidden \
+         \[&>*:nth-child(7)]:hidden"
     strKeyState (Enabled bPressed mode) =
       unwords [strPressed bHomerow bPressed, strMode mode]
 
@@ -497,26 +520,23 @@ mkClassStr (Positional yOffset bHomerow) enabled sswitch =
     strPressed IsHomerow  IsPressed  = "text-grayishblue-700 shadow-[_inset_0_0_8px_6px_#dcdcff]"
 
     strMode Inactive = "bg-zinc-200 text-2xl "
-      <> case sswitch of
-           SpecialActive ->
-             "[&>*:nth-child(1)]:invisible \
-             \[&>*:nth-child(2)]:hidden \
-             \[&>*:nth-child(3)]:hidden \
-             \[&>*:nth-child(4)]:hidden \
-             \[&>*:nth-child(5)]:hidden \
-             \[&>*:nth-child(6)]:hidden \
-             \[&>*:nth-child(7)]:hidden"
-           SpecialInactive -> ""
+      <> "[&>*:nth-child(1)]:invisible \
+         \[&>*:nth-child(2)]:hidden \
+         \[&>*:nth-child(3)]:hidden \
+         \[&>*:nth-child(4)]:hidden \
+         \[&>*:nth-child(5)]:hidden \
+         \[&>*:nth-child(6)]:hidden \
+         \[&>*:nth-child(7)]:hidden"
     strMode (Active submode size) = unwords ["bg-white", strSubmode sswitch submode, strSize size]
 
-    strSubmode SpecialInactive _                = ""
-    strSubmode SpecialActive   ModeNormal       = cssHideAllButNthChild 1
-    strSubmode SpecialActive   NumberMode       = cssHideAllButNthChild 2
-    strSubmode SpecialActive   ShiftMode        = cssHideAllButNthChild 3
-    strSubmode SpecialActive   CommandMode      = cssHideAllButNthChild 4
-    strSubmode SpecialActive   FKeysMode        = cssHideAllButNthChild 5
-    strSubmode SpecialActive   SpecialMode      = cssHideAllButNthChild 6
-    strSubmode SpecialActive   SpecialShiftMode = cssHideAllButNthChild 7
+    strSubmode SpecialInactive _                = cssHideAllButNthChild 7 1
+    strSubmode SpecialActive   ModeNormal       = cssHideAllButNthChild 7 1
+    strSubmode SpecialActive   NumberMode       = cssHideAllButNthChild 7 2
+    strSubmode SpecialActive   ShiftMode        = cssHideAllButNthChild 7 3
+    strSubmode SpecialActive   CommandMode      = cssHideAllButNthChild 7 4
+    strSubmode SpecialActive   FKeysMode        = cssHideAllButNthChild 7 5
+    strSubmode SpecialActive   SpecialMode      = cssHideAllButNthChild 7 6
+    strSubmode SpecialActive   SpecialShiftMode = cssHideAllButNthChild 7 7
 
     strSize NormalSize = "text-2xl"
     strSize Small      = "text-lg"
@@ -526,26 +546,34 @@ mkClassStr (Positional yOffset bHomerow) enabled sswitch =
     strYOffset NoOffset    = ""
     strYOffset ThumbColumn = "relative top-[12px]"
 
-    cssHideAllButNthChild :: Int -> Text
-    cssHideAllButNthChild d =
-      Text.unwords $ delete d [1..7] <&> \i -> "[&>*:nth-child(" <> showt i <> ")]:hidden"
+    cssHideAllButNthChild :: Int -> Int -> Text
+    cssHideAllButNthChild max d =
+      Text.unwords $ delete d [1..max] <&> \i ->
+        "[&>*:nth-child(" <> showt i <> ")]:hidden"
 
 elKeyboard
   :: forall key t (m :: * -> *)
   .  ( DomBuilder t m
      , EventWriter t (Endo State) m
+     , MonadHold t m
+     , MonadIO (Performable m)
      , Palantype key
+     , PerformEvent t m
      , PostBuild t m
+     , TriggerEvent t m
      )
   => CfgName
+  -> GetLoadedAndBuilt t
+  -> Dynamic t StateKeyboard
   -> Map KeyIndex [Text]
   -> Dynamic t (Set key)
   -> SystemLang
-  -> Bool
-  -> Bool
   -> m ()
-elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
-    let cc = CellContext{..}
+elKeyboard cfgName getLoadedAndBuilt dynStateKeyboard ccStenoKeys ccDynPressedKeys lang =
+    let
+         ccDynShowQwerty = bool QwertyHidden    QwertyVisible . stShowQwerty <$> dynStateKeyboard
+         ccDynModes      = bool SpecialInactive SpecialActive . stModes      <$> dynStateKeyboard
+         cc = CellContext{..}
     in  elClass "div" "w-[650px] h-[271px] relative mx-auto" do
           elClass "table" "border-separate border-spacing-1 rounded-lg bg-zinc-200 w-full h-full px-3 pt-3 pb-[24px]" do
             el "tr" $ do
@@ -609,8 +637,9 @@ elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
               el "div" $ text $ showt lang
               el "div" $ text $ showt cfgName
 
+              evQwertiesInitial <- tag (stShowQwerty <$> current dynStateKeyboard) <$> getLoadedAndBuilt
               evToggleQwerties <- _inputElement_checkedChange <$> inputElement
-                  ( def & inputElementConfig_initialChecked .~ ccShowQwerty
+                  ( def & inputElementConfig_setChecked .~ evQwertiesInitial
                         & inputElementConfig_elementConfig
                             . elementConfig_initialAttributes
                                 .~ (  "id"  =: "showQwerties"
@@ -623,8 +652,9 @@ elKeyboard cfgName ccStenoKeys ccDynPressedKeys lang ccShowQwerty ccModes =
                 ]
 
               el "br" blank
+              evModesInitial <- tag (stModes <$> current dynStateKeyboard) <$> getLoadedAndBuilt
               evToggleModes <- _inputElement_checkedChange <$> inputElement
-                  ( def & inputElementConfig_initialChecked .~ ccModes
+                  ( def & inputElementConfig_setChecked .~ evModesInitial
                         & inputElementConfig_elementConfig
                             . elementConfig_initialAttributes
                                 .~ (  "id"   =: "modes"
@@ -648,8 +678,8 @@ elKeyboardEN ::
     Dynamic t (Set key) ->
     m ()
 elKeyboardEN cfgName ccStenoKeys ccDynPressedKeys =
-  let ccShowQwerty = True
-      ccModes = False
+  let ccDynShowQwerty = constDyn QwertyVisible
+      ccDynModes = constDyn SpecialInactive
       cc = CellContext{..}
   in  elClass "div" "keyboard" $ do
         _ <- el "table" $ do
@@ -711,25 +741,30 @@ elCell CellContext{..} i colspan positional =
     let
         (qwerties, dynKeyState) = case Map.lookup i ccStenoKeys of
           Nothing -> ([], constDyn Disabled)
-          Just qs -> (qs, ) $ ccDynPressedKeys <&> \s ->
-            Enabled (bPressed s) (mode s)
+          Just qs -> (qs, ) $ zipDyn ccDynPressedKeys ccDynModes <&> \(s, modes) ->
+            Enabled (bPressed s) (mode s modes)
 
-        dynAttrs = dynKeyState <&> \keyState ->
-             "class"   =: mkClassStr positional keyState (bool SpecialInactive SpecialActive ccModes)
-          <> "colspan" =: showt colspan
+        dynAttrs = zipDyn (zipDyn dynKeyState ccDynModes) ccDynShowQwerty <&>
+          \((keyState, modes), showQwerty) ->
+            -- TODO mkClassStr to account fro modes and showQerty
+               "class"   =: mkClassStr positional keyState modes showQwerty
+            <> "colspan" =: showt colspan
 
     in
         elDynAttr "td" dynAttrs $ do
-            let strClass = "font-bold h-[32px] flex justify-center items-center"
-            elClass "div" strClass $ text $ Text.singleton $ keyCode k
-            when ccModes do
-              elClass "div" strClass $ text strNumberMode
-              elClass "div" strClass $ text strShiftMode
-              elClass "div" strClass $ text strCommandMode
-              elClass "div" strClass $ text strFKeysMode
-              elClass "div" strClass $ text strSpecialMode
-              elClass "div" strClass $ text strSpecialShiftMode
-            when ccShowQwerty $ elClass "div" "text-xs text-zinc-500 -mt-1"
+            traverse_
+                ( elClass "div" "font-bold h-[32px] flex justify-center \
+                                \items-center" . text
+                )
+                [ Text.singleton $ keyCode k
+                , strNumberMode
+                , strShiftMode
+                , strCommandMode
+                , strFKeysMode
+                , strSpecialMode
+                , strSpecialShiftMode
+                ]
+            elClass "div" "text-xs text-zinc-500 -mt-1"
               $ text $ Text.unwords qwerties
   where
     k = fromIndex i
@@ -742,7 +777,7 @@ elCell CellContext{..} i colspan positional =
     (strSpecialMode, strSpecialShiftMode) = fromMaybe ("", "") $ Special.fromIndex i
 
     bPressed s = bool NotPressed IsPressed $ k `Set.member` s
-    mode setPressedKeys =
+    mode setPressedKeys modes =
       let
           isNumberModeAnyActive = Set.fromList (fromIndex <$> [9, 11])
             `Set.isSubsetOf` setPressedKeys
@@ -764,25 +799,26 @@ elCell CellContext{..} i colspan positional =
           size str | Text.length str >= 2  = Small
           size _                           = NormalSize
       in
-          if  ccModes &&
-              (
-                 (isNumberModeActive       && Text.null strNumberMode      )
-              || (isNumberShiftModeActive  && Text.null strShiftMode       )
-              || (isCommandModeActive      && Text.null strCommandMode     )
-              || (isFKeysModeActive        && Text.null strFKeysMode       )
-              || (isSpecialModeActive      && Text.null strSpecialMode     )
-              || (isSpecialModeShiftActive && Text.null strSpecialShiftMode)
-              || keyCode k == '_'
-              )
-            then Inactive
-            else if
-              | isNumberModeActive       -> Active NumberMode  (size strNumberMode)
-              | isNumberShiftModeActive  -> Active ShiftMode   (size strShiftMode )
-              | isCommandModeActive      -> Active CommandMode (size strCommandMode)
-              | isFKeysModeActive        -> Active FKeysMode   (size strFKeysMode)
-              | isSpecialModeActive      -> Active SpecialMode (size strSpecialMode)
-              | isSpecialModeShiftActive -> Active SpecialShiftMode (size strSpecialShiftMode)
-              | otherwise                -> Active ModeNormal  (size "")
+          if keyCode k == '_'
+          then Inactive
+          else if modes == SpecialInactive
+               then Active ModeNormal (size "")
+               else if
+                         (isNumberModeActive       && Text.null strNumberMode      )
+                      || (isNumberShiftModeActive  && Text.null strShiftMode       )
+                      || (isCommandModeActive      && Text.null strCommandMode     )
+                      || (isFKeysModeActive        && Text.null strFKeysMode       )
+                      || (isSpecialModeActive      && Text.null strSpecialMode     )
+                      || (isSpecialModeShiftActive && Text.null strSpecialShiftMode)
+                    then Inactive
+                    else if
+                      | isNumberModeActive       -> Active NumberMode  (size strNumberMode)
+                      | isNumberShiftModeActive  -> Active ShiftMode   (size strShiftMode )
+                      | isCommandModeActive      -> Active CommandMode (size strCommandMode)
+                      | isFKeysModeActive        -> Active FKeysMode   (size strFKeysMode)
+                      | isSpecialModeActive      -> Active SpecialMode (size strSpecialMode)
+                      | isSpecialModeShiftActive -> Active SpecialShiftMode (size strSpecialShiftMode)
+                      | otherwise                -> Active ModeNormal  (size "")
 
 elShowSteno
   :: forall key t (m :: * -> *)

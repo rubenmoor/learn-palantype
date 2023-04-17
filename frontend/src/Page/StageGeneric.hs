@@ -42,10 +42,6 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , gate
                                                 , splitE
                                                 , text
-                                                , widgetHold_
-                                                )
-import           Reflex.Dom.Pandoc              ( defaultConfig
-                                                , elPandoc
                                                 )
 import           State                          ( Env(..)
                                                 , State
@@ -95,7 +91,7 @@ getGenericExercise patternGroup greediness = mdo
             pure never
         Right (mSW, mWSs) -> taskWords
             dynStatsAll
-            (gate (not <$> current dynDone) envEChord)
+            (gate (not <$> current dynDone) envEvMChord)
             mSW
             mWSs
 

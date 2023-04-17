@@ -99,7 +99,6 @@ import           Safe                           ( initMay )
 import           Data.Eq                        ( Eq((==)) )
 import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
-import qualified Palantype.Common.RawSteno     as Raw
 import           Control.Monad                  ( replicateM, unless )
 import           Control.Lens                   ( (<>~)
                                                 , (.~)
@@ -144,10 +143,10 @@ taskDates
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Chord key)
+    -> Event t (Maybe (Chord key))
     -> Map RawSteno Text
     -> m (Event t Stats)
-taskDates dynStats evChord map = do
+taskDates dynStats evMChord map = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -158,15 +157,12 @@ taskDates dynStats evChord map = do
     dynSimple $ dynMStdGen <&> maybe
         (pure never)
         \stdGen -> do
-            let step :: Chord key -> StateDates key -> StateDates key
-                step c st = case st of
-                    StatePause _ ->
-                        if c == chordStart
-                            then stepStart
-                            else st
+            let step :: Maybe (Chord key) -> StateDates key -> StateDates key
+                step mc st = case (st, mc) of
+                    (StatePause _, Just c) | c == chordStart -> stepStart
+                    (StatePause _, _) -> st
                         -- let current = _stDates !! _stCounter
-                    StateRun Run {..}
-                        | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                    (StateRun Run {..}, Nothing) ->
                         -- undo last input
                           case initMay stChords of
                             Just cs -> st & _As @"StateRun"
@@ -174,7 +170,7 @@ taskDates dynStats evChord map = do
                                             .  (field @"stNMistakes" +~ 1)
                             Nothing -> st
 
-                    StateRun Run {..} ->
+                    (StateRun Run {..}, Just c) ->
                         if renderDate (stDates !! stCounter)
                             == renderPlover map (stChords <> [c])
                         then -- correct? next!
@@ -195,7 +191,7 @@ taskDates dynStats evChord map = do
                     , stNMistakes = 0
                     }
 
-            dynStenoDates <- foldDyn step (StatePause 0) evChord
+            dynStenoDates <- foldDyn step (StatePause 0) evMChord
 
             evStartStop <- fmap updated $ holdUniqDyn $ dynStenoDates <&> \case
                 StatePause nMistakes -> nMistakes
@@ -278,7 +274,7 @@ numberMode = mdo
           elClass "p" "text-sm text-red-500" $ text $ "Couldn't load resource: " <> str
           pure never
         Right map ->
-          taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map
+          taskDates dynStatsAll (gate (not <$> current dynDone) envEvMChord) map
 
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation

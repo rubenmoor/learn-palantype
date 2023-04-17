@@ -79,7 +79,7 @@ import           Reflex.Dom                     (constDyn, current, gate, never,
                                                     ( Event
                                                     , updated
                                                     )
-                                                , blank
+
                                                 , dynText
                                                 , dyn_
                                                 , el
@@ -145,7 +145,7 @@ exercise1 = mdo
     evLoadedAndBuilt <- envGetLoadedAndBuilt
     updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ True]
 
-    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+    evDone <- taskAlphabet (gate (not <$> current dynDone) $ catMaybes envEvMChord) True
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
@@ -179,7 +179,7 @@ exercise2 = mdo
 
     elCMSContent evPart1
 
-    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    evDone <- taskAlphabet (gate (not <$> current dynDone) $ catMaybes envEvMChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -215,7 +215,7 @@ exercise3 = mdo
     evLoadedAndBuilt <- envGetLoadedAndBuilt
     updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ False]
 
-    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) True
+    evDone <- taskAlphabet (gate (not <$> current dynDone) $ catMaybes envEvMChord) True
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -252,7 +252,7 @@ exercise4 = mdo
     evLoadedAndBuilt <- envGetLoadedAndBuilt
     updateState $ evLoadedAndBuilt $> [field @"stApp" . field @"stKeyboard" . field @"stShow" .~ False]
 
-    evDone <- taskAlphabet (gate (not <$> current dynDone) envEChord) False
+    evDone <- taskAlphabet (gate (not <$> current dynDone) $ catMaybes envEvMChord) False
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -491,7 +491,7 @@ exercise5 = mdo
         leftHand =
             filter (\k -> toFinger k `elem` fingersLeft) allKeys
 
-    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) leftHand
+    evDone <- taskLetters (gate (not <$> current dynDone) $ catMaybes envEvMChord) leftHand
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -527,7 +527,7 @@ exercise6 = mdo
         rightHand =
             filter (\k -> toFinger k `elem` fingersRight) allKeys
 
-    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) rightHand
+    evDone <- taskLetters (gate (not <$> current dynDone) $ catMaybes envEvMChord) rightHand
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -560,7 +560,7 @@ exercise7 = mdo
 
     let homeRow = fromIndex <$> [2, 5, 8, 11, 15, 18, 22, 25, 28, 31]
 
-    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) homeRow
+    evDone <- taskLetters (gate (not <$> current dynDone) $ catMaybes envEvMChord) homeRow
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2
@@ -591,7 +591,7 @@ exercise8 = mdo
 
     elCMSContent evPart1
 
-    evDone <- taskLetters (gate (not <$> current dynDone) envEChord) allKeys
+    evDone <- taskLetters (gate (not <$> current dynDone) $ catMaybes envEvMChord) allKeys
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
     elCMSContent evPart2

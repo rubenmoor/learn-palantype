@@ -53,6 +53,7 @@ data AppState = AppState
     { stMLang     :: Maybe SystemLang
     , stMsg       :: Maybe Message
     , stKeyboard  :: StateKeyboard
+    , stPloverCfg :: PloverCfg
     , stToc       :: StateToc
     , stShowStats :: ShowStats
     , stSound     :: Bool
@@ -67,6 +68,7 @@ defaultAppState = AppState
   { stMLang     = Nothing
   , stMsg       = Nothing
   , stKeyboard  = defaultStateKeyboard
+  , stPloverCfg  = defaultPloverCfg
   , stToc       = defaultStateToc
   , stShowStats = ShowStatsHide
   , stSound     = False
@@ -74,10 +76,10 @@ defaultAppState = AppState
 
 data StateKeyboard = StateKeyboard
     { stShow       :: Bool
-    , stPloverCfg  :: PloverCfg
     , stShowQwerty :: Bool
     , stModes      :: Bool
     , stActive     :: Bool
+    , stTocNavigation :: TocNavigation
     }
     deriving (Eq, Generic, Show)
 
@@ -87,16 +89,23 @@ instance ToJSON   StateKeyboard
 defaultStateKeyboard :: StateKeyboard
 defaultStateKeyboard = StateKeyboard
     { stShow       = True
-    , stPloverCfg  = defaultPloverCfg
     , stShowQwerty = True
     , stModes      = False
     , stActive     = True
+    , stTocNavigation = TocNavToplevel
     }
+
+data TocNavigation = TocNavToplevel | TocNavSublevel Int
+    deriving (Eq, Generic, Show)
+
+instance FromJSON TocNavigation
+instance ToJSON   TocNavigation
 
 data StateToc = StateToc
     { stVisible       :: Bool
     , stCleared       :: Set StageIndex
     , stShowToplevelSteno :: Bool
+    , stShowSublevelSteno :: Bool
     , stProgress      :: Map SystemLang StageIndex
     , stShowStage     :: Set Int
     }
@@ -110,6 +119,7 @@ defaultStateToc = StateToc
   { stVisible           = False
   , stCleared           = Set.empty
   , stShowToplevelSteno = False
+  , stShowSublevelSteno = False
   , stProgress          = defaultProgress
   , stShowStage         = Set.empty
   }
@@ -218,13 +228,13 @@ instance Read TextLang where
 
 instance ToHttpApiData TextLang where
   toQueryParam = \case
-    TextDE -> "DE"
-    TextEN -> "EN"
+    TextDE -> "TextDE"
+    TextEN -> "TextEN"
 
 instance FromHttpApiData TextLang where
   parseQueryParam = \case
-    "DE" -> Right TextDE
-    "EN" -> Right TextEN
+    "TextDE" -> Right TextDE
+    "TextEN" -> Right TextEN
     str     -> Left $ "FromHttpApiData: Couldn't parse TextLang: " <> str
 
 data CacheContentType = CacheContentMarkdown

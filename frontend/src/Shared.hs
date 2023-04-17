@@ -8,6 +8,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Shared where
 
@@ -24,7 +25,7 @@ import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.)) )
-import           Control.Lens                   ( (.~) )
+import           Control.Lens                   ( (.~), (%~) )
 import           Control.Monad                  ( (=<<)
                                                 , Monad((>>=))
                                                 , unless
@@ -37,11 +38,11 @@ import           Control.Monad.Reader           ( MonadReader
 import           Data.Bool                      ( Bool(..) )
 import           Data.Either                    ( Either(Right) )
 import           Data.Function                  ( ($)
-                                                , flip
+                                                , flip, const
                                                 )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
-                                                , Functor(fmap)
+                                                , Functor(fmap, (<$))
                                                 , void
                                                 )
 import           Data.Generics.Product          ( field )
@@ -66,35 +67,31 @@ import           GHC.Real                       ( div
                                                 , mod
                                                 , realToFrac
                                                 )
-import           GHCJS.DOM                      ( currentWindowUnchecked )
+import           GHCJS.DOM                      ( currentWindowUnchecked, currentWindow )
 import           GHCJS.DOM.Document             ( getLocationUnchecked )
 import           GHCJS.DOM.Location             ( assign )
-import           GHCJS.DOM.Window               ( getDocument )
+import           GHCJS.DOM.Window               ( getDocument, scrollTo )
 import           Language.Javascript.JSaddle    ( MonadJSM
                                                 , liftJSM
                                                 )
 import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , SetRoute
-                                                , setRoute
+                                                , setRoute, RouteToUrl (..)
                                                 )
 import           Reflex.Dom                     ( (&)
                                                 , (=:)
                                                 , Adjustable
                                                 , DomBuilder
-                                                    ( DomBuilderSpace
-                                                    , inputElement
+                                                    (..
                                                     )
                                                 , Element
                                                 , EventName(Click)
                                                 , EventResult
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
-                                                , InputElement
-                                                    ( _inputElement_checked
-                                                    , _inputElement_value
-                                                    )
-                                                , InputElementConfig
+                                                , InputElement ( _inputElement_checked)
+
                                                 , MonadHold
                                                 , NotReady
                                                 , PostBuild
@@ -107,7 +104,7 @@ import           Reflex.Dom                     ( (&)
                                                 , dyn_
                                                 , el
                                                 , elAttr
-                                                , elAttr'
+
                                                 , elClass
                                                 , elClass'
                                                 , elementConfig_initialAttributes
@@ -116,14 +113,15 @@ import           Reflex.Dom                     ( (&)
                                                 , leftmost
                                                 , switchHold
                                                 , tag
-                                                , text, el'
+                                                , text, el', ElementConfig, elementConfig_eventSpec, DomSpace (..), preventDefault, PerformEvent (..), prerender_
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , updateState
+                                                , updateState, Loading (LoadingStill)
                                                 )
 import           Text.Printf                    ( printf )
 import           TextShow                       ( TextShow(showt) )
+import Data.Proxy (Proxy (..))
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -255,11 +253,11 @@ elLoginSignup dynRedirectRoute =
         SessionAnon -> do
           (domLogin, _) <- el' "a" $ text "Log in"
           let evLogin = domEvent Click domLogin
-          setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+          setRouteAndLoading $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
           el "span" $ text " or "
           (domSignup, _) <- el' "a" $ text "sign up"
           let evSignup = domEvent Click domSignup
-          setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+          setRouteAndLoading $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
           updateState $
             tag (current dynRedirectRoute)
                 (leftmost [evSignup, evLogin]) <&> \r ->
@@ -275,8 +273,50 @@ elLoginSignup dynRedirectRoute =
             domAdmin <- elClass "span" "text-zinc-500 cursor-pointer text-sm"
               $ iFa' "fas fa-lock"
             let evClickAdmin = domEvent Click domAdmin
-            setRoute $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
+            setRouteAndLoading $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
             updateState $ tag (current dynRedirectRoute) evClickAdmin <&> \r ->
               [ field @"stRedirectUrl" .~ r ]
           let evLogout = domEvent Click domLogout
           updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
+
+setRouteAndLoading
+  :: forall t r (m :: * -> *)
+  . ( SetRoute t r m
+    , EventWriter t (Endo State) m
+    )
+  => Event t r
+  -> m ()
+setRouteAndLoading e = do
+  updateState $ e $> [ field @"stLoading" .~ LoadingStill ]
+  setRoute e
+
+elRouteLink
+  :: forall t m a route
+   . ( DomBuilder t m
+     , EventWriter t (Endo State) m
+     , RouteToUrl route m
+     , SetRoute t route m
+     , Prerender t m
+     )
+    => route -- ^ Target route
+    -> m a -- ^ Child widget
+    -> m a
+elRouteLink r w = do
+  enc <- askRouteToUrl
+  let cfg = (def :: ElementConfig EventResult t (DomBuilderSpace m))
+        & elementConfig_eventSpec
+            %~ addEventSpecFlags (Proxy :: Proxy (DomBuilderSpace m))
+                                 Click
+                                 (const preventDefault)
+        & elementConfig_initialAttributes .~ "href" =: enc r
+  (e, a) <- element "a" cfg w
+  let evClick = domEvent Click e
+  setRouteAndLoading $ r <$ evClick
+
+  -- scrollToTop e
+  prerender_ blank $ performEvent_ $ evClick $> liftJSM
+    ( currentWindow >>= \case
+        Nothing -> pure ()
+        Just win -> scrollTo win 0 0
+    )
+  pure a

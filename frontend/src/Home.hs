@@ -102,10 +102,10 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , RouteToUrl
                                                 , Routed
                                                 , RoutedT
-                                                , SetRoute(setRoute)
+                                                , SetRoute
                                                 , askRoute
                                                 , mapRoutedT
-                                                , routeLink
+
                                                 )
 import           Page.Common                    ( elFooter )
 import           Page.Introduction              ( introduction )
@@ -173,14 +173,14 @@ import           Reflex.Dom                     ( (=:)
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
                                                 , iFa
-                                                , whenJust
+                                                , whenJust, elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Session(..)
                                                 , State(..)
                                                 , stageUrl
-                                                , updateState, GetLoadedAndBuilt
+                                                , updateState, GetLoadedAndBuilt, Loading (..)
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )
@@ -251,17 +251,25 @@ elSettings
     , Prerender t m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , Routed t StageIndex m
-    , SetRoute t (R FrontendRoute) m
+    , Obelisk.Route.Frontend.Routed t StageIndex m
+    , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
+    , MonadFix m
     )
   => m ()
 elSettings = elClass "div" "shadow-md p-1" do
     dynState <- ask
-    let dynAppState = stApp <$> dynState
+    dynAppState <- holdUniqDyn $ stApp <$> dynState
+    let
         lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
           | otherwise -> $failure "Key not implemented"
+
+    dynLoading <- holdUniqDyn $ stLoading <$> dynState
+    dyn_ $ dynLoading <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
+      LoadingStill     -> iFa "fas fa-spinner fa-spin"
+      LoadingDone      -> blank
+      LoadingError str -> elAttr "span" ("title" =: str) $ iFa "fal fa-meh"
 
     elClass "div" "float-left divide-x border-gray-500" do
         -- button to show configuration dropdown
@@ -274,8 +282,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                   let dynMCfgName =
                           fmap pcfgName
                               . view (at lang >>> _Wrapped')
-                              . stPloverCfg . stKeyboard
-                              <$> dynAppState
+                              . stPloverCfg <$> dynAppState
                       elCheckmark co =
                           dyn_ $ dynMCfgName <&> \cfgName ->
                               elClass "span" "inline-block w-4" $
@@ -294,7 +301,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                   let eQwertz = domEvent Click elQwertz
                   updateState $
                       eQwertz
-                          $> [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg"
+                          $> [ field @"stApp" . field @"stPloverCfg"
                                   . _Wrapped'
                                   . ix lang
                                   .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
@@ -309,7 +316,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                           _        -> lsStenoQwerty
                   updateState $
                       eQwerty
-                          $> [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg"
+                          $> [ field @"stApp" . field @"stPloverCfg"
                                   . _Wrapped'
                                   . ix lang
                                   .~ keyMapToPloverCfg lsStenoQwertyEN [] "keyboard" CNQwertyEN
@@ -346,7 +353,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                       let evGotoSettings = tag (current dynStage) $ domEvent Click domSettings
                       updateState $ evGotoSettings <&> \stage ->
                         [ field @"stRedirectUrl" .~ (stageUrl @key) stage ]
-                      setRoute $ evGotoSettings $> FrontendRoute_Auth :/ AuthPage_Settings :/ ()
+                      setRouteAndLoading $ evGotoSettings $> FrontendRoute_Auth Obelisk.Route.Frontend.:/ AuthPage_Settings Obelisk.Route.Frontend.:/ ()
 
                   pure eFile'
 
@@ -363,7 +370,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                               $ text "Back to system selection"
                   let eClickRL = domEvent Click eRL
                   updateState $ eClickRL $> [ field @"stApp" . field @"stMLang" .~ Nothing]
-                  setRoute $ eClickRL $> FrontendRoute_Main :/ ()
+                  setRouteAndLoading $ eClickRL $> FrontendRoute_Main :/ ()
 
         evText <- postRender $ do
             fileReader <- liftJSM newFileReader
@@ -382,12 +389,12 @@ elSettings = elClass "div" "shadow-md p-1" do
                 let msgCaption = "Error when loading file"
                     msgBody = "Did you upload a proper .cfg file?\n" <> str
                  in [ field @"stApp" . field @"stMsg" ?~ Message {..}
-                    , field @"stApp" . field @"stKeyboard" . field @"stPloverCfg" .~ defaultPloverCfg
+                    , field @"stApp" . field @"stPloverCfg" .~ defaultPloverCfg
                     ]
 
         updateState $ mapMaybe (either (const Nothing) Just) evRespConfigNew <&>
             \(ln, systemCfg@PloverSystemCfg {..}) ->
-                [ field @"stApp" . field @"stKeyboard" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
+                [ field @"stApp" . field @"stPloverCfg" %~ (_Wrapped' %~ ix ln .~ systemCfg),
                   if null pcfgUnrecognizedQwertys
                       then id
                       else
@@ -421,7 +428,7 @@ elSettings = elClass "div" "shadow-md p-1" do
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
 
-    dynRedirectRoute <- fmap (stageUrl @key) <$> askRoute
+    dynRedirectRoute <- fmap (stageUrl @key) <$> Obelisk.Route.Frontend.askRoute
     elLoginSignup dynRedirectRoute
 
     elClass "br" "clear-both" blank
@@ -437,8 +444,8 @@ elToc ::
       Palantype key,
       Prerender t m,
       PostBuild t m,
-      RouteToUrl (R FrontendRoute) m,
-      SetRoute t (R FrontendRoute) m
+      Obelisk.Route.Frontend.RouteToUrl (Obelisk.Route.Frontend.R FrontendRoute) m,
+      Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
     )
     => StageIndex
     -> Dynamic t StateToc
@@ -448,6 +455,7 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
     let dynShowStage i = Set.member i . stShowStage <$> dynStateToc
         dynClassDisplay = bool "hidden" "" <$> dynVisible
         dynClsToplevelSteno = bool "hidden" "" . stShowToplevelSteno <$> dynStateToc
+        dynClsSublevelSteno = bool "hidden" "" . stShowSublevelSteno <$> dynStateToc
 
     -- button to toggle TOC
     elClass "div" "flex items-center" do
@@ -476,13 +484,13 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
           elClass "span" "steno-navigation text-xs p-1"
             $ text $ showt $ KI.toRaw @key KI.kiCtrlNumber
 
-    elDynClass "div" (fmap ("border-t " <>) dynClassDisplay) $ do
+    elDynClass "div" (fmap ("mt-1 border-t " <>) dynClassDisplay) $ do
 
         let dynCleared = stCleared <$> dynStateToc
         dyn_ $ dynCleared <&> \cleared -> do
 
             let
-                elLi iSubstage = do
+                elLi dynClsSteno iSubstage = do
                     let cls = "whitespace-nowrap leading-7" <> " " <>
                             if iSubstage == stageCurrent
                                 then "bg-zinc-200"
@@ -491,12 +499,16 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
                         elClass "span" "w-4 inline-block px-0.5" $ if iSubstage `Set.member` cleared
                             then elClass "span" "text-green-500 text-xs" $ iFa "fas fa-check"
                             else el "span" $ text "○"
-                        routeLink (stageUrl @key iSubstage) $ do
-                            let (str1, mg, str2) = Stage.toTOCString $
+                        elRouteLink (stageUrl @key iSubstage) $ do
+                            let (iSub, mg, str2) = Stage.toTOCString $
                                   case Stage.fromIndex @key iSubstage of
                                     Nothing -> $failure $ "index invalid: " <> show iSubstage
                                     Just s  -> s
-                            text str1
+                            text $ "Ex. " <> showt iSub
+                            elDynClass "span"
+                              ( ("steno-navigation text-xs p-1 " <>) <$> dynClsSteno)
+                              $ text $ showt $ KI.toRaw @key $ $fromJust $ kiFromSmallNumber iSub
+                            text ": "
                             whenJust mg \g -> el "strong" $ text $ "G" <> showt g <> " "
                             text str2
 
@@ -507,14 +519,14 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
                                 bool "fas fa-caret-right" "fas fa-caret-down" <$> dynShowStage i
                         elClass "span" "text-grayishblue-900 text-lg w-4 inline-block"
                           $ elDynClass "i" dynClass blank
-                        text "Stage "
-                        elDynClass "span" ( fmap ("steno-navigation text-xs p-1 " <>) dynClsToplevelSteno) do
-                            text $ showt $ KI.toRaw @key $ $fromJust $ kiFromSmallNumber i
-                            text " "
-                        text $ showt i <> ": " <> stageTitle
+                        text $ "Stage " <> showt i
+                        elDynClass "span"
+                          ( ("steno-navigation text-xs p-1 " <>) <$> dynClsToplevelSteno
+                          ) $ text $ showt $ KI.toRaw @key $ $fromJust $ kiFromSmallNumber i
+                        text $ ": " <> stageTitle
 
                         let dynClassUl = bool "hidden" "" <$> dynShowStage i
-                        elDynClass "ul" dynClassUl $ traverse_ elLi iSubstages
+                        elDynClass "ul" dynClassUl $ traverse_ (elLi dynClsSublevelSteno) iSubstages
 
                     let eClickS = domEvent Click s
                     updateState $ eClickS $>
@@ -524,7 +536,7 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
 
             el "ul" $ do
 
-                elLi 0
+                elLi dynClsToplevelSteno 0
                 elStage 1 "The Palantype Alphabet"  [1 .. 8 ]
                 let lang = if
                       | Just HRefl <- typeRep @key `eqTypeRep` typeRep @EN.Key -> SystemEN
@@ -547,14 +559,14 @@ elToc stageCurrent dynStateToc = elClass "section" "p-3 shrink-0 overflow-y-auto
                       elStage 13 "Rare replacements and small s"  [49 .. 52]
                       elStage 14 "Briefs"                         [53]
                       elStage 15 "Real-life text input"           [54 .. 58]
-                      elLi 59
+                      elLi dynClsToplevelSteno 59
 
 landingPage
   :: forall t (m :: * -> *)
   . ( DomBuilder t m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , SetRoute t (R FrontendRoute) m
+    , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
     )
   => m ()
 landingPage = elClass "div" "bg-grayishblue-300" $ do
@@ -636,7 +648,7 @@ landingPage = elClass "div" "bg-grayishblue-300" $ do
                           pure $ case lang of
                             SystemDE -> stageUrl @DE.Key stage
                             SystemEN -> stageUrl @EN.Key stage
-                    setRoute $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
+                    setRouteAndLoading $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
 
     elClass "div" "flex flex-wrap justify-center py-8" $ do
 
@@ -739,16 +751,20 @@ elStages
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , RouteToUrl (R FrontendRoute) m
-       , SetRoute t (R FrontendRoute) m
-       , SetRoute t (R FrontendRoute) (Client m)
+       , Obelisk.Route.Frontend.RouteToUrl (Obelisk.Route.Frontend.R FrontendRoute) m
+       , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
+       , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) (Client m)
        , TriggerEvent t m
        )
     => GetLoadedAndBuilt t
-    -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-elStages getLoadedAndBuilt = do
+    -> RoutedT t StageIndex
+         (ReaderT (Dynamic t State)
+           ( EventWriterT t (Endo State) m
+           )
+         ) ()
+elStages getLoadedAndBuilt = mdo
     elClass "header" "h-[47px] z-10" $ elSettings @key
-    dynCurrent <- askRoute
+    dynCurrent <- Obelisk.Route.Frontend.askRoute
     dyn_ $ dynCurrent <&> stages'
   where
     mkNavigation si =
@@ -762,22 +778,21 @@ elStages getLoadedAndBuilt = do
       in  Navigation{..}
 
     stages' ::
-        StageIndex ->
-        RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
-    stages' iCurrent =
-      elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" do
+        StageIndex -> RoutedT t StageIndex (ReaderT (Dynamic t State) (EventWriterT t (Endo State) m)) ()
+    stages' iCurrent = elClass "div" "py-1 flex flex-col flex-nowrap h-[calc(100%-47px)]" do
 
         dynState' <- ask
 
         let navigation = mkNavigation iCurrent
         dynActive <- holdUniqDyn $ stActive . stKeyboard . stApp <$> dynState'
 
-        eChord <- dynSimple $ dynActive <&> \case
+        evMChord <- dynSimple $ dynActive <&> \case
           True  -> do
-            dynKeyboard <- holdUniqDyn $ stKeyboard . stApp <$> dynState'
-            dynSimple $ dynKeyboard <&> \st ->
+            dynStateKeyboard <- holdUniqDyn $ stKeyboard . stApp <$> dynState'
+            dynPloverCfg <- holdUniqDyn $ stPloverCfg . stApp <$> dynState'
+            dynSimple $ dynPloverCfg <&> \ploverCfg ->
               elClass "div" "mx-auto border-b border-dotted"
-              $ postRender $ elStenoInput @key st navigation getLoadedAndBuilt
+              $ postRender $ elStenoInput @key dynStateKeyboard ploverCfg navigation getLoadedAndBuilt
           False -> do
             elClass "div" "p-2 text-center mx-auto text-gray-500 border border-solid border-gray-200 \
                           \rounded-lg" do
@@ -797,12 +812,12 @@ elStages getLoadedAndBuilt = do
             let setEnv page = mapRoutedT
                   ( withReaderT $ \dynState -> Env
                       { envDynState = dynState
-                      , envEChord = eChord
+                      , envEvMChord = evMChord
                       , envNavigation = navigation
                       , envGetLoadedAndBuilt = getLoadedAndBuilt
                       }
                   ) do
-                      dynRoute <- askRoute
+                      dynRoute <- Obelisk.Route.Frontend.askRoute
                       Env{..} <- ask
                       evLoadedAndBuilt <- envGetLoadedAndBuilt
                       void $ request $ postEventViewPage
@@ -825,37 +840,37 @@ elStages getLoadedAndBuilt = do
                               \after:h-[320px] \
                               \p-4"
                   $ setEnv do
-                  let
-                      elPageNotImplemented str = do
-                        elClass "div" "text-xs text-grayishblue-900" do
-                          el "p" $ text ("Page not implemented: StageIndex " <> showt iCurrent)
-                          el "p" $ text str
+                    let
+                        elPageNotImplemented str = do
+                          elClass "div" "text-xs text-grayishblue-900" do
+                            el "p" $ text ("Page not implemented: StageIndex " <> showt iCurrent)
+                            el "p" $ text str
 
-                  case Stage.fromIndex iCurrent of
-                    Just (Stage (StageSpecial str) _) -> case str of
-                      "Introduction"              -> introduction
-                      "Type the letters"          -> Stage1.exercise1
-                      "Memorize the order"        -> Stage1.exercise2
-                      "Type the letters blindly"  -> Stage1.exercise3
-                      "Memorize the order blindly"-> Stage1.exercise4
-                      "Memorize the left hand"    -> Stage1.exercise5
-                      "Memorize the right hand"   -> Stage1.exercise6
-                      "Memorize home row"         -> Stage1.exercise7
-                      "Memorize them all"         -> Stage1.exercise8
-                      "Building muscle memory"    -> Stage2.exercise1
-                      "Learn your first chords"   -> Stage2.exercise2
-                      "Onset, nucleus, and coda"  -> Stage2.exercise3
-                      "Syllabes and word parts"   -> Stage2.exercise4
-                      "Plover Commands"           -> ploverCommands
-                      "Fingerspelling"            -> fingerspelling
-                      "Number Mode"               -> numberMode
-                      "Command Keys"              -> commandKeys
-                      "Special Characters"        -> specialCharacters
-                      "Pattern Overview"          -> Patterns.overview
-                      _                           ->
-                        elPageNotImplemented "special page not found"
-                    Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
-                    Nothing -> elPageNotImplemented "index invalid"
+                    case Stage.fromIndex iCurrent of
+                      Just (Stage (StageSpecial str) _) -> case str of
+                        "Introduction"              -> introduction
+                        "Type the letters"          -> Stage1.exercise1
+                        "Memorize the order"        -> Stage1.exercise2
+                        "Type the letters blindly"  -> Stage1.exercise3
+                        "Memorize the order blindly"-> Stage1.exercise4
+                        "Memorize the left hand"    -> Stage1.exercise5
+                        "Memorize the right hand"   -> Stage1.exercise6
+                        "Memorize home row"         -> Stage1.exercise7
+                        "Memorize them all"         -> Stage1.exercise8
+                        "Building muscle memory"    -> Stage2.exercise1
+                        "Learn your first chords"   -> Stage2.exercise2
+                        "Onset, nucleus, and coda"  -> Stage2.exercise3
+                        "Syllabes and word parts"   -> Stage2.exercise4
+                        "Plover Commands"           -> ploverCommands
+                        "Fingerspelling"            -> fingerspelling
+                        "Number Mode"               -> numberMode
+                        "Command Keys"              -> commandKeys
+                        "Special Characters"        -> specialCharacters
+                        "Pattern Overview"          -> Patterns.overview
+                        _                           ->
+                          elPageNotImplemented "special page not found"
+                      Just (Stage (StageGeneric pg g) _) -> getGenericExercise pg g
+                      Nothing -> elPageNotImplemented "index invalid"
 
                 elClass "div" "w-max sticky bottom-4 text-xs p-1 steno-navigation mx-auto opacity-50"
                   $ text $ "⯆ "

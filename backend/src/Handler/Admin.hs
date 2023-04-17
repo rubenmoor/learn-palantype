@@ -194,11 +194,12 @@ handleCreateMissingFilesLocally UserInfo{..} = do
               pure counter
             else do
               putStrLn $ "Creating file: " <> Text.pack filename
-              case stageHierarchy of
-                StageToplevel     -> case stageSpecialGeneric of
+              let StageHierarchy t ms = stageHierarchy
+              case ms of
+                Nothing     -> case stageSpecialGeneric of
                   StageSpecial str -> writeFile filename $ "# " <> str
                   StageGeneric _ _ -> writeFile filename ""
-                StageSublevel t s -> case stageSpecialGeneric of
+                Just s -> case stageSpecialGeneric of
                   StageSpecial str -> writeFile filename $ "# " <> str
                   StageGeneric pg g -> writeFile filename $
                       "# Stage " <> showt t <> "\n\n"

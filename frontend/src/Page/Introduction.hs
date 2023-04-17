@@ -37,7 +37,7 @@ import           Data.Semigroup                 ( Endo(..)
                                                 )
 import qualified Data.Set                      as Set
 import           Obelisk.Route.Frontend         ( R
-                                                , SetRoute(setRoute)
+                                                , SetRoute
                                                 )
 import           Page.Common                    ( chordStart )
 import           Palantype.Common               ( Palantype )
@@ -68,6 +68,7 @@ import           State                          ( Env(..)
                                                 )
 import           Witherable                     ( Filterable(filter, mapMaybe) )
 import Data.Bifunctor (Bifunctor(first))
+import Shared (setRouteAndLoading)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -91,9 +92,10 @@ introduction = do
     let
         Navigation {..} = envNavigation
 
-    ((evPart1, evPart2), evPart3) <- elCMS 3 <&> first splitE . splitE . mapMaybe \case
+    evCMS <- elCMS 3 <&> mapMaybe \case
       [p1, p2, p3] -> Just ((p1, p2), p3)
       _            -> Nothing
+    let ((evPart1, evPart2), evPart3) = first splitE $ splitE evCMS
 
     elCMSContent evPart1
 
@@ -110,7 +112,7 @@ introduction = do
 
     elCMSContent evPart2
 
-    let eChordSTART = void $ filter (== chordStart) envEChord
+    let eChordSTART = void $ filter (== Just chordStart) envEvMChord
 
     -- prose class: to center within prose text-flow
     elClass "div" "prose" $ elClass "div" "mx-auto steno-action" $ do
@@ -121,7 +123,7 @@ introduction = do
           , field @"stApp" . field @"stToc" . field @"stCleared"   %~ Set.insert navCurrent
           , field @"stApp" . field @"stToc" . field @"stShowStage" .~ Set.singleton 1
           ]
-        setRoute $ eStart $> stageUrl @key 1
+        setRouteAndLoading $ eStart $> stageUrl @key 1
     el "br" blank
 
     elCMSContent evPart3

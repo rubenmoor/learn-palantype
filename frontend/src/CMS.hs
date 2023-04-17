@@ -26,9 +26,9 @@ import           Control.Category               ( (.)
 import           Control.Monad                  ( Monad )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
-import           Data.Either                    ( Either(..) )
+import           Data.Either                    ( Either(..), isRight, either )
 import           Data.Foldable                  ( Foldable(length) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  ( ($), const )
 import           Data.Functor                   ( ($>)
                                                 , (<$>)
                                                 , (<&>)
@@ -76,21 +76,22 @@ import           Shared                         ( iFa
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Session(..)
-                                                , State(..), updateState
+                                                , State(..), updateState, Loading (..)
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
 import           TextShow                       ( TextShow(showt) )
-import           Witherable                     ( catMaybes
+import           Witherable                     ( catMaybes, Filterable (..)
                                                 )
 import Data.Tuple (fst, snd)
 import Data.Eq (Eq((==)))
 import Control.Monad.Fix (MonadFix)
-import Control.Lens (set)
+import Control.Lens (set, (.~))
 import Data.Generics.Product (HasField(field))
 import Data.Monoid (Endo)
 import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
 import Servant.API (ToHttpApiData(toUrlPiece))
+import Data.Bool (Bool(..))
 
 
 elCMSContent
@@ -136,27 +137,32 @@ elCMS numParts = mdo
             . stCMSCacheInvalidationData
           <$> envDynState
 
-    evRespCMS <- Client.request $
-      Client.getCMS (constDyn $ Right navSystemLang)
-                    (constDyn $ Right navTextLang  )
-                    (constDyn $ Right filename     )
-                    (Right . UTCTimeInUrl <$> dynLatest)
-                    $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
+    evRespCMS <- request $
+      getCMS (constDyn $ Right navSystemLang)
+             (constDyn $ Right navTextLang  )
+             (constDyn $ Right filename     )
+             (Right . UTCTimeInUrl <$> dynLatest)
+             $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
-
-    dynPair <- el "div" $ widgetHold (elLoading "" $> (Nothing, never)) $
-      attachWith (\mt e -> (mt,) <$> e) (current dynLatest) evRespCMS <&> \case
+    dynPair <- el "div" $ widgetHold (pure (Nothing, never)) $
+      attachWith (\t e -> (t,) <$> e) (current dynLatest) evRespCMS <&> \case
         Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
         Right (latest, parts) -> elCMSMenu numParts latest parts
 
     let evRefresh = switchDyn $ snd <$> dynPair
-    evRespCMSCache <-
-      request $ getCacheInvalidationData evRefresh
+    evRespCMSCache <- request $ getCacheInvalidationData evRefresh
     let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
     updateState $ evSuccCMSCache <&> \ci ->
       [ set (field @"stCMSCacheInvalidationData") ci ]
     widgetHold_ blank $ evFailCMSCache <&> \msg ->
       el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
+
+    updateState $ evRefresh $>
+      [ field @"stLoading" .~ LoadingStill ]
+    updateState $ filter isRight evRespCMS $>
+      [ field @"stLoading" .~ LoadingDone ]
+    updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->
+      [ field @"stLoading" .~ LoadingError str ]
 
     pure $ catMaybes $ updated $ fst <$> dynPair
 
@@ -211,8 +217,8 @@ elCMSMenu numParts latest parts = do
             <> "title" =: "Clear server cache"
             ) $ iFa' "fas fa-skull"
 
-          evRespAll <- Client.request $ Client.postClearCache
-            (Client.getAuthData <$> envDynState)
+          evRespAll <- request $ postClearCache
+            (getAuthData <$> envDynState)
             (constDyn $ Right navSystemLang)
             (constDyn $ Right navTextLang  )
             (constDyn $ Right navPageName  )

@@ -40,8 +40,7 @@ import           Control.Lens                   ( (%~)
                                                 , (?~)
                                                 , preview
                                                 )
-import           Control.Monad                  ( (=<<)
-                                                , when
+import           Control.Monad                  ( when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
@@ -119,8 +118,7 @@ import qualified LocalStorage                  as LS
 import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
-                                                , SetRoute(setRoute)
-                                                , routeLink
+                                                , SetRoute
                                                 )
 import           Page.Common.Stopwatch          ( elStatisticsPersonalShort
                                                 , elStopwatch
@@ -180,7 +178,7 @@ import           Safe                           ( initMay )
 import           Shared                         ( dynSimple
                                                 , formatTime
                                                 , iFa
-                                                , whenJust
+                                                , whenJust, elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -198,6 +196,7 @@ import Palantype.Common.TH (fromJust)
 elFooter
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , Palantype key
        , Prerender t m
        , RouteToUrl (R FrontendRoute) m
@@ -211,7 +210,7 @@ elFooter Navigation {..} =
     whenJust navMPrevious $ \prv ->
       elClass "div" "float-left" do
         text "< "
-        routeLink (stageUrl @key prv) $
+        elRouteLink (stageUrl @key prv) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
         elClass "span" "steno-navigation ml-2 p-2" $ text
           $ "⯇ " <> showt (KI.toRaw @key kiLeft)
@@ -222,7 +221,7 @@ elFooter Navigation {..} =
       elClass "div" "float-right" do
         elClass "span" "steno-navigation mr-2 p-2" $ text
           $ "⯈ " <> showt (KI.toRaw @key kiRight)
-        routeLink (stageUrl @key nxt) $
+        elRouteLink (stageUrl @key nxt) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
         text " >"
     elClass "br" "clear-both" blank
@@ -248,8 +247,9 @@ elCongraz evDone dynStats Navigation {..} = mdo
     Env {..} <- ask
 
     let
-        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) envEChord
-        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) envEChord
+        evChord = catMaybes envEvMChord
+        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter ) evChord
+        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) evChord
 
     dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
     let evNewStats = catMaybes $ catMaybes $ updated dynDone
@@ -311,14 +311,14 @@ elCongraz evDone dynStats Navigation {..} = mdo
                                     (\s -> if nxt > s then Just nxt else Just s)
                                     navSystemLang
                         , field @"stApp" . field @"stToc" . field @"stCleared" %~ Set.insert navCurrent
-                        ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
+                        ] <> case Stage.fromIndex @key nxt of
                             Nothing -> []
                             Just  t ->
                               [   field @"stApp" . field @"stToc"
-                                . field @"stShowStage" .~ Set.singleton t
+                                . field @"stShowStage" .~ Set.singleton (Stage.getGroupIndex t)
                               ]
 
-                    setRoute $ eContinue $> stageUrl @key nxt
+                    setRouteAndLoading $ eContinue $> stageUrl @key nxt
 
                   text "go "
                   (domABack, _) <- el' "a" $ text "back"
@@ -376,7 +376,7 @@ taskWords
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Chord key)
+    -> Event t (Maybe (Chord key))
     -> Map RawSteno Text
     -> Map Text [RawSteno]
     -> m (Event t Stats)
@@ -386,18 +386,15 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-
     fmap switchDyn $ widgetHold (loading $> never) $ evStdGen <&> \stdGen -> do
 
         let len = Map.size mapWordStenos
-            step :: Chord key -> StateWords -> StateWords
-            step c st = case st of
-                StatePause _ ->
-                    if c == chordStart @key
-                        then stepStart
-                        else st
+            step :: Maybe (Chord key) -> StateWords -> StateWords
+            step mc st = case (st, mc) of
+                (StatePause _, Just c) | c == chordStart @key -> stepStart
+                (StatePause _, _) -> st
                 -- undo last input
-                StateRun Run {..} | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                (StateRun Run {..}, Nothing) ->
                     case initMay stChords of
                         Just cs ->
                             st
@@ -413,7 +410,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                                        []
                                        (stWords !! stCounter)
                                        mapWordStenos
-                StateRun Run {..} ->
+                (StateRun Run {..}, Just c) ->
                     let rawSteno = unparts $ stChords <> [Raw.fromChord c]
                         word     = Map.findWithDefault "" rawSteno mapStenoWord
                     in  if word == stWords !! stCounter

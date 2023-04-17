@@ -53,8 +53,7 @@ import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , RouteToUrl
                                                 , SetRoute
-                                                , routeLink
-                                                , setRoute
+
                                                 )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
@@ -132,7 +131,7 @@ import           Servant.Reflex                 ( QParam(..) )
 import           Shared                         ( elLoginSignup
                                                 , formatTime
                                                 , iFa'
-                                                , elLoading
+                                                , elLoading, elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -175,16 +174,16 @@ journal dynHasLoaded = mdo
         elClass "div" "float-left" $ do
             domBack <- elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
                                \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
-            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl"))
+            setRouteAndLoading $ tag (current dynState <&> view (field @"stRedirectUrl"))
               $ domEvent Click domBack
 
             domCacheUpdateAll <- elClass "span" "text-zinc-500 \
                                                 \hover:text-grayishblue-800 \
                                                 \text-3xl cursor-pointer"
                                  $ iFa' "fas fa-sync-alt"
-            evResp <- request $ postCacheUpdateAll (getAuthData <$> dynState)
+            evRespCacheUpdateAll <- request $ postCacheUpdateAll (getAuthData <$> dynState)
               $ domEvent Click domCacheUpdateAll
-            widgetHold_ blank $ evResp <&> \case
+            widgetHold_ blank $ evRespCacheUpdateAll <&> \case
               Left strErr -> text strErr
               Right ()    -> elClass "span" "px-1 text-green-500" $ text "✓"
 
@@ -195,7 +194,7 @@ journal dynHasLoaded = mdo
         logout st = case st ^. field @"stSession" of
           SessionAnon   -> Just $ st ^. field @"stRedirectUrl"
           SessionUser _ -> Nothing
-    setRoute $ mapMaybe logout $ updated dynState
+    setRouteAndLoading $ mapMaybe logout $ updated dynState
 
     let toQParam = maybe (QParamInvalid "couldn't parse date") QParamSome
         dynStart = toQParam <$> dynMStart
@@ -325,11 +324,12 @@ journal dynHasLoaded = mdo
 showEvent
   :: forall (m :: * -> *) t
   . ( DomBuilder t m
+    , EventWriter t (Endo State) m
     , Prerender t m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
     )
-  => JournalEvent
+  => JournalEvent -- ^
   -> m ()
 showEvent = \case
     EventUser eu -> text case eu of
@@ -352,7 +352,7 @@ showEvent = \case
                           index <- Stage.findStageIndex stageRepr
                           stage <- Stage.fromIndex @key index
                           pure (stageUrl @key index, showt stage)
-                    routeLink r $ text str
+                    elRouteLink r $ text str
 
             case lang of
                 SystemEN -> mkRouteLink @EN.Key

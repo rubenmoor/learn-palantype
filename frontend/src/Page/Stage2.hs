@@ -86,7 +86,7 @@ import           Data.Tuple                     ( fst
 import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( R
-                                                , SetRoute(setRoute)
+                                                , SetRoute
                                                 )
 import           Page.Common                    ( elBtnSound
                                                 , elCongraz
@@ -106,7 +106,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , SystemLang(..)
                                                 , allKeys
                                                 , findStage
-                                                , fromChord
+
                                                 , kiBackUp
                                                 , mkChord
                                                 , parseStenoMaybe
@@ -144,7 +144,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold
                                                 , widgetHold_, splitE
                                                 )
-import           Shared                         ( whenJust )
+import           Shared                         ( whenJust, setRouteAndLoading )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
@@ -316,21 +316,19 @@ exercise1 = mdo
     let Navigation {..} = envNavigation
     unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
-    let eChordBackUp =
-          void $ gate (not <$> current dynDone) $
-            filter (\c -> KI.fromChord c == kiBackUp) envEChord
+    let evBackUp = void $ gate (not <$> current dynDone) $ filter isNothing envEvMChord
 
         (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
 
-    setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
-    updateState $ eChordBackUp $>
+    setRouteAndLoading $ evBackUp $> stageUrl @key 1 -- Stage 1.1
+    updateState $ evBackUp $>
       [ field @"stApp" . field @"stToc" . field @"stProgress" . at navSystemLang ?~ stage1_1
       ]
 
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
+    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) $ catMaybes envEvMChord)
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
     pure ()
@@ -352,25 +350,24 @@ walkWords
        , Palantype key
        , PostBuild t m
        )
-    => Event t (Chord key)
+    => Event t (Maybe (Chord key))
     -> [Text]
     -> RawSteno
     -> m (Event t ())
-walkWords evChord words raw = do
+walkWords evMChord words raw = do
 
     let chords = $fromJust $ parseStenoMaybe raw
         len    = length chords
-        step :: Chord key -> WalkState -> WalkState
-        step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
+        step :: Maybe (Chord key) -> WalkState -> WalkState
+        step mChord ws@WalkState {..} = case (mChord, wsMMistake, wsDone) of
         -- reset after done
-            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
+            (_, _, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
             -- undo stroke
-            _ | fromChord chord == KI.toRaw @key kiBackUp ->
-                ws { wsMMistake = Nothing }
+            (Nothing, _, _) -> ws { wsMMistake = Nothing }
             -- halt while mistake
-            (Just _, _) -> ws
+            (Just _, Just _, _) -> ws
             -- correct
-            _ | chords !! wsCounter == chord ->
+            (Just chord, _, _) | chords !! wsCounter == chord ->
                 let done = if wsCounter == len - 1
                         then Just True -- done
                         else Nothing
@@ -382,7 +379,7 @@ walkWords evChord words raw = do
                                 , wsDone     = Nothing
                                 }
 
-    dynWalk <- foldDyn step stepInitial evChord
+    dynWalk <- foldDyn step stepInitial evMChord
     let evDone = catMaybes $ wsDone <$> updated dynWalk
 
     elClass "table" "my-4" do
@@ -443,13 +440,13 @@ exercise2 = mdo
         let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
             txt = "The quick brown fox jumps over the la zy dog ."
 
-        in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
+        in  walkWords (gate (not <$> current dynDone) envEvMChord) (Text.words txt) raw
 
       SystemDE ->
           let raw = "MID DEM F+ISn F+Ä+GSD DEÜ ʃG+EI/FEL +-"
               txt = "Mit dem Wissen wächst der Zwei fel ."
 
-          in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
+          in  walkWords (gate (not <$> current dynDone) envEvMChord) (Text.words txt) raw
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
@@ -627,7 +624,7 @@ exercise3 = mdo
             elClass "p" "text-sm text-red-500" $ text $ "Couldn't load exercise: " <> str
             pure never
         Right (mSW, mWSs) ->
-            taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
+            taskSingletons dynStatsAll (gate (not <$> current dynDone) $ catMaybes envEvMChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     blank
@@ -666,7 +663,7 @@ exercise4 = mdo
             pure never
         Right (mSW, mWSs) -> taskWords
             dynStatsAll
-            (gate (not <$> current dynDone) envEChord)
+            (gate (not <$> current dynDone) envEvMChord)
             mSW
             mWSs
 
