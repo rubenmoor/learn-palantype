@@ -112,7 +112,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , text
                                                 , updated
                                                 , widgetHold_
-                                                , zipDyn, TriggerEvent, PerformEvent (Performable), InputElementConfig
+                                                , zipDyn, TriggerEvent, PerformEvent (Performable), InputElementConfig, holdUniqDyn
                                                 )
 import           Witherable                     ( Filterable
                                                     ( catMaybes
@@ -126,7 +126,6 @@ import           Common.Auth                    ( LoginData(..)
                                                 )
 import           Common.Model                   ( Message(..) )
 import           Control.Lens                   ( preview
-                                                , view
                                                 )
 import           Control.Monad.Reader           ( MonadReader
                                                 , ask
@@ -209,7 +208,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
     (_, evAliasExists) <- fanEither <$> request (postDoesAliasExist eAlias evFocusLostAlias)
 
     el "h3" $ text "Public visibility"
-    dynCheckedVisible <- Shared.elLabelCheckbox False "Show my scores" "scores-visible"
+    dynCheckedVisible <- elLabelCheckbox False "Show my scores" "scores-visible"
 
     el "p" $ text "If you check this, your scores will be publicly visible. \
                   \If not, nothing will be shown, not even your alias."
@@ -224,7 +223,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
     let evPressEnter = keypress Enter inputPassword
     el "br" blank
     evCheckedHidePassword <- updated
-        <$> Shared.elLabelCheckbox False "Hide password input" "hide-password"
+        <$> elLabelCheckbox False "Hide password input" "hide-password"
 
     el "p" $ text "You enter your password only once. There are \
                   \no invalid passwords except for an empty one."
@@ -233,7 +232,7 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
 
     evSubmit <- elButtonSubmit $ text "Submit"
 
-    let dynEUserNew =
+    dynEUserNew <- holdUniqDyn $
           zipDyn dynState (
             zipDyn dynUserExists $
               zipDyn dynMUserName $
@@ -280,8 +279,8 @@ signup = elAttr "section" ("id" =: "user-form") $ mdo
          \In order to delete all data related to your account, there is a \
          \delete option right on this website."
 
-    dyn_ $ dynState <&> \State {..} ->
-        setRouteAndLoading $ filter isRight evRespNew $> stRedirectUrl
+    dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+    dyn_ $ dynRedirectUrl <&> \url -> setRouteAndLoading $ filter isRight evRespNew $> url
 
 login
     :: forall t (m :: * -> *)
@@ -313,7 +312,7 @@ login = elAttr "section" ("id" =: "user-form") mdo
                    )
     (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
     evCheckedHidePassword <- el "p" $ updated
-        <$> Shared.elLabelCheckbox False "Hide password input" "hide-password"
+        <$> elLabelCheckbox False "Hide password input" "hide-password"
 
     let evPressEnter = keypress Enter inputPassword
         evWrongInput =
@@ -338,14 +337,14 @@ login = elAttr "section" ("id" =: "user-form") mdo
       , field @"stApp" .~ appState
       ]
 
-    dyn_ $ dynState <&> \State {..} ->
-        setRouteAndLoading $ evLogin $> stRedirectUrl
+    dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+    dyn_ $ dynRedirectUrl <&> \url -> setRouteAndLoading $ evLogin $> url
 
     el "br" blank
     el "br" blank
     el "p" do
             text "Don't have an account yet? "
-            Shared.elRouteLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+            elRouteLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                 $ text "Sign up"
             text " here."
 
@@ -376,20 +375,22 @@ settings getLoadedAndBuilt = do
             domBack <-
               elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
                              \cursor-pointer"
-              $ Shared.iFa' "fas fa-arrow-circle-left"
-            setRouteAndLoading $ tag (current dynState <&> view (field @"stRedirectUrl")) $
-              domEvent Click domBack
-        Shared.elLoginSignup $ stRedirectUrl <$> dynState
+              $ iFa' "fas fa-arrow-circle-left"
+            behRedirectUrl <- fmap current $ holdUniqDyn $ stRedirectUrl <$> dynState
+            setRouteAndLoading $ tag behRedirectUrl $ domEvent Click domBack
+        dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+        elLoginSignup dynRedirectUrl
         elClass "br" "clear-both" blank
 
     elAttr "section" ("id" =: "user-form") mdo
         el "h1"  $ text "Settings"
 
-        let dynCurrentAlias = dynState <&> fromMaybe "" . preview
+        dynCurrentAlias <- holdUniqDyn $ dynState <&> fromMaybe "" . preview
               (   field @"stSession"
                 . _As @"SessionUser"
                 . field @"sdAliasName"
               )
+        let
             conf = def & inputElementConfig_setValue
               .~ tagPromptlyDyn dynCurrentAlias
                                 (leftmost [evLoadedAndBuilt, void evRespAliasRenameFail])
@@ -414,8 +415,9 @@ settings getLoadedAndBuilt = do
           <> "class" =: "ml-4 rounded-xl bg-grayishblue-800 text-white px-2 py-1"
           ) $ text "Submit"
         let evSubmitAlias = domEvent Click domButton
+        dynAuthData <- holdUniqDyn $ getAuthData <$> dynState
         (evRespAliasRenameFail, evRespAliasRename) <-
-          fanEither <$> request (postAliasRename (getAuthData <$> dynState)
+          fanEither <$> request (postAliasRename dynAuthData
                                                  dynEAliasNew
                                                  (leftmost [evSubmitAlias, evPressEnter])
                                 )
@@ -441,11 +443,11 @@ settings getLoadedAndBuilt = do
         el "h3" $ text "Public visibility"
 
         let elemId = "cb-visiblity"
-            dynVisible = dynState <&> fromMaybe False . preview
-              (   field @"stSession"
-                . _As @"SessionUser"
-                . field @"sdAliasVisible"
-              )
+        dynVisible <- holdUniqDyn $ dynState <&> fromMaybe False . preview
+            (   field @"stSession"
+              . _As @"SessionUser"
+              . field @"sdAliasVisible"
+            )
         dyn_ $ dynVisible <&> \bVisible -> do
           cb <-
               inputElement
@@ -459,9 +461,9 @@ settings getLoadedAndBuilt = do
               evShowScoresChecked = updated dynShowScoresChecked
           updateState $ evShowScoresChecked <&> \isChecked ->
             [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
-          void $ request $ postAliasVisibility (getAuthData <$> dynState)
-                                             (Right <$> dynShowScoresChecked)
-                                             (void evShowScoresChecked)
+          void $ request $ postAliasVisibility dynAuthData
+                                               (Right <$> dynShowScoresChecked)
+                                               (void evShowScoresChecked)
 
         el "p" $ text
             "If you check this, your scores will be publicly visible. \

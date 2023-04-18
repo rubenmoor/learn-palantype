@@ -98,7 +98,6 @@ import           Reflex.Dom                     ( (=:)
                                                 , el
                                                 , elAttr
                                                 , elClass
-                                                , elClass'
                                                 , foldDyn
                                                 , holdUniqDyn
                                                 , leftmost
@@ -210,7 +209,8 @@ mkStopwatch
 mkStopwatch ev = do
     Env{..} <- ask
     let evGo = void $ Witherable.filter (== (-1)) ev
-    _ <- request $ postStatsStart (getAuthData <$> envDynState) evGo
+    dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
+    _ <- request $ postStatsStart dynAuthData evGo
     evToggle <- performEvent $ ev <&> \nErrors ->
         ESWToggle nErrors <$> liftIO getCurrentTime
     evTick <- fmap (ESWTick <<< _tickInfo_lastUTC)

@@ -254,8 +254,9 @@ elCongraz evDone dynStats Navigation {..} = mdo
     dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
     let evNewStats = catMaybes $ catMaybes $ updated dynDone
 
+    dynAuthData <- holdUniqDyn $ getMaybeAuthData <$> envDynState
     _ <- request $ postEventStageCompleted
-      (getMaybeAuthData <$> envDynState)
+      dynAuthData
       (dynDone <&> maybe (Left "not ready")
         (maybe (Left "no stats") \stats ->
           Right (navSystemLang, navCurrent, stats)

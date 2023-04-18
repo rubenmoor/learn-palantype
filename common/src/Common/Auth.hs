@@ -129,6 +129,9 @@ data SessionData = SessionData
   , sdClearances :: Rank
   } deriving (Generic)
 
+instance Eq SessionData where
+  sd1 == sd2 = sdUserName sd1 == sdUserName sd2
+
 instance ToJSON SessionData
 instance FromJSON SessionData
 

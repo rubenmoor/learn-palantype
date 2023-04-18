@@ -98,7 +98,7 @@ import qualified AdminPages
 import qualified AuthPages
 import           Client                         ( getAppState
                                                 , postAppState
-                                                , request, getCacheInvalidationData, getLocallyCreateMissingFiles, getAuthData
+                                                , request, getCacheInvalidationData, getLocallyCreateMissingFiles
                                                 )
 import           Common.Auth                    ( SessionData(..) )
 import           Common.Model                   ( AppState
@@ -183,7 +183,7 @@ frontendBody = mdo
 
     dynSessionData <- holdDyn Nothing $ Just <$> evSessionFromServer
 
-    let dynAuthData = dynSessionData <&> \case
+    dynAuthData <- holdUniqDyn $ dynSessionData <&> \case
           Nothing -> Left "not logged in"
           Just SessionData{..} -> Right (sdJwt, sdAliasName)
 
@@ -267,21 +267,23 @@ frontendBody = mdo
     let isLoggedIn = \State{..} -> case stSession of
           SessionUser _ -> True
           SessionAnon   -> False
-        dynEAuth = dynState <&> \State{..} -> case stSession of
-          SessionAnon -> Left "not logged in"
-          SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
+    dynEAuth <- holdUniqDyn $ dynState <&> \State{..} -> case stSession of
+      SessionAnon -> Left "not logged in"
+      SessionUser SessionData{..} -> Right (sdJwt, sdAliasName)
 
     -- TODO: persist application state on visibility change (when hidden)
     updatedTail <- tailE $ updated dynState
-    _ <- request $ postAppState dynEAuth (Right . stApp <$> dynState) $
+    dynAppState <- holdUniqDyn $ Right . stApp <$> dynState
+    _ <- request $ postAppState dynEAuth dynAppState $
         void $ filter isLoggedIn updatedTail
 
     prerender_ blank $ performEvent_ $
       filter (not <<< isLoggedIn) (updated dynState) <&> \State{..} ->
         liftJSM $ LS.put LS.KeyAppState stApp
 
-    prerender_ blank $ performEvent_ $ updated dynState <&> \State{..} -> do
-        liftJSM $ LS.put LS.KeySession stSession
+    dynSession <- holdUniqDyn $ stSession <$> dynState
+    prerender_ blank $ performEvent_
+      $ liftJSM . LS.put LS.KeySession <$> updated dynSession
 
     (_, evStateUpdate) <- mapRoutedT (runEventWriterT <<< flip runReaderT dynState) do
 
@@ -317,17 +319,17 @@ frontendBody = mdo
             FrontendRoute_Admin -> subRoute_ \case
                 AdminPage_CreateMissingFiles -> do
                   evLoadedAndBuilt <- getLoadedAndBuilt
-                  void $ request $ getLocallyCreateMissingFiles (getAuthData <$> dynState) evLoadedAndBuilt
+                  void $ request $ getLocallyCreateMissingFiles dynAuthData evLoadedAndBuilt
                 AdminPage_Journal -> do
                   evLoadedAndBuilt <- getLoadedAndBuilt
+                  dynFanAdmin <- holdUniqDyn $ dynState <&> \State{..} -> case stSession of
+                    SessionAnon -> Map.singleton FanAdminLogin ()
+                    SessionUser SessionData{..} ->
+                      if sdIsSiteAdmin || sdClearances >= RankAdmin
+                      then Map.singleton FanAdminAccess ()
+                      else Map.singleton FanAdminForbidden ()
                   let
-                      evAdmin = attachPromptlyDynWith const dynState evLoadedAndBuilt
-                      selector = fanMap $ evAdmin <&> \State{..} -> case stSession of
-                        SessionAnon -> Map.singleton FanAdminLogin ()
-                        SessionUser SessionData{..} ->
-                          if sdIsSiteAdmin || sdClearances >= RankAdmin
-                          then Map.singleton FanAdminAccess ()
-                          else Map.singleton FanAdminForbidden ()
+                      selector = fanMap $ attachPromptlyDynWith const dynFanAdmin evLoadedAndBuilt
                       evToLogin = select selector $ Const2 FanAdminLogin
                       evAccess = select selector $ Const2 FanAdminAccess
                       evForbidden = select selector $ Const2 FanAdminForbidden

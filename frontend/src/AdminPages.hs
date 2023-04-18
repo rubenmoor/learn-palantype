@@ -85,7 +85,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , tag
                                                 , text
                                                 , updated
-                                                , widgetHold_
+                                                , widgetHold_, holdUniqDyn
                                                 )
 import           TextShow                       ( TextShow(showt) )
 
@@ -139,7 +139,7 @@ import           State                          ( Session(..)
                                                 )
 import           Text.Read                      ( readEither )
 import           Text.Show                      ( Show(show) )
-import           Witherable                     ( mapMaybe )
+import           Witherable                     ( Filterable (..) )
 import Data.Traversable (Traversable(traverse))
 import Control.Lens (At(at), (?~), (%~), non)
 
@@ -169,20 +169,21 @@ journal
 journal dynHasLoaded = mdo
 
     dynState <- ask
+    dynAuthData <- holdUniqDyn $ getAuthData <$> dynState
+    behRedirectUrl <- fmap current $ holdUniqDyn $ stRedirectUrl <$> dynState
 
     elClass "div" "shadow-md p-1" $ do
         elClass "div" "float-left" $ do
             domBack <- elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
                                \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
-            setRouteAndLoading $ tag (current dynState <&> view (field @"stRedirectUrl"))
-              $ domEvent Click domBack
+            setRouteAndLoading $ tag behRedirectUrl $ domEvent Click domBack
 
             domCacheUpdateAll <- elClass "span" "text-zinc-500 \
                                                 \hover:text-grayishblue-800 \
                                                 \text-3xl cursor-pointer"
                                  $ iFa' "fas fa-sync-alt"
-            evRespCacheUpdateAll <- request $ postCacheUpdateAll (getAuthData <$> dynState)
-              $ domEvent Click domCacheUpdateAll
+            evRespCacheUpdateAll <- request $ postCacheUpdateAll dynAuthData
+                $ domEvent Click domCacheUpdateAll
             widgetHold_ blank $ evRespCacheUpdateAll <&> \case
               Left strErr -> text strErr
               Right ()    -> elClass "span" "px-1 text-green-500" $ text "✓"
@@ -190,11 +191,10 @@ journal dynHasLoaded = mdo
         elLoginSignup $ constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()
         elClass "br" "clear-both" blank
 
-    let
-        logout st = case st ^. field @"stSession" of
+    dynMLogout <- holdUniqDyn $ dynState <&> \st -> case st ^. field @"stSession" of
           SessionAnon   -> Just $ st ^. field @"stRedirectUrl"
           SessionUser _ -> Nothing
-    setRouteAndLoading $ mapMaybe logout $ updated dynState
+    setRouteAndLoading $ catMaybes $ updated dynMLogout
 
     let toQParam = maybe (QParamInvalid "couldn't parse date") QParamSome
         dynStart = toQParam <$> dynMStart
@@ -215,8 +215,7 @@ journal dynHasLoaded = mdo
                   ]
         evLoad = leftmost [ gate (current dynHasLoaded) evParamUpdate, void $ updated dynHasLoaded]
 
-    evResp <- request
-        $ getJournalAll (getAuthData <$> dynState)
+    evResp <- request $ getJournalAll dynAuthData
             dynStart
             dynEnd
             dynExclAdmin
@@ -255,11 +254,12 @@ journal dynHasLoaded = mdo
               domCbx <- inputElement confCbx
               elAttr "label" ("for" =: elemId) $ el "span" $ do
                 text "Exclude admin user "
-                el "em" $ dynText $ dynState <&>
+                dynAdminName <- holdUniqDyn $ dynState <&>
                   view ( field @"stSession"
                        . _As @"SessionUser"
                        . field @"sdUserName"
                        )
+                el "em" $ dynText dynAdminName
                 text " "
               pure $ _inputElement_checked domCbx
 

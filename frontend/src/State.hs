@@ -20,7 +20,7 @@ import           Common.Model                   ( AppState
                                                 , defaultAppState, TextLang
                                                 )
 import           Common.Route                   ( FrontendRoute(..), FrontendRoute_TextLang (..))
-import           Control.Applicative            ( (<$>) )
+import           Control.Applicative            ( (<$>), Applicative (..) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )
@@ -115,10 +115,10 @@ updateState event = tellEvent $ foldMap Endo <$> event
 
 -- Session
 
-data Session
-  = SessionUser SessionData
-  | SessionAnon
-  deriving (Generic)
+data Session where
+  SessionUser :: SessionData -> Session
+  SessionAnon :: Session
+  deriving (Eq, Generic)
 
 instance FromJSON Session
 instance ToJSON Session

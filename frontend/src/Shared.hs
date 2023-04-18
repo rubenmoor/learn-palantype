@@ -113,7 +113,7 @@ import           Reflex.Dom                     ( (&)
                                                 , leftmost
                                                 , switchHold
                                                 , tag
-                                                , text, el', ElementConfig, elementConfig_eventSpec, DomSpace (..), preventDefault, PerformEvent (..), prerender_
+                                                , text, el', ElementConfig, elementConfig_eventSpec, DomSpace (..), preventDefault, PerformEvent (..), prerender_, holdUniqDyn
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -122,6 +122,7 @@ import           State                          ( Session(..)
 import           Text.Printf                    ( printf )
 import           TextShow                       ( TextShow(showt) )
 import Data.Proxy (Proxy (..))
+import Control.Monad.Fix (MonadFix)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -186,19 +187,6 @@ elLabelCheckbox initial label id = do
     elAttr "label" ("for" =: id) $ el "span" $ text label
     pure $ _inputElement_checked cb
 
-undynState
-    :: forall t (m :: * -> *)
-     . ( MonadReader (Dynamic t State) m
-       , Adjustable t m
-       , NotReady t m
-       , PostBuild t m
-       )
-    => (State -> m ())
-    -> m ()
-undynState func = do
-    dynState <- ask
-    dyn_ $ dynState <&> \st -> func st
-
 redirectToWikipedia
   :: forall m . MonadJSM m => Text -> m ()
 redirectToWikipedia str = liftJSM $
@@ -223,6 +211,8 @@ formatTime dt =
 requestPostViewPage
   :: forall m t
   . ( MonadReader (Dynamic t State) m
+    , MonadHold t m
+    , MonadFix m
     , PostBuild t m
     , Prerender t m
     )
@@ -230,9 +220,9 @@ requestPostViewPage
   -> Event t ()
   -> m ()
 requestPostViewPage dynRoute ev = do
-  dynState <- ask
+  dynMAuthData <- ask >>= holdUniqDyn . fmap getMaybeAuthData
   void $ request $ postEventViewPage
-    (getMaybeAuthData <$> dynState)
+    dynMAuthData
     (Right . showRoute <$> dynRoute)
     ev
 

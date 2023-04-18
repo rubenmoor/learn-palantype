@@ -1,14 +1,10 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Page.Stage15.SpecialCharacters
@@ -18,12 +14,10 @@ module Page.Stage15.SpecialCharacters
 import Control.Monad (unless)
 import Control.Monad.Reader.Class (MonadReader, ask)
 import Data.Function (($))
-import Data.Semigroup ((<>))
 import Page.Common (elNotImplemented)
 import Palantype.Common (SystemLang (SystemDE))
-import Reflex.Dom ((=:), DomBuilder, blank, el, elAttr, elClass, text)
+import Reflex.Dom (DomBuilder, blank, el, elClass, text)
 import State (Env (..), Navigation (..))
-import Obelisk.Generated.Static (static)
 import Data.Eq (Eq((==)))
 
 specialCharacters

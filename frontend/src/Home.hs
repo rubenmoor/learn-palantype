@@ -56,7 +56,7 @@ import           Control.Lens.Setter            ( (%~)
                                                 , (?~)
                                                 )
 import           Control.Lens.Wrapped           ( _Wrapped' )
-import           Control.Monad                  ( (<=<))
+import           Control.Monad                  ( (<=<), (=<<))
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader
@@ -226,14 +226,16 @@ elFileInput strClass eSet = do
 
 message ::
     forall t (m :: * -> *).
-    ( DomBuilder t m,
-      PostBuild t m,
-      MonadReader (Dynamic t State) m,
-      EventWriter t (Endo State) m
+    ( DomBuilder t m
+    , PostBuild t m
+    , MonadHold t m
+    , MonadReader (Dynamic t State) m
+    , EventWriter t (Endo State) m
+    , MonadFix m
     ) =>
     m ()
 message = do
-    dynMsg <- asks (fmap $ stApp >>> stMsg)
+    dynMsg <- holdUniqDyn =<< asks (fmap $ stApp >>> stMsg)
     dyn_ $ dynMsg <&> \mMsg -> whenJust mMsg $ \Message {..} ->
       elClass "div" "overlay" $ do
         (elClose, _) <- elClass' "span" "float-right" $ iFa "fas fa-times"
@@ -251,14 +253,13 @@ elSettings
     , Prerender t m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , Obelisk.Route.Frontend.Routed t StageIndex m
-    , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
+    , Routed t StageIndex m
+    , SetRoute t (R FrontendRoute) m
     , MonadFix m
     )
   => m ()
 elSettings = elClass "div" "shadow-md p-1" do
     dynState <- ask
-    dynAppState <- holdUniqDyn $ stApp <$> dynState
     let
         lang = if
           | Just HRefl <- typeRep @key `eqTypeRep` typeRep @DE.Key -> SystemDE
@@ -279,10 +280,10 @@ elSettings = elClass "div" "shadow-md p-1" do
               iFa "fas fa-cog"
               elClass "div" "group-hover:block hidden w-40 absolute bg-gray-50 \
                             \shadow-lg z-20" mdo
-                  let dynMCfgName =
-                          fmap pcfgName
+                  dynMCfgName <- holdUniqDyn $ fmap pcfgName
                               . view (at lang >>> _Wrapped')
-                              . stPloverCfg <$> dynAppState
+                              . stPloverCfg . stApp <$> dynState
+                  let
                       elCheckmark co =
                           dyn_ $ dynMCfgName <&> \cfgName ->
                               elClass "span" "inline-block w-4" $
@@ -299,13 +300,10 @@ elSettings = elClass "div" "shadow-md p-1" do
                       text "qwertz DE"
 
                   let eQwertz = domEvent Click elQwertz
-                  updateState $
-                      eQwertz
-                          $> [ field @"stApp" . field @"stPloverCfg"
-                                  . _Wrapped'
-                                  . ix lang
-                                  .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
-                            ]
+                  updateState $ eQwertz $>
+                      [ field @"stApp" . field @"stPloverCfg" . _Wrapped' . ix lang
+                          .~ keyMapToPloverCfg lsStenoQwertz [] "keyboard" CNQwertzDE
+                      ]
 
                   (elQwerty, _) <- elClass' "span" "px-4 py-2 hover:bg-zinc-300 block text-base text-black" do
                       elCheckmark CNQwertyEN
@@ -341,7 +339,8 @@ elSettings = elClass "div" "shadow-md p-1" do
                       [ field @"stApp" . field @"stToc" . field @"stProgress" .~ def
                       ]
 
-                  dyn_ $ dynState <&> \State{..} -> case stSession of
+                  dynSession <- holdUniqDyn $ stSession <$> dynState
+                  dyn_ $ dynSession <&> \case
                     SessionAnon -> blank
                     SessionUser _ -> do
                       dynStage <- askRoute
@@ -353,7 +352,7 @@ elSettings = elClass "div" "shadow-md p-1" do
                       let evGotoSettings = tag (current dynStage) $ domEvent Click domSettings
                       updateState $ evGotoSettings <&> \stage ->
                         [ field @"stRedirectUrl" .~ (stageUrl @key) stage ]
-                      setRouteAndLoading $ evGotoSettings $> FrontendRoute_Auth Obelisk.Route.Frontend.:/ AuthPage_Settings Obelisk.Route.Frontend.:/ ()
+                      setRouteAndLoading $ evGotoSettings $> FrontendRoute_Auth :/ AuthPage_Settings :/ ()
 
                   pure eFile'
 
@@ -416,10 +415,9 @@ elSettings = elClass "div" "shadow-md p-1" do
                 ]
 
         -- button to toggle keyboard
-
-        let dynClass = dynAppState <&> \st ->
+        dynClass <- holdUniqDyn $ dynState <&> \st ->
                 "px-3 h-8 hover:text-grayishblue-800 cursor-pointer inline-block text-2xl"
-                    <> " " <> if stShow $ stKeyboard st
+                    <> " " <> if stShow $ stKeyboard $ stApp st
                         then "text-grayishblue-800"
                         else "text-zinc-500"
         (s, _) <- elDynClass' "div" dynClass $ elClass "div" "inline-flex" do
@@ -428,7 +426,7 @@ elSettings = elClass "div" "shadow-md p-1" do
 
         updateState $ domEvent Click s $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
 
-    dynRedirectRoute <- fmap (stageUrl @key) <$> Obelisk.Route.Frontend.askRoute
+    dynRedirectRoute <- fmap (stageUrl @key) <$> askRoute
     elLoginSignup dynRedirectRoute
 
     elClass "br" "clear-both" blank
@@ -444,8 +442,8 @@ elToc ::
       Palantype key,
       Prerender t m,
       PostBuild t m,
-      Obelisk.Route.Frontend.RouteToUrl (Obelisk.Route.Frontend.R FrontendRoute) m,
-      Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
+      RouteToUrl (R FrontendRoute) m,
+      SetRoute t (R FrontendRoute) m
     )
     => StageIndex
     -> Dynamic t StateToc
@@ -566,7 +564,9 @@ landingPage
   . ( DomBuilder t m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
+    , MonadFix m
+    , MonadHold t m
+    , SetRoute t (R FrontendRoute) m
     )
   => m ()
 landingPage = elClass "div" "bg-grayishblue-300" $ do
@@ -642,13 +642,13 @@ landingPage = elClass "div" "bg-grayishblue-300" $ do
                                     %~ Map.insertWith (\_ o -> o) lang ($fromJust mSi)
                                 ]
                     dynState <- ask
-                    let toMNewRoute st _ = do
-                          lang <- st ^. field @"stApp" . field @"stMLang"
-                          stage <- st ^. field @"stApp" . field @"stToc" . field @"stProgress" . at lang
-                          pure $ case lang of
-                            SystemDE -> stageUrl @DE.Key stage
-                            SystemEN -> stageUrl @EN.Key stage
-                    setRouteAndLoading $ attachPromptlyDynWithMaybe toMNewRoute dynState evClick
+                    dynMNewRoute <- holdUniqDyn $ dynState <&> \st -> do
+                      lang <-  st ^. field @"stApp" . field @"stMLang"
+                      stage <- st ^. field @"stApp" . field @"stToc" . field @"stProgress" . at lang
+                      pure $ case lang of
+                        SystemDE -> stageUrl @DE.Key stage
+                        SystemEN -> stageUrl @EN.Key stage
+                    setRouteAndLoading $ attachPromptlyDynWithMaybe const dynMNewRoute evClick
 
     elClass "div" "flex flex-wrap justify-center py-8" $ do
 
@@ -751,9 +751,9 @@ elStages
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
-       , Obelisk.Route.Frontend.RouteToUrl (Obelisk.Route.Frontend.R FrontendRoute) m
-       , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) m
-       , Obelisk.Route.Frontend.SetRoute t (Obelisk.Route.Frontend.R FrontendRoute) (Client m)
+       , RouteToUrl (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) m
+       , SetRoute t (R FrontendRoute) (Client m)
        , TriggerEvent t m
        )
     => GetLoadedAndBuilt t
@@ -764,7 +764,7 @@ elStages
          ) ()
 elStages getLoadedAndBuilt = mdo
     elClass "header" "h-[47px] z-10" $ elSettings @key
-    dynCurrent <- Obelisk.Route.Frontend.askRoute
+    dynCurrent <- askRoute
     dyn_ $ dynCurrent <&> stages'
   where
     mkNavigation si =
@@ -817,11 +817,12 @@ elStages getLoadedAndBuilt = mdo
                       , envGetLoadedAndBuilt = getLoadedAndBuilt
                       }
                   ) do
-                      dynRoute <- Obelisk.Route.Frontend.askRoute
+                      dynRoute <- askRoute
                       Env{..} <- ask
                       evLoadedAndBuilt <- envGetLoadedAndBuilt
+                      dynAuthData <- holdUniqDyn $ getMaybeAuthData <$> envDynState
                       void $ request $ postEventViewPage
-                        (getMaybeAuthData <$> envDynState)
+                        dynAuthData
                         (Right . showRoute . stageUrl @key <$> dynRoute)
                         evLoadedAndBuilt
                       page

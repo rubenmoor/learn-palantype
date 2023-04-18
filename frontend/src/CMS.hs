@@ -12,7 +12,10 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 
-module CMS (elCMS, elCMSContent)where
+module CMS
+  ( elCMS
+  , elCMSContent
+  ) where
 
 import           Client                         ( getAuthData
                                                 , getCMS
@@ -68,10 +71,10 @@ import           Reflex.Dom                     ( (=:)
 
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, switchDyn, attachWith, EventWriter
+                                                , widgetHold_, switchDyn, attachWith, EventWriter, holdUniqDyn
                                                 )
 import           Shared                         ( iFa
-                                                , iFa', elLoading
+                                                , iFa'
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -91,7 +94,6 @@ import Data.Monoid (Endo)
 import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
 import Servant.API (ToHttpApiData(toUrlPiece))
-import Data.Bool (Bool(..))
 
 
 elCMSContent
@@ -169,6 +171,7 @@ elCMS numParts = mdo
 elCMSMenu
     :: ( MonadReader (Env t key) m
        , DomBuilder t m
+       , MonadFix m
        , MonadHold t m
        , PostBuild t m
        , Prerender t m
@@ -217,8 +220,10 @@ elCMSMenu numParts latest parts = do
             <> "title" =: "Clear server cache"
             ) $ iFa' "fas fa-skull"
 
+
+          dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
           evRespAll <- request $ postClearCache
-            (getAuthData <$> envDynState)
+            dynAuthData
             (constDyn $ Right navSystemLang)
             (constDyn $ Right navTextLang  )
             (constDyn $ Right navPageName  )

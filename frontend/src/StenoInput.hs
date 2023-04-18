@@ -746,7 +746,6 @@ elCell CellContext{..} i colspan positional =
 
         dynAttrs = zipDyn (zipDyn dynKeyState ccDynModes) ccDynShowQwerty <&>
           \((keyState, modes), showQwerty) ->
-            -- TODO mkClassStr to account fro modes and showQerty
                "class"   =: mkClassStr positional keyState modes showQwerty
             <> "colspan" =: showt colspan
 
