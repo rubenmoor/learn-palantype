@@ -34,6 +34,7 @@
     @apply font-mono;
     @apply rounded-lg;
     @apply text-white;
+    @apply whitespace-nowrap;
   }
   .steno-action {
     @apply bg-grayishblue-900;
@@ -43,6 +44,7 @@
     @apply px-2;
     @apply w-fit;
     @apply font-mono;
+    @apply whitespace-nowrap;
   }
   .overlay {
     @apply p-6;

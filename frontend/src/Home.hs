@@ -168,7 +168,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , never
                                                 , tag
                                                 , text
-                                                , wrapDomEvent, HasDomEvent (..), holdUniqDyn
+                                                , wrapDomEvent, HasDomEvent (..), holdUniqDyn, attachWith
                                                 )
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
@@ -628,27 +628,25 @@ landingPage = elClass "div" "bg-grayishblue-300" $ do
                         pure elEN
 
                     let evClick = leftmost
-                          [ domEvent Click elEN $> SystemEN
-                          , domEvent Click elDE $> SystemDE
+                          [ domEvent Click elEN $> (SystemEN, $fromJust $ mkStageIndex @EN.Key 0)
+                          , domEvent Click elDE $> (SystemDE, $fromJust $ mkStageIndex @DE.Key 0)
                           ]
                     updateState $
-                        evClick <&> \lang ->
-                            let mSi = case lang of
-                                  SystemEN -> mkStageIndex @EN.Key 0
-                                  SystemDE -> mkStageIndex @DE.Key 0
-                            in  [ field @"stApp" . field @"stMLang" ?~ lang,
-                                -- if no progress in map, insert "Introduction"
-                                field @"stApp" . field @"stToc" . field @"stProgress"
-                                    %~ Map.insertWith (\_ o -> o) lang ($fromJust mSi)
-                                ]
+                        evClick <&> \(lang, si0) ->
+                            [ field @"stApp" . field @"stMLang" ?~ lang
+                              -- if no progress in map, insert "Introduction"
+                            , field @"stApp" . field @"stToc" . field @"stProgress"
+                                %~ Map.insertWith (\_ o -> o) lang si0
+                            ]
                     dynState <- ask
-                    dynMNewRoute <- holdUniqDyn $ dynState <&> \st -> do
-                      lang <-  st ^. field @"stApp" . field @"stMLang"
-                      stage <- st ^. field @"stApp" . field @"stToc" . field @"stProgress" . at lang
-                      pure $ case lang of
-                        SystemDE -> stageUrl @DE.Key stage
-                        SystemEN -> stageUrl @EN.Key stage
-                    setRouteAndLoading $ attachPromptlyDynWithMaybe const dynMNewRoute evClick
+                    let
+                        behMapProgress = stProgress . stToc . stApp <$> current dynState
+                        selectRoute m (lang, si0) =
+                          let stage = Map.findWithDefault si0 lang m
+                          in  case lang of
+                                SystemEN -> stageUrl @EN.Key stage
+                                SystemDE -> stageUrl @DE.Key stage
+                    setRouteAndLoading $ attachWith selectRoute behMapProgress evClick
 
     elClass "div" "flex flex-wrap justify-center py-8" $ do
 

@@ -292,6 +292,7 @@ frontendBody = mdo
             FrontendRoute_Main -> do
               getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Main :/ ())
               landingPage
+              blank
             FrontendRoute_SystemEN -> subRoute_ \case
                 FrontendRoute_TextEN -> elStages @EN.Key getLoadedAndBuilt
             FrontendRoute_SystemDE -> subRoute_ \case
