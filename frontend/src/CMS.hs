@@ -105,7 +105,7 @@ elCMSContent
     -> m ()
 elCMSContent ev =
     widgetHold_ elWaitingForCMS $
-      elClass "div" "prose" . elPandoc defaultConfig <$> ev
+      elClass "div" "my-prose" . elPandoc defaultConfig <$> ev
   where
     elWaitingForCMS = elClass "span" "text-xs italic" $
       text "waiting for content-management-system"

@@ -128,4 +128,8 @@
     @apply rounded;
     @apply p-1;
   }
+
+  .my-prose {
+    @apply prose;
+  }
 }
