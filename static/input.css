@@ -131,5 +131,32 @@
 
   .my-prose {
     @apply prose;
+    @apply max-w-none;
+    @apply leading-normal;
+    @apply prose-p:my-2;
+    @apply prose-h2:text-grayishblue-800;
+    @apply after:prose-code:content-none;
+    @apply before:prose-code:content-none;
+    @apply prose-a:text-grayishblue-800;
+    @apply prose-a:no-underline;
+    @apply prose-blockquote:not-italic;
+    @apply prose-blockquote:bg-grayishblue-200;
+    @apply prose-blockquote:m-0;
+    @apply prose-blockquote:p-3;
+    @apply prose-blockquote:border-none;
+    @apply prose-blockquote:my-1;
+    @apply prose-blockquote:rounded;
+
+    @apply prose-table:w-fit;
+    @apply prose-table:leading-tight;
+    @apply prose-tr:border-none;
+  }
+  .my-prose blockquote {
+    quotes: none;
+  }
+  .my-prose dd {
+    @apply mb-2;
+    @apply mt-0.5;
+    @apply ml-8;
   }
 }

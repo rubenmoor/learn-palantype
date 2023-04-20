@@ -222,8 +222,8 @@ instance FromJSON TextLang
 
 instance Read TextLang where
   readPrec = ReadPrec.lift $ asum $ (\(str, lang) -> string str $> lang) <$>
-    [ ("DE", TextDE)
-    , ("EN", TextEN)
+    [ ("TextDE", TextDE)
+    , ("TextEN", TextEN)
     ]
 
 instance ToHttpApiData TextLang where

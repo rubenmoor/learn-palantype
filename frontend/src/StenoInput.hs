@@ -108,7 +108,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber, kiChordToInt, mapHierarchyStageIndex, kiBackUp, StageIndex
+                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber, kiChordToInt, mapHierarchyStageIndex, kiBackUp
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -188,7 +188,7 @@ import           Witherable                     ( Filterable
 
                                                     )
                                                 )
-import Obelisk.Route.Frontend (SetRoute, R, Routed)
+import Obelisk.Route.Frontend (SetRoute, R)
 import Common.Route (FrontendRoute)
 import qualified Palantype.Common.Dictionary.Commands as Commands
 import Data.List (delete)
@@ -272,7 +272,6 @@ elStenoInput :: forall key (m :: * -> *) t.
   , PerformEvent t m
   , Palantype key
   , PostBuild t m
-  , Routed t StageIndex m
   , SetRoute t (R FrontendRoute) m, MonadHold t m, MonadFix m
   , TriggerEvent t m
   )

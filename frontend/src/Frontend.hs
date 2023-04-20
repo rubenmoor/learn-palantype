@@ -120,8 +120,7 @@ import           Data.Functor.Misc              ( Const2(Const2) )
 import           Data.Ord                       ( Ord((>=)) )
 import qualified LocalStorage                  as LS
 import           Palantype.Common.TH            ( failure )
-import           Shared                         ( elLoading
-                                                , redirectToWikipedia
+import           Shared                         ( redirectToWikipedia
                                                 , requestPostViewPage, setRouteAndLoading
                                                 )
 import           Witherable                     ( Filterable(catMaybes, filter)
@@ -243,19 +242,6 @@ frontendBody = mdo
         getLoadedAndBuilt = do
           evPb <- delay 0 =<< getPostBuild
           headE $ leftmost [gate (current dynHasLoaded) evPb, evLoaded]
-
-    -- TODO remove
-    dyn_ $ dynFrontendLoaded <&> \fl@FrontendLoaded{..} ->
-      if frontendAllLoaded fl
-      then blank
-      else
-        let strLoadingSession = if not flSession
-              then "Loading session ..."
-              else ""
-            strLoadingCacheInvalidation = if not flCacheInvalidation
-              then "Loading cache invalidation data ...\n"
-              else ""
-        in  elLoading $ strLoadingSession <> "\n" <> strLoadingCacheInvalidation
 
     dynState <- foldDyn appEndo defaultState $ mergeWith (<>)
       [ evSessionLoaded

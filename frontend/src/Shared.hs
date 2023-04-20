@@ -117,7 +117,7 @@ import           Reflex.Dom                     ( (&)
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , updateState, Loading (LoadingStill)
+                                                , updateState, Loading (..)
                                                 )
 import           Text.Printf                    ( printf )
 import           TextShow                       ( TextShow(showt) )
@@ -165,13 +165,15 @@ elFatalError strMessage = elClass "div" "mkOverlay" do
       iFa "fas fa-bomb"
     unless (Text.null strMessage) $ el "p" $ text strMessage
 
-elLoading :: DomBuilder t m => Text -> m ()
-elLoading strMessage =
-  elClass "div" "overlay" do
-    el "div" $ do
-      iFa "fas fa-spinner fa-spin"
-      text " Loading"
-    unless (Text.null strMessage) $ el "p" $ text strMessage
+elLoading
+  :: forall t (m :: * -> *)
+  . ( DomBuilder t m
+    , PostBuild t m
+    ) => Dynamic t Loading -> m ()
+elLoading d = dyn_ $ d <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
+      LoadingStill msg      -> elAttr "span" ("title" =: msg) $ iFa "fas fa-spinner fa-spin"
+      LoadingDone           -> blank
+      LoadingError strError -> elAttr "span" ("title" =: strError) $ iFa "far fa-meh"
 
 elLabelCheckbox
     :: (DomBuilder t m) => Bool -> Text -> Text -> m (Dynamic t Bool)

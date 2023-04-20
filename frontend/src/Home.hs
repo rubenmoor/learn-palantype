@@ -171,7 +171,7 @@ import           Reflex.Dom                     ( (=:)
 import           Shared                         ( dynSimple
                                                 , elLoginSignup
                                                 , iFa
-                                                , whenJust, elRouteLink, setRouteAndLoading
+                                                , whenJust, elRouteLink, setRouteAndLoading, elLoading
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -265,10 +265,7 @@ elSettings = elClass "div" "shadow-md p-1" do
           | otherwise -> $failure "Key not implemented"
 
     dynLoading <- holdUniqDyn $ stLoading <$> dynState
-    dyn_ $ dynLoading <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
-      LoadingStill msg      -> elAttr "span" ("title" =: msg) $ iFa "fas fa-spinner fa-spin"
-      LoadingDone           -> blank
-      LoadingError strError -> elAttr "span" ("title" =: strError) $ iFa "fal fa-meh"
+    elLoading dynLoading
 
     elClass "div" "float-left divide-x border-gray-500" do
         -- button to show configuration dropdown

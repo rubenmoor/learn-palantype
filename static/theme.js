@@ -23,6 +23,12 @@
                 '0%, 100%': { opacity: 0.5 },
                 '50%': { opacity: 1 }
             }
+        },
+        typography: {
+            DEFAULT: {
+                css: {
+                }
+            }
         }
     },
     textShadow: {

@@ -80,7 +80,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , tag
                                                 , text
                                                 , updated
-                                                , widgetHold_, holdUniqDyn, dyn_, fanEither, MonadHold
+                                                , widgetHold_, MonadHold, holdUniqDyn, fanEither
                                                 )
 import           TextShow                       ( TextShow(showt) )
 
@@ -123,7 +123,7 @@ import           Servant.Reflex                 ( QParam(..) )
 import           Shared                         ( elLoginSignup
                                                 , formatTime
                                                 , iFa'
-                                                , elRouteLink, setRouteAndLoading, iFa
+                                                , elRouteLink, setRouteAndLoading, elLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
@@ -168,20 +168,18 @@ journal = mdo
     elClass "div" "shadow-md p-1" do
 
         dynLoading <- holdUniqDyn $ stLoading <$> dynState
-        dyn_ $ dynLoading <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
-          LoadingStill msg      -> elAttr "span" ("title" =: msg) $ iFa "fas fa-spinner fa-spin"
-          LoadingDone           -> blank
-          LoadingError strError -> elAttr "span" ("title" =: strError) $ iFa "fal fa-meh"
+        elLoading dynLoading
 
         elClass "div" "float-left" do
             domBack <- elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
                                \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
             setRouteAndLoading $ tag behRedirectUrl $ domEvent Click domBack
 
-            domCacheUpdateAll <- elClass "span" "text-zinc-500 \
-                                                \hover:text-grayishblue-800 \
-                                                \text-3xl cursor-pointer"
-                                 $ iFa' "fas fa-sync-alt"
+            domCacheUpdateAll <- elAttr "span"
+              (  "class" =: "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                            \cursor-pointer"
+              <> "title" =: "clear cache for all pages"
+              ) $ iFa' "fas fa-sync-alt"
             evRespCacheUpdateAll <- request $ postCacheUpdateAll dynAuthData
                 $ domEvent Click domCacheUpdateAll
             widgetHold_ blank $ evRespCacheUpdateAll <&> \case
