@@ -29,6 +29,7 @@ import           Common.Route                   ( FrontendRoute
                                                     ( AuthPage_SignUp
                                                     )
                                                 )
+import           Control.Applicative            ( pure )
 import           Control.Category               ( (<<<)
                                                 , Category((.))
                                                 )
@@ -69,16 +70,16 @@ import           Data.Semigroup                 ( Endo
                                                 , Semigroup((<>))
                                                 )
 import qualified Data.Text                     as Text
+import Data.Text (Text)
 import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , RouteToUrl
                                                 , SetRoute
-                                                , routeLink
-                                                , setRoute
                                                 )
 import           Reflex.Dom                     ( (=:)
-                                                , DomBuilder
+                                                , DomBuilder (DomBuilderSpace)
                                                 , Dynamic
+                                                , Event
                                                 , EventName(Click)
                                                 , EventWriter
                                                 , InputElement(..)
@@ -93,12 +94,12 @@ import           Reflex.Dom                     ( (=:)
                                                 , dyn_
                                                 , el
                                                 , elAttr
+                                                , elAttr'
                                                 , elClass
                                                 , elementConfig_initialAttributes
                                                 , elementConfig_modifyAttributes
                                                 , fanEither
                                                 , gate
-
                                                 , holdDyn
                                                 , inputElement
                                                 , inputElementConfig_elementConfig
@@ -111,7 +112,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , text
                                                 , updated
                                                 , widgetHold_
-                                                , zipDyn, TriggerEvent, PerformEvent (Performable)
+                                                , zipDyn, TriggerEvent, PerformEvent (Performable), InputElementConfig, holdUniqDyn
                                                 )
 import           Witherable                     ( Filterable
                                                     ( catMaybes
@@ -125,23 +126,22 @@ import           Common.Auth                    ( LoginData(..)
                                                 )
 import           Common.Model                   ( Message(..) )
 import           Control.Lens                   ( preview
-                                                , view
                                                 )
 import           Control.Monad.Reader           ( MonadReader
                                                 , ask
                                                 )
 import           Data.Char                      ( isAlphaNum )
-import           Shared                         ( elButtonSubmit
-                                                , elLabelCheckbox
-                                                , elLabelInput
+import           Shared                         ( elLabelCheckbox
                                                 , elLoginSignup
-                                                , iFa'
+                                                , iFa', elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
                                                 , updateState, GetLoadedAndBuilt
                                                 )
 import Control.Monad.IO.Class (MonadIO)
+import Data.Int (Int)
+import TextShow (TextShow(..))
 
 signup
     :: forall t (m :: * -> *)
@@ -155,7 +155,7 @@ signup
        , MonadReader (Dynamic t State) m
        )
     => m ()
-signup = elClass "div" "auth" $ mdo
+signup = elAttr "section" ("id" =: "user-form") $ mdo
 
     dynState <- ask
 
@@ -165,7 +165,7 @@ signup = elClass "div" "auth" $ mdo
 
     dynUserExists                 <- holdDyn False evUserExists
     dyn_ $ dynUserExists <&> \userExists -> if userExists
-        then elClass "p" "red small" (text "This user name already exists.")
+        then elFormMessage $ text "This user name already exists."
         else blank
 
     let behNotAlphanumeric = current $ dynMUserName <&> \case
@@ -174,14 +174,12 @@ signup = elClass "div" "auth" $ mdo
     dynNotAlphaNumeric <- holdDyn False
         $ attachWith const behNotAlphanumeric evFocusLostUser
     dyn_ $ dynNotAlphaNumeric <&> \notAlphaNumeric -> if notAlphaNumeric
-        then elClass "p" "red small"
-            $ text "The user name can only contain A-Z, a-z, 0-9."
+        then elFormMessage $ text "The user name can only contain A-Z, a-z, 0-9."
         else blank
 
-    el "p"
-        $ text
-              "Your user name must contain only alphanumeric characters \
-                  \and it won't be publicly visible."
+    el "p" $ text
+        "Your user name must contain only alphanumeric characters and it won't \
+        \be publicly visible."
 
     let evFocusLostUser =
             void $ filter not $ updated $ _inputElement_hasFocus inputUserName
@@ -199,7 +197,7 @@ signup = elClass "div" "auth" $ mdo
     dynAliasExists <- holdDyn False evAliasExists
     dyn_ $ dynAliasExists <&> \aliasExists ->
       if aliasExists
-      then elClass "p" "red small" $ text "This alias is already in use."
+      then elFormMessage $ text "This alias is already in use."
       else blank
 
     el "p" $ text "Your alias is your public identity, maximum 16 characters."
@@ -212,34 +210,29 @@ signup = elClass "div" "auth" $ mdo
     el "h3" $ text "Public visibility"
     dynCheckedVisible <- elLabelCheckbox False "Show my scores" "scores-visible"
 
-    el "p"
-        $ text
-              "If you check this, your scores will be publicly visible. \
+    el "p" $ text "If you check this, your scores will be publicly visible. \
                   \If not, nothing will be shown, not even your alias."
 
     let conf =
-            def
-                &  inputElementConfig_elementConfig
-                .  elementConfig_modifyAttributes
-                .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
-                   <$> evCheckedHidePassword
-                   )
+          def &  inputElementConfig_elementConfig
+              .  elementConfig_modifyAttributes
+              .~ (   bool ("type" =: Just "text") ("type" =: Just "password")
+                 <$> evCheckedHidePassword
+                 )
     (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
     let evPressEnter = keypress Enter inputPassword
     el "br" blank
     evCheckedHidePassword <- updated
         <$> elLabelCheckbox False "Hide password input" "hide-password"
 
-    el "p"
-        $ text
-              "You enter your password only once. There are \
-                    \no invalid passwords except for an empty one."
+    el "p" $ text "You enter your password only once. There are \
+                  \no invalid passwords except for an empty one."
 
     el "hr" blank
 
-    evSubmit <- elButtonSubmit "small" $ text "Submit"
+    evSubmit <- elButtonSubmit $ text "Submit"
 
-    let dynEUserNew =
+    dynEUserNew <- holdUniqDyn $
           zipDyn dynState (
             zipDyn dynUserExists $
               zipDyn dynMUserName $
@@ -265,11 +258,12 @@ signup = elClass "div" "auth" $ mdo
                 "Your account was registered successfully."
             ]
 
+    el "br" blank
+    el "br" blank
     el "h2" $ text "Why register?"
 
-    el "p"
-        $ text
-              "You don't have to register to practice on Palantype.com. \
+    el "p" $ text
+         "You don't have to register to practice on Palantype.com. \
          \For an unregistered, anonymous user the progress and configuration \
          \data is stored in the local storage of your browser. \
          \At any time, you can delete all the data \
@@ -277,17 +271,16 @@ signup = elClass "div" "auth" $ mdo
          \Palantype.com from another browser (e.g. on a different computer), \
          \you won't have access to your data."
 
-    el "p"
-        $ text
-              "As soon as you create an account, your progress and configuration \
+    el "p" $ text
+         "As soon as you create an account, your progress and configuration \
          \data will be stored on the Palantype.com server. \
          \You can access your account from any computer and any browser to \
          \continue where you left off. \
          \In order to delete all data related to your account, there is a \
          \delete option right on this website."
 
-    dyn_ $ dynState <&> \State {..} ->
-        setRoute $ filter isRight evRespNew $> stRedirectUrl
+    dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+    dyn_ $ dynRedirectUrl <&> \url -> setRouteAndLoading $ filter isRight evRespNew $> url
 
 login
     :: forall t (m :: * -> *)
@@ -302,7 +295,7 @@ login
        , SetRoute t (R FrontendRoute) m
        )
     => m ()
-login = elClass "div" "auth" $ mdo
+login = elAttr "section" ("id" =: "user-form") mdo
 
     dynState <- ask
 
@@ -318,21 +311,18 @@ login = elClass "div" "auth" $ mdo
                    <$> evCheckedHidePassword
                    )
     (dynMPassword, inputPassword) <- elLabelInput conf "Password" 64 "password"
-    el "br" blank
-    evCheckedHidePassword <- updated
+    evCheckedHidePassword <- el "p" $ updated
         <$> elLabelCheckbox False "Hide password input" "hide-password"
 
     let evPressEnter = keypress Enter inputPassword
         evWrongInput =
             filter isNothing $ mapMaybe (either (const Nothing) Just) evRespAuth
 
-    widgetHold_ blank $ evWrongInput $> elClass
-        "p"
-        "red small"
-        (text "Wrong user name or password.")
+    widgetHold_ blank $ evWrongInput $> elFormMessage
+      (text "Wrong user name or password.")
 
     el "hr" blank
-    evSubmit <- elButtonSubmit "small" $ text "Submit"
+    evSubmit <- elButtonSubmit $ text "Submit"
 
     let dynELoginData = zipDyn dynMUserName dynMPassword <&> \case
             (Just ldUserName, Just ldPassword) -> Right LoginData { .. }
@@ -347,12 +337,14 @@ login = elClass "div" "auth" $ mdo
       , field @"stApp" .~ appState
       ]
 
-    dyn_ $ dynState <&> \State {..} ->
-        setRoute $ evLogin $> stRedirectUrl
+    dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+    dyn_ $ dynRedirectUrl <&> \url -> setRouteAndLoading $ evLogin $> url
 
+    el "br" blank
+    el "br" blank
     el "p" do
             text "Don't have an account yet? "
-            routeLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
+            elRouteLink (FrontendRoute_Auth :/ AuthPage_SignUp :/ ())
                 $ text "Sign up"
             text " here."
 
@@ -378,22 +370,27 @@ settings getLoadedAndBuilt = do
 
     evLoadedAndBuilt <- getLoadedAndBuilt
 
-    elClass "div" "topmenu" $ do
-        elClass "div" "floatLeft" $ do
-            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
-            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $
-              domEvent Click domBack
-        elLoginSignup $ stRedirectUrl <$> dynState
-        elClass "br" "clearBoth" blank
+    elClass "div" "shadow-md p-1" $ do
+        elClass "div" "float-left" $ do
+            domBack <-
+              elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                             \cursor-pointer"
+              $ iFa' "fas fa-arrow-circle-left"
+            behRedirectUrl <- fmap current $ holdUniqDyn $ stRedirectUrl <$> dynState
+            setRouteAndLoading $ tag behRedirectUrl $ domEvent Click domBack
+        dynRedirectUrl <- holdUniqDyn $ stRedirectUrl <$> dynState
+        elLoginSignup dynRedirectUrl
+        elClass "br" "clear-both" blank
 
-    elClass "div" "auth" $ mdo
-        el "h1" $ text "Settings"
+    elAttr "section" ("id" =: "user-form") mdo
+        el "h1"  $ text "Settings"
 
-        let dynCurrentAlias = dynState <&> fromMaybe "" . preview
+        dynCurrentAlias <- holdUniqDyn $ dynState <&> fromMaybe "" . preview
               (   field @"stSession"
                 . _As @"SessionUser"
                 . field @"sdAliasName"
               )
+        let
             conf = def & inputElementConfig_setValue
               .~ tagPromptlyDyn dynCurrentAlias
                                 (leftmost [evLoadedAndBuilt, void evRespAliasRenameFail])
@@ -413,22 +410,30 @@ settings getLoadedAndBuilt = do
                                evFocusLostAlias
 
         let evPressEnter = keypress Enter inputAliasNew
-        evSubmit <- elButtonSubmit "small" $ text "Submit"
+        (domButton, _) <- elAttr' "button"
+          (  "type"  =: "submit"
+          <> "class" =: "ml-4 rounded-xl bg-grayishblue-800 text-white px-2 py-1"
+          ) $ text "Submit"
+        let evSubmitAlias = domEvent Click domButton
+        dynAuthData <- holdUniqDyn $ getAuthData <$> dynState
         (evRespAliasRenameFail, evRespAliasRename) <-
-          fanEither <$> request (postAliasRename (getAuthData <$> dynState)
+          fanEither <$> request (postAliasRename dynAuthData
                                                  dynEAliasNew
-                                                 (leftmost [evSubmit, evPressEnter])
+                                                 (leftmost [evSubmitAlias, evPressEnter])
                                 )
+        widgetHold_ blank $ evRespAliasRename <&> \new -> el "p" do
+          elClass "span" "text-green-500 text-lg w-4 inline-block" $ text "✓"
+          text " Alias successfully changed to "
+          elClass "span" "font-bold" $ text new
 
         dynAliasExists <- holdDyn False evAliasExists
         dyn_ $ dynAliasExists <&> \aliasExists ->
           if aliasExists
-          then elClass "p" "red small" $ text "This alias is already in use."
+          then elFormMessage $ text "This alias is already in use."
           else blank
 
         updateState $ evRespAliasRename <&> \new ->
           [ field @"stSession" . _As @"SessionUser" . field @"sdAliasName" .~ new
-          , field @"stApp" . field @"stMsg" ?~ Message "Succes" "Alias changed successfully"
           ]
         updateState $ evRespAliasRenameFail <&> \strErr ->
           [ field @"stApp" . field @"stMsg" ?~ Message "Error" strErr ]
@@ -438,11 +443,11 @@ settings getLoadedAndBuilt = do
         el "h3" $ text "Public visibility"
 
         let elemId = "cb-visiblity"
-            dynVisible = dynState <&> fromMaybe False . preview
-              (   field @"stSession"
-                . _As @"SessionUser"
-                . field @"sdAliasVisible"
-              )
+        dynVisible <- holdUniqDyn $ dynState <&> fromMaybe False . preview
+            (   field @"stSession"
+              . _As @"SessionUser"
+              . field @"sdAliasVisible"
+            )
         dyn_ $ dynVisible <&> \bVisible -> do
           cb <-
               inputElement
@@ -456,10 +461,48 @@ settings getLoadedAndBuilt = do
               evShowScoresChecked = updated dynShowScoresChecked
           updateState $ evShowScoresChecked <&> \isChecked ->
             [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
-          void $ request $ postAliasVisibility (getAuthData <$> dynState)
-                                             (Right <$> dynShowScoresChecked)
-                                             (void evShowScoresChecked)
+          void $ request $ postAliasVisibility dynAuthData
+                                               (Right <$> dynShowScoresChecked)
+                                               (void evShowScoresChecked)
 
         el "p" $ text
             "If you check this, your scores will be publicly visible. \
             \If not, nothing will be shown, not even your alias."
+
+elFormMessage :: DomBuilder t m => m a -> m a
+elFormMessage = elClass "p" "text-red-500 text-sm"
+
+elButtonSubmit
+  :: DomBuilder t m
+  => m ()
+  -> m (Event t ())
+elButtonSubmit inner = do
+    (e, _) <- elAttr' "button"
+      (  "type"  =: "submit"
+      <> "class" =: "rounded-2xl text-2xl bg-grayishblue-800 text-white px-3 py-2 \
+                    \focus:outline-white focus:outline-1 \
+                    \focus:shadow-[0_0_20_0_rgba(13,83,181,0.8)] focus:shadow-grayishblue-800"
+      ) inner
+    pure $ domEvent Click e
+
+elLabelInput
+    :: DomBuilder t m
+    => InputElementConfig e t (DomBuilderSpace m)
+    -> Text
+    -> Int
+    -> Text
+    -> m
+           ( Dynamic t (Maybe Text)
+           , InputElement e (DomBuilderSpace m) t
+           )
+elLabelInput conf strLabel maxlength id = do
+    elAttr "label" ("for" =: id) $ el "h3" $ text strLabel
+    i <-
+        inputElement
+        $  conf
+        &  inputElementConfig_elementConfig
+        .  elementConfig_initialAttributes
+        .~ "id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength
+    let dynStr  = _inputElement_value i
+        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
+    pure (dynMStr, i)

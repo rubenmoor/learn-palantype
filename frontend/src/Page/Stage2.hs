@@ -86,10 +86,9 @@ import           Data.Tuple                     ( fst
 import           GHC.Generics                   ( Generic )
 import           GHC.Num                        ( Num((+), (-)) )
 import           Obelisk.Route.Frontend         ( R
-                                                , SetRoute(setRoute)
+                                                , SetRoute
                                                 )
-import           Page.Common                    ( elBackUp
-                                                , elBtnSound
+import           Page.Common                    ( elBtnSound
                                                 , elCongraz
                                                 , elNotImplemented
                                                 , elPatterns
@@ -107,7 +106,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , SystemLang(..)
                                                 , allKeys
                                                 , findStage
-                                                , fromChord
+
                                                 , kiBackUp
                                                 , mkChord
                                                 , parseStenoMaybe
@@ -145,7 +144,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , widgetHold
                                                 , widgetHold_, splitE
                                                 )
-import           Shared                         ( whenJust )
+import           Shared                         ( whenJust, setRouteAndLoading )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , State(..)
@@ -258,31 +257,32 @@ taskLetters dynStats evChord = do
             StateLettersRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
-        elClass "div" "taskSingletons" $ do
+        elClass "div" "mt-8 text-lg" do
             dyn_ $ dynSingletons <&> \case
                 StateLettersPause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "btnSteno blinking" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateLettersRun SLRun {..} -> do
-                    elClass "span" "exerciseField"
+                    elClass "span" "bg-zinc-200 rounded w-fit p-1"
                         $  el "code"
                         $  text
                         $  showt
                         $  _stlLetters
                         !! _stlCounter
 
-                    whenJust _stlMMistake \case
+                    whenJust _stlMMistake $ elClass "span" "ml-8 text-sm" . \case
                             SLMistakeOne c -> do
-                                elClass "code" "red small" $ text $ showt c
-                                elClass "span" "small" $ text " try again!"
+                                elClass "code" "text-red-500" $ text $ showt c
+                                text " try again!"
                             SLMistakeTwo c -> do
-                                elClass "code" "red small" $ text $ showt c
-                                elClass "span" "small" $ text " keep trying!"
+                                elClass "code" "text-red-500" $ text $ showt c
+                                text " keep trying!"
 
-                    elClass "hr" "visibilityHidden" blank
+                    el "br" blank
+                    el "br" blank
                     el "strong" $ text $ showt _stlCounter
                     text $ " / " <> showt len
 
@@ -316,21 +316,19 @@ exercise1 = mdo
     let Navigation {..} = envNavigation
     unless (navSystemLang `elem` [SystemDE, SystemEN]) elNotImplemented
 
-    let eChordBackUp =
-          void $ gate (not <$> current dynDone) $
-            filter (\c -> KI.fromChord c == kiBackUp) envEChord
+    let evBackUp = void $ gate (not <$> current dynDone) $ filter isNothing envEvMChord
 
         (stage1_1, _, _) = $fromJust $ findStage @key (StageSpecial "Type the letters")
 
-    setRoute $ eChordBackUp $> stageUrl @key 1 -- Stage 1.1
-    updateState $ eChordBackUp $>
-      [ field @"stApp" . field @"stProgress" . at navSystemLang ?~ stage1_1
+    setRouteAndLoading $ evBackUp $> stageUrl @key 1 -- Stage 1.1
+    updateState $ evBackUp $>
+      [ field @"stApp" . field @"stToc" . field @"stProgress" . at navSystemLang ?~ stage1_1
       ]
 
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
-    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) envEChord)
+    evDone <- taskLetters dynStatsAll (gate (not <$> current dynDone) $ catMaybes envEvMChord)
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
     pure ()
@@ -352,25 +350,24 @@ walkWords
        , Palantype key
        , PostBuild t m
        )
-    => Event t (Chord key)
+    => Event t (Maybe (Chord key))
     -> [Text]
     -> RawSteno
     -> m (Event t ())
-walkWords evChord words raw = do
+walkWords evMChord words raw = do
 
     let chords = $fromJust $ parseStenoMaybe raw
         len    = length chords
-        step :: Chord key -> WalkState -> WalkState
-        step chord ws@WalkState {..} = case (wsMMistake, wsDone) of
+        step :: Maybe (Chord key) -> WalkState -> WalkState
+        step mChord ws@WalkState {..} = case (mChord, wsMMistake, wsDone) of
         -- reset after done
-            (_, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
+            (_, _, Just True) -> ws { wsDone = Just False, wsCounter = 0 }
             -- undo stroke
-            _ | fromChord chord == KI.toRaw @key kiBackUp ->
-                ws { wsMMistake = Nothing }
+            (Nothing, _, _) -> ws { wsMMistake = Nothing }
             -- halt while mistake
-            (Just _, _) -> ws
+            (Just _, Just _, _) -> ws
             -- correct
-            _ | chords !! wsCounter == chord ->
+            (Just chord, _, _) | chords !! wsCounter == chord ->
                 let done = if wsCounter == len - 1
                         then Just True -- done
                         else Nothing
@@ -382,31 +379,33 @@ walkWords evChord words raw = do
                                 , wsDone     = Nothing
                                 }
 
-    dynWalk <- foldDyn step stepInitial evChord
+    dynWalk <- foldDyn step stepInitial evMChord
     let evDone = catMaybes $ wsDone <$> updated dynWalk
 
-    el "blockquote" $ el "table" $ do
+    elClass "table" "my-4" do
         el "tr" $ traverse_ (elAttr "td" ("colspan" =: "2") . text) words
-        el "tr" $ do
+        el "tr" do
             for_ (zip [0 :: Int ..] chords) $ \(i, c) -> do
                 let dynCls = dynWalk <&> \WalkState {..} -> case wsMMistake of
-                        Just j  -> if i == j then "bgRed" else ""
-                        Nothing -> if wsCounter > i then "bgGreen" else ""
-                when (i > 0) $ el "td" $ elClass "span" "darkgray" $ text "•"
+                        Just j  -> if i == j then "p-1 rounded bg-red-500" else "p-1"
+                        Nothing -> if wsCounter > i then "p-1 rounded bg-green-500" else "p-1"
+                when (i > 0) $ el "td" $ elClass "span" "text-grayishblue-900" $ text "•"
                 el "td" $ elDynClass "span" dynCls $ el "code" $ text $ showt c
 
             el "td" $ do
                 let eMistake = wsMMistake <$> updated dynWalk
                 widgetHold_ blank $ eMistake <&> \case
-                    Just _ -> elClass "code" "blinking" $ do
+                    Just _ -> el "code" $ do
                         text " "
-                        elBackUp @key
+                        elClass "span" "text-sm steno-action" $
+                          text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                     Nothing -> blank
 
     dynDone <- holdDyn False evDone
-    dyn_ $ dynDone <&> \bDone ->
-        when bDone $ elClass "div" "small anthrazit" $ text
+    dyn_ $ dynDone <&> \bDone -> when bDone do
+      elClass "div" "text-sm text-grayishblue-900" $ text
             "Cleared. Press any key to start over."
+      el "br" blank
 
     pure $ void $ filter id evDone
 
@@ -416,14 +415,14 @@ exercise2
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
        , Palantype key
+       , PerformEvent t m
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
-       , PerformEvent t m
-       , MonadIO (Performable m)
        )
     => m ()
 exercise2 = mdo
@@ -441,13 +440,13 @@ exercise2 = mdo
         let raw = "TH CFIC P+RAUN FOCS +YUMPS OEFR TH LE^/S+I T+OC+ ^"
             txt = "The quick brown fox jumps over the la zy dog ."
 
-        in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
+        in  walkWords (gate (not <$> current dynDone) envEvMChord) (Text.words txt) raw
 
       SystemDE ->
           let raw = "MID DEM F+ISn F+Ä+GSD DEÜ ʃG+EI/FEL +-"
               txt = "Mit dem Wissen wächst der Zwei fel ."
 
-          in  walkWords (gate (not <$> current dynDone) envEChord) (Text.words txt) raw
+          in  walkWords (gate (not <$> current dynDone) envEvMChord) (Text.words txt) raw
 
     dynDone <- elCongraz (evDone $> Nothing) (constDyn []) envNavigation
 
@@ -551,7 +550,7 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
                 StateRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
-        elClass "div" "taskSingletons" $ do
+        elClass "div" "mt-8 text-lg" $ do
 
             evTrigger <- void . updated <$> holdUniqDyn
               ( dynSingletons <&> fromMaybe 0
@@ -562,31 +561,31 @@ taskSingletons dynStats evChord mapStenoWord mapWordStenos = do
             dyn_ $ dynSingletons <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "btnSteno blinking" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateRun Run {..} -> do
-                    elClass "span" "exerciseField"
+                    elClass "span" "bg-zinc-200 rounded w-fit p-1"
                         $  el "code"
                         $  text
                         $  _stWords
                         !! _stCounter
 
-                    whenJust _stMMistake \case
+                    whenJust _stMMistake $ elClass "span" "ml-1 text-sm" . \case
                         MistakeOne raw -> do
-                            elClass "code" "red small" $ text $ showt raw
-                            elClass "span" "small" $ text " try again!"
+                            elClass "code" "text-red-500" $ text $ showt raw
+                            text " try again!"
                         MistakeTwo raw corrects -> do
-                            elClass "code" "red small" $ text $ showt raw
-                            elClass "span" "small" $ text
-                                $ if length corrects == 1
+                            elClass "code" "text-red-500" $ text $ showt raw
+                            text $ if length corrects == 1
                                       then " try this: "
                                       else " try one of these: "
                             for_ corrects $ \correct ->
-                                elClass "code" "small" $ text $ showt correct
+                                el "code" $ text $ showt correct
 
-                    elClass "hr" "visibilityHidden" blank
+                    el "br" blank
+                    el "br" blank
                     el "strong" $ text $ showt _stCounter
                     text $ " / " <> showt len
 
@@ -620,12 +619,12 @@ exercise3 = mdo
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
 
-    evDone      <- case getMapsForExercise PatSimple 0 of
+    evDone <- case getMapsForExercise PatSimple 0 of
         Left str -> do
-            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            elClass "p" "text-sm text-red-500" $ text $ "Couldn't load exercise: " <> str
             pure never
         Right (mSW, mWSs) ->
-            taskSingletons dynStatsAll (gate (not <$> current dynDone) envEChord) mSW mWSs
+            taskSingletons dynStatsAll (gate (not <$> current dynDone) $ catMaybes envEvMChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
     blank
@@ -660,11 +659,11 @@ exercise4 = mdo
     dynStatsAll <- getStatsLocalAndRemote evDone
     evDone      <- case getMapsForExercise PatSimpleMulti 0 of
         Left str -> do
-            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            elClass "p" "text-sm text-red-500" $ text $ "Couldn't load exercise: " <> str
             pure never
         Right (mSW, mWSs) -> taskWords
             dynStatsAll
-            (gate (not <$> current dynDone) envEChord)
+            (gate (not <$> current dynDone) envEvMChord)
             mSW
             mWSs
 
@@ -682,6 +681,6 @@ exercise4 = mdo
 
     el "p" $ do
         let styleHuge = "style" =: "font-size: 48pt"
-        elAttr "span" ("class" =: "bgPink" <> styleHuge) $ text "st"
-        elAttr "span" ("class" =: "bgLightgreen" <> styleHuge) $ text "a"
-        elAttr "span" ("class" =: "bgLightblue" <> styleHuge) $ text "rk"
+        elAttr "span" ("class" =: "text-rose-400" <> styleHuge) $ text "st"
+        elAttr "span" ("class" =: "text-green-400" <> styleHuge) $ text "a"
+        elAttr "span" ("class" =: "text-blue-400" <> styleHuge) $ text "rk"

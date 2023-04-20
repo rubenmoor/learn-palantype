@@ -120,8 +120,6 @@ instance (HasClient t m api tag, Reflex t)
             in  addHeaderOptional "Authorization" token $
                     addHeaderOptional "X-Alias" alias req
 
-
-
 data SessionData = SessionData
   { sdJwt :: CompactJWT
   , sdIsSiteAdmin :: Bool
@@ -130,6 +128,9 @@ data SessionData = SessionData
   , sdAliasVisible :: Bool
   , sdClearances :: Rank
   } deriving (Generic)
+
+instance Eq SessionData where
+  sd1 == sd2 = sdUserName sd1 == sdUserName sd2
 
 instance ToJSON SessionData
 instance FromJSON SessionData

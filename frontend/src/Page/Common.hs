@@ -40,8 +40,7 @@ import           Control.Lens                   ( (%~)
                                                 , (?~)
                                                 , preview
                                                 )
-import           Control.Monad                  ( (=<<)
-                                                , when
+import           Control.Monad                  ( when
                                                 )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
@@ -54,7 +53,7 @@ import           Control.Monad.Reader           ( MonadReader
 import           Data.Bifunctor                 ( Bifunctor(second) )
 import           Data.Bool                      ( Bool(..)
                                                 , not
-                                                , (||)
+                                                , (||), (&&)
                                                 )
 import           Data.Either                    ( Either(..) )
 import           Data.Eq                        ( Eq((==)) )
@@ -86,7 +85,7 @@ import           Data.Map.Strict                ( Map )
 import           Data.Maybe                     ( Maybe(..)
                                                 , fromMaybe
                                                 , isJust
-                                                , maybe
+                                                , maybe, isNothing
                                                 )
 import           Data.Monoid                    ( Monoid(mempty) )
 import           Data.Ord                       ( Down(Down)
@@ -119,8 +118,7 @@ import qualified LocalStorage                  as LS
 import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
-                                                , SetRoute(setRoute)
-                                                , routeLink
+                                                , SetRoute
                                                 )
 import           Page.Common.Stopwatch          ( elStatisticsPersonalShort
                                                 , elStopwatch
@@ -128,12 +126,12 @@ import           Page.Common.Stopwatch          ( elStatisticsPersonalShort
                                                 )
 import           Palantype.Common               ( Chord
                                                 , Palantype
-                                                , PatternPos
+                                                , PatternPos (..)
                                                 , RawSteno
                                                 , kiBackUp
                                                 , kiEnter
                                                 , showPretty
-                                                , unparts, SystemLang (..), parseChordMaybe, getSystemLang
+                                                , unparts, SystemLang (..), parseChordMaybe, getSystemLang, kiLeft, kiRight
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import qualified Palantype.Common.RawSteno     as Raw
@@ -161,7 +159,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elAttr
                                                 , elAttr'
                                                 , elClass
-                                                , elClass'
+
                                                 , fanEither
                                                 , foldDyn
                                                 , gate
@@ -174,13 +172,13 @@ import           Reflex.Dom                     ( (=:)
                                                 , switchDyn
                                                 , text
                                                 , updated
-                                                , widgetHold
+                                                , widgetHold, el'
                                                 )
 import           Safe                           ( initMay )
 import           Shared                         ( dynSimple
                                                 , formatTime
                                                 , iFa
-                                                , whenJust
+                                                , whenJust, elRouteLink, setRouteAndLoading
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -198,6 +196,7 @@ import Palantype.Common.TH (fromJust)
 elFooter
     :: forall key t (m :: * -> *)
      . ( DomBuilder t m
+       , EventWriter t (Endo State) m
        , Palantype key
        , Prerender t m
        , RouteToUrl (R FrontendRoute) m
@@ -205,26 +204,27 @@ elFooter
        )
     => Navigation
     -> m ()
-elFooter Navigation {..} = elClass "footer" "stage" $ do
+elFooter Navigation {..} =
+  elClass "footer" "grow-0 shrink shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] text-xl p-3 \
+                   \text-center z-10" do
     whenJust navMPrevious $ \prv ->
-        elClass "div" "floatLeft" $ do
+      elClass "div" "float-left" do
         text "< "
-        routeLink (stageUrl @key prv) $
+        elRouteLink (stageUrl @key prv) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key prv
+        elClass "span" "steno-navigation ml-2 p-2" $ text
+          $ "⯇ " <> showt (KI.toRaw @key kiLeft)
 
     text $ maybe "" Stage.showShort $ Stage.fromIndex @key navCurrent
 
     whenJust navMNext $ \nxt ->
-        elClass "div" "floatRight" $ do
-        routeLink (stageUrl @key nxt) $
+      elClass "div" "float-right" do
+        elClass "span" "steno-navigation mr-2 p-2" $ text
+          $ "⯈ " <> showt (KI.toRaw @key kiRight)
+        elRouteLink (stageUrl @key nxt) $
           text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
         text " >"
-    elClass "br" "clearBoth" blank
-
-elBackUp
-    :: forall key (m :: * -> *) t . (DomBuilder t m, Palantype key) => m ()
-elBackUp =
-    elClass "span" "btnSteno" $ text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+    elClass "br" "clear-both" blank
 
 elCongraz
     :: forall key t (m :: * -> *)
@@ -247,14 +247,16 @@ elCongraz evDone dynStats Navigation {..} = mdo
     Env {..} <- ask
 
     let
-        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter) envEChord
-        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) envEChord
+        evChord = catMaybes envEvMChord
+        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter ) evChord
+        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) evChord
 
     dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
     let evNewStats = catMaybes $ catMaybes $ updated dynDone
 
+    dynAuthData <- holdUniqDyn $ getMaybeAuthData <$> envDynState
     _ <- request $ postEventStageCompleted
-      (getMaybeAuthData <$> envDynState)
+      dynAuthData
       (dynDone <&> maybe (Left "not ready")
         (maybe (Left "no stats") \stats ->
           Right (navSystemLang, navCurrent, stats)
@@ -276,54 +278,56 @@ elCongraz evDone dynStats Navigation {..} = mdo
     evRepeat <- dynSimple $ dynDone <&> \case
         Nothing -> pure never
         Just mNewStats ->
-            elClass "div" "mkOverlay" $ elClass "div" "congraz" $ do
-                el "div" $ text "Task cleared!"
-                elClass "div" "check" $ iFa "fas fa-check-circle"
+
+            elClass "div" "overlay" $ elClass "div" "text-center text-md" $ do
+                elClass "div" "text-4xl" $ text "Task cleared!"
+                elClass "div" "text-[72pt] text-green-500" $ iFa "fas fa-check-circle"
                 whenJust mNewStats $ \newStats -> dyn_ $ dynStats <&> \lsStats -> do
-                    -- let lsStatsPersonal = filter (isNothing . fst . snd) lsStats
-                    when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats))
-                        $ elClass "div" "paragraph newBest" $ do
-                              iFa "fa-solid fa-star-sharp"
+                    when (null lsStats || statsTime newStats == minimum (statsTime <$> lsStats)) do
+                      elClass "p" "text-shadow" $ do
+                              elClass "span" "px-2 text-yellow-500" $ iFa "fas fa-star"
                               el "strong" $ text $ "New personal best: " <> formatTime
                                   (statsTime newStats)
-                              iFa "fa-solid fa-star-sharp"
+                              elClass "span" "px-2 text-yellow-500" $ iFa "fas fa-star"
+                      el "br" blank
+
                     elStatisticsPersonalShort lsStats
-                    elClass "hr" "visibilityHidden" blank
-                whenJust navMNext $ \nxt -> do
-                    elACont <- elClass "div" "anthrazit" $ do
-                        text "Type "
-                        elClass "span" "btnSteno" $ do
-                            el "em" $ text "Enter "
-                            el "code" $ text $ showt $ KI.toRaw @key kiEnter
-                        text " to continue to "
-                        elClass "div" "paragraph" $ do
-                            (e, _) <- elClass' "a" "normalLink" $
-                                text $ maybe "" Stage.showShort $ Stage.fromIndex @key nxt
-                            text "."
-                            pure e
-                    let eContinue =
-                            leftmost [eChordEnter, domEvent Click elACont]
+                    el "br" blank
+
+                elClass "div" "text-grayishblue-900" $ do
+                  whenJust navMNext \nxt -> do
+                    text "Type "
+                    elClass "span" "steno-action" $ do
+                        text "Enter "
+                        el "code" $ text $ showt $ KI.toRaw @key kiEnter
+                    text " to continue to "
+                    (domNextStage, _) <- el' "a" $ text $ maybe "" Stage.showShort
+                        $ Stage.fromIndex @key nxt
+                    text " or "
+
+                    let eContinue = leftmost [eChordEnter, domEvent Click domNextStage]
 
                     updateState $ eContinue $>
-                      [ field @"stApp" .  field @"stProgress" %~ Map.update
-                                  (\s -> if nxt > s then Just nxt else Just s)
-                                  navSystemLang
-                      , field @"stApp" .  field @"stCleared" %~ Set.insert navCurrent
-                      ] <> case Stage.getGroupIndex =<< Stage.fromIndex @key nxt of
-                          Nothing -> []
-                          Just  t ->
-                            [ field @"stApp" . field @"stTOCShowStage" .~ Set.singleton t
-                            ]
+                        [ field @"stApp" . field @"stToc" . field @"stProgress" %~ Map.update
+                                    (\s -> if nxt > s then Just nxt else Just s)
+                                    navSystemLang
+                        , field @"stApp" . field @"stToc" . field @"stCleared" %~ Set.insert navCurrent
+                        ] <> case Stage.fromIndex @key nxt of
+                            Nothing -> []
+                            Just  t ->
+                              [   field @"stApp" . field @"stToc"
+                                . field @"stShowStage" .~ Set.singleton (Stage.getGroupIndex t)
+                              ]
 
-                    setRoute $ eContinue $> stageUrl @key nxt
+                    setRouteAndLoading $ eContinue $> stageUrl @key nxt
 
-                el "div" $ do
-                    el "span" $ text "("
-                    (elABack, _) <- elClass' "a" "normalLink" $ text "back"
-                    text " "
-                    elBackUp @key
-                    el "span" $ text ")"
-                    pure $ leftmost [eChordBackUp, domEvent Click elABack]
+                  text "go "
+                  (domABack, _) <- el' "a" $ text "back"
+                  text " "
+                  elClass "span" "steno-navigation p-1" $
+                      text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                  text " to repeat the exercise."
+                  pure $ leftmost [eChordBackUp, domEvent Click domABack]
     pure $ isJust <$> dynDone
 
 chordStart :: forall key. Palantype key => Chord key
@@ -373,7 +377,7 @@ taskWords
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Chord key)
+    -> Event t (Maybe (Chord key))
     -> Map RawSteno Text
     -> Map Text [RawSteno]
     -> m (Event t Stats)
@@ -383,18 +387,15 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 
-
     fmap switchDyn $ widgetHold (loading $> never) $ evStdGen <&> \stdGen -> do
 
         let len = Map.size mapWordStenos
-            step :: Chord key -> StateWords -> StateWords
-            step c st = case st of
-                StatePause _ ->
-                    if c == chordStart @key
-                        then stepStart
-                        else st
+            step :: Maybe (Chord key) -> StateWords -> StateWords
+            step mc st = case (st, mc) of
+                (StatePause _, Just c) | c == chordStart @key -> stepStart
+                (StatePause _, _) -> st
                 -- undo last input
-                StateRun Run {..} | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                (StateRun Run {..}, Nothing) ->
                     case initMay stChords of
                         Just cs ->
                             st
@@ -410,7 +411,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
                                        []
                                        (stWords !! stCounter)
                                        mapWordStenos
-                StateRun Run {..} ->
+                (StateRun Run {..}, Just c) ->
                     let rawSteno = unparts $ stChords <> [Raw.fromChord c]
                         word     = Map.findWithDefault "" rawSteno mapStenoWord
                     in  if word == stWords !! stCounter
@@ -448,7 +449,7 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             StateRun   _         -> -1
         dynStopwatch <- mkStopwatch evStartStop
 
-        elClass "div" "taskWords" $ do
+        elClass "div" "mt-8 text-lg" $ do
 
             evTrigger <- void . updated <$> holdUniqDyn
               ( dynStateWords <&> fromMaybe 0
@@ -459,38 +460,38 @@ taskWords dynStats evChord mapStenoWord mapWordStenos = do
             dyn_ $ dynStateWords <&> \case
                 StatePause _ -> el "div" $ do
                     text "Type "
-                    elClass "span" "btnSteno blinking" $ do
+                    elClass "span" "steno-action" $ do
                         text "Start "
                         el "code" $ text $ showt $ chordStart @key
                     text " to begin the exercise."
                 StateRun Run {..} -> do
-                    -- TODO: what is span ".word"?
-                    elClass "span" "word"
-                        $  elClass "span" "exerciseField"
+                    elClass "span" "bg-zinc-200 rounded w-fit p-1 mx-2"
                         $  el "code"
                         $  text
                         $  stWords
                         !! stCounter
 
-                    elClass "span" "input"
+                    elClass "span" "mx-2"
                         $  traverse_ (el "code" <<< text)
                         $  intersperse "/"
                         $  (showt <$> stChords)
-                        <> [" …"]
+                        <> ["…"]
 
-                    el "span" $ do
-                        elClass "span" "btnSteno" $ text $ "↤ " <> showt
+                    el "span" do
+                        elClass "span" "steno-navigation p-1" $ text $ "↤ " <> showt
                             (KI.toRaw @key kiBackUp) -- U+21A4
-                        elClass "span" "small" $ text $ if null stChords
+                        elClass "span" "text-sm" $ text
+                          $ if null stChords && isNothing stMHint
                             then " to show hint"
                             else " to back up"
 
                     whenJust stMHint $ \hint ->
-                        elClass "span" "small" $ for_ hint $ \r -> do
-                            text $ showt r
-                            el "br" blank
+                        elClass "span" "text-sm" $ for_ hint $ \r -> do
+                            text "hint: "
+                            elClass "code" "text-md" $ text $ showt r
 
-                    elClass "hr" "visibilityHidden" blank
+                    el "br" blank
+                    el "br" blank
                     el "strong" $ text $ showt stCounter
                     text $ " / " <> showt len
 
@@ -501,14 +502,15 @@ elPatterns
      . DomBuilder t m
     => [(PatternPos, [(Text, RawSteno)])]
     -> m ()
-elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
+elPatterns doc = elClass "div" "my-4" $ traverse_ elPatterns' doc
   where
     elPatterns' (pPos, pairs) = do
-        elClass "hr" (showt pPos) blank
-        elClass "span" ("patternPosition " <> showt pPos) $ text $ showPretty
-            pPos
-        elClass "br" "clearBoth" blank
-        for_ pairs $ \(orig, steno) -> elClass "div" "floatLeft" $ do
+        elDummy
+        elClass "hr" ("my-2 border-none h-[1px] bg-" <> strColor pPos) blank
+        elClass "span" ("float-right text-sm font-bold relative \
+                        \text-" <> strColor pPos
+                       ) $ text $ showPretty pPos
+        for_ pairs $ \(orig, steno) -> elClass "div" "float-left" $ do
             let lOrig :: Double = fromIntegral $ length orig
                 styleOrig       = if lOrig > 6
                     then
@@ -523,10 +525,31 @@ elPatterns doc = elClass "div" "patternTable" $ traverse_ elPatterns' doc
                     then
                         "style" =: ("font-size: " <> showt (6 / lSteno) <> "em")
                     else mempty
-            elAttr "div" ("class" =: "orig" <> styleOrig) $ text orig
-            elAttr "code" ("class" =: "steno" <> styleSteno) $ text $ showt
+            elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-24 h-8 text-right text-xl \
+                                     \border border-white inline-block" <> styleOrig
+                         ) $ text orig
+            elAttr "code" ("class" =: "w-24 pl-1 text-left inline-block text-lg"
+                           <> styleSteno
+                          ) $ text $ showt
                 steno
-        elClass "br" "clearBoth" blank
+        elClass "br" "clear-both" blank
+
+    strColor = \case
+      Onset        -> "rose-400"
+      Nucleus      -> "green-400"
+      Coda         -> "blue-400"
+      Multiple     -> "violet-400"
+      OnsetAndCoda -> "orange-400"
+      PPException  -> "grayishblue-900"
+
+    -- make sure tailwind classes show up explicitly somewhere
+    elDummy = elClass "div" "hidden" do
+      elClass "span" "text-rose-400 bg-rose-400" blank
+      elClass "span" "text-green-400 bg-green-400" blank
+      elClass "span" "text-blue-400 bg-blue-400" blank
+      elClass "span" "text-violet-400 bg-violet-400" blank
+      elClass "span" "text-orange-400 bg-orange-400" blank
+      elClass "span" "text-grayishblue-900 bg-grayishblue-900" blank
 
 -- | get the statistics for the score board for the current page
 --   'evNewStats': an event stream of new stats records
@@ -620,7 +643,7 @@ elBtnSound evTrigger = do
       performEvent_ $ evPlaySound $> play audioEl
 
     (domSound, _) <- elAttr' "span"
-      (  "class" =: "floatRight icon-link"
+      (  "class" =: "float-right text-zinc-500 hover:text-grayishblue-800 cursor-pointer"
       <> "title" =: "toggle sound"
       ) $ dyn_ $ dynSound <&> \case
         True  -> iFa "fas fa-volume-down"

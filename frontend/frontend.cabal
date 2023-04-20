@@ -66,6 +66,7 @@ library
     , PloverDict
     , Shared
     , State
+    , StenoInput
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wincomplete-record-updates -O -fno-show-valid-hole-fits
   default-extensions:
       FlexibleContexts

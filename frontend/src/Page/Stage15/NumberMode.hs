@@ -99,8 +99,7 @@ import           Safe                           ( initMay )
 import           Data.Eq                        ( Eq((==)) )
 import qualified Data.Text                     as Text
 import           GHC.Num                        ( Num((+)) )
-import qualified Palantype.Common.RawSteno     as Raw
-import           Control.Monad                  ( replicateM )
+import           Control.Monad                  ( replicateM, unless )
 import           Control.Lens                   ( (<>~)
                                                 , (.~)
                                                 , (%~)
@@ -110,7 +109,7 @@ import           Shared                         ( dynSimple )
 import qualified Data.Time                     as Time
 import           Common.Model                   ( Stats )
 import           GHC.Generics                   ( Generic )
-import Data.Bool (Bool, not)
+import Data.Bool (Bool (..), not)
 import Data.Tuple (fst, snd)
 import PloverDict (eMapNumbersForExercise)
 import CMS (elCMS, elCMSContent)
@@ -144,10 +143,10 @@ taskDates
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Chord key)
+    -> Event t (Maybe (Chord key))
     -> Map RawSteno Text
     -> m (Event t Stats)
-taskDates dynStats evChord map = do
+taskDates dynStats evMChord map = do
 
     eStdGen <- postRender $ do
         ePb <- getPostBuild
@@ -158,27 +157,20 @@ taskDates dynStats evChord map = do
     dynSimple $ dynMStdGen <&> maybe
         (pure never)
         \stdGen -> do
-            let step :: Chord key -> StateDates key -> StateDates key
-                step c st = case st of
-                    StatePause _ ->
-                        if c == chordStart
-                            then stepStart
-                            else st
+            let step :: Maybe (Chord key) -> StateDates key -> StateDates key
+                step mc st = case (st, mc) of
+                    (StatePause _, Just c) | c == chordStart -> stepStart
+                    (StatePause _, _) -> st
                         -- let current = _stDates !! _stCounter
-                    StateRun Run {..}
-                        | Raw.fromChord c == KI.toRaw @key kiBackUp ->
+                    (StateRun Run {..}, Nothing) ->
                         -- undo last input
-                                                                       case
-                                initMay stChords
-                            of
-                                Just cs ->
-                                    st
-                                        &  _As @"StateRun"
-                                        %~ (field @"stChords" .~ cs)
-                                        .  (field @"stNMistakes" +~ 1)
-                                Nothing -> st
+                          case initMay stChords of
+                            Just cs -> st & _As @"StateRun"
+                                            %~ (field @"stChords" .~ cs)
+                                            .  (field @"stNMistakes" +~ 1)
+                            Nothing -> st
 
-                    StateRun Run {..} ->
+                    (StateRun Run {..}, Just c) ->
                         if renderDate (stDates !! stCounter)
                             == renderPlover map (stChords <> [c])
                         then -- correct? next!
@@ -199,7 +191,7 @@ taskDates dynStats evChord map = do
                     , stNMistakes = 0
                     }
 
-            dynStenoDates <- foldDyn step (StatePause 0) evChord
+            dynStenoDates <- foldDyn step (StatePause 0) evMChord
 
             evStartStop <- fmap updated $ holdUniqDyn $ dynStenoDates <&> \case
                 StatePause nMistakes -> nMistakes
@@ -207,37 +199,35 @@ taskDates dynStats evChord map = do
 
             dynStopwatch <- mkStopwatch evStartStop
 
-            elClass "div" "taskWords" $ do
+            elClass "div" "mt-8 text-lg" do
                 dyn_ $ dynStenoDates <&> \case
                     StatePause _ -> el "div" $ do
                         text "Type "
-                        elClass "span" "btnSteno blinking" $ do
+                        elClass "span" "steno-action" $ do
                             text "Start "
-                            el "code" $ text "SDAÜD"
+                            el "code" $ text $ showt $ chordStart @key
                         text " to begin the exercise."
                     StateRun Run {..} -> do
                         elClass "span" "word"
-                            $  elClass "div" "exerciseField multiline"
+                            $  elClass "div" "bg-zinc-200 rounded p-1 break-all"
                             $  el "code"
                             $  text
                             $  renderDate
                             $  stDates
                             !! stCounter
 
-                        elClass "span" "input"
+                        elClass "span" "mx-2"
                             $  text
                             $  renderPlover map stChords
-                            <> " …"
+                            <> "…"
 
-                        el "span" $ do
-                            elClass "span" "btnSteno" $ text $ "↤ " <> showt
+                        unless (null stChords) do
+                            elClass "span" "steno-navigation p-1" $ text $ "↤ " <> showt
                                 (KI.toRaw @key kiBackUp) -- U+21A4
-                            elClass "span" "small" $ text $ if null stChords
-                                then " to show hint"
-                                else " to back up"
+                            elClass "span" "text-sm" $ text " to back up"
 
-                        elClass "hr" "visibilityHidden" blank
-
+                        el "br" blank
+                        el "br" blank
                         el "strong" $ text $ showt stCounter
                         text $ " / " <> showt numDates
 
@@ -281,10 +271,10 @@ numberMode = mdo
     dynStatsAll <- getStatsLocalAndRemote evDone
     evDone <- case eMapNumbersForExercise @key of
         Left str  -> do
-          elClass "p" "small red" $ text $ "Couldn't load resource: " <> str
+          elClass "p" "text-sm text-red-500" $ text $ "Couldn't load resource: " <> str
           pure never
         Right map ->
-          taskDates dynStatsAll (gate (not <$> current dynDone) envEChord) map
+          taskDates dynStatsAll (gate (not <$> current dynDone) envEvMChord) map
 
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation

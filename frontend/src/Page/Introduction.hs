@@ -37,7 +37,7 @@ import           Data.Semigroup                 ( Endo(..)
                                                 )
 import qualified Data.Set                      as Set
 import           Obelisk.Route.Frontend         ( R
-                                                , SetRoute(setRoute)
+                                                , SetRoute
                                                 )
 import           Page.Common                    ( chordStart )
 import           Palantype.Common               ( Palantype )
@@ -58,7 +58,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , elClass'
                                                 , leftmost
                                                 , text
-                                                , splitE
+                                                , splitE, el
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
@@ -68,6 +68,7 @@ import           State                          ( Env(..)
                                                 )
 import           Witherable                     ( Filterable(filter, mapMaybe) )
 import Data.Bifunctor (Bifunctor(first))
+import Shared (setRouteAndLoading)
 
 introduction
     :: forall key t (m :: * -> *)
@@ -91,9 +92,10 @@ introduction = do
     let
         Navigation {..} = envNavigation
 
-    ((evPart1, evPart2), evPart3) <- elCMS 3 <&> first splitE . splitE . mapMaybe \case
+    evCMS <- elCMS 3 <&> mapMaybe \case
       [p1, p2, p3] -> Just ((p1, p2), p3)
       _            -> Nothing
+    let ((evPart1, evPart2), evPart3) = first splitE $ splitE evCMS
 
     elCMSContent evPart1
 
@@ -110,17 +112,17 @@ introduction = do
 
     elCMSContent evPart2
 
-    let eChordSTART = void $ filter (== chordStart) envEChord
+    let eChordSTART = void $ filter (== Just chordStart) envEvMChord
 
-    elClass "div" "start" $ do
-        (btn, _) <- elClass' "button" "small" $ text "Get Started!"
+    -- prose class: to center within prose text-flow
+    elClass "div" "my-prose" $ elClass "div" "mx-auto my-4 steno-action" $ do
+        (btn, _) <- elClass' "button" "" $ text "Get Started!"
         let eStart = leftmost [eChordSTART, domEvent Click btn]
-        updateState
-            $  eStart
-            $> [ field @"stApp" . field @"stProgress" %~ Map.insert navSystemLang ($fromJust navMNext)
-              , field @"stApp" . field @"stCleared" %~ Set.insert navCurrent
-              , field @"stApp" . field @"stTOCShowStage" .~ Set.singleton 1
-              ]
-        setRoute $ eStart $> stageUrl @key 1
+        updateState $  eStart $>
+          [ field @"stApp" . field @"stToc" . field @"stProgress"  %~ Map.insert navSystemLang ($fromJust navMNext)
+          , field @"stApp" . field @"stToc" . field @"stCleared"   %~ Set.insert navCurrent
+          , field @"stApp" . field @"stToc" . field @"stShowStage" .~ Set.singleton 1
+          ]
+        setRouteAndLoading $ eStart $> stageUrl @key 1
 
     elCMSContent evPart3

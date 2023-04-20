@@ -10,7 +10,7 @@ module Handler.CMS
 
 import           AppData                        ( Handler )
 import           Common.Api                     ( RoutesCMS )
-import           Common.Model                   ( TextLang, UTCTimeInUrl (UTCTimeInUrl) )
+import           Common.Model                   ( TextLang, UTCTimeInUrl (UTCTimeInUrl), CacheContentType (..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<) )
 import           Control.Monad                  ( Monad((>>=)), unless )
@@ -19,7 +19,7 @@ import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.UTF8     as BLU
 import           Data.Default                   ( Default(def) )
 import           Data.Either                    ( Either(..) )
-import           Data.Foldable                  ( for_ )
+import           Data.Foldable                  ( traverse_, Foldable (null) )
 import           Data.Function                  ( ($), (&) )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
@@ -81,6 +81,8 @@ import Auth (UserInfo (..))
 import Data.Generics.Product (field)
 import Control.Lens ((.~))
 import Snap.Core (modifyResponse, setHeader)
+import Data.Int (Int)
+import qualified Data.Text.IO as Text
 
 separatorToken :: Text
 separatorToken = "<!--separator-->"
@@ -92,6 +94,7 @@ handlers =
     :<|> handleGetCacheInvalidationData
     :<|> handleClearCacheAll
     :<|> handleClearCache
+    :<|> handlePostUpdateAll
 
 handleCMSGet
   :: SystemLang
@@ -99,44 +102,50 @@ handleCMSGet
   -> Text
   -> UTCTimeInUrl
   -> Handler [Pandoc]
-handleCMSGet systemLang textLang pageName (UTCTimeInUrl time) = do
+handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
     modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
-    let cacheDbKey = UCMSCache systemLang textLang pageName time
+    let cacheDbKey = UCMSCache systemLang textLang filename time
     mFromCache <- runDb (getBy cacheDbKey) >>= \case
-        Just (Entity _ CMSCache {..}) -> case blobDecode cMSCacheBlob of
-            Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
-            Just lsDoc -> pure $ Just lsDoc
+        Just (Entity _ CMSCache {..}) ->
+          case cMSCacheContentType of
+            CacheContentMarkdown -> case blobDecode cMSCacheBlob of
+              Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
+              Just lsDoc -> pure $ Just lsDoc
+            -- TODO: other content types
         Nothing -> pure Nothing
     case mFromCache of
-        Just c -> pure c
-        Nothing -> GithubApi.request (GithubApi.RequestData systemLang textLang pageName) >>= \case
-            GithubApi.Success str -> do
-                liftIO (Pandoc.runIO $ convertMarkdown str) >>= \case
-                    Left err -> Servant.throwError $ err500
-                        { errBody =
-                            "Couldn't convert markdown"
-                                <> BLU.fromString (show err)
-                        }
-                    Right lsDoc -> do
-                      runDb $ Esqueleto.delete $ from $ \c ->
-                        where_ $ c ^. CMSCacheSystemLang ==. val systemLang
-                             &&. c ^. CMSCacheTextLang   ==. val textLang
-                             &&. c ^. CMSCachePageName   ==. val pageName
-                      _ <- runDb $ insert $ CMSCache systemLang
-                                                     textLang
-                                                     pageName
-                                                     (blobEncode lsDoc)
-                                                     time
-                      pure lsDoc
-            GithubApi.PageNotFound strFilename -> Servant.throwError $ err404
-                { errBody = "Missing file: " <> textToLazyBS strFilename
-                }
-            GithubApi.Error code msg -> Servant.throwError $ err500
-                { errBody = "Couldn't retrieve page: "
-                            <> BLU.fromString (show code)
-                            <> " "
-                            <> textToLazyBS msg
-                }
+      Just c -> do
+        liftIO $ Text.putStrLn "Retrieved page from cache"
+        pure c
+      Nothing -> GithubApi.getTextFile systemLang textLang filename >>= \case
+        GithubApi.Success str -> liftIO (Pandoc.runIO $ convertMarkdown str) >>= \case
+          Left err -> Servant.throwError $ err500
+              { errBody =
+                  "Couldn't convert markdown"
+                      <> BLU.fromString (show err)
+              }
+          Right lsDoc -> do
+            liftIO $ Text.putStrLn "Fetched from GitHub"
+            runDb $ Esqueleto.delete $ from $ \c ->
+              where_ $ c ^. CMSCacheSystemLang ==. val systemLang
+                   &&. c ^. CMSCacheTextLang   ==. val textLang
+                   &&. c ^. CMSCacheFilename   ==. val filename
+            _ <- runDb $ insert $ CMSCache systemLang
+                                           textLang
+                                           filename
+                                           CacheContentMarkdown
+                                           (blobEncode lsDoc)
+                                           time
+            pure lsDoc
+        GithubApi.Error 404 strFilename -> Servant.throwError $ err404
+            { errBody = "Missing file: " <> textToLazyBS strFilename
+            }
+        GithubApi.Error code msg -> Servant.throwError $ err500
+            { errBody = "Couldn't retrieve page: "
+                        <> BLU.fromString (show code)
+                        <> " "
+                        <> textToLazyBS msg
+            }
 
 convertMarkdown :: Text -> PandocIO [Pandoc]
 convertMarkdown str =
@@ -144,25 +153,7 @@ convertMarkdown str =
   in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
 
 handlePostCacheInvalidation :: [Text] -> Handler ()
-handlePostCacheInvalidation filepaths = for_ filepaths \filepath -> do
-    (strSystemLang, strTextLang, pageName) <- case Text.splitOn "/" filepath of
-        ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
-        _ -> bail
-                $ "required: cms-content/[systemLang]/[textLang]/[pageName]; got: "
-                <> textToLazyBS filepath
-    systemLang <- case readMaybe $ Text.unpack strSystemLang of
-        Nothing -> bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
-        Just s -> pure s
-    textLang <- case readMaybe $ Text.unpack strTextLang of
-        Nothing -> bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
-        Just s -> pure s
-    time <- liftIO getCurrentTime
-    runDb $ deleteBy $ UCMSCacheLatest systemLang textLang pageName
-    void $ runDb $ insert $ CMSCacheLatest time
-                                           systemLang
-                                           textLang
-                                           pageName
-    where bail msg = Servant.throwError $ err400 { errBody = msg }
+handlePostCacheInvalidation = traverse_ invalidateCache
 
 handleGetCacheInvalidationData
     :: Handler (Map (SystemLang, TextLang, Text) UTCTime)
@@ -175,7 +166,7 @@ handleGetCacheInvalidationData = do
         <&> \(Entity _ CMSCacheLatest {..}) ->
                 ( ( cMSCacheLatestSystemLang
                   , cMSCacheLatestTextLang
-                  , cMSCacheLatestPageName
+                  , cMSCacheLatestFilename
                   )
                 , cMSCacheLatestTime
                 )
@@ -194,9 +185,47 @@ handleClearCache
   -> TextLang
   -> Text
   -> Handler ()
-handleClearCache UserInfo{..} systemLang textLang pageName = do
+handleClearCache UserInfo{..} systemLang textLang filename = do
   unless uiIsSiteAdmin $ Servant.throwError err403
   runDb $ Esqueleto.delete $ from $ \c ->
     where_ $ c ^. CMSCacheSystemLang ==. val systemLang
          &&. c ^. CMSCacheTextLang   ==. val textLang
-         &&. c ^. CMSCachePageName   ==. val pageName
+         &&. c ^. CMSCacheFilename   ==. val filename
+
+handlePostUpdateAll :: UserInfo -> Handler ()
+handlePostUpdateAll UserInfo{..} = do
+    unless uiIsSiteAdmin $ Servant.throwError err403
+    GithubApi.getFileList ".md" >>= \case
+      GithubApi.Success filepaths ->
+        if null filepaths
+        then bail (500 :: Int) "empty file list"
+        else traverse_ invalidateCache filepaths
+      GithubApi.Error code msg -> bail code msg
+  where bail code msg = Servant.throwError $ err500
+            { errBody = "Error communicating with Github: "
+                        <> BLU.fromString (show code)
+                        <> " "
+                        <> textToLazyBS msg
+            }
+
+invalidateCache :: Text -> Handler ()
+invalidateCache filepath = do
+    (strSystemLang, strTextLang, filename) <- case Text.splitOn "/" filepath of
+        ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
+        _ -> bail
+                $ "required: cms-content/[systemLang]/[textLang]/[filename]; got: "
+                <> textToLazyBS filepath
+    systemLang <- case readMaybe $ Text.unpack strSystemLang of
+        Nothing -> bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
+        Just s -> pure s
+    textLang <- case readMaybe $ Text.unpack strTextLang of
+        Nothing -> bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
+        Just s -> pure s
+    time <- liftIO getCurrentTime
+    runDb $ deleteBy $ UCMSCacheLatest systemLang textLang filename
+    void $ runDb $ insert $ CMSCacheLatest time
+                                           systemLang
+                                           textLang
+                                           filename
+  where
+    bail msg = Servant.throwError $ err400 { errBody = msg }

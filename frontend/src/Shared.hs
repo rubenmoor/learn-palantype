@@ -8,6 +8,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Shared where
 
@@ -24,7 +25,7 @@ import           Control.Applicative            ( (<$>)
                                                 , Applicative(pure)
                                                 )
 import           Control.Category               ( Category((.)) )
-import           Control.Lens                   ( (.~) )
+import           Control.Lens                   ( (.~), (%~) )
 import           Control.Monad                  ( (=<<)
                                                 , Monad((>>=))
                                                 , unless
@@ -37,11 +38,11 @@ import           Control.Monad.Reader           ( MonadReader
 import           Data.Bool                      ( Bool(..) )
 import           Data.Either                    ( Either(Right) )
 import           Data.Function                  ( ($)
-                                                , flip
+                                                , flip, const
                                                 )
 import           Data.Functor                   ( ($>)
                                                 , (<&>)
-                                                , Functor(fmap)
+                                                , Functor(fmap, (<$))
                                                 , void
                                                 )
 import           Data.Generics.Product          ( field )
@@ -66,35 +67,31 @@ import           GHC.Real                       ( div
                                                 , mod
                                                 , realToFrac
                                                 )
-import           GHCJS.DOM                      ( currentWindowUnchecked )
+import           GHCJS.DOM                      ( currentWindowUnchecked, currentWindow )
 import           GHCJS.DOM.Document             ( getLocationUnchecked )
 import           GHCJS.DOM.Location             ( assign )
-import           GHCJS.DOM.Window               ( getDocument )
+import           GHCJS.DOM.Window               ( getDocument, scrollTo )
 import           Language.Javascript.JSaddle    ( MonadJSM
                                                 , liftJSM
                                                 )
 import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , SetRoute
-                                                , setRoute
+                                                , setRoute, RouteToUrl (..)
                                                 )
 import           Reflex.Dom                     ( (&)
                                                 , (=:)
                                                 , Adjustable
                                                 , DomBuilder
-                                                    ( DomBuilderSpace
-                                                    , inputElement
+                                                    (..
                                                     )
                                                 , Element
                                                 , EventName(Click)
                                                 , EventResult
                                                 , EventWriter
                                                 , HasDomEvent(domEvent)
-                                                , InputElement
-                                                    ( _inputElement_checked
-                                                    , _inputElement_value
-                                                    )
-                                                , InputElementConfig
+                                                , InputElement ( _inputElement_checked)
+
                                                 , MonadHold
                                                 , NotReady
                                                 , PostBuild
@@ -107,7 +104,7 @@ import           Reflex.Dom                     ( (&)
                                                 , dyn_
                                                 , el
                                                 , elAttr
-                                                , elAttr'
+
                                                 , elClass
                                                 , elClass'
                                                 , elementConfig_initialAttributes
@@ -116,14 +113,16 @@ import           Reflex.Dom                     ( (&)
                                                 , leftmost
                                                 , switchHold
                                                 , tag
-                                                , text
+                                                , text, el', ElementConfig, elementConfig_eventSpec, DomSpace (..), preventDefault, PerformEvent (..), prerender_, holdUniqDyn
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , updateState
+                                                , updateState, Loading (..)
                                                 )
 import           Text.Printf                    ( printf )
 import           TextShow                       ( TextShow(showt) )
+import Data.Proxy (Proxy (..))
+import Control.Monad.Fix (MonadFix)
 
 iFa' :: DomBuilder t m => Text -> m (Element EventResult (DomBuilderSpace m) t)
 iFa' class' = fst <$> elClass' "i" class' blank
@@ -133,62 +132,6 @@ iFa = void . iFa'
 
 iFaAttr :: DomBuilder t m => Text -> Map Text Text -> m ()
 iFaAttr class' attrs = void $ elAttr "i" ("class" =: class' <> attrs) blank
-
-elLabelInput
-    :: DomBuilder t m
-    => InputElementConfig e t (DomBuilderSpace m)
-    -> Text
-    -> Int
-    -> Text
-    -> m
-           ( Dynamic t (Maybe Text)
-           , InputElement e (DomBuilderSpace m) t
-           )
-elLabelInput conf label maxlength id = do
-    elAttr "label" ("for" =: id) $ el "h3" $ text label
-    i <-
-        inputElement
-        $  conf
-        &  inputElementConfig_elementConfig
-        .  elementConfig_initialAttributes
-        .~ "id" =: id <> "type" =: "text" <> "maxlength" =: showt maxlength
-    let dynStr  = _inputElement_value i
-        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
-    pure (dynMStr, i)
-
-elLabelPasswordInput
-    :: DomBuilder t m
-    => InputElementConfig e t (DomBuilderSpace m)
-    -> Text
-    -> Text
-    -> m
-           ( Dynamic t (Maybe Text)
-           , InputElement e (DomBuilderSpace m) t
-           )
-elLabelPasswordInput conf label id = do
-    elAttr "label" ("for" =: id) $ el "h3" $ text label
-    i <-
-        inputElement
-        $  conf
-        &  inputElementConfig_elementConfig
-        .  elementConfig_initialAttributes
-        .~ "id" =: id <> "type" =: "password" <> "maxlength" =: "64"
-    let dynStr  = _inputElement_value i
-        dynMStr = dynStr <&> \s -> if Text.null s then Nothing else Just s
-    pure (dynMStr, i)
-
-elButtonSubmit
-  :: DomBuilder t m
-  => Text
-  -> m ()
-  -> m (Event t ())
-elButtonSubmit cls inner = do
-    (e, _) <- elAttr' "button"
-                      (  "type" =: "submit"
-                      <> "class" =: cls
-                      )
-                      inner
-    pure $ domEvent Click e
 
 whenJust :: forall a t . Applicative t => Maybe a -> (a -> t ()) -> t ()
 whenJust (Just x) a = a x
@@ -222,12 +165,15 @@ elFatalError strMessage = elClass "div" "mkOverlay" do
       iFa "fas fa-bomb"
     unless (Text.null strMessage) $ el "p" $ text strMessage
 
-loadingScreen :: DomBuilder t m => Text -> m ()
-loadingScreen strMessage = elClass "div" "mkOverlay" do
-    el "div" $ do
-      iFa "fas fa-spinner fa-spin"
-      text " Loading"
-    unless (Text.null strMessage) $ el "p" $ text strMessage
+elLoading
+  :: forall t (m :: * -> *)
+  . ( DomBuilder t m
+    , PostBuild t m
+    ) => Dynamic t Loading -> m ()
+elLoading d = dyn_ $ d <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
+      LoadingStill msg      -> elAttr "span" ("title" =: msg) $ iFa "fas fa-spinner fa-spin"
+      LoadingDone           -> blank
+      LoadingError strError -> elAttr "span" ("title" =: strError) $ iFa "far fa-meh"
 
 elLabelCheckbox
     :: (DomBuilder t m) => Bool -> Text -> Text -> m (Dynamic t Bool)
@@ -242,19 +188,6 @@ elLabelCheckbox initial label id = do
         .~ initial
     elAttr "label" ("for" =: id) $ el "span" $ text label
     pure $ _inputElement_checked cb
-
-undynState
-    :: forall t (m :: * -> *)
-     . ( MonadReader (Dynamic t State) m
-       , Adjustable t m
-       , NotReady t m
-       , PostBuild t m
-       )
-    => (State -> m ())
-    -> m ()
-undynState func = do
-    dynState <- ask
-    dyn_ $ dynState <&> \st -> func st
 
 redirectToWikipedia
   :: forall m . MonadJSM m => Text -> m ()
@@ -280,6 +213,8 @@ formatTime dt =
 requestPostViewPage
   :: forall m t
   . ( MonadReader (Dynamic t State) m
+    , MonadHold t m
+    , MonadFix m
     , PostBuild t m
     , Prerender t m
     )
@@ -287,49 +222,92 @@ requestPostViewPage
   -> Event t ()
   -> m ()
 requestPostViewPage dynRoute ev = do
-  dynState <- ask
+  dynMAuthData <- ask >>= holdUniqDyn . fmap getMaybeAuthData
   void $ request $ postEventViewPage
-    (getMaybeAuthData <$> dynState)
+    dynMAuthData
     (Right . showRoute <$> dynRoute)
     ev
 
 elLoginSignup
   :: forall t (m :: * -> *)
-  . ( DomBuilder t m,
-      PostBuild t m,
-      EventWriter t (Endo State) m,
-      MonadReader (Dynamic t State) m,
-      SetRoute t (R FrontendRoute) m
+  . ( DomBuilder t m
+    , EventWriter t (Endo State) m
+    , MonadHold t m
+    , MonadReader (Dynamic t State) m
+    , PostBuild t m
+    , SetRoute t (R FrontendRoute) m, MonadFix m
     )
   => Dynamic t (R FrontendRoute)
   -> m ()
-elLoginSignup dynRedirectRoute = elClass "div" "login-signup floatRight" $ do
-    dynSession  <- asks $ fmap stSession
+elLoginSignup dynRedirectRoute =
+  elClass "div" "float-right text-lg px-2 pt-1" do
+    dynSession  <- holdUniqDyn =<< asks (fmap stSession)
     dyn_ $ dynSession <&> \case
         SessionAnon -> do
-          (domLogin, _) <- elClass' "a" "normalLink" $ text "Log in"
+          (domLogin, _) <- el' "a" $ text "Log in"
           let evLogin = domEvent Click domLogin
-          setRoute $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+          setRouteAndLoading $ evLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
           el "span" $ text " or "
-          (domSignup, _) <- elClass' "a" "normalLink" $ text "sign up"
+          (domSignup, _) <- el' "a" $ text "sign up"
           let evSignup = domEvent Click domSignup
-          setRoute $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
-          updateState $
-            tag (current dynRedirectRoute)
-                (leftmost [evSignup, evLogin]) <&> \r ->
-              [ field @"stRedirectUrl" .~ r ]
+          setRouteAndLoading $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
+          updateState $ tag (current dynRedirectRoute) (leftmost [evSignup, evLogin]) <&>
+              \r -> [ field @"stRedirectUrl" .~ r ]
         SessionUser SessionData{..} -> do
           el "span" $ text "Logged in as "
-          el "span" $ text sdAliasName
+          elClass "span" "font-bold" $ text sdAliasName
           el "span" $ text " ("
-          (domLogout, _) <- elClass' "a" "normalLink" $ text "log out"
+          (domLogout, _) <- el' "a" $ text "log out"
           el "span" $ text ")"
-          when sdIsSiteAdmin $ do
+          when sdIsSiteAdmin do
             el "span" $ text " "
-            domAdmin <- elClass "span" "icon-link small" $ iFa' "fas fa-lock"
+            domAdmin <- elClass "span" "text-zinc-500 cursor-pointer text-sm"
+              $ iFa' "fas fa-lock"
             let evClickAdmin = domEvent Click domAdmin
-            setRoute $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
+            setRouteAndLoading $ evClickAdmin $> FrontendRoute_Admin :/ AdminPage_Journal :/ ()
             updateState $ tag (current dynRedirectRoute) evClickAdmin <&> \r ->
               [ field @"stRedirectUrl" .~ r ]
           let evLogout = domEvent Click domLogout
           updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
+
+setRouteAndLoading
+  :: forall r t (m :: * -> *)
+  . ( EventWriter t (Endo State) m
+    , SetRoute t r m
+    )
+  => Event t r
+  -> m ()
+setRouteAndLoading e = do
+  updateState $ e $> [ field @"stLoading" .~ LoadingStill "Building page" ]
+  setRoute e
+
+elRouteLink
+  :: forall t m a
+   . ( DomBuilder t m
+     , EventWriter t (Endo State) m
+     , RouteToUrl (R FrontendRoute) m
+     , SetRoute t (R FrontendRoute) m
+     , Prerender t m
+     )
+    => R FrontendRoute -- ^ Target route
+    -> m a             -- ^ Child widget
+    -> m a
+elRouteLink r w = do
+  enc <- askRouteToUrl
+  let cfg = (def :: ElementConfig EventResult t (DomBuilderSpace m))
+        & elementConfig_eventSpec
+            %~ addEventSpecFlags (Proxy :: Proxy (DomBuilderSpace m))
+                                 Click
+                                 (const preventDefault)
+        & elementConfig_initialAttributes .~ "href" =: enc r
+  (e, a) <- element "a" cfg w
+  let evClick = domEvent Click e
+  setRouteAndLoading $ r <$ evClick
+
+  -- scrollToTop e
+  prerender_ blank $ performEvent_ $ evClick $> liftJSM
+    ( currentWindow >>= \case
+        Nothing -> pure ()
+        Just win -> scrollTo win 0 0
+    )
+  pure a

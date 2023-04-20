@@ -26,7 +26,7 @@ import           Database.Persist.TH     (mkEntityDefList, mkPersist,
                                           persistLowerCase, share, sqlSettings)
 import DbAdapter.Instances ()
 import qualified Common.Model as Model
-import Common.Model (TextLang)
+import Common.Model (TextLang, CacheContentType)
 import Palantype.Common (StageRepr, SystemLang)
 
 share [mkPersist sqlSettings, mkEntityDefList "entities"] [persistLowerCase|
@@ -72,14 +72,15 @@ StageBegin
 CMSCache
   systemLang       SystemLang
   textLang         TextLang
-  pageName         Text
+  filename         Text
+  contentType      CacheContentType
   blob             ByteString
   time             UTCTime
-  UCMSCache systemLang textLang pageName time
+  UCMSCache systemLang textLang filename time
 CMSCacheLatest
   time             UTCTime
   systemLang       SystemLang
   textLang         TextLang
-  pageName         Text
-  UCMSCacheLatest systemLang textLang pageName
+  filename         Text
+  UCMSCacheLatest systemLang textLang filename
 |]

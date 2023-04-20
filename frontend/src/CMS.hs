@@ -12,7 +12,10 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 
-module CMS (elCMS, elCMSContent)where
+module CMS
+  ( elCMS
+  , elCMSContent
+  ) where
 
 import           Client                         ( getAuthData
                                                 , getCMS
@@ -26,9 +29,9 @@ import           Control.Category               ( (.)
 import           Control.Monad                  ( Monad )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Control.Monad.Reader           ( MonadReader(ask) )
-import           Data.Either                    ( Either(..) )
+import           Data.Either                    ( Either(..), isRight, either )
 import           Data.Foldable                  ( Foldable(length) )
-import           Data.Function                  ( ($) )
+import           Data.Function                  ( ($), const )
 import           Data.Functor                   ( ($>)
                                                 , (<$>)
                                                 , (<&>)
@@ -68,28 +71,29 @@ import           Reflex.Dom                     ( (=:)
 
                                                 , text
                                                 , widgetHold
-                                                , widgetHold_, switchDyn, attachWith, EventWriter
+                                                , widgetHold_, switchDyn, attachWith, EventWriter, holdUniqDyn
                                                 )
 import           Shared                         ( iFa
-                                                , iFa', loadingScreen
+                                                , iFa'
                                                 )
 import           State                          ( Env(..)
                                                 , Navigation(..)
                                                 , Session(..)
-                                                , State(..), updateState
+                                                , State(..), updateState, Loading (..)
                                                 )
 import           Text.Pandoc.Definition         ( Pandoc )
 import           TextShow                       ( TextShow(showt) )
-import           Witherable                     ( catMaybes
+import           Witherable                     ( catMaybes, Filterable (..)
                                                 )
 import Data.Tuple (fst, snd)
 import Data.Eq (Eq((==)))
 import Control.Monad.Fix (MonadFix)
-import Control.Lens (set)
+import Control.Lens (set, (.~))
 import Data.Generics.Product (HasField(field))
 import Data.Monoid (Endo)
 import Common.Model (UTCTimeInUrl(UTCTimeInUrl))
 import Reflex.Dom.Pandoc (elPandoc, defaultConfig)
+import Servant.API (ToHttpApiData(toUrlPiece))
 
 
 elCMSContent
@@ -100,9 +104,10 @@ elCMSContent
     => Event t Pandoc
     -> m ()
 elCMSContent ev =
-    widgetHold_ elWaitingForCMS $ elPandoc defaultConfig <$> ev
+    widgetHold_ elWaitingForCMS $
+      elClass "div" "my-prose" . elPandoc defaultConfig <$> ev
   where
-    elWaitingForCMS = elClass "span" "small italic" $
+    elWaitingForCMS = elClass "span" "text-xs italic" $
       text "waiting for content-management-system"
 
 elCMS
@@ -127,39 +132,46 @@ elCMS numParts = mdo
 
     let
         Navigation {..} = envNavigation
+        filename = navPageName <> ".md"
         dynLatest =
               fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
-            . Map.lookup (navSystemLang, navTextLang, navPageName)
+            . Map.lookup (navSystemLang, navTextLang, filename)
             . stCMSCacheInvalidationData
           <$> envDynState
 
-    evRespCMS <- Client.request $
-      Client.getCMS (constDyn $ Right navSystemLang)
-                    (constDyn $ Right navTextLang  )
-                    (constDyn $ Right navPageName  )
-                    (Right . UTCTimeInUrl <$> dynLatest)
-                    $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
+    evRespCMS <- request $
+      getCMS (constDyn $ Right navSystemLang)
+             (constDyn $ Right navTextLang  )
+             (constDyn $ Right filename     )
+             (Right . UTCTimeInUrl <$> dynLatest)
+             $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
-
-    dynPair <- el "div" $ widgetHold (loadingScreen "" $> (Nothing, never)) $
-      attachWith (\mt e -> (mt,) <$> e) (current dynLatest) evRespCMS <&> \case
+    dynPair <- el "div" $ widgetHold (pure (Nothing, never)) $
+      attachWith (\t e -> (t,) <$> e) (current dynLatest) evRespCMS <&> \case
         Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
         Right (latest, parts) -> elCMSMenu numParts latest parts
 
     let evRefresh = switchDyn $ snd <$> dynPair
-    evRespCMSCache <-
-      request $ getCacheInvalidationData evRefresh
+    evRespCMSCache <- request $ getCacheInvalidationData evRefresh
     let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
     updateState $ evSuccCMSCache <&> \ci ->
       [ set (field @"stCMSCacheInvalidationData") ci ]
     widgetHold_ blank $ evFailCMSCache <&> \msg ->
       el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
 
+    updateState $ evRefresh $>
+      [ field @"stLoading" .~ LoadingStill "Retrieving CMS content" ]
+    updateState $ filter isRight evRespCMS $>
+      [ field @"stLoading" .~ LoadingDone ]
+    updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->
+      [ field @"stLoading" .~ LoadingError str ]
+
     pure $ catMaybes $ updated $ fst <$> dynPair
 
 elCMSMenu
     :: ( MonadReader (Env t key) m
        , DomBuilder t m
+       , MonadFix m
        , MonadHold t m
        , PostBuild t m
        , Prerender t m
@@ -172,6 +184,7 @@ elCMSMenu numParts latest parts = do
     Env {..} <- ask
     let
         n = length parts
+        Navigation{..} = envNavigation
 
     mParts <- if n == numParts
       then pure $ Just parts
@@ -179,29 +192,45 @@ elCMSMenu numParts latest parts = do
         text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> " expected parts."
         pure Nothing
 
-    evRefresh <- elClass "div" "small floatRight gray italic" $ do
-      text $ "Last update "
-        <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d" latest)
-        <> " "
-      domRefresh <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Refresh") $ iFa' "fas fa-sync"
+    evRefresh <- elClass "div" "text-xs float-right text-zinc-500 italic" $ do
+      elAttr "span" (  "class" =: "pr-1"
+                    <> "title" =: "Latest update"
+                    )
+        $ text $ Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" latest) <> " "
+
+      domRefresh <- elAttr "span"
+        (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+        <> "title" =: "Refresh contents"
+        ) $ iFa' "fas fa-sync"
+
+      elAttr "a" (  "href" =: (  "https://github.com/rubenmoor/learn-palantype/blob/main/cms-content/"
+                              <> toUrlPiece navSystemLang <> "/"
+                              <> toUrlPiece navTextLang   <> "/"
+                              <> navPageName              <> ".md"
+                              )
+                  <> "title" =: "Edit this page on Github"
+                  <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
+                  ) $ iFa "fas fa-edit"
 
       let dynSession = stSession <$> envDynState
       dyn_ $ dynSession <&> whenIsAdmin do
-          text " "
 
-          domSyncServerAll <- elAttr "span" ("class" =: "icon-link verySmall" <> "title" =: "Clear server cache") $
-            iFa' "fas fa-skull"
+          domSyncServerAll <- elAttr "span"
+            (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+            <> "title" =: "Clear server cache"
+            ) $ iFa' "fas fa-skull"
 
-          let Navigation{..} = envNavigation
-          evRespAll <- Client.request $ Client.postClearCache
-            (Client.getAuthData <$> envDynState)
+
+          dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
+          evRespAll <- request $ postClearCache
+            dynAuthData
             (constDyn $ Right navSystemLang)
             (constDyn $ Right navTextLang  )
             (constDyn $ Right navPageName  )
             $ domEvent Click domSyncServerAll
-          widgetHold_ blank $ evRespAll <&> elClass "span" "verySmall" . \case
-            Left  _ -> iFa "red fas fa-times"
-            Right _ -> iFa "green fas fa-check"
+          widgetHold_ blank $ evRespAll <&> \case
+            Left  _ -> iFa "text-red-500 fas fa-times"
+            Right _ -> iFa "text-green-500 fas fa-check"
 
       pure $ domEvent Click domRefresh
 

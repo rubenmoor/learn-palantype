@@ -10,8 +10,7 @@
 
 module AdminPages where
 
-import           Control.Lens.Getter            ( (^.)
-                                                , view
+import           Control.Lens.Getter            ( view
                                                 )
 import           Control.Lens.Setter            ( (.~) )
 import           Control.Monad.Reader           ( MonadReader(ask) )
@@ -28,7 +27,7 @@ import           Data.Function                  ( ($)
 import           Data.Functor                   ( (<$>)
                                                 , (<&>)
                                                 , Functor(fmap)
-                                                , void
+                                                , void, ($>)
                                                 )
 import           Data.Generics.Product          ( field )
 import           Data.Generics.Sum              ( _As )
@@ -49,12 +48,10 @@ import           Data.Time                      ( Day
                                                 )
 import qualified Data.Time.Format              as Time
                                                 ( formatTime )
-import           Obelisk.Route.Frontend         ( pattern (:/)
-                                                , R
+import           Obelisk.Route.Frontend         ( R
                                                 , RouteToUrl
-                                                , SetRoute
-                                                , routeLink
-                                                , setRoute
+                                                , SetRoute (setRoute)
+
                                                 )
 import           Reflex.Dom                     ( (=:)
                                                 , DomBuilder
@@ -64,11 +61,9 @@ import           Reflex.Dom                     ( (=:)
                                                 , EventWriter
                                                 , InputElement(..)
                                                 , InputElementConfig
-                                                , MonadHold
                                                 , PostBuild
                                                 , Prerender
                                                 , blank
-                                                , constDyn
                                                 , current
                                                 , domEvent
                                                 , dynText
@@ -76,7 +71,6 @@ import           Reflex.Dom                     ( (=:)
                                                 , elAttr
                                                 , elClass
                                                 , elementConfig_initialAttributes
-                                                , gate
                                                 , inputElement
                                                 , inputElementConfig_elementConfig
                                                 , inputElementConfig_initialChecked
@@ -86,13 +80,13 @@ import           Reflex.Dom                     ( (=:)
                                                 , tag
                                                 , text
                                                 , updated
-                                                , widgetHold_
+                                                , widgetHold_, MonadHold, holdUniqDyn, fanEither
                                                 )
 import           TextShow                       ( TextShow(showt) )
 
 import           Client                         ( getAuthData
                                                 , getJournalAll
-                                                , request
+                                                , request, postCacheUpdateAll
                                                 )
 import           Common.Model                   ( EventApp(..)
                                                 , EventUser(..)
@@ -101,15 +95,12 @@ import           Common.Model                   ( EventApp(..)
                                                 , Stats(..)
                                                 )
 import           Common.Route                   ( FrontendRoute
-                                                    ( FrontendRoute_Admin
-                                                    ), FrontendRoute_AdminPages (AdminPage_Journal)
                                                 )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<)
                                                 , Category(id)
                                                 )
 import           Control.Monad                  ( when )
-import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Data.Aeson                     ( FromJSON
                                                 , ToJSON
@@ -132,16 +123,19 @@ import           Servant.Reflex                 ( QParam(..) )
 import           Shared                         ( elLoginSignup
                                                 , formatTime
                                                 , iFa'
-                                                , loadingScreen
+                                                , elRouteLink, setRouteAndLoading, elLoading
                                                 )
 import           State                          ( Session(..)
                                                 , State(..)
-                                                , stageUrl
+                                                , stageUrl, Loading (..), updateState
                                                 )
 import           Text.Read                      ( readEither )
 import           Text.Show                      ( Show(show) )
-import           Witherable                     ( mapMaybe )
+import           Witherable                     ( Filterable (..) )
 import Data.Traversable (Traversable(traverse))
+import Control.Lens (At(at), (?~), (%~), non)
+import Data.Eq (Eq((==)))
+import Control.Monad.Fix (MonadFix)
 
 data JournalReqConfig = JournalReqConfig
     { jrcExcludeAdmin :: Bool
@@ -156,32 +150,47 @@ journal
     :: forall m t
      . ( DomBuilder t m
        , EventWriter t (Endo State) m
+       , MonadReader (Dynamic t State) m
        , MonadFix m
        , MonadHold t m
-       , MonadReader (Dynamic t State) m
        , PostBuild t m
        , Prerender t m
        , RouteToUrl (R FrontendRoute) m
        , SetRoute t (R FrontendRoute) m
        )
-    => Dynamic t Bool
-    -> m ()
-journal dynHasLoaded = mdo
+    => m ()
+journal = mdo
 
     dynState <- ask
+    dynAuthData <- holdUniqDyn $ getAuthData <$> dynState
+    let behRedirectUrl = stRedirectUrl <$> current dynState
 
-    elClass "div" "topmenu" $ do
-        elClass "div" "floatLeft" $ do
-            domBack <- elClass "span" "icon-link big" $ iFa' "fas fa-arrow-circle-left"
-            setRoute $ tag (current dynState <&> view (field @"stRedirectUrl")) $ domEvent Click domBack
-        elLoginSignup $ constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()
-        elClass "br" "clearBoth" blank
+    elClass "div" "shadow-md p-1" do
 
-    let
-        logout st = case st ^. field @"stSession" of
-          SessionAnon   -> Just $ st ^. field @"stRedirectUrl"
-          SessionUser _ -> Nothing
-    setRoute $ mapMaybe logout $ updated dynState
+        dynLoading <- holdUniqDyn $ stLoading <$> dynState
+        elLoading dynLoading
+
+        elClass "div" "float-left" do
+            domBack <- elClass "span" "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                               \cursor-pointer" $ iFa' "fas fa-arrow-circle-left"
+            setRouteAndLoading $ tag behRedirectUrl $ domEvent Click domBack
+
+            domCacheUpdateAll <- elAttr "span"
+              (  "class" =: "text-zinc-500 hover:text-grayishblue-800 text-3xl \
+                            \cursor-pointer"
+              <> "title" =: "clear cache for all pages"
+              ) $ iFa' "fas fa-sync-alt"
+            evRespCacheUpdateAll <- request $ postCacheUpdateAll dynAuthData
+                $ domEvent Click domCacheUpdateAll
+            widgetHold_ blank $ evRespCacheUpdateAll <&> \case
+              Left strErr -> text strErr
+              Right ()    -> elClass "span" "px-1 text-green-500" $ text "✓"
+
+        elLoginSignup $ stRedirectUrl <$> dynState
+        elClass "br" "clear-both" blank
+
+    let evLogout = filter id $ updated $ dynState <&> \State{..} -> stSession == SessionAnon
+    setRoute $ tag behRedirectUrl evLogout
 
     let toQParam = maybe (QParamInvalid "couldn't parse date") QParamSome
         dynStart = toQParam <$> dynMStart
@@ -192,66 +201,84 @@ journal dynHasLoaded = mdo
         dynFilterByAlias = maybe QNone QParamSome <$> dynMAlias
 
         evParamUpdate = leftmost $ updated <$>
-                  [ void dynMStart
-                  , void dynMEnd
-                  , void dynExclAdmin
-                  , void dynEId
-                  , void dynMUser
-                  , void dynMAlias
-                  , void dynFilterAnon
-                  ]
-        evLoad = leftmost [ gate (current dynHasLoaded) evParamUpdate, void $ updated dynHasLoaded]
+            [ void dynMStart
+            , void dynMEnd
+            , void dynExclAdmin
+            , void dynEId
+            , void dynMUser
+            , void dynMAlias
+            , void dynFilterAnon
+            ]
+        -- evLoad = leftmost [ gate (current dynHasLoaded) evParamUpdate, void $ updated dynHasLoaded]
 
-    evResp <- request
-        $ getJournalAll (getAuthData <$> dynState)
-            dynStart
-            dynEnd
-            dynExclAdmin
-            dynFilterByVisitor
-            dynFilterByUser
-            dynFilterByAlias
-            dynFilterAnon evLoad
+    evResp <- request $ getJournalAll dynAuthData
+                                      dynStart
+                                      dynEnd
+                                      dynExclAdmin
+                                      dynFilterByVisitor
+                                      dynFilterByUser
+                                      dynFilterByAlias
+                                      dynFilterAnon
+                                      evParamUpdate
+    updateState $ evParamUpdate $>
+      [ field @"stLoading" .~ LoadingStill "Querying for journal data"
+      ]
+    let (evRespFailure, evRespSuccess) = fanEither evResp
+    updateState $ evRespSuccess $>
+      [ field @"stLoading" .~ LoadingDone
+      ]
+    updateState $ evRespFailure <&> \strError ->
+      [ field @"stLoading" .~ LoadingError strError
+      ]
 
     (dynMStart, dynMEnd, dynExclAdmin, dynEId, dynMUser, dynMAlias, dynFilterAnon) <-
-      elClass "div" "journal" do
-        params <- elClass "div" "filters" $ do
+      elClass "div" "p-4" do
+        params <- elClass "div" "flex justify-center items-center flex-wrap" $ do
             dynENow <- prerender (pure $ Left "before switchover") $ Right <$> liftIO getCurrentTime
 
             let
+                setClass = inputElementConfig_elementConfig
+                         . elementConfig_initialAttributes
+                         . at "class" . non "" %~ (<> " p-0 rounded my-1 mr-2")
                 evEDayEnd = updated dynENow <&> fmap utctDay
                 evEDayStart = evEDayEnd <&> fmap (addDays (-7))
                 eDayToStr = either id (Text.pack <<< show)
                 confStart = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayStart)
+                                & setClass
                 confEnd   = def & inputElementConfig_setValue .~ (eDayToStr <$> evEDayEnd)
+                                & setClass
 
             dynMStart' <- el "span" $ elLabelInputDate confStart "Start " "date-start"
-            dynMEnd'   <- el "span" $ elLabelInputDate confEnd   "End " "date-end"
+            dynMEnd'   <- el "span" $ elLabelInputDate confEnd   "End "   "date-end"
 
             let elemId = "exclude-admin"
                 confCbx = def
-                  & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "type" =: "checkbox" <> "id" =: elemId
+                  & inputElementConfig_elementConfig
+                  . elementConfig_initialAttributes
+                  %~ (at "type" ?~ "checkbox") . (at "id" ?~ elemId)
                   & inputElementConfig_initialChecked .~ True
             dynExclAdmin' <- el "span" do
               domCbx <- inputElement confCbx
               elAttr "label" ("for" =: elemId) $ el "span" $ do
                 text "Exclude admin user "
-                el "em" $ dynText $ dynState <&>
+                dynAdminName <- holdUniqDyn $ dynState <&>
                   view ( field @"stSession"
                        . _As @"SessionUser"
                        . field @"sdUserName"
                        )
+                el "em" $ dynText dynAdminName
                 text " "
               pure $ _inputElement_checked domCbx
 
-            dynEId' <- el "span" $ elLabelInputWord def "Visitor ID " "filter-visitor"
+            dynEId' <- el "span" $ elLabelInputWord (setClass def) "Visitor ID " "filter-visitor"
 
-            dynMUser' <- el "span" $ elLabelInput def "User name " "filter-user"
+            dynMUser' <- el "span" $ elLabelInput (setClass def) "User name " "filter-user"
 
-            dynMAlias' <- el "span" $ elLabelInput def "Alias " "filter-alias"
+            dynMAlias' <- el "span" $ elLabelInput (setClass def) "Alias " "filter-alias"
 
             let elemIdAnon = "filter-anonymous"
-                confCbxAnon = def &
-                  inputElementConfig_elementConfig
+                confCbxAnon = def
+                  & inputElementConfig_elementConfig
                   . elementConfig_initialAttributes
                   .~ "type" =: "checkbox" <> "id" =: elemIdAnon
             dynFilterAnon' <- el "span" do
@@ -272,23 +299,17 @@ journal dynHasLoaded = mdo
 
         el "hr" blank
 
-        widgetHold_ (loadingScreen "Checking your access rights ...") $ evResp <&> \case
-
-            Left strErr     ->
-              elClass "p" "red small" $
-                text $ "Error: " <> strErr
-
-            Right lsJournal -> do
+        widgetHold_ blank $ evRespSuccess <&> \lsJournal -> do
 
               let n = length lsJournal
-              el "p" $ text $ "Fetched " <> showt n <> " journal entries."
+              elClass "p" "text-xs" $ el "em" $ text $ "Fetched " <> showt n <> " journal entries."
               when (n > 0) $ el "table" $ do
                   el "tr" do
-                      el "th" $ text "Time"
-                      el "th" $ text "User"
-                      el "th" $ text "Alias"
-                      el "th" $ text "VID"
-                      el "th" $ text "Event"
+                      elClass "th" "text-left" $ text "Time"
+                      elClass "th" "text-left" $ text "User"
+                      elClass "th" "text-left" $ text "Alias"
+                      elClass "th" "text-left" $ text "VID"
+                      elClass "th" "text-left" $ text "Event"
                   for_ lsJournal \Journal {..} -> el "tr" do
                       elClass "td" "date" $ text $ Text.pack $ Time.formatTime defaultTimeLocale "%F %R" journalTime
                       case journalMAliasUser of
@@ -305,11 +326,12 @@ journal dynHasLoaded = mdo
 showEvent
   :: forall (m :: * -> *) t
   . ( DomBuilder t m
+    , EventWriter t (Endo State) m
     , Prerender t m
     , RouteToUrl (R FrontendRoute) m
     , SetRoute t (R FrontendRoute) m
     )
-  => JournalEvent
+  => JournalEvent -- ^
   -> m ()
 showEvent = \case
     EventUser eu -> text case eu of
@@ -332,7 +354,7 @@ showEvent = \case
                           index <- Stage.findStageIndex stageRepr
                           stage <- Stage.fromIndex @key index
                           pure (stageUrl @key index, showt stage)
-                    routeLink r $ text str
+                    elRouteLink r $ text str
 
             case lang of
                 SystemEN -> mkRouteLink @EN.Key
@@ -350,7 +372,9 @@ elLabelInputDate conf label elemId = do
     elAttr "label" ("for" =: elemId) $ text label
     i <-
         inputElement
-        $  conf & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "id" =: elemId <> "type" =: "date"
+        $  conf & inputElementConfig_elementConfig
+                . elementConfig_initialAttributes
+                %~ (at "id" ?~ elemId) . (at "type" ?~ "date")
     pure $ _inputElement_value i <&> \str ->
           parseTimeM True defaultTimeLocale "%Y-%m-%d" (Text.unpack str)
 
@@ -365,7 +389,7 @@ elLabelInput conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ "id" =: elemId <> "type" =: "text" <> "maxlength" =: "64"
+           %~ (at "id" ?~ elemId) . (at "type" ?~ "text") . (at "maxlength" ?~ "64")
     pure $ _inputElement_value i <&> \str ->
       if Text.null str then Nothing else Just str
 
@@ -380,7 +404,7 @@ elLabelInputWord conf label elemId = do
     i <- inputElement $
       conf & inputElementConfig_elementConfig
            . elementConfig_initialAttributes
-           .~ "id" =: elemId <> "type" =: "number" <> "patern" =: "\\d+"
+           %~ (at "id" ?~ elemId) . (at "type" ?~ "number") . (at "pattern" ?~ "\\d+")
     let toMaybe str = if null str then Nothing else Just str
     pure $ traverse (mapLeft Text.pack . readEither) . toMaybe
          . Text.unpack

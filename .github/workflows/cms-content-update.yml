@@ -28,6 +28,6 @@ jobs:
         if: steps.cms.outputs.any_changed == 'true'
         run: |
           set -x
-          curl -X POST https://palantype.com/api/cms/invalidate-cache \
+          curl -X POST https://palantype.com/api/cms/cache/invalidate \
                -H "Content-Type: application/json" \
                -d ${{steps.cms.outputs.all_changed_files}}

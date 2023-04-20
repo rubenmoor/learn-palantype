@@ -98,13 +98,12 @@ import           Reflex.Dom                     ( (=:)
                                                 , el
                                                 , elAttr
                                                 , elClass
-                                                , elClass'
                                                 , foldDyn
                                                 , holdUniqDyn
                                                 , leftmost
                                                 , text
                                                 , tickLossyFromPostBuildTime
-                                                , zipDyn
+                                                , zipDyn, el'
                                                 )
 import           Shared                         ( formatTime )
 import           State                          ( Env(..)
@@ -138,7 +137,7 @@ elStopwatch
     -> m (Event t Stats)
 elStopwatch dynStats dynStopwatch n = do
     evStats <-
-        elClass "span" "stopwatch"
+        elClass "span" "text-lg text-grayishblue-900 font-mono px-3"
         $   fmap catMaybes
         $   dyn
         $   dynStopwatch <&> \case
@@ -153,22 +152,19 @@ elStopwatch dynStats dynStopwatch n = do
 
     Env {..} <- ask
 
-    el "hr" blank
-    elClass "div" "stats small" $ do
+    elClass "hr" "pb-8" blank
+    elClass "div" "text-sm w-fit text-center" $ do
 
         let elStrongWhen ss x = dyn_ $ envDynState <&> \st ->
               if stShowStats (stApp st) == ss
               then el "strong" x
               else x
         text "10 most recent scores ("
-        (domPersonal, _) <- elClass' "a" "normalLink" $
-          elStrongWhen ShowStatsPersonal $ text "personal"
+        (domPersonal, _) <- el' "a" $ elStrongWhen ShowStatsPersonal $ text "personal"
         text " | "
-        (domPublic, _) <- elClass' "a" "normalLink" $
-          elStrongWhen ShowStatsPublic $ text "public"
+        (domPublic, _) <- el' "a" $ elStrongWhen ShowStatsPublic $ text "public"
         text " | "
-        (domHide, _) <- elClass' "a" "normalLink" $
-          elStrongWhen ShowStatsHide $ text "hide"
+        (domHide, _) <- el' "a" $ elStrongWhen ShowStatsHide $ text "hide"
         text ")"
         let evPersonal = domEvent Click domPersonal $> ShowStatsPersonal
             evPublic   = domEvent Click domPublic   $> ShowStatsPublic
@@ -180,20 +176,20 @@ elStopwatch dynStats dynStopwatch n = do
             (ShowStatsHide    , _ ) -> blank
             (ShowStatsPersonal, ls) -> do
               let lsPersonal = filter (isNothing . fst . snd) ls
-              unless (null lsPersonal) $ el "p" $ do
+              unless (null lsPersonal) $ elClass "p" "py-2" do
                 text "Personal best: "
-                elClass "span" "stopwatch" $ text $ formatTime
+                elClass "strong" "font-mono" $ text $ formatTime
                   (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPersonal lsPersonal
             (ShowStatsPublic, ls) -> do
               let lsPersonal = filter (isNothing . fst . snd) ls
-              unless (null lsPersonal) $ el "p" $ do
+              unless (null lsPersonal) $ elClass "p" "py-2" do
                 text "Personal best: "
-                elClass "span" "stopwatch" $ text $ formatTime
+                elClass "strong" "font-mono" $ text $ formatTime
                   (minimum $ statsTime . snd . snd <$> ls)
               el "div" $ elStatistics ElStatsPublic ls
 
-
+    el "br" blank
     pure evStats
 
 mkStopwatch
@@ -213,7 +209,8 @@ mkStopwatch
 mkStopwatch ev = do
     Env{..} <- ask
     let evGo = void $ Witherable.filter (== (-1)) ev
-    _ <- request $ postStatsStart (getAuthData <$> envDynState) evGo
+    dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
+    _ <- request $ postStatsStart dynAuthData evGo
     evToggle <- performEvent $ ev <&> \nErrors ->
         ESWToggle nErrors <$> liftIO getCurrentTime
     evTick <- fmap (ESWTick <<< _tickInfo_lastUTC)
@@ -247,28 +244,24 @@ elStatistics flag ls = do
   let lsShow = snd <$> case flag of
         ElStatsPublic   -> filter fst ls
         ElStatsPersonal -> ls
-  elClass "table" "statistics" $
+  elClass "table" "text-sm border-t" $
     for_ lsShow \(mAlias, Stats {..}) -> el "tr" $ do
-          elClass "td" "date" $ text $ Text.pack $ Time.formatTime
-              defaultTimeLocale
-              "%F %R"
-              statsDate
-          elClass "td" "time" $ text $ formatTime statsTime
-          case flag of
-              ElStatsPersonal -> blank
-              ElStatsPublic   -> elClass "td" "alias" $ case mAlias of
-                  Just alias -> el "strong" $ text alias
-                  Nothing    -> el "em" $ text "you"
-          elClass "td" "nMistakes" $ do
-              if statsNErrors == 0
-                  then elAttr "strong" ("title" =: "0 mistakes")
-                      $ text "flawless"
-                  else text $ showt statsNErrors <> " mistakes"
-          elClass "td" "wpm"
-              $  text
-              $  showt @Int
-                     (round $ fromIntegral statsLength / toMinutes statsTime)
-              <> " wpm"
+      elClass "td" "text-grayishblue-900 italic" $ text $ Text.pack $ Time.formatTime
+          defaultTimeLocale
+          "%F %R"
+          statsDate
+      elClass "td" "px-2 font-mono" $ text $ formatTime statsTime
+      case flag of
+          ElStatsPersonal -> blank
+          ElStatsPublic   -> elClass "td" "pr-2" $ case mAlias of
+              Just alias -> el "strong" $ text alias
+              Nothing    -> el "em" $ text "you"
+      elClass "td" "pr-2 text-right" $ do
+          if statsNErrors == 0
+              then elAttr "strong" ("title" =: "0 mistakes")
+                  $ text "flawless"
+              else text $ showt statsNErrors <> " mistakes"
+      el "td" $  text $  showt @Int (round $ fromIntegral statsLength / toMinutes statsTime) <> " wpm"
 
 elStatisticsPersonalShort
     :: forall t (m :: * -> *)
@@ -276,20 +269,16 @@ elStatisticsPersonalShort
     => [Stats]
     -> m ()
 elStatisticsPersonalShort ls =
-  elClass "table" "statistics" $
-    for_ (take 3 ls) \Stats {..} -> el "tr" $ do
-            elClass "td" "date" $ text $ Text.pack $ Time.formatTime
-                defaultTimeLocale
-                "%F %R"
-                statsDate
-            elClass "td" "time" $ text $ formatTime statsTime
-            elClass "td" "nMistakes" $
-                if statsNErrors == 0
-                    then elAttr "strong" ("title" =: "0 mistakes")
-                        $ text "flawless"
-                    else text $ showt statsNErrors <> " mistakes"
-            elClass "td" "wpm"
-                $  text
-                $  showt @Int
-                       (round $ fromIntegral statsLength / toMinutes statsTime)
-                <> " wpm"
+  elClass "table" "mx-auto text-sm" $
+    for_ (take 3 ls) \Stats {..} -> elClass "tr" "p-2 rounded first:bg-zinc-200" $ do
+      elClass "td" "text-grayishblue-900 italic" $ text $ Text.pack $ Time.formatTime
+          defaultTimeLocale
+          "%F %R"
+          statsDate
+      elClass "td" "px-2 font-mono" $ text $ formatTime statsTime
+      elClass "td" "pr-2 text-right" $
+          if statsNErrors == 0
+              then elAttr "strong" ("title" =: "0 mistakes")
+                  $ text "flawless"
+              else text $ showt statsNErrors <> " mistakes"
+      el "td" $  text $ showt @Int (round $ fromIntegral statsLength / toMinutes statsTime) <> " wpm"

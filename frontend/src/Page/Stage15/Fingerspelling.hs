@@ -149,47 +149,40 @@ taskLiterals
        , TriggerEvent t m
        )
     => Dynamic t [(Bool, (Maybe Text, Stats))]
-    -> Event t (Palantype.Common.Chord key)
+    -> Event t (Maybe (Chord key))
     -> m (Event t Stats)
-taskLiterals dynStats evChord = do
+taskLiterals dynStats evMChord = do
     --Env {..} <- ask
     let
         --Navigation {..} = envNavigation
         len             = length dictLiterals
 
-        step :: Palantype.Common.Chord key -> StateLiterals key -> StateLiterals key
-        step c st = case st of
-            StatePause _ ->
-                if c == chordStart
-                    then stepStart
-                    else st
-            StateRun Run {..} ->
+        step :: Maybe (Chord key) -> StateLiterals key -> StateLiterals key
+        step mChord st = case (st, mChord) of
+            (StatePause _, Just c) | c == chordStart -> stepStart
+            (StatePause _, _) -> st
+            (StateRun Run {..}, mc) ->
                 let currentLetter = KI.toRaw @key $ fst $ dictLiterals !! stCounter
                 in
-                    case stMMistake of
+                    case (stMMistake, mc) of
 
                         -- mistake mode ...
                         -- ... back up
-                        Just _ | Raw.fromChord c == KI.toRaw @key Palantype.Common.kiBackUp ->
+                        (_, Nothing) ->
                             st & _As @"StateRun" . field @"stMMistake" .~ Nothing
                         -- ... or do nothing
-                        Just _ -> st
+                        (Just _, Just _) -> st
 
                         -- correct
-                        Nothing | Raw.fromChord c == currentLetter ->
+                        (Nothing, Just c) | Raw.fromChord c == currentLetter ->
                             if stCounter == len - 1
                                 then StatePause stNMistakes
                                 else st & _As @"StateRun" . field @"stCounter" +~ 1
 
                         -- mistake
-                        Nothing ->
-                            st
-                                &  _As @"StateRun"
-                                .  field @"stMMistake"
-                                ?~ (stCounter, c)
-                                &  _As @"StateRun"
-                                .  field @"stNMistakes"
-                                +~ 1
+                        (Nothing, Just c) ->
+                            st &  _As @"StateRun" .  field @"stMMistake" ?~ (stCounter, c)
+                               &  _As @"StateRun" .  field @"stNMistakes" +~ 1
 
         stepStart = StateRun Run { stCounter   = 0
                                  , stMMistake  = Nothing
@@ -197,7 +190,7 @@ taskLiterals dynStats evChord = do
                                  }
         stateInitial = StatePause 0
 
-    dynLiterals <- foldDyn step stateInitial evChord
+    dynLiterals <- foldDyn step stateInitial evMChord
 
     evStartStop <- fmap updated $ holdUniqDyn $ dynLiterals <&> \case
         StatePause nMistakes -> nMistakes
@@ -205,33 +198,34 @@ taskLiterals dynStats evChord = do
 
     dynStopwatch <- mkStopwatch evStartStop
 
-    elClass "div" "paragraph" $ do
+    elClass "div" "mt-8 text-lg" do
         dyn_ $ dynLiterals <&> \case
-            StatePause _ -> el "div" $ do
+            StatePause _ -> el "div" do
                 text "Type "
-                elClass "span" "btnSteno blinking" $ do
+                elClass "span" "steno-action" do
                     text "Start "
-                    el "code" $ text "SDAÜD"
+                    el "code" $ text $ showt $ chordStart @key
                 text " to begin the exercise."
             StateRun Run {..} -> do
-                elClass "div" "exerciseField multiline"
-                    $ el "code"
-                    $ for_ (zip [0 :: Int ..] dictLiterals)
-                    $ \(i, (_, lit)) ->
-                          let
-                              cls = case stMMistake of
-                                  Just (j, _) -> if i == j then "bgRed" else ""
-                                  Nothing ->
-                                      if stCounter > i then "bgGreen" else ""
-                          in  elClass "span" cls $ text lit
+                elClass "div" "bg-zinc-200 rounded p-1 break-all"
+                  $ for_ (zip [0 :: Int ..] dictLiterals) \(i, (_, lit)) -> do
+                    let
+                        clsBase = "p-1"
+                        clsBg = case stMMistake of
+                            Just (j, _) -> if i == j        then "bg-red-500"   else ""
+                            Nothing     -> if stCounter > i then "bg-green-500" else ""
+                    elClass "code" (Text.unwords [clsBase, clsBg]) $ text lit
 
-                whenJust stMMistake $ \(_, w) ->
-                    elClass "div" "red small paragraph" $ do
-                        text $ "You typed " <> showt w <> " "
-                        elClass "span" "btnSteno blinking"
-                            $  text
-                            $  "↤ "
-                            <> showt (KI.toRaw @key Palantype.Common.kiBackUp) -- U+21A4
+                el "br" blank
+                whenJust stMMistake $ \(_, w) -> do
+                  elClass "p" "text-red-500 text-sm ml-1" do
+                      text "You typed "
+                      el "code" $ text $ showt w
+                      elClass "span" "steno-navigation p-1 ml-2"
+                          $  text
+                          $  "↤ "
+                          <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                  el "br" blank
 
                 text $ showt stCounter <> " / " <> showt len
 
@@ -262,24 +256,30 @@ fingerspelling = mdo
 
     elCMSContent evPart1
 
-    elClass "div" "patternTable" $ do
-        for_ keysLetterUS \(c, steno) -> elClass "div" "floatLeft" $ do
-            elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
-            elAttr "code" ("class" =: "steno") $ text steno
-        elClass "br" "clearBoth" blank
+    elClass "div" "my-4" $ do
+        for_ keysLetterUS \(c, steno) -> elClass "div" "float-left" $ do
+            elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-16 h-8 text-right \
+                                     \text-xl border border-white inline-block"
+                         ) $ text $ Text.singleton c
+            elAttr "code" ("class" =: "w-16 pl-1 text-left inline-block text-lg"
+                          ) $ text steno
+        elClass "br" "clear-both" blank
 
     elCMSContent evPart2
 
-    elClass "div" "patternTable" $ do
+    elClass "div" "my-4" $ do
         for_
             keysLetterOther
-            \(c, steno) -> elClass "div" "floatLeft" $ do
-                elAttr "div" ("class" =: "orig") $ text $ Text.singleton c
-                elAttr "code" ("class" =: "steno") $ text steno
-        elClass "br" "clearBoth" blank
+            \(c, steno) -> elClass "div" "float-left" $ do
+                elAttr "div" ("class" =: "bg-zinc-200 pr-2 w-16 h-8 text-right \
+                                         \text-xl border border-white inline-block"
+                             ) $ text $ Text.singleton c
+                elAttr "code" ("class" =: "w-16 pl-1 text-left inline-block text-lg"
+                              ) $ text steno
+        elClass "br" "clear-both" blank
 
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEChord
+    evDone <- taskLiterals dynStatsAll $ gate (not <$> current dynDone) envEvMChord
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 

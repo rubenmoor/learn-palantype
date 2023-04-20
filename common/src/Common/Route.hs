@@ -52,9 +52,8 @@ import           Obelisk.Route                  ( pattern (:/)
                                                 , pathComponentEncoder
                                                 , renderFrontendRoute
                                                 , reviewEncoder
-                                                , singlePathSegmentEncoder
                                                 , unitEncoder
-                                                , unwrappedEncoder
+                                                , unwrappedEncoder, singlePathSegmentEncoder
                                                 )
 import           Obelisk.Route.TH               ( deriveRouteComponent )
 import           Palantype.Common.Stage         ( StageIndex )
@@ -69,17 +68,19 @@ data FrontendRoute_AuthPages :: * -> * where
   AuthPage_Login    :: FrontendRoute_AuthPages ()
   AuthPage_Settings :: FrontendRoute_AuthPages ()
 
+data FrontendRoute_TextLang :: * -> * where
+  FrontendRoute_TextEN :: FrontendRoute_TextLang StageIndex
+
 data BackendRoute :: * -> * where
-  -- | Used to handle unparseable routes.
   BackendRoute_Missing :: BackendRoute ()
   BackendRoute_Api     :: BackendRoute PageName
 
 data FrontendRoute :: * -> * where
-  FrontendRoute_Main  :: FrontendRoute ()
-  FrontendRoute_DE    :: FrontendRoute StageIndex
-  FrontendRoute_EN    :: FrontendRoute StageIndex
-  FrontendRoute_Auth  :: FrontendRoute (R FrontendRoute_AuthPages)
-  FrontendRoute_Admin :: FrontendRoute (R FrontendRoute_AdminPages)
+  FrontendRoute_Main     :: FrontendRoute ()
+  FrontendRoute_SystemDE :: FrontendRoute (R FrontendRoute_TextLang )
+  FrontendRoute_SystemEN :: FrontendRoute (R FrontendRoute_TextLang )
+  FrontendRoute_Auth     :: FrontendRoute (R FrontendRoute_AuthPages)
+  FrontendRoute_Admin    :: FrontendRoute (R FrontendRoute_AdminPages)
 
 fullRouteEncoder
     :: Encoder
@@ -95,8 +96,10 @@ fullRouteEncoder = mkFullRouteEncoder
     )
     (\case
         FrontendRoute_Main -> PathEnd $ unitEncoder mempty
-        FrontendRoute_DE   -> PathSegment "DE" $ singlePathSegmentEncoder . wrappedIntEncoder
-        FrontendRoute_EN   -> PathSegment "EN" $ singlePathSegmentEncoder . wrappedIntEncoder
+        FrontendRoute_SystemDE -> PathSegment "SystemDE" $ pathComponentEncoder \case
+            FrontendRoute_TextEN -> PathSegment "TextEN" $ singlePathSegmentEncoder . wrappedIntEncoder
+        FrontendRoute_SystemEN -> PathSegment "SystemEN" $ pathComponentEncoder \case
+            FrontendRoute_TextEN -> PathSegment "TextEN" $ singlePathSegmentEncoder . wrappedIntEncoder
         FrontendRoute_Auth  -> PathSegment "auth" $ pathComponentEncoder \case
             AuthPage_SignUp   -> PathSegment "signup"   $ unitEncoder mempty
             AuthPage_Login    -> PathSegment "login"    $ unitEncoder mempty
@@ -122,6 +125,7 @@ concat <$> mapM deriveRouteComponent
   , ''FrontendRoute
   , ''FrontendRoute_AuthPages
   , ''FrontendRoute_AdminPages
+  , ''FrontendRoute_TextLang
   ]
 
 showRoute :: R FrontendRoute -> Text

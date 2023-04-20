@@ -5,7 +5,7 @@ module Page.StageGeneric
     ( getGenericExercise
     ) where
 
-import           CMS                            ( elCMS )
+import           CMS                            ( elCMS, elCMSContent )
 import           Common.Route                   ( FrontendRoute )
 import           Control.Monad.Fix              ( MonadFix )
 import           Control.Monad.IO.Class         ( MonadIO )
@@ -42,10 +42,6 @@ import           Reflex.Dom                     ( DomBuilder
                                                 , gate
                                                 , splitE
                                                 , text
-                                                , widgetHold_
-                                                )
-import           Reflex.Dom.Pandoc              ( defaultConfig
-                                                , elPandoc
                                                 )
 import           State                          ( Env(..)
                                                 , State
@@ -78,24 +74,24 @@ getGenericExercise patternGroup greediness = mdo
       [p1, p2] -> Just (p1, p2)
       _        -> Nothing
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart1
+    elCMSContent evPart1
 
     elPatterns
         $ Map.toList
         $ Map.findWithDefault Map.empty greediness
         $ Map.findWithDefault Map.empty patternGroup patternDoc
 
-    widgetHold_ blank $ elPandoc defaultConfig <$> evPart2
+    elCMSContent evPart2
 
     dynStatsAll <- getStatsLocalAndRemote evDone
 
     evDone <- case getMapsForExercise patternGroup greediness of
         Left str -> do
-            elClass "p" "small red" $ text $ "Couldn't load exercise: " <> str
+            elClass "p" "text-sm text-red-500" $ text $ "Couldn't load exercise: " <> str
             pure never
         Right (mSW, mWSs) -> taskWords
             dynStatsAll
-            (gate (not <$> current dynDone) envEChord)
+            (gate (not <$> current dynDone) envEvMChord)
             mSW
             mWSs
 

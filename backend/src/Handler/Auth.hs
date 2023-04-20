@@ -82,7 +82,6 @@ import           Common.Model                   (defaultAppState, Rank (..), Jou
 import qualified DbJournal
 import qualified DbAdapter                     as Db
 import Control.Category ((<<<))
-import Snap.Core (modifyResponse, setHeader)
 
 default(Text)
 

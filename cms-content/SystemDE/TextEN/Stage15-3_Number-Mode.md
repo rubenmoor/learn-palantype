@@ -5,7 +5,8 @@
 ### Digits and related symbols
 
 For typing numbers, the virtual keyboard above can assist you quite a bit.
-Just hold down `B+-` and you can see, how to reach numbers and related symbols.
+Click on "Show special modes" to activate visualization of special input.
+Then just hold down `B+-` and you can see, how to reach numbers and related symbols.
 
 ![The palantype virtual keyboard in number mode](https://raw.githubusercontent.com/rubenmoor/learn-palantype/main/cms-content/SystemDE/media/numbermode.png)
 
