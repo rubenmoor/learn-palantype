@@ -48,7 +48,6 @@ import           Control.Category               ( Category((.), id), (>>>)
                                                 )
 import           Control.Lens                   ( At(at)
                                                 , Ixed(ix)
-                                                , (^.)
                                                 , view
                                                 )
 import           Control.Lens.Setter            ( (%~)
@@ -100,11 +99,10 @@ import           Obelisk.Generated.Static       ( static )
 import           Obelisk.Route.Frontend         ( pattern (:/)
                                                 , R
                                                 , RouteToUrl
-                                                , Routed
                                                 , RoutedT
                                                 , SetRoute
                                                 , askRoute
-                                                , mapRoutedT
+                                                , mapRoutedT, Routed
 
                                                 )
 import           Page.Common                    ( elFooter )
@@ -150,7 +148,7 @@ import           Reflex.Dom                     ( (=:)
                                                     , updated
                                                     )
                                                 , TriggerEvent
-                                                , attachPromptlyDynWithMaybe
+
                                                 , blank
                                                 , current
                                                 , dyn_
@@ -251,9 +249,9 @@ elSettings
     , Palantype key
     , PostBuild t m
     , Prerender t m
+    , Routed t StageIndex m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , Routed t StageIndex m
     , SetRoute t (R FrontendRoute) m
     , MonadFix m
     )
@@ -268,9 +266,9 @@ elSettings = elClass "div" "shadow-md p-1" do
 
     dynLoading <- holdUniqDyn $ stLoading <$> dynState
     dyn_ $ dynLoading <&> elClass "div" "fixed left-1/2 text-zinc-500 top-3" . \case
-      LoadingStill     -> iFa "fas fa-spinner fa-spin"
-      LoadingDone      -> blank
-      LoadingError str -> elAttr "span" ("title" =: str) $ iFa "fal fa-meh"
+      LoadingStill msg      -> elAttr "span" ("title" =: msg) $ iFa "fas fa-spinner fa-spin"
+      LoadingDone           -> blank
+      LoadingError strError -> elAttr "span" ("title" =: strError) $ iFa "fal fa-meh"
 
     elClass "div" "float-left divide-x border-gray-500" do
         -- button to show configuration dropdown
@@ -564,8 +562,6 @@ landingPage
   . ( DomBuilder t m
     , EventWriter t (Endo State) m
     , MonadReader (Dynamic t State) m
-    , MonadFix m
-    , MonadHold t m
     , SetRoute t (R FrontendRoute) m
     )
   => m ()

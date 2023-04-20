@@ -415,14 +415,14 @@ exercise2
        , EventWriter t (Endo State) m
        , MonadFix m
        , MonadHold t m
+       , MonadIO (Performable m)
        , MonadReader (Env t key) m
        , Palantype key
+       , PerformEvent t m
        , PostBuild t m
        , Prerender t m
        , SetRoute t (R FrontendRoute) m
        , TriggerEvent t m
-       , PerformEvent t m
-       , MonadIO (Performable m)
        )
     => m ()
 exercise2 = mdo

@@ -160,7 +160,7 @@ elCMS numParts = mdo
       el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
 
     updateState $ evRefresh $>
-      [ field @"stLoading" .~ LoadingStill ]
+      [ field @"stLoading" .~ LoadingStill "Retrieving CMS content" ]
     updateState $ filter isRight evRespCMS $>
       [ field @"stLoading" .~ LoadingDone ]
     updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->

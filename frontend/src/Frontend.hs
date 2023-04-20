@@ -62,7 +62,7 @@ import           Obelisk.Route                  ( pattern (:/)
 import           Obelisk.Route.Frontend         ( RoutedT
 
                                                 , mapRoutedT
-                                                , subRoute_
+                                                , subRoute_, setRoute
                                                 )
 import qualified Palantype.DE.Keys             as DE
 import qualified Palantype.EN.Keys             as EN
@@ -91,7 +91,7 @@ import           Reflex.Dom                     ( (=:)
                                                 , select
                                                 , tailE
                                                 , text
-                                                , zipDyn, mergeWith, mapAccumMaybeDyn, headE, delay
+                                                , zipDyn, mergeWith, mapAccumMaybeDyn, headE, delay, widgetHold_
                                                 )
 
 import qualified AdminPages
@@ -220,7 +220,6 @@ frontendBody = mdo
             [ evLoadedFromServer
             , evLoadedLocal
             ]
-
     evRespCacheInvalidationData <-
       request $ getCacheInvalidationData $ void evSessionInitial
 
@@ -281,7 +280,7 @@ frontendBody = mdo
       filter (not <<< isLoggedIn) (updated dynState) <&> \State{..} ->
         liftJSM $ LS.put LS.KeyAppState stApp
 
-    dynSession <- holdUniqDyn $ stSession <$> dynState
+    dynSession <- holdUniqDyn $ dynState <&> \State{..} -> stSession
     prerender_ blank $ performEvent_
       $ liftJSM . LS.put LS.KeySession <$> updated dynSession
 
@@ -323,23 +322,25 @@ frontendBody = mdo
                   void $ request $ getLocallyCreateMissingFiles dynAuthData evLoadedAndBuilt
                 AdminPage_Journal -> do
                   evLoadedAndBuilt <- getLoadedAndBuilt
-                  dynFanAdmin <- holdUniqDyn $ dynState <&> \State{..} -> case stSession of
-                    SessionAnon -> Map.singleton FanAdminLogin ()
-                    SessionUser SessionData{..} ->
-                      if sdIsSiteAdmin || sdClearances >= RankAdmin
-                      then Map.singleton FanAdminAccess ()
-                      else Map.singleton FanAdminForbidden ()
                   let
-                      selector = fanMap $ attachPromptlyDynWith const dynFanAdmin evLoadedAndBuilt
+                      dynFanSession = dynSession <&> \case
+                        SessionAnon -> Map.singleton FanAdminLogin ()
+                        SessionUser SessionData{..} ->
+                          if sdIsSiteAdmin || sdClearances >= RankAdmin
+                            then Map.singleton FanAdminAccess ()
+                            else Map.singleton FanAdminForbidden ()
+
+                      selector = fanMap $ attachPromptlyDynWith const dynFanSession evLoadedAndBuilt
                       evToLogin = select selector $ Const2 FanAdminLogin
                       evAccess = select selector $ Const2 FanAdminAccess
                       evForbidden = select selector $ Const2 FanAdminForbidden
 
-                  setRouteAndLoading $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
                   prerender_ blank $ performEvent_ $ evForbidden $> redirectToWikipedia "HTTP_403"
 
                   requestPostViewPage (constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()) evAccess
-                  AdminPages.journal dynHasLoaded
+                  widgetHold_ blank $ evAccess $> AdminPages.journal
+
     blank
 
 frontendHead

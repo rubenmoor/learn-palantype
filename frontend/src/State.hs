@@ -87,7 +87,7 @@ data Navigation = Navigation
 
 -- State
 
-data Loading = LoadingDone | LoadingStill | LoadingError Text
+data Loading = LoadingDone | LoadingStill Text | LoadingError Text
   deriving (Eq, Generic)
 
 data State = State
@@ -104,7 +104,7 @@ defaultState = State { stSession     = SessionAnon
                      , stApp         = defaultAppState
                      , stRedirectUrl = FrontendRoute_Main :/ ()
                      , stCMSCacheInvalidationData = Map.empty
-                     , stLoading     = LoadingStill
+                     , stLoading     = LoadingStill "Initialization"
                      }
 
 updateState

@@ -108,7 +108,7 @@ import           Palantype.Common               ( Chord(..)
                                                 , kiPageDown
                                                 , kiPageUp
                                                 , kiUp
-                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber, kiChordToInt, mapHierarchyStageIndex, kiBackUp
+                                                , mkChord, kiLeft, kiRight, kiDelete, kiCtrlNumber, kiChordToInt, mapHierarchyStageIndex, kiBackUp, StageIndex
                                                 )
 import qualified Palantype.Common.Dictionary.Numbers
                                                as Numbers
@@ -188,7 +188,7 @@ import           Witherable                     ( Filterable
 
                                                     )
                                                 )
-import Obelisk.Route.Frontend (SetRoute, R)
+import Obelisk.Route.Frontend (SetRoute, R, Routed)
 import Common.Route (FrontendRoute)
 import qualified Palantype.Common.Dictionary.Commands as Commands
 import Data.List (delete)
@@ -265,15 +265,16 @@ data StateInput key = StateInput
   }
 
 elStenoInput :: forall key (m :: * -> *) t.
-  ( PerformEvent t m
+  ( DomBuilder t m
+  , EventWriter t (Endo State) m
   , IsHTMLElement (RawInputElement (DomBuilderSpace m))
   , MonadJSM (Performable m)
+  , PerformEvent t m
   , Palantype key
   , PostBuild t m
-  , DomBuilder t m
-  , EventWriter t (Endo State) m
-  , TriggerEvent t m
+  , Routed t StageIndex m
   , SetRoute t (R FrontendRoute) m, MonadHold t m, MonadFix m
+  , TriggerEvent t m
   )
   => Dynamic t StateKeyboard
   -> PloverCfg

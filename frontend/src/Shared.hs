@@ -228,17 +228,18 @@ requestPostViewPage dynRoute ev = do
 
 elLoginSignup
   :: forall t (m :: * -> *)
-  . ( DomBuilder t m,
-      PostBuild t m,
-      EventWriter t (Endo State) m,
-      MonadReader (Dynamic t State) m,
-      SetRoute t (R FrontendRoute) m
+  . ( DomBuilder t m
+    , EventWriter t (Endo State) m
+    , MonadHold t m
+    , MonadReader (Dynamic t State) m
+    , PostBuild t m
+    , SetRoute t (R FrontendRoute) m, MonadFix m
     )
   => Dynamic t (R FrontendRoute)
   -> m ()
 elLoginSignup dynRedirectRoute =
   elClass "div" "float-right text-lg px-2 pt-1" do
-    dynSession  <- asks $ fmap stSession
+    dynSession  <- holdUniqDyn =<< asks (fmap stSession)
     dyn_ $ dynSession <&> \case
         SessionAnon -> do
           (domLogin, _) <- el' "a" $ text "Log in"
@@ -248,17 +249,15 @@ elLoginSignup dynRedirectRoute =
           (domSignup, _) <- el' "a" $ text "sign up"
           let evSignup = domEvent Click domSignup
           setRouteAndLoading $ evSignup $> FrontendRoute_Auth :/ AuthPage_SignUp :/ ()
-          updateState $
-            tag (current dynRedirectRoute)
-                (leftmost [evSignup, evLogin]) <&> \r ->
-              [ field @"stRedirectUrl" .~ r ]
+          updateState $ tag (current dynRedirectRoute) (leftmost [evSignup, evLogin]) <&>
+              \r -> [ field @"stRedirectUrl" .~ r ]
         SessionUser SessionData{..} -> do
           el "span" $ text "Logged in as "
           elClass "span" "font-bold" $ text sdAliasName
           el "span" $ text " ("
           (domLogout, _) <- el' "a" $ text "log out"
           el "span" $ text ")"
-          when sdIsSiteAdmin $ do
+          when sdIsSiteAdmin do
             el "span" $ text " "
             domAdmin <- elClass "span" "text-zinc-500 cursor-pointer text-sm"
               $ iFa' "fas fa-lock"
@@ -270,26 +269,26 @@ elLoginSignup dynRedirectRoute =
           updateState $ evLogout $> [ field @"stSession" .~ SessionAnon ]
 
 setRouteAndLoading
-  :: forall t r (m :: * -> *)
-  . ( SetRoute t r m
-    , EventWriter t (Endo State) m
+  :: forall r t (m :: * -> *)
+  . ( EventWriter t (Endo State) m
+    , SetRoute t r m
     )
   => Event t r
   -> m ()
 setRouteAndLoading e = do
-  updateState $ e $> [ field @"stLoading" .~ LoadingStill ]
+  updateState $ e $> [ field @"stLoading" .~ LoadingStill "Building page" ]
   setRoute e
 
 elRouteLink
-  :: forall t m a route
+  :: forall t m a
    . ( DomBuilder t m
      , EventWriter t (Endo State) m
-     , RouteToUrl route m
-     , SetRoute t route m
+     , RouteToUrl (R FrontendRoute) m
+     , SetRoute t (R FrontendRoute) m
      , Prerender t m
      )
-    => route -- ^ Target route
-    -> m a -- ^ Child widget
+    => R FrontendRoute -- ^ Target route
+    -> m a             -- ^ Child widget
     -> m a
 elRouteLink r w = do
   enc <- askRouteToUrl
