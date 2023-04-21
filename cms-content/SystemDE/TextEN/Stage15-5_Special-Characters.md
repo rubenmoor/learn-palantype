@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Special Characters
-=======
 # Special Characters
 
 ## The remaining ones

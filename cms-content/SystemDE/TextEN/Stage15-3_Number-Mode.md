@@ -19,6 +19,15 @@ is possible by adding a modifier key to any input.
 The available modifiers are `Control`, `Super`, and `Alt`.
 `Super` is usually called the Windows-key.
 
+### Navigating the table of contents using numbers
+
+If you haven't noticed already,
+the table of contents of this website can be accessed
+by typing a number with the `Control` modifier key.
+E.g. `Ctrl + 0` brings you to the introduction.
+`Ctrl + 1` opens the exercises of the first stage;
+from there, it's just `Control` plus the number of the exercise.
+
 ### The special characters of number mode
 
 Following the standard US keyboard layout,
