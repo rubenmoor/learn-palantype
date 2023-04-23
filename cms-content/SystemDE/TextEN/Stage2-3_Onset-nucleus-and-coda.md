@@ -44,7 +44,7 @@ The only specialty for now is *sch*, for which you will have to use `ʃ`.
 And remember: the small keys `v`, `b`, `s`, and `n` are special keys.
 Don't use them yet.
 
-<!--separater-->
+<!--TODO: separator-->
 
 If you just came back to this exercise after having advanced further, very good!
 This is the first and easiest exercise that already contains actual words.
