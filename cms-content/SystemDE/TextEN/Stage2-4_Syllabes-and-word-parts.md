@@ -19,6 +19,28 @@ Thus our next rule:
 ### Rule 3: syllables and word parts
 
 Words that contain more than one syllable can be typed by typing the syllables separately, one after the other.
+You can expect the number of words per minute (wpm) to go down significantly compared to the previous exercise.
+It's quite interesting to point out the different factors that make up the higher difficulty:
+
+* The word of this exercise are preselected to span several syllables. This alone implies that it takes at least twice as much time to type a whole word now, even if you maintain the same speed.
+* Like in real life, you have to correct your mistakes now. For every time that your mistype, that's another chord you have to type on top, i.e. mistakes slow you down twice.
+
+The second point is important:
+While exercising, you probably want to prioritize accuracy above speed.
+When you focus on accuracy alone, the speed will increase automatically.
+I regularly made the experience (not only when typing) that explicitly focussing on speed actually results in a slower result.
+
+Regarding the second point, there is a mitigating effect.
+Yes, more syllables mean slower typing.
+However, I notice that it helps a lot to actually have the complete word in mind while typing.
+I.e. every word part after the first just come out easier.
+This advantage will be emphasized when you type in real life:
+There never will be just single syllables appear individually on your screen.
+Rather, there will be a stream of natural language that you are listening to
+(or that you are making up in your mind)
+and subconsciously, while typing one syllable, the following syllables are already queuing in your head,
+allowing your fingers to flow from one position to the next uninterrupted.
+This effect will greatly contribute to your typing speed.
 
 <!--separator-->
 
