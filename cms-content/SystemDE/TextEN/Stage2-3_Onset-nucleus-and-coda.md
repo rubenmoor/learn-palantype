@@ -43,3 +43,15 @@ Every letter can be typed as it is, just make sure to use the correct finger.
 The only specialty for now is *sch*, for which you will have to use `ʃ`.
 And remember: the small keys `v`, `b`, `s`, and `n` are special keys.
 Don't use them yet.
+
+<!--separater-->
+
+If you just came back to this exercise after having advanced further, very good!
+This is the first and easiest exercise that already contains actual words.
+Also, this exercise doesn't require you to correct your mistake using the back-up-chord `I+NSD`.
+This allows you to focus completely on perfect finger placement and memorization of the keyboard layout.
+
+There is nothing wrong with training the more complicated exercises early on,
+but I encourage you to come back here and practice this exercise until the number of mistakes is a one-digit-number.
+**Then** start optimizing for speed, never compromising on accuracy.
+I.e. the number of errors has to stay down and improve further.
