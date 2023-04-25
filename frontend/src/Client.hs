@@ -285,7 +285,14 @@ postCacheUpdateAll
     -> Event t ()
     -> m (Event t (ReqResult () ()))
 
-(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache :<|> postCacheUpdateAll))
+getWordList
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text String)
+    -> Dynamic t (Either Text Int)
+    -> Event t ()
+    -> m (Event t (ReqResult () Text))
+
+(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache :<|> postCacheUpdateAll) :<|> getWordList)
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())

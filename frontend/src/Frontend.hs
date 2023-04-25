@@ -127,6 +127,7 @@ import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
 import Data.Generics.Product (field)
 import Control.Lens (set)
+import PageWordList (pageWordList)
 
 default(Text)
 
@@ -326,6 +327,9 @@ frontendBody = mdo
 
                   requestPostViewPage (constDyn $ FrontendRoute_Admin :/ AdminPage_Journal :/ ()) evAccess
                   widgetHold_ blank $ evAccess $> AdminPages.journal
+            FrontendRoute_WordList -> do
+              getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_WordList :/ ())
+              pageWordList
 
     blank
 

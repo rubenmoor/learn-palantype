@@ -247,9 +247,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
     Env {..} <- ask
 
     let
-        evChord = catMaybes envEvMChord
-        eChordEnter  = void $ filter (\c -> KI.fromChord c == kiEnter ) evChord
-        eChordBackUp = void $ filter (\c -> KI.fromChord c == kiBackUp) evChord
+        eChordEnter = void $ filter (\c -> fmap KI.fromChord c == Just kiEnter ) envEvMChord
 
     dynDone <- foldDyn const Nothing $ leftmost [Just <$> evDone, evRepeat $> Nothing]
     let evNewStats = catMaybes $ catMaybes $ updated dynDone
@@ -327,7 +325,7 @@ elCongraz evDone dynStats Navigation {..} = mdo
                   elClass "span" "steno-navigation p-1" $
                       text $ "↤ " <> showt (KI.toRaw @key kiBackUp) -- U+21A4
                   text " to repeat the exercise."
-                  pure $ leftmost [eChordBackUp, domEvent Click domABack]
+                  pure $ leftmost [void $ filter isNothing envEvMChord, domEvent Click domABack]
     pure $ isJust <$> dynDone
 
 chordStart :: forall key. Palantype key => Chord key

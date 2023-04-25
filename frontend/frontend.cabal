@@ -63,6 +63,7 @@ library
     , Page.Stage15.CommandKeys
     , Page.Stage15.SpecialCharacters
     , Page.StageGeneric
+    , PageWordList
     , PloverDict
     , Shared
     , State

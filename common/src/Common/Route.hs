@@ -81,6 +81,7 @@ data FrontendRoute :: * -> * where
   FrontendRoute_SystemEN :: FrontendRoute (R FrontendRoute_TextLang )
   FrontendRoute_Auth     :: FrontendRoute (R FrontendRoute_AuthPages)
   FrontendRoute_Admin    :: FrontendRoute (R FrontendRoute_AdminPages)
+  FrontendRoute_WordList :: FrontendRoute ()
 
 fullRouteEncoder
     :: Encoder
@@ -107,6 +108,7 @@ fullRouteEncoder = mkFullRouteEncoder
         FrontendRoute_Admin -> PathSegment "admin" $ pathComponentEncoder \case
             AdminPage_Journal            -> PathSegment "journal" $ unitEncoder mempty
             AdminPage_CreateMissingFiles -> PathSegment "create-missing-files" $ unitEncoder mempty
+        FrontendRoute_WordList -> PathSegment "wordlist" $ unitEncoder mempty
     )
   where
     wrappedIntEncoder

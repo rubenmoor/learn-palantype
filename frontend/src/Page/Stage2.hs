@@ -610,11 +610,11 @@ exercise3
 exercise3 = mdo
     Env {..} <- ask
 
-    evContent <- elCMS 1 <&> mapMaybe \case
-      [p] -> Just p
+    evContent <- elCMS 2 <&> mapMaybe \case
+      [p1, p2] -> Just (p1, p2)
       _   -> Nothing
 
-    elCMSContent evContent
+    elCMSContent $ fst <$> evContent
 
     dynStatsAll <- getStatsLocalAndRemote evDone
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
@@ -627,7 +627,8 @@ exercise3 = mdo
             taskSingletons dynStatsAll (gate (not <$> current dynDone) $ catMaybes envEvMChord) mSW mWSs
 
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
-    blank
+
+    elCMSContent $ snd <$> evContent
 
 -- Ex 2.4
 
