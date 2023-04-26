@@ -125,8 +125,9 @@ type RoutesApi = "api" :>
       :<|> "event" :> RoutesEvent
       :<|> "stats" :> RoutesStats
       :<|> "cms"   :> RoutesCMS
-      :<|> "word-list" :> Capture "letters" String
+      :<|> "word-list" :> Capture "letters" Text
                        :> Capture "max-number" Int
+                       :> QueryFlag "case-insensitive"
                        :> Get '[PlainText] Text
     )
 

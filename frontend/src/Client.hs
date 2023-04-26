@@ -287,8 +287,9 @@ postCacheUpdateAll
 
 getWordList
     :: SupportsServantReflex t m
-    => Dynamic t (Either Text String)
+    => Dynamic t (Either Text Text)
     -> Dynamic t (Either Text Int)
+    -> Dynamic t Bool
     -> Event t ()
     -> m (Event t (ReqResult () Text))
 

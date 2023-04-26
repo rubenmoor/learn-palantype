@@ -2,13 +2,12 @@
 {-# LANGUAGE RecursiveDo #-}
 
 module PageWordList where
-import Reflex.Dom (blank, DomBuilder (..), InputElementConfig, Reflex (Dynamic, current), elAttr, inputElementConfig_elementConfig, (=:), text, elementConfig_initialAttributes, InputElement (..), el, inputElementConfig_initialValue, elAttr', HasDomEvent (..), EventName (..), Prerender, elClass, widgetHold_, MonadHold (..), leftmost, dyn_, PostBuild, gate)
+import Reflex.Dom (blank, DomBuilder (..), InputElementConfig, Reflex (Dynamic, current), elAttr, inputElementConfig_elementConfig, (=:), text, elementConfig_initialAttributes, InputElement (..), el, inputElementConfig_initialValue, elAttr', HasDomEvent (..), EventName (..), Prerender, elClass, widgetHold_, MonadHold (..), leftmost, dyn_, PostBuild, gate, inputElementConfig_initialChecked)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Control.Lens ((&), (%~), At (at), (?~), non, (.~), (<&>))
 import Data.Default (Default(..))
 import Client (request, getWordList)
-import Control.Category ((<<<))
 import TextShow (TextShow(showt))
 import Text.Read (readMaybe)
 import Shared (iFa)
@@ -28,11 +27,11 @@ pageWordList = elClass "div" "max-w-5xl mx-auto mt-8" mdo
   elClass "h1" "text-4xl font-bold my-4" $ text "Frequent words generation"
   elClass "p" "my-2" do
     text "Search a list of "
-    elAttr "a" ("href" =: "")
-      $ text "2 Mio. words of the German language for words"
-    text " that only contain the specified letters. Frequency information is \
-        \provided with friendly permission by the Natural Langauge Processing \
-        \Group Uni Leipzig. It is generated out of a "
+    elAttr "a" ("href" =: "https://sourceforge.net/projects/germandict/files/")
+      $ text "2 Mio. words of the German language"
+    text " for words that only contain the specified letters. Frequency \
+         \information is provided with friendly permission by the Natural \
+         \Langauge Processing Group Uni Leipzig. It is generated out of a "
     elAttr "a" ("href" =: "https://wortschatz.uni-leipzig.de/en")
       $ text "corpus of 35 Million sentences"
     text "."
@@ -53,6 +52,20 @@ pageWordList = elClass "div" "max-w-5xl mx-auto mt-8" mdo
   dynMMaxNumber <- elLabelInputNumber confMax "Limit the number of words in the response" "letters"
   elClass "p" "my-2" $ text "Put 0 to disable the limit."
 
+  let
+      elemId = "checkbox-caseinsensitive"
+  cb <-
+      inputElement
+      $  def
+      &  inputElementConfig_elementConfig
+      .  elementConfig_initialAttributes
+      .~ "type" =: "checkbox" <> "id" =: elemId
+      & inputElementConfig_initialChecked .~ True
+  elAttr "label" ("for" =: elemId) $ el "span" $ text "Case insensitive, e.g. 'a' is treated like 'A'"
+  let dynCaseinsensitive = _inputElement_checked cb
+
+  el "br" blank
+
   (e, _) <- elAttr' "button"
     (  "type"  =: "submit"
     <> "class" =: "rounded bg-grayishblue-800 text-white p-1 \
@@ -62,10 +75,10 @@ pageWordList = elClass "div" "max-w-5xl mx-auto mt-8" mdo
 
   let
       evSubmit = domEvent Click e
-      dynELetter = maybe (Left "no input") (Right <<< Text.unpack) <$> dynMLetters
+      dynELetter = maybe (Left "no input") Right <$> dynMLetters
       dynEMax = maybe (Right 0) Right <$> dynMMaxNumber
 
-  evResp <- request $ getWordList dynELetter dynEMax
+  evResp <- request $ getWordList dynELetter dynEMax dynCaseinsensitive
     $ gate (not <$> current dynLoading) evSubmit
 
   dynLoading <- holdDyn False $ leftmost [evSubmit $> True, evResp $> False]

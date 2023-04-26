@@ -37,6 +37,9 @@ import Data.Foldable (all)
 import Data.String (String)
 import Data.Int (Int)
 import Data.Ord ((>))
+import qualified Data.Text.IO as Text
+import Control.Monad.IO.Class
+import qualified Network.URI.Encode as URI
 
 handlers :: ServerT RoutesApi a Handler
 handlers =
@@ -49,12 +52,22 @@ handlers =
    :<|> CMS.handlers
    :<|> handleWordList
 
-handleWordList :: String -> Int -> Handler Text
-handleWordList letters max = do
+handleWordList :: Text -> Int -> Bool -> Handler Text
+handleWordList letters max bCaseInsensitive = do
+    liftIO $ Text.putStrLn letters
     let sorted = Text.lines $ Text.decodeUtf8 $(staticFileContent "german.utf8.dic.sorted")
         ls = filter everyCharInSet sorted
         maxed = if max > 0 then take max ls else ls
     pure $ Text.unlines maxed
   where
     everyCharInSet :: Text -> Bool
-    everyCharInSet str = all (`Set.member` Set.fromList letters) $ Text.unpack str
+    everyCharInSet str =
+      let strCase = if bCaseInsensitive
+                    then Text.toLower str
+                    else str
+      in  all (`Set.member` Set.fromList lettersCase) $ Text.unpack strCase
+
+    lettersCase = Text.unpack $ URI.decodeText $
+      if bCaseInsensitive
+      then Text.toLower letters
+      else letters
