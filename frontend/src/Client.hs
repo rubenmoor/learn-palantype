@@ -291,7 +291,7 @@ getWordList
     -> Dynamic t (Either Text Int)
     -> Dynamic t Bool
     -> Event t ()
-    -> m (Event t (ReqResult () Text))
+    -> m (Event t (ReqResult () [Text]))
 
 (postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache :<|> postCacheUpdateAll) :<|> getWordList)
     = client (Proxy :: Proxy RoutesApi)

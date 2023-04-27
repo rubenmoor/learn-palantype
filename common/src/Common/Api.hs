@@ -128,7 +128,7 @@ type RoutesApi = "api" :>
       :<|> "word-list" :> Capture "letters" Text
                        :> Capture "max-number" Int
                        :> QueryFlag "case-insensitive"
-                       :> Get '[PlainText] Text
+                       :> Get '[JSON] [Text]
     )
 
 --

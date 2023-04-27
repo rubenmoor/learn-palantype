@@ -373,7 +373,7 @@ taskLetters
     -> m (Event t ())
 taskLetters evChord letters = do
 
-    eStdGen <- postRender $ do
+    eStdGen <- postRender do
         ePb <- getPostBuild
         performEvent $ ePb $> liftIO newStdGen
 

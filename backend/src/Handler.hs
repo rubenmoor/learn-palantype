@@ -52,13 +52,11 @@ handlers =
    :<|> CMS.handlers
    :<|> handleWordList
 
-handleWordList :: Text -> Int -> Bool -> Handler Text
+handleWordList :: Text -> Int -> Bool -> Handler [Text]
 handleWordList letters max bCaseInsensitive = do
-    liftIO $ Text.putStrLn letters
     let sorted = Text.lines $ Text.decodeUtf8 $(staticFileContent "german.utf8.dic.sorted")
         ls = filter everyCharInSet sorted
-        maxed = if max > 0 then take max ls else ls
-    pure $ Text.unlines maxed
+    pure if max > 0 then take max ls else ls
   where
     everyCharInSet :: Text -> Bool
     everyCharInSet str =
