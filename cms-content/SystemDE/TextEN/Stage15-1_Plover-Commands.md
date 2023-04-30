@@ -81,7 +81,7 @@ among them I included my personal selection of ASCII emoticons.
 
 When actually using the Plover software instead of practicing on this website,
 you will find those shortcuts useful.
-They all follow the same scheme: `BDJN` plus some letter related to the plover command.
+All but the first follow the same scheme: `DSN+-` plus some letter related to the plover command.
 
 |          |                          |
 |----------|--------------------------|
@@ -104,5 +104,5 @@ is documented well for exactly that purpose.
 There are more interactive exercises on this page, however, if you have not already done so,
 it is high time you actually install the
 [Plover Software](https://github.com/openstenoproject/plover/releases/tag/v4.0.0.dev10).
-Plover Version 4 comes with a Plugin Manager where you can find "Palantype DE".
+Plover Version 4 comes with a Plugin Manager where you can find "plover-palantype-DE".
 Try it out and type a few paragraphs!
