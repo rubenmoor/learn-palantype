@@ -33,4 +33,3 @@ Here are they:
 
 Make sure that "Show special modes" is activated and use `-N` to reach the special characters.
 Use `SHIFT`, i.e. `-D` to type the characters of the second column.
->>>>>>> tailwind.css
