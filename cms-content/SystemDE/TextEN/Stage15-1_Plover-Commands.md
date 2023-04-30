@@ -33,8 +33,8 @@ the system will output the word uncapitalized and leave the decision to you.
 | :     | `M-  ` | attach colon                      | {^:}            |
 | :     | `NM- ` | colon and capitalize              | {^:}{-&#124;}   |
 | ?     | `N+- ` | question mark and capitalize      | {^?}{-&#124;}   |
-| !     | `NL  ` | exclamation mark and capitalize   | {^!}{-&#124;}   |
-| #     | `N+  ` | hash with next word attached      | {\#^}           |
+| !     | `NL- ` | exclamation mark and capitalize   | {^!}{-&#124;}   |
+| #     | `N+- ` | hash with next word attached      | {\#^}           |
 | §     | `B+- ` | legal paragraph symbol            | §               |
 | °     | `G-  ` | attach degree symbol              | {^°}            |
 | ™     | `DM- ` | attach trademark symbol           | {^™}            |
@@ -64,18 +64,18 @@ among them I included my personal selection of ASCII emoticons.
 
 |         |               |
 |---------|---------------|
-| `SLNSD` | `¯\_(ツ)_/¯`     |
-| `BLNSD` | `ʕ•ᴥ•ʔ`         |
-| `GLNSD` | ```(´･_･`)```       |
-| `HLNSD` | `(⊃｡•́‿•̀｡)⊃`   |
-| `DLNSD` | `(╯°□°）╯︵ ┻━┻`  |
-| `FLNSD` | `(☞ﾟヮﾟ)☞`       |
-| `MLNSD` | `(๑•́ ₃ •̀๑)`   |
-| `JLNSD` | `┬─┬⃰͡ (ᵔᵕᵔ͜ )` |
-| `WLNSD` | `( ˘ ³˘)♥`      |
-| `LLNSD` | `( ͡° ͜ʖ ͡°)`   |
-| `NLNSD` | `( ಠ ʖ̯ ಠ )`    |
-| `RLNSD` | `(ᵔᴥᵔ)`         |
+| `v-+NSD` | `¯\_(ツ)_/¯`     |
+| `D-+NSD` | `ʕ•ᴥ•ʔ`         |
+| `b-+NSD` | ```(´･_･`)```       |
+| `ʃ-+NSD` | `(⊃｡•́‿•̀｡)⊃`   |
+| `S-+NSD` | `(╯°□°）╯︵ ┻━┻`  |
+| `F-+NSD` | `(☞ﾟヮﾟ)☞`       |
+| `G-+NSD` | `(๑•́ ₃ •̀๑)`   |
+| `N-+NSD` | `┬─┬⃰͡ (ᵔᵕᵔ͜ )` |
+| `B-+NSD` | `( ˘ ³˘)♥`      |
+| `M+NSD` | `( ͡° ͜ʖ ͡°)`   |
+| `++NSD` | `( ಠ ʖ̯ ಠ )`    |
+| `L+NSD` | `(ᵔᴥᵔ)`         |
 
 ### Plover application shortcuts
 
@@ -85,13 +85,15 @@ They all follow the same scheme: `BDJN` plus some letter related to the plover c
 
 |          |                          |
 |----------|--------------------------|
-| `BDJN+D` | {PLOVER:TOGGLE}          |
-| `BDJNA ` | {PLOVER:ADD_TRANSLATION} |
-| `BDJNL ` | {PLOVER:LOOKUP}          |
-| `BDJNS ` | {PLOVER:SUGGESTIONS}     |
-| `BDJNF ` | {PLOVER:FOCUS}           |
-| `BDJNG ` | {PLOVER:CONFIGURE}       |
-| `BDJN+G` | {PLOVER:CONFIGURE}       |
+| `I+NSD`  | =undo                    |
+| `DSN++D` | {PLOVER:TOGGLE}          |
+| `DSN+A`  | {PLOVER:ADD_TRANSLATION} |
+| `DSN+L`  | {PLOVER:LOOKUP}          |
+| `DSN+-S` | {PLOVER:SUGGESTIONS}     |
+| `DSN+-F` | {PLOVER:FOCUS}           |
+| `DSN+-G` | {PLOVER:CONFIGURE}       |
+| `DSN++G` | {PLOVER:CONFIGURE}       |
+|          |                          |
 
 Sooner or later you will add your own dictionary entries, or make adjustments to the default.
 The [Plover syntax](https://github.com/openstenoproject/plover/wiki/Dictionary-Format)
