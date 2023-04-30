@@ -2,13 +2,8 @@
 
 ## Palantype command-key mode
 
-<<<<<<< HEAD
-Just like with the number mode, you can hold down `N+-` to have a look
-at the available command keys.
-=======
 Just like with the number mode, you can activate "Show special modes"
 and hold down `N+-` to have a look at the available command keys.
->>>>>>> tailwind.css
 
 ![The palantype virtual keyboard in command-key mode](https://github.com/rubenmoor/learn-palantype/raw/main/cms-content/SystemDE/media/commandmode.png)
 
@@ -54,8 +49,6 @@ In Microsoft PowerPoint (and some other programs),
 `CTRL + SHIFT + UP/DOWN` is used to move a bullet point up or down the list.
 Of course, having a steno mindset, you can reconfigure shortcuts of any application that you use intensively.
 With the Palantype command keys, you don't have to.
-<<<<<<< HEAD
-=======
 
 ### Function keys
 
@@ -75,4 +68,3 @@ this isn't really any strict limit.
 For this particular key combination, there exists already a steno code in the command keys:
 
 `N++NSD`
->>>>>>> tailwind.css
