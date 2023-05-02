@@ -207,14 +207,14 @@ taskLiterals dynStats evMChord = do
                     el "code" $ text $ showt $ chordStart @key
                 text " to begin the exercise."
             StateRun Run {..} -> do
-                elClass "div" "bg-zinc-200 rounded p-1 break-all"
+                elClass "div" "bg-zinc-200 rounded p-1"
                   $ for_ (zip [0 :: Int ..] dictFingerspellingLiterals) \(i, (_, lit)) -> do
                     let
                         clsBase = "p-1"
                         clsBg = case stMMistake of
                             Just (j, _) -> if i == j        then "bg-red-500"   else ""
                             Nothing     -> if stCounter > i then "bg-green-500" else ""
-                    elClass "code" (Text.unwords [clsBase, clsBg]) $ text lit
+                    elClass "code" (Text.unwords [clsBase, clsBg]) $ text $ Text.singleton lit
 
                 el "br" blank
                 whenJust stMMistake $ \(_, w) -> do

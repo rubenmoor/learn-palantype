@@ -9,6 +9,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Page.Stage15.SpecialCharacters
     ( specialCharacters
@@ -40,10 +41,10 @@ import qualified Data.Text as Text
 import Page.Common (getStatsLocalAndRemote, chordStart, elCongraz)
 import Data.Bool (Bool, not)
 import Data.Text (Text)
-import Data.Tuple (fst, snd)
+import Data.Tuple (fst, snd, swap)
 import Palantype.Common.Dictionary (dictLiterals)
 import Data.Generics.Product (HasField(..))
-import Control.Lens ((.~), (+~), (?~))
+import Control.Lens ((.~), (+~), (?~), (^?))
 import GHC.Num (Num((-)))
 import Page.Common.Stopwatch (mkStopwatch, elStopwatch)
 import TextShow (TextShow(showt))
@@ -52,6 +53,8 @@ import Shared (whenJust)
 import Obelisk.Route.Frontend (SetRoute)
 import Obelisk.Route (R)
 import Common.Route (FrontendRoute)
+import qualified Data.Map.Strict as Map
+import Palantype.Common.TH (fromJust)
 
 specialCharacters
   :: forall key t (m :: * -> *)
@@ -72,18 +75,37 @@ specialCharacters
 specialCharacters = mdo
     Env {..} <- ask
 
-    evContent <- elCMS 1 <&> mapMaybe \case
-      [c] -> Just c
+    (evPart1, evPart2) <- elCMS 2 <&> splitE . mapMaybe \case
+      [c1, c2] -> Just (c1, c2)
       _   -> Nothing
 
-    elCMSContent evContent
+    elCMSContent evPart1
+
+    let listing =
+          "handleWordList :: Text -> Int -> Bool -> Handler [Text]\n\
+          \handleWordList letters max bCaseInsensitive = do\n\
+          \\tlet sorted = Text.lines $ Text.decodeUtf8 $(staticFileContent \"german.utf8.dic.sorted\")\n\
+          \\t\tls = filter everyCharInSet sorted\n\
+          \\tpure if max > 0 then take max ls else ls\n\
+          \  where\n\
+          \\teveryCharInSet :: Text -> Bool\n\
+          \\teveryCharInSet str =\n\
+          \\t\tlet strCase = if bCaseInsensitive\n\
+          \\t\t\t\t\t\tthen Text.toLower str\n\
+          \\t\t\t\t\t\telse str\n\
+          \\t\tin  all (`Set.member` Set.fromList lettersCase) $ Text.unpack strCase\n\
+          \\n\
+          \\tlettersCase = Text.unpack $ URI.decodeText $\n\
+          \\t\tif bCaseInsensitive\n\
+          \\t\tthen Text.toLower letters\n\
+          \\t\telse letters\n"
 
     dynStatsAll <- getStatsLocalAndRemote evDone
-    evDone <- taskListing dynStatsAll $ gate (not <$> current dynDone) envEvMChord
+    evDone <- taskListing listing dynStatsAll $ gate (not <$> current dynDone) envEvMChord
     let dynStatsPersonal = fmap snd . filter (isNothing . fst) . fmap snd <$> dynStatsAll
     dynDone <- elCongraz (Just <$> evDone) dynStatsPersonal envNavigation
 
-    blank
+    elCMSContent evPart2
 
 data StateSpecial k
   = StatePause Int
@@ -110,40 +132,22 @@ taskListing
        , Prerender t m
        , TriggerEvent t m
        )
-    => Dynamic t [(Bool, (Maybe Text, Stats))]
+    => String
+    -> Dynamic t [(Bool, (Maybe Text, Stats))]
     -> Event t (Maybe (Chord key))
     -> m (Event t Stats)
-taskListing dynStats evMChord = do
+taskListing listing dynStats evMChord = do
   let
-      listing :: String
-      listing =
-        "handleWordList :: Text -> Int -> Bool -> Handler [Text]\n\
-        \handleWordList letters max bCaseInsensitive = do\n\
-        \    let sorted = Text.lines $ Text.decodeUtf8 $(staticFileContent \"german.utf8.dic.sorted\")\n\
-        \        ls = filter everyCharInSet sorted\n\
-        \    pure if max > 0 then take max ls else ls\n\
-        \  where\n\
-        \    everyCharInSet :: Text -> Bool\n\
-        \    everyCharInSet str =\n\
-        \      let strCase = if bCaseInsensitive\n\
-        \                    then Text.toLower str\n\
-        \                    else str\n\
-        \      in  all (`Set.member` Set.fromList lettersCase) $ Text.unpack strCase\n\
-        \n\
-        \    lettersCase = Text.unpack $ URI.decodeText $\n\
-        \      if bCaseInsensitive\n\
-        \      then Text.toLower letters\n\
-        \      else letters\n"
       len = length listing
 
-      map = Map.fromList
+      map = Map.fromList $ swap <$> dictLiterals
 
       step :: Maybe (Chord key) -> StateSpecial key -> StateSpecial key
       step (Just c) (StatePause _) | c == chordStart = stepStart
       step _        st@(StatePause _) = st
       step mc       st@(StateRun Run {..}) =
 
-          let currentLiteral = KI.toRaw @key $ fst $ listing !! stCounter
+          let currentLiteral = KI.toRaw @key $ $fromJust $ Map.lookup (listing !! stCounter) map
           in  case (stMMistake, mc) of
 
                 -- mistake mode ...
@@ -180,34 +184,37 @@ taskListing dynStats evMChord = do
   dynStopwatch <- mkStopwatch evStartStop
 
   elClass "div" "mt-8 text-lg" do
-      dyn_ $ dynListing <&> \case
-          StatePause _ -> el "div" do
-              text "Type "
-              elClass "span" "steno-action" do
-                  text "Start "
-                  el "code" $ text $ showt $ chordStart @key
-              text " to begin the exercise."
-          StateRun Run {..} -> do
-              elClass "div" "bg-zinc-200 rounded p-1 block"
-                $ for_ (zip [0 :: Int ..] listing) \(i, lit) -> do
-                  let
-                      clsBase = "p-1"
-                      clsBg = case stMMistake of
-                          Just (j, _) -> if i == j        then "bg-red-500"   else ""
-                          Nothing     -> if stCounter > i then "bg-green-500" else ""
-                  elClass "code" (Text.unwords [clsBase, clsBg]) $ text $ Text.singleton lit
+      dyn_ $ dynListing <&> \st -> do
+          elClass "pre" "bg-zinc-200 rounded p-3 block text-sm text-zinc-500"
+            $ for_ (zip [0 :: Int ..] listing) \(i, lit) -> do
+              let
+                  clsBase = if lit == '\n' then "p-1" else ""
+                  clsBg = case st of
+                    StatePause _ -> "text-black"
+                    StateRun Run{..} | stCounter > i -> "text-black"
+                    StateRun Run{..} -> case stMMistake of
+                      Just (j, _) -> if i == j         then "border border-red-500 -mx-[1px]"   else ""
+                      Nothing     -> if stCounter == i then "text-zinc-200 bg-grayishblue-900" else ""
+              elClass "code" (Text.unwords [clsBase, clsBg]) $ text $ Text.singleton lit
+          el "br" blank
+          case st of
+              StatePause _ -> el "div" do
+                  text "Type "
+                  elClass "span" "steno-action" do
+                      text "Start "
+                      el "code" $ text $ showt $ chordStart @key
+                  text " to begin the exercise."
+              StateRun Run {..} -> do
+                  whenJust stMMistake $ \(_, w) -> do
+                    elClass "p" "text-red-500 text-sm ml-1" do
+                        text "You typed "
+                        el "code" $ text $ showt w
+                        elClass "span" "steno-navigation p-1 ml-2"
+                            $  text
+                            $  "↤ "
+                            <> showt (KI.toRaw @key kiBackUp) -- U+21A4
+                    el "br" blank
 
-              el "br" blank
-              whenJust stMMistake $ \(_, w) -> do
-                elClass "p" "text-red-500 text-sm ml-1" do
-                    text "You typed "
-                    el "code" $ text $ showt w
-                    elClass "span" "steno-navigation p-1 ml-2"
-                        $  text
-                        $  "↤ "
-                        <> showt (KI.toRaw @key kiBackUp) -- U+21A4
-                el "br" blank
-
-              text $ showt stCounter <> " / " <> showt len
+                  text $ showt stCounter <> " / " <> showt len
 
       elStopwatch dynStats dynStopwatch len
