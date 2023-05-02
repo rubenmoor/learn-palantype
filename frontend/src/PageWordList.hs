@@ -2,28 +2,73 @@
 {-# LANGUAGE RecursiveDo #-}
 
 module PageWordList
-  ( pageWordList
-  ) where
-import Reflex.Dom (blank, DomBuilder (..), InputElementConfig, Reflex (..), elAttr, inputElementConfig_elementConfig, (=:), text, elementConfig_initialAttributes, InputElement (..), el, inputElementConfig_initialValue, elAttr', HasDomEvent (..), EventName (..), Prerender, elClass, widgetHold_, MonadHold (..), leftmost, dyn_, PostBuild (..), gate, inputElementConfig_initialChecked, selectElementConfig_elementConfig, SelectElementConfig, SelectElement (..), dynText, selectElementConfig_initialValue, zipDyn, PerformEvent (..), attach, constDyn)
-import Data.Text (Text)
-import qualified Data.Text as Text
-import Control.Lens ((&), (%~), At (at), (?~), non, (.~), (<&>))
-import Data.Default (Default(..))
-import Client (request, getWordList, postRender)
-import TextShow (TextShow(..))
-import Text.Read (readMaybe)
-import Shared (iFa)
-import Data.Functor (($>))
-import Control.Monad.Fix (MonadFix)
-import Data.Maybe (fromMaybe)
-import Data.Foldable (for_)
-import qualified Data.Aeson as Aeson
-import qualified Data.Text.Encoding as Text
-import qualified Data.ByteString.Lazy as Lazy
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Random (newStdGen, evalRand)
-import Control.Monad.Random.Strict (StdGen)
-import System.Random.Shuffle (shuffleM)
+    ( pageWordList
+    ) where
+
+import           Client                         ( getWordList
+                                                , postRender
+                                                , request
+                                                )
+import           Control.Lens                   ( (%~)
+                                                , (&)
+                                                , (.~)
+                                                , (<&>)
+                                                , (?~)
+                                                , At(at)
+                                                , non
+                                                )
+import           Control.Monad.Fix              ( MonadFix )
+import           Control.Monad.IO.Class         ( MonadIO(..) )
+import           Control.Monad.Random           ( evalRand
+                                                , newStdGen
+                                                )
+import           Control.Monad.Random.Strict    ( StdGen )
+import qualified Data.Aeson                    as Aeson
+import qualified Data.ByteString.Lazy          as Lazy
+import           Data.Default                   ( Default(..) )
+import           Data.Foldable                  ( for_ )
+import           Data.Functor                   ( ($>) )
+import           Data.Maybe                     ( fromMaybe )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
+import qualified Data.Text.Encoding            as Text
+import           Reflex.Dom                     ( (=:)
+                                                , DomBuilder(..)
+                                                , EventName(..)
+                                                , HasDomEvent(..)
+                                                , InputElement(..)
+                                                , InputElementConfig
+                                                , MonadHold(..)
+                                                , PerformEvent(..)
+                                                , PostBuild(..)
+                                                , Prerender
+                                                , Reflex(..)
+                                                , SelectElement(..)
+                                                , SelectElementConfig
+                                                , attach
+                                                , blank
+                                                , dynText
+                                                , dyn_
+                                                , el
+                                                , elAttr
+                                                , elAttr'
+                                                , elClass
+                                                , elementConfig_initialAttributes
+                                                , gate
+                                                , inputElementConfig_elementConfig
+                                                , inputElementConfig_initialChecked
+                                                , inputElementConfig_initialValue
+                                                , leftmost
+                                                , selectElementConfig_elementConfig
+                                                , selectElementConfig_initialValue
+                                                , text
+                                                , widgetHold_
+                                                , zipDyn
+                                                )
+import           Shared                         ( iFa )
+import           System.Random.Shuffle          ( shuffleM )
+import           Text.Read                      ( readMaybe )
+import           TextShow                       ( TextShow(..) )
 
 pageWordList
   :: forall t (m :: * -> *)

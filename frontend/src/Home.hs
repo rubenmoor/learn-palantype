@@ -178,7 +178,7 @@ import           State                          ( Env(..)
                                                 , Session(..)
                                                 , State(..)
                                                 , stageUrl
-                                                , updateState, GetLoadedAndBuilt, Loading (..)
+                                                , updateState, GetLoadedAndBuilt
                                                 )
 import           Text.Show                      ( Show(show) )
 import           TextShow                       ( TextShow(showt) )

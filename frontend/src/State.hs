@@ -20,7 +20,7 @@ import           Common.Model                   ( AppState
                                                 , defaultAppState, TextLang
                                                 )
 import           Common.Route                   ( FrontendRoute(..), FrontendRoute_TextLang (..))
-import           Control.Applicative            ( (<$>), Applicative (..) )
+import           Control.Applicative            ( (<$>) )
 import           Data.Aeson                     ( FromJSON(..)
                                                 , ToJSON(..)
                                                 )

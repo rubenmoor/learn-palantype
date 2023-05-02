@@ -16,7 +16,7 @@ module Page.Stage15.SpecialCharacters
     ) where
 
 import Control.Monad.Reader.Class (MonadReader, ask)
-import Reflex.Dom (DomBuilder, EventWriter, TriggerEvent, MonadHold, PerformEvent (..), PostBuild, Prerender, el, text, blank, Reflex (..), gate, foldDyn, holdUniqDyn, elClass, dyn_)
+import Reflex.Dom (DomBuilder, EventWriter, TriggerEvent, MonadHold, PerformEvent (..), PostBuild, Prerender, el, text, blank, Reflex (..), gate, foldDyn, holdUniqDyn, elClass, dyn_, splitE)
 import State (Env (..), State)
 import CMS (elCMSContent, elCMS)
 import Witherable (Filterable(mapMaybe, filter))
@@ -44,7 +44,7 @@ import Data.Text (Text)
 import Data.Tuple (fst, snd, swap)
 import Palantype.Common.Dictionary (dictLiterals)
 import Data.Generics.Product (HasField(..))
-import Control.Lens ((.~), (+~), (?~), (^?))
+import Control.Lens ((.~), (+~), (?~))
 import GHC.Num (Num((-)))
 import Page.Common.Stopwatch (mkStopwatch, elStopwatch)
 import TextShow (TextShow(showt))

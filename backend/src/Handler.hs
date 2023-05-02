@@ -7,12 +7,10 @@
 
 module Handler
     ( handlers
-    )
-where
+    ) where
 
 import           Servant.API                    ( (:<|>)(..) )
 import           Servant.Server                 ( HasServer(ServerT) )
-
 import           Common.Api                     ( RoutesApi )
 import qualified Handler.Palantype             as Palantype
 import qualified Handler.Auth                  as Auth
@@ -26,19 +24,14 @@ import Data.Text (Text)
 import Control.Applicative (Applicative(..))
 import Obelisk.Generated.Static (staticFileContent)
 import qualified Data.Text.Encoding as Text
-import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Char (Char)
 import qualified Data.Text as Text
 import Data.Bool (Bool)
 import Data.Function (($))
 import Data.List (filter, take)
 import Data.Foldable (all)
-import Data.String (String)
 import Data.Int (Int)
 import Data.Ord ((>))
-import qualified Data.Text.IO as Text
-import Control.Monad.IO.Class
 import qualified Network.URI.Encode as URI
 
 handlers :: ServerT RoutesApi a Handler
