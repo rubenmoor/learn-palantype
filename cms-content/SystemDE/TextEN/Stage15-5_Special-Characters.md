@@ -31,5 +31,25 @@ Here are they:
 | `B`   | ;    | :      |
 | `L`   | /    | ?      |
 
-Make sure that "Show special modes" is activated and use `-N` to reach the special characters.
+If you want to see the special characters in the virtual keyboard,
+make sure to activate "Show special modes" there
+and use `-N` to reach the special characters.
 Use `SHIFT`, i.e. `-D` to type the characters of the second column.
+
+The exercise below combines all of Fingerspelling, some numbers and special characters,
+but also command keys:
+You will need `RETURN` at the end of each line,
+`TABULATOR` for the indentation, and finally.
+`SPACE` for spaces.
+
+<!--separator-->
+
+In case you wonder, the above text is Haskell code.
+It produces a list of German words given a set of letters,
+such that the words do not contain any letter not in the set.
+The whole project Palantype DE is implemented in Haskell,
+including the website you are looking at.
+
+If you want to practice fingerspelling with a different programming language
+(or a different text altogether), just give me a hint on the
+[Plover Discord #palantype-machine](https://discord.gg/spymr5aCr5).

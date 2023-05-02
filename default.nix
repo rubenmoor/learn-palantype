@@ -152,13 +152,13 @@ in
         sha256 = "0p1h1a1rnrg5c63cpir8i26w93af6hqwxgqc6w2h94wjz2fbxp4c";
       }) {};
 
-      my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
-      #my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
-      #  owner = "rubenmoor";
-      #  repo = "my-palantype";
-      #  rev = "9f5cecc92721838f598b885a0a881a04384ec660";
-      #  sha256 = "16irhqxy22z1w5z9v7d5fdcwxzq61n03qy13xwzyjwq1s2d83m5i";
-      #}) {};
+      #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
+      my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "my-palantype";
+        rev = "2afe58feed95771c2094fb797589286b1b84b522";
+        sha256 = "077cgzf7nd458sdy9aarp2nv1x5mfrb7wmzchqrz5yh4gp8s6l42";
+      }) {};
 
       bytestring-trie = self.callHackage "bytestring-trie" "0.2.7" {};
     };
