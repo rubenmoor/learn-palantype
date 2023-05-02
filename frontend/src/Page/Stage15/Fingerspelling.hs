@@ -82,7 +82,7 @@ import           Palantype.Common               ( Chord
                                                 )
 import qualified Palantype.Common.Indices      as KI
 import qualified Palantype.Common.RawSteno     as Raw
-import           Palantype.DE.FingerSpelling    ( dictLiterals
+import           Palantype.DE.FingerSpelling    ( dictFingerspellingLiterals
                                                 , keysLetterOther
                                                 , keysLetterUS
                                                 )
@@ -127,7 +127,7 @@ data StateLiterals k
 
 data Run k = Run
     { stCounter  :: Int
-    , stMMistake :: Maybe (Int, Palantype.Common.Chord k)
+    , stMMistake :: Maybe (Int, Chord k)
     , stNMistakes :: Int
     } deriving (Generic)
 
@@ -142,7 +142,7 @@ taskLiterals
        , MonadHold t m
        , MonadIO (Performable m)
        , MonadReader (Env t key) m
-       , Palantype.Common.Palantype key
+       , Palantype key
        , PerformEvent t m
        , PostBuild t m
        , Prerender t m
@@ -155,14 +155,14 @@ taskLiterals dynStats evMChord = do
     --Env {..} <- ask
     let
         --Navigation {..} = envNavigation
-        len             = length dictLiterals
+        len             = length dictFingerspellingLiterals
 
         step :: Maybe (Chord key) -> StateLiterals key -> StateLiterals key
         step mChord st = case (st, mChord) of
             (StatePause _, Just c) | c == chordStart -> stepStart
             (StatePause _, _) -> st
             (StateRun Run {..}, mc) ->
-                let currentLetter = KI.toRaw @key $ fst $ dictLiterals !! stCounter
+                let currentLetter = KI.toRaw @key $ fst $ dictFingerspellingLiterals !! stCounter
                 in
                     case (stMMistake, mc) of
 
@@ -208,7 +208,7 @@ taskLiterals dynStats evMChord = do
                 text " to begin the exercise."
             StateRun Run {..} -> do
                 elClass "div" "bg-zinc-200 rounded p-1 break-all"
-                  $ for_ (zip [0 :: Int ..] dictLiterals) \(i, (_, lit)) -> do
+                  $ for_ (zip [0 :: Int ..] dictFingerspellingLiterals) \(i, (_, lit)) -> do
                     let
                         clsBase = "p-1"
                         clsBg = case stMMistake of

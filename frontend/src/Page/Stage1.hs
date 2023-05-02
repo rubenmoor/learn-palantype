@@ -285,7 +285,7 @@ taskAlphabet evChord showAlphabet = do
         step (Chord ks) ws@WalkState {..} =
             case (ks, wsMMistake, wsDone) of
 
-        -- reset after done
+                -- reset after done
                 (_, _, Just True) ->
                     ws { wsDone = Just False, wsCounter = 0 }
 
