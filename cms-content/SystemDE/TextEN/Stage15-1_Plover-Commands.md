@@ -53,9 +53,18 @@ Your fingers of your right hand take care of any thing that opens and closes.
 | «»    | Guillemets      | `-MG `  | `-ʃn` | {«&Hat;},{&Hat;»}     |
 | „“    | German quotes   | `-+`    | `-N`  | {„&Hat;},{&Hat;“}     |
 | ‹›    | chevrons        | `-L`    | `-B`  | {‹&Hat;},{&Hat;›}     |
-| []    | square brackets | `-F`    | `n`   | {[&Hat;},{&Hat;]}     |
+| []    | square brackets | `-ʃ`    | `n`   | {[&Hat;},{&Hat;]}     |
 | ()    | parenthesis     | `-S`    | `-D`  | {(&Hat;},{&Hat;)}     |
 | {}    | brackets        | `-M`    | `-G`  | {\\{&Hat;},{&Hat;\\}} |
+| "     | double quotes   | `-+N`   | `-SD` | {"&Hat;},{&Hat;"}     |
+| '     | single quotes   | `-LB`   | `-Fs` | {'&Hat;},{&Hat;'}     |
+| &#96; | backticks       | `-+NS`  | `-NSD`| {`&Hat;},{&Hat;`}     |
+
+The `"`, `'`, `&#96` are added for the convenience.
+Plover allows to attach the character to the next and to the previous word, respectively.
+There is nothing wrong with using the fingerspelling version of `"`, `'`, and `&#96;`,
+you find them in [Ex. 15.5: Special Character](SystemDE/TextEN/57).
+Only in that case you have to put the space explicitly, too.
 
 ### ASCII art
 
