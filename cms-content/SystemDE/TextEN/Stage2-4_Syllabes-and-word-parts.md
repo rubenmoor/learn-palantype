@@ -10,7 +10,7 @@ There are, however, several reasons why especially German words do not always fi
 In that case, the words are simply split up and you type the corresponding chord in succession to produce the word.
 
 As a rule of thumb, words are split up along their orthographic syllables,
-e.g. we saw «Zweifel» as `SWEI/FEL` in [Exercise 2.2](DE/10).
+e.g. we saw «Zweifel» as `SWEI/FEL` in [Exercise 2.2](/SystemDE/TextEN/10).
 In the same exercise we saw «Wissen» as `WISn`,
 thus orthographic syllables are not respected, after all?
 Well, there are alternative spellings and you can choose to type `WIS/SEN`, too.

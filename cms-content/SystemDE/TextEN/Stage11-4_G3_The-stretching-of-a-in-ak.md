@@ -13,7 +13,7 @@ Compare with the words *praktisch*, *Fakt*, or *Pakt*.
 A solution based on orthography would be: a special steno code for *ck*
 and a greedier rule that allows to treat *ck* just like *k* as long as the steno code for the whole world is unambiguous.
 You see that we take another route.
-In [Exercise 3.1](DE/13) you learned that *k* and *ck* are treated with the same steno.
+In [Exercise 3.1](/SystemDE/TextEN/13) you learned that *k* and *ck* are treated with the same steno.
 The reason is that the need to differentiate between the two is so rare that we treat it as exception.
 
 In this exercise you find words with a long vowel before the *k*.

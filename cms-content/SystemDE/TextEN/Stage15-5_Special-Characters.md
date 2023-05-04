@@ -3,17 +3,17 @@
 ## The remaining ones
 
 We are not quite done in terms of special characters.
-The [Plover Commands](54) got you covered for most kind of special input,
+The [Plover Commands](/SystemDE/TextEN/54) got you covered for most kind of special input,
 rendering a lot of the numerous keys on the conventional keyboard obsolete.
-[Fingerspelling mode](55) allows you to reach any (regular) letter,
+[Fingerspelling mode](/SystemDE/TextEN/55) allows you to reach any (regular) letter,
 to type words that are not in your dictionary.
 The fingerspelling mode already contains a couple of special characters.
-The [Number mode](56) is really about typing numbers,
+The [Number mode](/SystemDE/TextEN/56) is really about typing numbers,
 but for your convenience, combining a number with `SHIFT` mimics the behavior
 of conventional keyboards.
 
 Now there are still keys left.
-Some of them are covered by the [Command keys](57).
+Some of them are covered by the [Command keys](/SystemDE/TextEN/57).
 What still remains though, are non-alphanumeric characters that are not commands.
 Here are they:
 

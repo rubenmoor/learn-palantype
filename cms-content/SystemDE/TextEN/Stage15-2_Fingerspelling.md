@@ -37,7 +37,7 @@ Be aware that `WIN`, a key whose actual name is `SUPER`,
 appears strictly as modifier here.
 In case you want to tap the `WIN` key, e.g. to open the Start menu on the
 Microsoft Windows operating system,
-the `WIN` key shows up among the keys in [Ex. 15.4 Command Keys](DE/57).
+the `WIN` key shows up among the keys in [Ex. 15.4 Command Keys](/SystemDE/TextEN/57).
 
 Use `-+` and `-D` (SHIFT) in combination with the keys below, to start fingerspelling!
 
@@ -65,6 +65,6 @@ but they aren't keys on a regular keyboard, so they are not part of shortcuts.
 ### Beyond text transcription
 
 Fingerspelling is a powerfull feature.
-Together with [Ex. 15.4 Command Keys](DE/57),
+Together with [Ex. 15.4 Command Keys](/SystemDE/TextEN/57),
 you can reach conventional key bindings in steno mode without any additional configuration.
 Your usual shortcuts just turn into steno code, if you like--and they easily fit into a single chord.

@@ -28,7 +28,7 @@ In the thumb row you have
 * and SPACE
 
 You might already guess, why the windows key features again.
-Like with the [Number mode](DE/56), you have access to modifier keys:
+Like with the [Number mode](/SystemDE/TextEN/56), you have access to modifier keys:
 SHIFT, CONTROL, WIN, and ALT.
 However, if you want to tab the windows key,
 e.g. to open the start menu on the Microsoft Windows operating system,

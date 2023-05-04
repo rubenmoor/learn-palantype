@@ -40,11 +40,11 @@ The virtual keyboard assists you here again.
 Note that access to these special chars via the number mode
 shouldn't be usually necessary when typing regularly.
 Rather, consider them part of the extended finger spelling.
-For the usual formatting, the [Exercise 15.1: Plover Commands](DE/54) should be all you ever need.
+For the usual formatting, the [Exercise 15.1: Plover Commands](SystemDE/TextEN/54) should be all you ever need.
 
 Also, there are special characters missing.
 In number mode, there are only those special characters that you reach via the Shift modifier plus some number.
-The remaining special characters can be found in [Exercise 15.5: Special Character](DE/58).
+The remaining special characters can be found in [Exercise 15.5: Special Character](/SystemDE/TextEN/58).
 
 ### Practicing dates
 

@@ -19,7 +19,7 @@ The *sp* rule is a simplification of `SB+`, which is possible because *sb* isn't
 The *st* rule is the first example of a swap—in combination with the fact that *sd* doesn't exist in German.
 The onset *y* is encoded in its use as a consonant here, like in «Yoghurt».
 Note the different code for its vowel user in the nucleus.
-This onset code is also used for [Exercise 15.2: Fingerspelling](DE/55), i.e. to type just the letter *Y*.
+This onset code is also used for [Exercise 15.2: Fingerspelling](/SystemDE/TextEN/55), i.e. to type just the letter *Y*.
 
 For the coda, you find a lot of cases where somewhat arbitrary rules follow from necessity.
 Consonant combinations in the coda are just too plentiful in German.

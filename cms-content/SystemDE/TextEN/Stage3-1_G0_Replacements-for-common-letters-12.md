@@ -11,7 +11,7 @@ based on a couple of straightforward substitutions.
 In this exercise, we start with the most common ones.
 
 First of all, note that the following patterns are in addition
-to the simple patterns of the previous [Exercise 2.3](DE/11).
+to the simple patterns of the previous [Exercise 2.3](/SystemDE/TextEN/11).
 Thus, if you are missing a letter, it might be among the simple patterns.
 Also, note that the minus sign, `-`, isn't an actual steno key.
 Instead, it is used to distinguish between the left-hand and right-hand version of keys

@@ -8,7 +8,7 @@
 
 Now we allow some more simplification of *-ts* as `-SD`.
 Also, there is an efficient way of typing *st*.
-The greediness 0 way of typing *st* is part of [Exercise 13.3: Making use of the (small) s key](DE/51).
+The greediness 0 way of typing *st* is part of [Exercise 13.3: Making use of the (small) s key](/SystemDE/TextEN/51).
 
 <!--separator-->
 
