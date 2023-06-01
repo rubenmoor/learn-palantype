@@ -11,8 +11,15 @@ let
     inherit system;
     iosSdkVersion = "13.2";
     terms.security.acme.acceptTerms = true;
-    useGHC810 = true;
+    # useGHC810 = true;
   });
+  # persistent 2.14.0.5
+  persistent-src = pkgs.fetchFromGitHub {
+    owner = "yesodweb";
+    repo = "persistent";
+    rev = "434f49266749cad6f074920fb61ad3ec6ef90bea";
+    sha256 = "1h1hflfddr0k1ir4q2yf2a6wh9ix3qjqpbx3356117n59h6jf8f6";
+  };
 
 in
   with pkgs.haskell.lib;
@@ -39,15 +46,20 @@ in
       # for persistent
       lift-type = self.callHackage "lift-type" "0.1.0.1" {};
       # esqueleto's test suite introduces dependencies to persistent-... packages
-      esqueleto = self.callHackage "esqueleto" "3.5.3.0" {};
-      persistent = self.callHackage "persistent" "2.13.2.1" {};
+      esqueleto = self.callHackage "esqueleto" "3.5.8.0" {};
+
+      #persistent = self.callHackage "persistent" "2.13.3.5" {};
+      persistent = self.callCabal2nix "persistent" "${persistent-src}/persistent" {};
+      persistent-mysql = self.callCabal2nix "persistent-mysql" "${persistent-src}/persistent-mysql" {};
+      mysql = self.callHackage "mysql" "0.2.1" {};
+      mysql-simple = self.callHackage "mysql-simple" "0.4.9" {};
       # the version 2.13.0.2 still got a bug with mariadb
       #persistent-mysql = self.callHackage "persistent-mysql" "2.13.0.2" {};
-      persistent-mysql = self.callHackageDirect {
-        pkg = "persistent-mysql";
-        ver = "2.13.0.3";
-        sha256 = "0mnrgq05nk7ghfavfr2rhcz2yc0lciw88idri0ljsk2nymsnrbb8";
-      } {};
+      #persistent-mysql = self.callHackageDirect {
+      #  pkg = "persistent-mysql";
+      #  ver = "2.13.0.3";
+      #  sha256 = "0mnrgq05nk7ghfavfr2rhcz2yc0lciw88idri0ljsk2nymsnrbb8";
+      #} {};
 
       gerippe = self.callCabal2nix "gerippe" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
@@ -140,16 +152,16 @@ in
       servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "servant-reflex";
-        rev = "00b101c46fb3ecb3d35fa55080b4b32455cee66e";
-        sha256 = "1gghpfgsw8p2v6msz17sr5nn30pkg2c59pz7gvazqrv80v8102bb";
+        rev = "06bd09d0777c658da5269840be60d6cb24a264e8";
+        sha256 = "0s23q4cz93dw8wwz3n94l69qw5syvh37hj7bgdy5i0bb8b9g2617";
       }) {};
 
       #servant-snap = self.callCabal2nix "servant-snap" ../servant-snap {};
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "servant-snap";
-        rev = "657af13efa002b4f7c24bfc20d63d59e85a1086f";
-        sha256 = "0p1h1a1rnrg5c63cpir8i26w93af6hqwxgqc6w2h94wjz2fbxp4c";
+        rev = "4850305bd586e887229954ad9dfccb649c497f8e";
+        sha256 = "1ins0j4vd3cmf2dgh601b4wjqky79myz1245v2b59m5zsp11am01";
       }) {};
 
       #my-palantype = self.callCabal2nix "my-palantype" ../my-palantype { };
@@ -161,5 +173,17 @@ in
       }) {};
 
       bytestring-trie = self.callHackage "bytestring-trie" "0.2.7" {};
+
+      # dunno why, if not explicitly specified trying and failing with 1.1.1
+      lens-aeson = self.callHackage "lens-aeson" "1.2.2" {};
+      jose = self.callHackage "jose" "0.9" {};
+      lens = self.callHackage "lens" "5.1.1" {};
+      servant = self.callHackage "servant" "0.19.1" {};
+      base64-bytestring = self.callHackage "base64-bytestring" "1.2.1.0" {};
+      servant-auth = self.callHackage "servant-auth" "0.4.1.0" {};
+      # jsaddle-dom doesn't have a version that supports lens 5.*
+      jsaddle-dom = doJailbreak(self.callHackage "jsaddle-dom" "0.9.5.0" {});
+      # reflex-dom-core doesn't support lens > 5.1
+      reflex-dom-core = doJailbreak(super.reflex-dom-core);
     };
   })
