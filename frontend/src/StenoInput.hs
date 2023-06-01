@@ -393,9 +393,13 @@ elStenoInput dynStateKeyboard ploverCfg Navigation{..} getLoadedAndBuilt = mdo
         eChordRight       = select selector (Const2 FanRight      ) $> ()
         eChordPageDown    = select selector (Const2 FanPageDown   ) $> ()
         eChordPageUp      = select selector (Const2 FanPageUp     ) $> ()
-        eChordSmallNumber = select selector (Const2 FanSmallNumber) <&> \(ContentSmallNumber n) -> n
+        eChordSmallNumber = select selector (Const2 FanSmallNumber) <&> \case
+          (ContentSmallNumber n) -> n
+          _                      -> $failure "unexpected"
         evBackUp          = select selector (Const2 FanBackUp     ) $> ()
-        eChordOther       = select selector (Const2 FanOther      ) <&> \(ContentAnyChord    c) -> c
+        eChordOther       = select selector (Const2 FanOther      ) <&> \case
+          (ContentAnyChord    c) -> c
+          _                      -> $failure "unexpected"
 
     updateState $ eChordToggle $> [field @"stApp" . field @"stKeyboard" . field @"stShow" %~ not]
     updateState $ evChordToc   $> [field @"stApp" . field @"stToc" . field @"stVisible" %~ not ]

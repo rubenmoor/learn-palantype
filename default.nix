@@ -176,13 +176,21 @@ in
 
       # dunno why, if not explicitly specified trying and failing with 1.1.1
       lens-aeson = self.callHackage "lens-aeson" "1.2.2" {};
-      jose = self.callHackage "jose" "0.9" {};
+      # jose 0.9 causes weird error where text-short can't be found
+      jose = self.callHackage "jose" "0.10" {};
       lens = self.callHackage "lens" "5.1.1" {};
       servant = self.callHackage "servant" "0.19.1" {};
       base64-bytestring = self.callHackage "base64-bytestring" "1.2.1.0" {};
-      servant-auth = self.callHackage "servant-auth" "0.4.1.0" {};
+
+      # hackage says jose < 0.11; but cabal complains -- probably have to
+      # switch to the github repo servant/servant-auth/servant-auth,
+      # even though the version number is the same;
+      # or wait until github-version becomes available on hackage
+      servant-auth = doJailbreak(self.callHackage "servant-auth" "0.4.1.0" {});
+
       # jsaddle-dom doesn't have a version that supports lens 5.*
       jsaddle-dom = doJailbreak(self.callHackage "jsaddle-dom" "0.9.5.0" {});
+
       # reflex-dom-core doesn't support lens > 5.1
       reflex-dom-core = doJailbreak(super.reflex-dom-core);
     };

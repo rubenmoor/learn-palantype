@@ -121,7 +121,7 @@ import           Data.Ord                       ( Ord((>=)) )
 import qualified LocalStorage                  as LS
 import           Palantype.Common.TH            ( failure )
 import           Shared                         ( redirectToWikipedia
-                                                , requestPostViewPage, setRouteAndLoading
+                                                , requestPostViewPage
                                                 )
 import           Witherable                     ( Filterable(catMaybes, filter)
                                                 )
@@ -296,7 +296,7 @@ frontendBody = mdo
                     (True , bLoggedIn) -> Just bLoggedIn
                   let evToLogin    = filter (== Just False) $ updated dynSettings
                       evToSettings = filter (== Just True) $ updated dynSettings
-                  setRouteAndLoading $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
+                  setRoute $ evToLogin $> FrontendRoute_Auth :/ AuthPage_Login :/ ()
 
                   requestPostViewPage (constDyn $ FrontendRoute_Auth :/ AuthPage_Settings :/ ()) $ void evToSettings
                   dyn_ $ dynSettings <&> \case

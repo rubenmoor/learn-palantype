@@ -103,16 +103,14 @@ import           Reflex.Dom                     ( (=:)
                                                 , holdDyn
                                                 , inputElement
                                                 , inputElementConfig_elementConfig
-                                                , inputElementConfig_initialChecked
                                                 , inputElementConfig_setValue
                                                 , keypress
                                                 , leftmost
                                                 , tag
-                                                , tagPromptlyDyn
                                                 , text
                                                 , updated
                                                 , widgetHold_
-                                                , zipDyn, TriggerEvent, PerformEvent (Performable), InputElementConfig, holdUniqDyn
+                                                , zipDyn, TriggerEvent, PerformEvent (Performable), InputElementConfig, holdUniqDyn, inputElementConfig_setChecked
                                                 )
 import           Witherable                     ( Filterable
                                                     ( catMaybes
@@ -392,8 +390,8 @@ settings getLoadedAndBuilt = do
               )
         let
             conf = def & inputElementConfig_setValue
-              .~ tagPromptlyDyn dynCurrentAlias
-                                (leftmost [evLoadedAndBuilt, void evRespAliasRenameFail])
+              .~ tag (current dynCurrentAlias)
+                     (leftmost [evLoadedAndBuilt, void evRespAliasRenameFail])
         (dynMAliasNew, inputAliasNew) <- elLabelInput conf "Change alias" 64 "alias-new"
 
         let evFocusLostAlias =
@@ -442,28 +440,27 @@ settings getLoadedAndBuilt = do
 
         el "h3" $ text "Public visibility"
 
-        let elemId = "cb-visiblity"
-        dynVisible <- holdUniqDyn $ dynState <&> fromMaybe False . preview
-            (   field @"stSession"
-              . _As @"SessionUser"
-              . field @"sdAliasVisible"
-            )
-        dyn_ $ dynVisible <&> \bVisible -> do
-          cb <-
-              inputElement
-              $  def
-              &  inputElementConfig_elementConfig
-              .  elementConfig_initialAttributes
-              .~ "type" =: "checkbox" <> "id" =: elemId
-              & inputElementConfig_initialChecked .~ bVisible
-          elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
-          let dynShowScoresChecked = _inputElement_checked cb
-              evShowScoresChecked = updated dynShowScoresChecked
-          updateState $ evShowScoresChecked <&> \isChecked ->
-            [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
-          void $ request $ postAliasVisibility dynAuthData
-                                               (Right <$> dynShowScoresChecked)
-                                               (void evShowScoresChecked)
+        let
+            elemId = "cb-visiblity"
+            behVisible = current $ dynState <&> fromMaybe False . preview
+              (   field @"stSession"
+                . _As @"SessionUser"
+                . field @"sdAliasVisible"
+              )
+            evVisible = tag behVisible evLoadedAndBuilt
+
+        cb <-
+          inputElement $ def
+            & inputElementConfig_elementConfig . elementConfig_initialAttributes .~ "type" =: "checkbox" <> "id" =: elemId
+            & inputElementConfig_setChecked .~ evVisible
+        elAttr "label" ("for" =: elemId) $ el "span" $ text "Show my scores"
+        let dynShowScoresChecked = _inputElement_checked cb
+            evShowScoresChecked = updated dynShowScoresChecked
+        updateState $ evShowScoresChecked <&> \isChecked ->
+          [ field @"stSession" . _As @"SessionUser" . field @"sdAliasVisible" .~ isChecked]
+        void $ request $ postAliasVisibility dynAuthData
+                                              (Right <$> dynShowScoresChecked)
+                                              (void evShowScoresChecked)
 
         el "p" $ text
             "If you check this, your scores will be publicly visible. \

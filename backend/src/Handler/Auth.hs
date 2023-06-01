@@ -19,7 +19,6 @@ import           Control.Monad                  ( Monad((>>=))
                                                 , unless
                                                 , when
                                                 )
-import           Control.Monad.Except           ( runExceptT )
 import           Control.Monad.IO.Class         ( MonadIO(liftIO) )
 import           Control.Monad.Reader           ( asks )
 import           Data.Bool                      ( Bool(..) )
@@ -116,9 +115,7 @@ handleGrantAuthPwd LoginData {..} = runDb (getBy $ Db.UUserName ldUserName) >>= 
                 jwk <- asks envJwk
                 let toServerError e = throwError
                         $ err500 { errBody = BSU.fromString $ show e }
-                sdJwt <-
-                    liftIO (runExceptT $ mkCompactJWT jwk claims)
-                        >>= either toServerError pure
+                sdJwt <- liftIO (mkCompactJWT jwk claims) >>= either toServerError pure
                 sdClearances <- getClearances keyAlias
                 let sdIsSiteAdmin = userIsSiteAdmin
                     sdUserName    = userName
@@ -162,9 +159,7 @@ handleUserNew UserNew {..} = do
     let claims = mkClaims now unUserName
         toServerError e =
             throwError $ err500 { errBody = BSU.fromString $ show e }
-    sdJwt <-
-        liftIO (runExceptT $ mkCompactJWT jwk claims)
-            >>= either toServerError pure
+    sdJwt <- liftIO (mkCompactJWT jwk claims) >>= either toServerError pure
     let sdClearances = if sdIsSiteAdmin then RankAdmin else RankMember
     runDb $ insert_ $ Db.Clearance keyAlias sdClearances
     let sdUserName = unUserName

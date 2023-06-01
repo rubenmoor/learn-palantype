@@ -36,7 +36,7 @@ import           Control.Lens                   ( (?~)
 import           Control.Monad                  ( (>>=) )
 import           Control.Monad.Except           (lift,  MonadError
                                                 , runExceptT
-                                                , throwError
+                                                , throwError, ExceptT
                                                 )
 import           Crypto.JWT                     (verifyClaimsAt,  Audience(..)
                                                 , ClaimsSet
@@ -56,7 +56,7 @@ import           Crypto.JWT                     (verifyClaimsAt,  Audience(..)
                                                 , encodeCompact
                                                 , newJWSHeader
                                                 , signClaims
-                                                , string
+                                                , string, runJOSE
 
                                                 )
 import           Data.Bool                      ( Bool(..) )
@@ -139,6 +139,7 @@ import Control.Monad.Trans.Except (except)
 import Servant.Server (err401)
 import Control.Monad ((=<<))
 import Data.Function (const)
+import System.IO (IO)
 
 audience :: StringOrURI
 audience = "https://palantype.com"
@@ -152,11 +153,10 @@ mkClaims now sub =
         &  claimSub ?~ fromString (Text.unpack sub)
 
 mkCompactJWT
-    :: (MonadRandom m, MonadError JWTError m)
-    => JWK
+    :: JWK
     -> ClaimsSet
-    -> m CompactJWT
-mkCompactJWT jwk claims = do
+    -> IO (Either JWTError CompactJWT)
+mkCompactJWT jwk claims = runJOSE do
     alg    <- bestJWSAlg jwk
     signed <- signClaims jwk (newJWSHeader ((), alg)) claims
     pure $ CompactJWT $ Text.decodeUtf8 $ BL.toStrict $ encodeCompact signed
