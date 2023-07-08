@@ -127,7 +127,6 @@ elCMS
     -> m (Event t [Pandoc])
 elCMS numParts = mdo
     Env {..} <- ask
-
     evLoadedAndBuilt <- envGetLoadedAndBuilt
 
     let
@@ -219,7 +218,6 @@ elCMSMenu numParts latest parts = do
             (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
             <> "title" =: "Clear server cache"
             ) $ iFa' "fas fa-skull"
-
 
           dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
           evRespAll <- request $ postClearCache

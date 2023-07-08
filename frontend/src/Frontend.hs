@@ -128,6 +128,7 @@ import           Witherable                     ( Filterable(catMaybes, filter)
 import Data.Generics.Product (field)
 import Control.Lens (set)
 import PageWordList (pageWordList)
+import PageBlog (pageBlog)
 
 default(Text)
 
@@ -330,6 +331,9 @@ frontendBody = mdo
             FrontendRoute_WordList -> do
               getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_WordList :/ ())
               pageWordList
+            FrontendRoute_Blog -> do
+              getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Blog :/ ())
+              pageBlog
 
     blank
 

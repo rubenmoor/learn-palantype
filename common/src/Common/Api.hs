@@ -103,6 +103,8 @@ type RoutesCMS =
        :> Capture "time"     UTCTimeInUrl
        :> Get '[JSON] [Pandoc]
 
+  :<|> "blog" :> Capture "time" UTCTimeInUrl :> Get '[JSON] [Pandoc]
+
   -- Route to be called by github action
   :<|> "cache" :> "invalidate"        :> ReqBody '[JSON] [Text] :> Post '[JSON] ()
 

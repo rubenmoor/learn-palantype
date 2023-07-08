@@ -10,10 +10,10 @@ module Handler.CMS
 
 import           AppData                        ( Handler )
 import           Common.Api                     ( RoutesCMS )
-import           Common.Model                   ( TextLang, UTCTimeInUrl (UTCTimeInUrl), CacheContentType (..) )
+import           Common.Model                   ( TextLang (TextDE), UTCTimeInUrl (UTCTimeInUrl), CacheContentType (..) )
 import           Control.Applicative            ( Applicative(pure) )
 import           Control.Category               ( (<<<) )
-import           Control.Monad                  ( Monad((>>=)), unless )
+import           Control.Monad                  ( Monad((>>=)), unless, Functor ((<$)) )
 import           Control.Monad.IO.Class         ( liftIO )
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.ByteString.Lazy.UTF8     as BLU
@@ -36,7 +36,7 @@ import qualified Data.Text.Lazy.Encoding       as LazyText
 import           Data.Time                      ( UTCTime
                                                 , getCurrentTime
                                                 )
-import           Data.Traversable               ( Traversable(traverse) )
+import           Data.Traversable               ( Traversable(traverse, sequence) )
 import           Database                       ( blobDecode
                                                 , blobEncode
                                                 , runDb
@@ -61,7 +61,7 @@ import           DbAdapter                      ( CMSCache ( .. )
                                                 , EntityField(..)
                                                 )
 import qualified GithubApi
-import           Palantype.Common               ( SystemLang )
+import           Palantype.Common               ( SystemLang (SystemDE) )
 import qualified Servant
 import           Servant.API                    ( type (:<|>)((:<|>)) )
 import           Servant.Server                 ( HasServer(ServerT)
@@ -90,11 +90,14 @@ separatorToken = "<!--separator-->"
 handlers :: ServerT RoutesCMS a Handler
 handlers =
          handleCMSGet
+    :<|> handleCMSBlogGet
     :<|> handlePostCacheInvalidation
     :<|> handleGetCacheInvalidationData
     :<|> handleClearCacheAll
     :<|> handleClearCache
     :<|> handlePostUpdateAll
+
+-- implementation of handlers
 
 handleCMSGet
   :: SystemLang
@@ -146,11 +149,69 @@ handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
                         <> " "
                         <> textToLazyBS msg
             }
+  where
+    convertMarkdown :: Text -> PandocIO [Pandoc]
+    convertMarkdown str =
+      let opts = def & field @"readerExtensions" .~ pandocExtensions
+      in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
 
-convertMarkdown :: Text -> PandocIO [Pandoc]
-convertMarkdown str =
-  let opts = def & field @"readerExtensions" .~ pandocExtensions
-  in  traverse (Pandoc.readMarkdown opts) $ Text.splitOn separatorToken str
+handleCMSBlogGet
+  :: UTCTimeInUrl
+  -> Handler [Pandoc]
+handleCMSBlogGet (UTCTimeInUrl time) = do
+    modifyResponse $ setHeader "Cache-Control" "public, max-age=31500000, immutable"
+    let
+        systemLang = SystemDE
+        textLang = TextDE
+        filename = "blog"
+        cacheDbKey = UCMSCache systemLang textLang filename time
+
+    mFromCache <- runDb (getBy cacheDbKey) >>= \case
+        Just (Entity _ CMSCache {..}) ->
+          case cMSCacheContentType of
+            CacheContentMarkdown -> case blobDecode cMSCacheBlob of
+              Nothing    -> runDb (deleteBy cacheDbKey) $> Nothing
+              Just lsDoc -> pure $ Just lsDoc
+            -- TODO: other content types
+        Nothing -> pure Nothing
+    case mFromCache of
+      Just c  -> c <$ liftIO (Text.putStrLn "Retrieved page from cache")
+      Nothing -> GithubApi.getBlogFiles >>= \case
+        GithubApi.Success strs -> do
+          lsEMarkdown <- liftIO (traverse (Pandoc.runIO <<< convertMarkdown) strs)
+          case sequence lsEMarkdown of
+            Left err -> Servant.throwError $ err500
+                { errBody =
+                    "Couldn't convert markdown"
+                        <> BLU.fromString (show err)
+                }
+            Right lsDoc -> do
+              liftIO $ Text.putStrLn "Fetched from GitHub"
+              runDb $ Esqueleto.delete $ from $ \c ->
+                where_ $ c ^. CMSCacheSystemLang ==. val systemLang
+                    &&. c ^. CMSCacheTextLang   ==. val textLang
+                    &&. c ^. CMSCacheFilename   ==. val filename
+              _ <- runDb $ insert $ CMSCache systemLang
+                                            textLang
+                                            filename
+                                            CacheContentMarkdown
+                                            (blobEncode lsDoc)
+                                            time
+              pure lsDoc
+        GithubApi.Error 404 strFilename -> Servant.throwError $ err404
+            { errBody = "Missing file: " <> textToLazyBS strFilename
+            }
+        GithubApi.Error code msg -> Servant.throwError $ err500
+            { errBody = "Couldn't retrieve page: "
+                        <> BLU.fromString (show code)
+                        <> " "
+                        <> textToLazyBS msg
+            }
+  where
+    convertMarkdown :: Text -> PandocIO Pandoc
+    convertMarkdown str =
+      let opts = def & field @"readerExtensions" .~ pandocExtensions
+      in  Pandoc.readMarkdown opts str
 
 handlePostCacheInvalidation :: [Text] -> Handler ()
 handlePostCacheInvalidation = traverse_ invalidateCache
@@ -170,9 +231,6 @@ handleGetCacheInvalidationData = do
                   )
                 , cMSCacheLatestTime
                 )
-
-textToLazyBS :: Text -> BL.ByteString
-textToLazyBS = LazyText.encodeUtf8 <<< LazyText.fromStrict
 
 handleClearCacheAll :: UserInfo -> Handler ()
 handleClearCacheAll UserInfo{..} = do
@@ -208,24 +266,51 @@ handlePostUpdateAll UserInfo{..} = do
                         <> textToLazyBS msg
             }
 
+-- end handlers
+
 invalidateCache :: Text -> Handler ()
 invalidateCache filepath = do
-    (strSystemLang, strTextLang, filename) <- case Text.splitOn "/" filepath of
-        ["cms-content", s1, s2, s3] -> pure (s1, s2, s3)
-        _ -> bail
-                $ "required: cms-content/[systemLang]/[textLang]/[filename]; got: "
-                <> textToLazyBS filepath
-    systemLang <- case readMaybe $ Text.unpack strSystemLang of
-        Nothing -> bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
-        Just s -> pure s
-    textLang <- case readMaybe $ Text.unpack strTextLang of
-        Nothing -> bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
-        Just s -> pure s
-    time <- liftIO getCurrentTime
-    runDb $ deleteBy $ UCMSCacheLatest systemLang textLang filename
-    void $ runDb $ insert $ CMSCacheLatest time
-                                           systemLang
-                                           textLang
-                                           filename
+
+    case Text.splitOn "/" filepath of
+
+      ["cms-content", s1, s2, s3] -> invalidateCacheFile s1 s2 s3
+
+      -- any file in cms-content/blog triggers cache invalidation of the whole blog
+      ["cms-content", "blog", _]  -> invalidateCacheBlog
+
+      _ -> bail
+              $ "required: cms-content/[systemLang]/[textLang]/[filename] or \
+                \cms-content/blog/[filename]; got: "
+              <> textToLazyBS filepath
   where
+    invalidateCacheFile strSystemLang strTextLang filename = do
+      systemLang <- case readMaybe $ Text.unpack strSystemLang of
+          Nothing -> bail $ "Couldn't parse SystemLang: " <> textToLazyBS strSystemLang
+          Just s -> pure s
+      textLang <- case readMaybe $ Text.unpack strTextLang of
+          Nothing -> bail $ "Couldn't parse TextLang: " <> textToLazyBS strTextLang
+          Just s -> pure s
+      time <- liftIO getCurrentTime
+      runDb $ deleteBy $ UCMSCacheLatest systemLang textLang filename
+      void $ runDb $ insert $ CMSCacheLatest time
+                                             systemLang
+                                             textLang
+                                             filename
+
+    invalidateCacheBlog = do
+      time <- liftIO getCurrentTime
+      -- a bit hacky: re-using the cache infrastructure for the blog
+      -- with systemLang = DE, textLang = DE, filename = "blog"
+      let systemLang = SystemDE
+          textLang = TextDE
+          filename = "blog"
+      runDb $ deleteBy $ UCMSCacheLatest systemLang textLang filename
+      void $ runDb $ insert $ CMSCacheLatest time
+                                             systemLang
+                                             textLang
+                                             filename
+
     bail msg = Servant.throwError $ err400 { errBody = msg }
+
+textToLazyBS :: Text -> BL.ByteString
+textToLazyBS = LazyText.encodeUtf8 <<< LazyText.fromStrict

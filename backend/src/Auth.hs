@@ -36,13 +36,12 @@ import           Control.Lens                   ( (?~)
 import           Control.Monad                  ( (>>=) )
 import           Control.Monad.Except           (lift,  MonadError
                                                 , runExceptT
-                                                , throwError, ExceptT
+                                                , throwError
                                                 )
 import           Crypto.JWT                     (verifyClaimsAt,  Audience(..)
                                                 , ClaimsSet
                                                 , JWK
                                                 , JWTError(..)
-                                                , MonadRandom
                                                 , NumericDate(..)
                                                 , StringOrURI
                                                 , bestJWSAlg

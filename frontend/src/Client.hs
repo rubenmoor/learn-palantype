@@ -251,6 +251,12 @@ getCMS
     -> Event t ()
     -> m (Event t (ReqResult () [Pandoc]))
 
+getCMSBlog
+    :: SupportsServantReflex t m
+    => Dynamic t (Either Text UTCTimeInUrl)
+    -> Event t ()
+    -> m (Event t (ReqResult () [Pandoc]))
+
 -- | meant to be called from github.com only
 --   only implemented here to satisfy the API type
 _cmsInvalidateCache
@@ -293,7 +299,7 @@ getWordList
     -> Event t ()
     -> m (Event t (ReqResult () [Text]))
 
-(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache :<|> postCacheUpdateAll) :<|> getWordList)
+(postConfigNew :<|> (getJournalAll :<|> getLocallyCreateMissingFiles) :<|> (postAuthenticate :<|> postAuthNew :<|> postDoesUserExist :<|> postDoesAliasExist :<|> postLogout) :<|> ((postAliasRename :<|> getAliasAll :<|> postAliasSetDefault :<|> postAliasVisibility) :<|> (getAppState :<|> postAppState)) :<|> postEventViewPage :<|> (getStats :<|> postStatsStart :<|> postEventStageCompleted) :<|> (getCMS :<|> getCMSBlog :<|> _cmsInvalidateCache :<|> getCacheInvalidationData :<|> postClearCacheAll :<|> postClearCache :<|> postCacheUpdateAll) :<|> getWordList)
     = client (Proxy :: Proxy RoutesApi)
              (Proxy :: Proxy (m :: * -> *))
              (Proxy :: Proxy ())
