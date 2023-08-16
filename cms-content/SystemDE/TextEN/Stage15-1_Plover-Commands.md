@@ -60,9 +60,9 @@ Your fingers of your right hand take care of any thing that opens and closes.
 | '     | single quotes   | `-LB`   | `-Fs` | {'&Hat;},{&Hat;'}     |
 | &#96; | backticks       | `-+NS`  | `-NSD`| {&#96;&Hat;},{&Hat;&#96;}     |
 
-The `"`, `'`, ``` ` ``` are added for the convenience.
+The `"`, `'`, ``` ` ``` are added for convenience.
 Plover allows to attach the character to the next and to the previous word, respectively.
-There is nothing wrong with using the fingerspelling version of `"`, `'`, and `&#96;`,
+There is nothing wrong with using the fingerspelling version of `"`, `'`, and ``` ` ```,
 you find them in [Ex. 15.5: Special Character](SystemDE/TextEN/57).
 Only in that case you have to put the space explicitly, too.
 
