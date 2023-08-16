@@ -58,9 +58,9 @@ Your fingers of your right hand take care of any thing that opens and closes.
 | {}    | brackets        | `-M`    | `-G`  | {\\{&Hat;},{&Hat;\\}} |
 | "     | double quotes   | `-+N`   | `-SD` | {"&Hat;},{&Hat;"}     |
 | '     | single quotes   | `-LB`   | `-Fs` | {'&Hat;},{&Hat;'}     |
-| &#96; | backticks       | `-+NS`  | `-NSD`| {`&Hat;},{&Hat;`}     |
+| &#96; | backticks       | `-+NS`  | `-NSD`| {&#96;&Hat;},{&Hat;&#96;}     |
 
-The `"`, `'`, `&#96` are added for the convenience.
+The `"`, `'`, `&#96;` are added for the convenience.
 Plover allows to attach the character to the next and to the previous word, respectively.
 There is nothing wrong with using the fingerspelling version of `"`, `'`, and `&#96;`,
 you find them in [Ex. 15.5: Special Character](SystemDE/TextEN/57).
