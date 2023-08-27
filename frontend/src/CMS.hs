@@ -148,7 +148,14 @@ elCMS numParts = mdo
     dynPair <- el "div" $ widgetHold (pure (Nothing, never)) $
       attachWith (\t e -> (t,) <$> e) (current dynLatest) evRespCMS <&> \case
         Left  str             -> text ("CMS error: " <> str) $> (Nothing, never)
-        Right (latest, parts) -> elCMSMenu numParts latest parts
+        Right (latest, parts) -> do
+          let n = length parts
+          mParts <- if n == numParts
+            then pure $ Just parts
+            else do
+              text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> " expected parts."
+              pure Nothing
+          (mParts,) <$> elCMSMenu latest
 
     let evRefresh = switchDyn $ snd <$> dynPair
     evRespCMSCache <- request $ getCacheInvalidationData evRefresh
@@ -175,23 +182,15 @@ elCMSMenu
        , PostBuild t m
        , Prerender t m
        )
-    => Int
-    -> UTCTime
-    -> [Pandoc]
-    -> m (Maybe [Pandoc], Event t ())
-elCMSMenu numParts latest parts = do
-    Env {..} <- ask
-    let
-        n = length parts
-        Navigation{..} = envNavigation
+    => UTCTime
+    -> m (Event t ())
+elCMSMenu latest =
+    elClass "div" "text-xs float-right text-zinc-500 italic" do
 
-    mParts <- if n == numParts
-      then pure $ Just parts
-      else do
-        text $ "CMS error: " <> showt n <> " out of " <> showt numParts <> " expected parts."
-        pure Nothing
+      Env {..} <- ask
+      let
+          Navigation{..} = envNavigation
 
-    evRefresh <- elClass "div" "text-xs float-right text-zinc-500 italic" $ do
       elAttr "span" (  "class" =: "pr-1"
                     <> "title" =: "Latest update"
                     )
@@ -231,8 +230,6 @@ elCMSMenu numParts latest parts = do
             Right _ -> iFa "text-green-500 fas fa-check"
 
       pure $ domEvent Click domRefresh
-
-    pure (mParts, evRefresh)
 
 whenIsAdmin :: Monad m => m () -> Session -> m ()
 whenIsAdmin action (SessionUser SessionData{..}) | sdIsSiteAdmin = action

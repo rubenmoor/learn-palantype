@@ -10,6 +10,7 @@ module PageBlog
   ( pageBlog
   ) where
 
+import Data.Tuple (fst, snd)
 import qualified Data.Map.Strict               as Map
 import           Control.Monad.Fix              ( MonadFix )
 import Reflex.Dom
@@ -30,6 +31,7 @@ import Reflex.Dom
       elAttr,
       elClass,
       text,
+      updated,
       widgetHold,
       widgetHold_,
       MonadHold,
@@ -50,7 +52,7 @@ import Data.Maybe (fromMaybe, Maybe (..))
 import Palantype.Common (SystemLang(..))
 import Common.Model (TextLang(..), UTCTimeInUrl (..))
 import Client (request, getCMSBlog, getCacheInvalidationData, getAuthData, postClearCache)
-import Data.Functor (($>), (<$>))
+import Data.Functor (fmap, ($>), (<$>))
 import Control.Lens ( set, (<&>) )
 import Data.Generics.Product ( HasField(field) )
 import TextShow (TextShow(..))
@@ -94,17 +96,16 @@ pageBlog getLoadedAndBuilt = mdo
             . stCMSCacheInvalidationData
           <$> dynState
 
-    -- (evRespCMS :: Event t (Either Text [Pandoc])) <- request $
     evRespCMS <- request $
       getCMSBlog (Right . UTCTimeInUrl <$> dynLatest)
         $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
 
-    dynRefresh <- el "div" $ widgetHold (pure never) $
+    dynPair <- el "div" $ widgetHold (pure ([], never)) $
       attachWith (\t e -> (t,) <$> e) (current dynLatest) evRespCMS <&> \case
-        Left  str           -> text ("CMS error: " <> str) $> never
-        Right (latest, doc) -> tag (constant (doc :: [Pandoc])) <$> elCMSMenu latest
+        Left  str           -> text ("CMS error: " <> str) $> ([], never)
+        Right (latest, doc) -> (doc,) <$> elCMSMenu latest
 
-    let evRefresh = switchDyn dynRefresh
+    let evRefresh = switchDyn $ snd <$> dynPair
     evRespCMSCache <- request $ getCacheInvalidationData $ void evRefresh
     let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
     updateState $ evSuccCMSCache <&> \ci ->
@@ -119,7 +120,7 @@ pageBlog getLoadedAndBuilt = mdo
     updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->
       [ field @"stLoading" .~ LoadingError str ]
 
-    elCMSContent (mconcat <$> evRefresh)
+    elCMSContent (fmap mconcat $ updated $ fst <$> dynPair)
 
 elCMSMenu
   :: forall (m :: * -> *) t
@@ -145,9 +146,9 @@ elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
       ) $ iFa' "fas fa-sync"
 
     elAttr "a" (  "href" =: "https://github.com/rubenmoor/learn-palantype/blob/main/cms-content/blog/"
-                <> "title" =: "Edit on Github"
-                <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
-                ) $ iFa "fas fa-edit"
+               <> "title" =: "Edit on Github"
+               <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
+               ) $ iFa "fas fa-edit"
 
     let dynSession = stSession <$> dynState
     dyn_ $ dynSession <&> whenIsAdmin do
