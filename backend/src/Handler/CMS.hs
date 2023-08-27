@@ -8,6 +8,8 @@ module Handler.CMS
     ( handlers
     ) where
 
+import qualified Data.Time.Format              as Time
+import           Data.Time                      ( defaultTimeLocale )
 import           AppData                        ( Handler )
 import           Common.Api                     ( RoutesCMS )
 import           Common.Model                   ( TextLang (TextDE), UTCTimeInUrl (UTCTimeInUrl), CacheContentType (..) )
@@ -82,6 +84,7 @@ import Data.Generics.Product (field)
 import Control.Lens ((.~))
 import Snap.Core (modifyResponse, setHeader)
 import Data.Int (Int)
+import TextShow (showt)
 import qualified Data.Text.IO as Text
 
 separatorToken :: Text
@@ -118,7 +121,11 @@ handleCMSGet systemLang textLang filename (UTCTimeInUrl time) = do
         Nothing -> pure Nothing
     case mFromCache of
       Just c -> do
-        liftIO $ Text.putStrLn "Retrieved page from cache"
+        liftIO $ Text.putStrLn $ "Retrieved page from cache: "
+          <> showt systemLang <> "/"
+          <> showt textLang   <> "/"
+          <> filename   <> " "
+          <> Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" time)
         pure c
       Nothing -> GithubApi.getTextFile systemLang textLang filename >>= \case
         GithubApi.Success str -> liftIO (Pandoc.runIO $ convertMarkdown str) >>= \case
@@ -175,16 +182,12 @@ handleCMSBlogGet (UTCTimeInUrl time) = do
             -- TODO: other content types
         Nothing -> pure Nothing
     case mFromCache of
-      Just c  -> c <$ liftIO (Text.putStrLn "Retrieved page from cache")
+      Just c  -> c <$ liftIO (Text.putStrLn "Retrieved page from cache: blog")
       Nothing -> GithubApi.getBlogFiles >>= \case
         GithubApi.Success strs -> do
           lsEMarkdown <- liftIO (traverse (Pandoc.runIO <<< convertMarkdown) strs)
           case sequence lsEMarkdown of
-            Left err -> Servant.throwError $ err500
-                { errBody =
-                    "Couldn't convert markdown"
-                        <> BLU.fromString (show err)
-                }
+            Left  err   -> throw500 err
             Right lsDoc -> do
               liftIO $ Text.putStrLn "Fetched from GitHub"
               runDb $ Esqueleto.delete $ from $ \c ->
@@ -208,6 +211,10 @@ handleCMSBlogGet (UTCTimeInUrl time) = do
                         <> textToLazyBS msg
             }
   where
+    throw500 err = Servant.throwError $ err500
+      { errBody = "Couldn't convert markdown" <> BLU.fromString (show err)
+      }
+
     convertMarkdown :: Text -> PandocIO Pandoc
     convertMarkdown str =
       let opts = def & field @"readerExtensions" .~ pandocExtensions

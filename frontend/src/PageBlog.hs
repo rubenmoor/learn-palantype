@@ -161,7 +161,7 @@ elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
         evRespAll <- request $ postClearCache
           dynAuthData
           (constDyn $ Right SystemDE)
-          (constDyn $ Right TextEN)
+          (constDyn $ Right TextDE)
           (constDyn $ Right "blog"  )
           $ domEvent Click domSyncServerAll
         widgetHold_ blank $ evRespAll <&> \case

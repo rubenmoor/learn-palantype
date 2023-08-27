@@ -86,6 +86,7 @@ getBlogFiles = do
     mAuth <- asks toMAuth
 
     lsEContents <- getFileListBlog >>= \case
+      Success []        -> pure [ Left (500, "no files at cms-content/blog")]
       Success files     -> liftIO $ traverse (getFileContents mAuth) files
       Error   code  msg -> pure [ Left (code, msg)]
 
@@ -143,11 +144,16 @@ getFileListBlog = do
         Error 500 $ "Url " <> Text.pack u <> " invalid: " <> Text.pack msg
 
       Right resp                            ->
-        Success $ resp ^.. responseBody . key "tree" . _Array . each
-          . filteredBy (key "type" . _String . only "blob")
-          . key "path" . _String . filtered checkStr
+        let fileList =
+                resp ^.. responseBody . key "tree" . _Array . each
+              . filteredBy (key "type" . _String . only "blob")
+              . key "path" . _String . filtered checkStr
+        in  if null fileList
+            then Error 500 $ "No files at " <> strLocation
+            else Success fileList
   where
-    checkStr str = "cms-content/blog/" `Text.isPrefixOf` str
+    strLocation = "cms-content/blog/"
+    checkStr str = strLocation `Text.isPrefixOf` str
 
 getFileList :: Text -> Handler (Response [Text])
 getFileList ext = do

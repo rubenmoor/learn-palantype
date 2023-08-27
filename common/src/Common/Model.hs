@@ -38,6 +38,7 @@ import qualified Text.ParserCombinators.ReadPrec as ReadPrec
 import Text.ParserCombinators.ReadP (string)
 import Data.Foldable (asum)
 import Data.Functor (($>))
+import TextShow
 
 newtype UTCTimeInUrl = UTCTimeInUrl { unUTCTimeInUrl :: UTCTime }
 
@@ -219,6 +220,11 @@ data TextLang
 
 instance ToJSON TextLang
 instance FromJSON TextLang
+
+instance TextShow TextLang where
+  showb = \case
+    TextDE -> fromText "TextDE"
+    TextEN -> fromText "TextEN"
 
 instance Read TextLang where
   readPrec = ReadPrec.lift $ asum $ (\(str, lang) -> string str $> lang) <$>
