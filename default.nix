@@ -148,13 +148,13 @@ in
         sha256 = "sha256-6UViAujrl7odTPvnseIx+x+/9HBhoKFbeM8Yo2P3iwQ=";
       }) {};
 
-      #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex {};
-      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-        owner = "rubenmoor";
-        repo = "servant-reflex";
-        rev = "06bd09d0777c658da5269840be60d6cb24a264e8";
-        sha256 = "0s23q4cz93dw8wwz3n94l69qw5syvh37hj7bgdy5i0bb8b9g2617";
-      }) {};
+      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex {};
+      # servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+      #   owner = "rubenmoor";
+      #   repo = "servant-reflex";
+      #   rev = "06bd09d0777c658da5269840be60d6cb24a264e8";
+      #   sha256 = "0s23q4cz93dw8wwz3n94l69qw5syvh37hj7bgdy5i0bb8b9g2617";
+      # }) {};
 
       #servant-snap = self.callCabal2nix "servant-snap" ../servant-snap {};
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
