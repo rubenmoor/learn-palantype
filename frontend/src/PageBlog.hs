@@ -1,27 +1,171 @@
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TupleSections #-}
+
 module PageBlog
   ( pageBlog
   ) where
 
+import qualified Data.Map.Strict               as Map
 import           Control.Monad.Fix              ( MonadFix )
-import           Reflex.Dom                     ( DomBuilder(..)
-                                                , MonadHold(..)
-                                                , PostBuild(..)
-                                                , Prerender
-                                                , blank
-                                                )
-import State (Env(..))
-import Control.Monad.Reader (MonadReader(ask))
+import Reflex.Dom
+    ( (.~),
+      Reflex(constant, Event, current, never),
+      attachWith,
+      constDyn,
+      fanEither,
+      leftmost,
+      tag,
+      holdUniqDyn,
+      switchDyn,
+      (=:),
+      blank,
+      dyn_,
+      el,
+      elAttr,
+      elClass,
+      text,
+      widgetHold,
+      widgetHold_,
+      MonadHold,
+      PerformEvent(Performable),
+      PostBuild,
+      TriggerEvent,
+      DomBuilder,
+      HasDomEvent(domEvent),
+      EventName(Click),
+      Prerender, EventWriter )
+import State (Env(..), State (..), updateState, Loading (..), Session (..))
+import Control.Monad.Reader (MonadReader(ask), void)
+import Control.Monad.IO.Class (MonadIO)
+import Data.Time (UTCTime (..), Day (..), secondsToDiffTime, defaultTimeLocale)
+import qualified Data.Time.Format as Time
+import qualified Data.Text as Text
+import Data.Maybe (fromMaybe, Maybe (..))
+import Palantype.Common (SystemLang(..))
+import Common.Model (TextLang(..), UTCTimeInUrl (..))
+import Client (request, getCMSBlog, getCacheInvalidationData, getAuthData, postClearCache)
+import Data.Functor (($>), (<$>))
+import Control.Lens ( set, (<&>) )
+import Data.Generics.Product ( HasField(field) )
+import TextShow (TextShow(..))
+import Data.Either (isRight, Either (..), either)
+import Witherable (Filterable(..))
+import Control.Category ( Category((.)) )
+import Data.Function (($), const)
+import Control.Applicative (Applicative(..))
+import Data.Semigroup (Semigroup(..), Endo)
+import CMS (elCMSContent)
+import Shared (iFa, iFa')
+import Control.Monad (Monad)
+import           Common.Auth                    ( SessionData(..) )
+import Text.Pandoc.Definition ( Pandoc )
+import Data.Monoid (Monoid(mconcat))
 
 pageBlog
-  :: forall t (m :: * -> *)
+  :: forall key t (m :: * -> *)
   . ( DomBuilder t m
-    , PostBuild t m
-    , Prerender t m
+    , EventWriter t (Endo State) m
     , MonadFix m
     , MonadHold t m
+    , MonadIO (Performable m)
+    , MonadReader (Env t key) m
+    , PerformEvent t m
+    , PostBuild t m
+    , Prerender t m
+    , TriggerEvent t m
     )
   => m ()
-pageBlog = do
-    -- Env {..} <- ask
-    -- evLoadedAndBuilt <- envGetLoadedAndBuilt
+pageBlog = mdo
+    Env {..} <- ask
+    evLoadedAndBuilt <- envGetLoadedAndBuilt
     blank
+
+    let
+        dynLatest =
+              fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
+            . Map.lookup (SystemDE, TextDE, "blog")
+            . stCMSCacheInvalidationData
+          <$> envDynState
+
+    -- (evRespCMS :: Event t (Either Text [Pandoc])) <- request $
+    evRespCMS <- request $
+      getCMSBlog (Right . UTCTimeInUrl <$> dynLatest)
+        $ leftmost [evLoadedAndBuilt, void evSuccCMSCache]
+
+    dynRefresh <- el "div" $ widgetHold (pure never) $
+      attachWith (\t e -> (t,) <$> e) (current dynLatest) evRespCMS <&> \case
+        Left  str           -> text ("CMS error: " <> str) $> never
+        Right (latest, doc) -> tag (constant (doc :: [Pandoc])) <$> elCMSMenu latest
+
+    let evRefresh = switchDyn dynRefresh
+    evRespCMSCache <- request $ getCacheInvalidationData $ void evRefresh
+    let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
+    updateState $ evSuccCMSCache <&> \ci ->
+      [ set (field @"stCMSCacheInvalidationData") ci ]
+    widgetHold_ blank $ evFailCMSCache <&> \msg ->
+      el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
+
+    updateState $ evRefresh $>
+      [ field @"stLoading" .~ LoadingStill "Retrieving CMS content" ]
+    updateState $ filter isRight evRespCMS $>
+      [ field @"stLoading" .~ LoadingDone ]
+    updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->
+      [ field @"stLoading" .~ LoadingError str ]
+
+    elCMSContent (mconcat <$> evRefresh)
+
+elCMSMenu
+    :: ( MonadReader (Env t key) m
+       , DomBuilder t m
+       , MonadFix m
+       , MonadHold t m
+       , PostBuild t m
+       , Prerender t m
+       )
+    => UTCTime
+    -> m (Event t ())
+elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
+    Env {..} <- ask
+    elAttr "span" (  "class" =: "pr-1"
+                  <> "title" =: "Latest update"
+                  )
+      $ text $ Text.pack (Time.formatTime defaultTimeLocale "%Y-%m-%d %l:%M%P" latest) <> " "
+
+    domRefresh <- elAttr "span"
+      (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+      <> "title" =: "Refresh contents"
+      ) $ iFa' "fas fa-sync"
+
+    elAttr "a" (  "href" =: "https://github.com/rubenmoor/learn-palantype/blob/main/cms-content/blog/"
+                <> "title" =: "Edit on Github"
+                <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
+                ) $ iFa "fas fa-edit"
+
+    let dynSession = stSession <$> envDynState
+    dyn_ $ dynSession <&> whenIsAdmin do
+
+        domSyncServerAll <- elAttr "span"
+          (  "class" =: "cursor-pointer hover:text-grayishblue-800 mx-1"
+          <> "title" =: "Clear server cache"
+          ) $ iFa' "fas fa-skull"
+
+        dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
+        evRespAll <- request $ postClearCache
+          dynAuthData
+          (constDyn $ Right SystemDE)
+          (constDyn $ Right TextEN)
+          (constDyn $ Right "blog"  )
+          $ domEvent Click domSyncServerAll
+        widgetHold_ blank $ evRespAll <&> \case
+          Left  _ -> iFa "text-red-500 fas fa-times"
+          Right _ -> iFa "text-green-500 fas fa-check"
+
+    pure $ domEvent Click domRefresh
+
+whenIsAdmin :: Monad m => m () -> Session -> m ()
+whenIsAdmin action (SessionUser SessionData{..}) | sdIsSiteAdmin = action
+whenIsAdmin _ _ = blank
