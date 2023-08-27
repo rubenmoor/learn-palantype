@@ -4,6 +4,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE RankNTypes #-}
 
 module PageBlog
   ( pageBlog
@@ -14,6 +15,7 @@ import           Control.Monad.Fix              ( MonadFix )
 import Reflex.Dom
     ( (.~),
       Reflex(constant, Event, current, never),
+      Dynamic,
       attachWith,
       constDyn,
       fanEither,
@@ -38,7 +40,7 @@ import Reflex.Dom
       HasDomEvent(domEvent),
       EventName(Click),
       Prerender, EventWriter )
-import State (Env(..), State (..), updateState, Loading (..), Session (..))
+import State (State (..), updateState, Loading (..), Session (..), GetLoadedAndBuilt)
 import Control.Monad.Reader (MonadReader(ask), void)
 import Control.Monad.IO.Class (MonadIO)
 import Data.Time (UTCTime (..), Day (..), secondsToDiffTime, defaultTimeLocale)
@@ -66,30 +68,31 @@ import Text.Pandoc.Definition ( Pandoc )
 import Data.Monoid (Monoid(mconcat))
 
 pageBlog
-  :: forall key t (m :: * -> *)
+  :: forall (m :: * -> *) t
   . ( DomBuilder t m
     , EventWriter t (Endo State) m
     , MonadFix m
     , MonadHold t m
     , MonadIO (Performable m)
-    , MonadReader (Env t key) m
+    , MonadReader (Dynamic t State) m
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
     , TriggerEvent t m
     )
-  => m ()
-pageBlog = mdo
-    Env {..} <- ask
-    evLoadedAndBuilt <- envGetLoadedAndBuilt
-    blank
+  => GetLoadedAndBuilt t
+  -> m ()
+pageBlog getLoadedAndBuilt = mdo
+
+    dynState <- ask
+    evLoadedAndBuilt <- getLoadedAndBuilt
 
     let
         dynLatest =
               fromMaybe (UTCTime (ModifiedJulianDay 0) (secondsToDiffTime 0))
             . Map.lookup (SystemDE, TextDE, "blog")
             . stCMSCacheInvalidationData
-          <$> envDynState
+          <$> dynState
 
     -- (evRespCMS :: Event t (Either Text [Pandoc])) <- request $
     evRespCMS <- request $
@@ -119,17 +122,18 @@ pageBlog = mdo
     elCMSContent (mconcat <$> evRefresh)
 
 elCMSMenu
-    :: ( MonadReader (Env t key) m
-       , DomBuilder t m
-       , MonadFix m
-       , MonadHold t m
-       , PostBuild t m
-       , Prerender t m
-       )
-    => UTCTime
-    -> m (Event t ())
+  :: forall (m :: * -> *) t
+   . ( DomBuilder t m
+     , MonadFix m
+     , MonadHold t m
+     , MonadReader (Dynamic t State) m
+     , PostBuild t m
+     , Prerender t m
+     )
+  => UTCTime
+  -> m (Event t ())
 elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
-    Env {..} <- ask
+    dynState <- ask
     elAttr "span" (  "class" =: "pr-1"
                   <> "title" =: "Latest update"
                   )
@@ -145,7 +149,7 @@ elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
                 <> "class" =: "text-zinc-500 hover:text-grayishblue-800 mx-1 cursor-pointer"
                 ) $ iFa "fas fa-edit"
 
-    let dynSession = stSession <$> envDynState
+    let dynSession = stSession <$> dynState
     dyn_ $ dynSession <&> whenIsAdmin do
 
         domSyncServerAll <- elAttr "span"
@@ -153,7 +157,7 @@ elCMSMenu latest = elClass "div" "text-xs float-right text-zinc-500 italic" do
           <> "title" =: "Clear server cache"
           ) $ iFa' "fas fa-skull"
 
-        dynAuthData <- holdUniqDyn $ getAuthData <$> envDynState
+        dynAuthData <- holdUniqDyn $ getAuthData <$> dynState
         evRespAll <- request $ postClearCache
           dynAuthData
           (constDyn $ Right SystemDE)

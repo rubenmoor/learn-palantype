@@ -331,9 +331,7 @@ frontendBody = mdo
             FrontendRoute_WordList -> do
               getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_WordList :/ ())
               pageWordList
-            FrontendRoute_Blog -> do
-              getLoadedAndBuilt >>= requestPostViewPage (constDyn $ FrontendRoute_Blog :/ ())
-              pageBlog
+            FrontendRoute_Blog -> pageBlog getLoadedAndBuilt
 
     blank
 
