@@ -33,7 +33,7 @@ import           Control.Lens                   ( (?~)
                                                 , (^?)
                                                 , _Just
                                                 )
-import           Control.Monad                  ( (>>=) )
+import Control.Monad ( (>>=), (=<<) )
 import           Control.Monad.Except           (lift,  MonadError
                                                 , runExceptT
                                                 , throwError
@@ -62,10 +62,7 @@ import           Data.Bool                      ( Bool(..) )
 import qualified Data.ByteString.Lazy          as BL
 import           Data.Either                    ( Either (..), either )
 import           Data.Eq                        ( Eq((==)) )
-import           Data.Function                  ( ($)
-                                                , (&)
-
-                                                )
+import Data.Function ( ($), (&), const )
 import           Data.Functor                   ((<$>)
                                                 )
 import           Data.Maybe                     (Maybe(..)
@@ -94,19 +91,15 @@ import           Database.Gerippe               ( Key
                                                 )
 import qualified Database.Gerippe
 import           GHC.Generics                   ( Generic )
-import           Servant.Server                 ( HasContextEntry
-                                                    ( getContextEntry
-                                                    )
-                                                , HasServer(..)
-                                                , Context((:.), EmptyContext)
-                                                , ServantErr(..)
-                                                , err500
-                                                )
+import Servant.Server
+    ( HasContextEntry(getContextEntry),
+      HasServer(..),
+      Context((:.), EmptyContext),
+      ServantErr(..),
+      err500,
+      err401 )
 import qualified Servant.Server                as Servant
-import           Snap.Core                      ( Snap
-                                                , getHeader
-                                                , getRequest
-                                                )
+import Snap.Core ( Snap, getHeader, getRequest, MonadSnap )
 import           Servant.API                    ( (:>)
                                                 , parseHeader
                                                 )
@@ -131,13 +124,9 @@ import           Database                       ( runDb
                                                 , runDb'
                                                 )
 import qualified          DbAdapter                      as Db
-import Snap.Core (MonadSnap)
 import GHC.Num (Num((*)))
 import Data.Either.Combinators (mapLeft)
 import Control.Monad.Trans.Except (except)
-import Servant.Server (err401)
-import Control.Monad ((=<<))
-import Data.Function (const)
 import System.IO (IO)
 
 audience :: StringOrURI

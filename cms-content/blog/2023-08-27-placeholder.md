@@ -1,7 +1,11 @@
 ---
 title: Placeholder Document
-subtitle: Testing waters with a markdown blog
 author: gurubm
-lang: en-GB
+date: 2023-08-27
 ---
-# Placeholder
+
+This is a placeholder for the blog.
+
+## Caption
+
+Content goes here, of course.

@@ -38,7 +38,7 @@ import qualified Text.ParserCombinators.ReadPrec as ReadPrec
 import Text.ParserCombinators.ReadP (string)
 import Data.Foldable (asum)
 import Data.Functor (($>))
-import TextShow
+import TextShow ( TextShow(showb), fromText )
 
 newtype UTCTimeInUrl = UTCTimeInUrl { unUTCTimeInUrl :: UTCTime }
 

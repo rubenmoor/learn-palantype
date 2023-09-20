@@ -47,7 +47,8 @@ handlers =
 
 handleWordList :: Text -> Int -> Bool -> Handler [Text]
 handleWordList letters max bCaseInsensitive = do
-    let sorted = Text.lines $ Text.decodeUtf8 $(staticFileContent "german.utf8.dic.sorted")
+    let sorted = Text.lines $
+          Text.decodeUtf8 $(staticFileContent "german.utf8.dic.sorted")
         ls = filter everyCharInSet sorted
     pure if max > 0 then take max ls else ls
   where

@@ -562,7 +562,7 @@ landingPage
     , SetRoute t (R FrontendRoute) m
     )
   => m ()
-landingPage = elClass "div" "bg-grayishblue-300" $ do
+landingPage = elClass "div" "bg-grayishblue-300" do
     elClass "div" "w-full h-28 pt-8 pl-8 text-6xl text-grayishblue-900 font-serif" $ text "Palantype DE"
     elClass "div" "bg-grayishblue-200 w-full text-center p-8" $ do
         elClass "div" "flex flex-wrap items-center justify-center" $ do

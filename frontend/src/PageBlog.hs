@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
@@ -15,13 +16,12 @@ import qualified Data.Map.Strict               as Map
 import           Control.Monad.Fix              ( MonadFix )
 import Reflex.Dom
     ( (.~),
-      Reflex(constant, Event, current, never),
+      Reflex(Event, current, never),
       Dynamic,
       attachWith,
       constDyn,
       fanEither,
       leftmost,
-      tag,
       holdUniqDyn,
       switchDyn,
       (=:),
@@ -52,7 +52,7 @@ import Data.Maybe (fromMaybe, Maybe (..))
 import Palantype.Common (SystemLang(..))
 import Common.Model (TextLang(..), UTCTimeInUrl (..))
 import Client (request, getCMSBlog, getCacheInvalidationData, getAuthData, postClearCache)
-import Data.Functor (fmap, ($>), (<$>))
+import Data.Functor (($>), (<$>))
 import Control.Lens ( set, (<&>) )
 import Data.Generics.Product ( HasField(field) )
 import TextShow (TextShow(..))
@@ -62,12 +62,14 @@ import Control.Category ( Category((.)) )
 import Data.Function (($), const)
 import Control.Applicative (Applicative(..))
 import Data.Semigroup (Semigroup(..), Endo)
-import CMS (elCMSContent)
-import Shared (iFa, iFa')
-import Control.Monad (Monad)
-import           Common.Auth                    ( SessionData(..) )
-import Text.Pandoc.Definition ( Pandoc )
-import Data.Monoid (Monoid(mconcat))
+import Shared (iFa, iFa', elRouteLink)
+import Control.Monad (Monad, join)
+import Common.Auth ( SessionData(..) )
+import Reflex.Dom.Pandoc (elPandoc, defaultConfig, elPandocInlines)
+import Text.Pandoc.Definition (Pandoc(..), docTitle, docDate, docAuthors)
+import Common.Route (FrontendRoute(FrontendRoute_Main))
+import Obelisk.Route.Frontend         ( pattern (:/), SetRoute, R, RouteToUrl)
+import Data.Foldable (for_)
 
 pageBlog
   :: forall (m :: * -> *) t
@@ -80,11 +82,13 @@ pageBlog
     , PerformEvent t m
     , PostBuild t m
     , Prerender t m
+    , RouteToUrl (R FrontendRoute) m
+    , SetRoute t (R FrontendRoute) m
     , TriggerEvent t m
     )
   => GetLoadedAndBuilt t
   -> m ()
-pageBlog getLoadedAndBuilt = mdo
+pageBlog getLoadedAndBuilt = elContainer mdo
 
     dynState <- ask
     evLoadedAndBuilt <- getLoadedAndBuilt
@@ -108,19 +112,48 @@ pageBlog getLoadedAndBuilt = mdo
     let evRefresh = switchDyn $ snd <$> dynPair
     evRespCMSCache <- request $ getCacheInvalidationData $ void evRefresh
     let (evFailCMSCache, evSuccCMSCache) = fanEither evRespCMSCache
+
     updateState $ evSuccCMSCache <&> \ci ->
-      [ set (field @"stCMSCacheInvalidationData") ci ]
+      [ set (field @"stCMSCacheInvalidationData") ci
+      ]
+
     widgetHold_ blank $ evFailCMSCache <&> \msg ->
       el "div" $ text $ "Could not get CMS cache invalidation data" <> showt msg
 
     updateState $ evRefresh $>
-      [ field @"stLoading" .~ LoadingStill "Retrieving CMS content" ]
+      [ field @"stLoading" .~ LoadingStill "Retrieving CMS content"
+      ]
     updateState $ filter isRight evRespCMS $>
-      [ field @"stLoading" .~ LoadingDone ]
+      [ field @"stLoading" .~ LoadingDone
+      ]
     updateState $ mapMaybe (either Just $ const Nothing) evRespCMS <&> \str ->
-      [ field @"stLoading" .~ LoadingError str ]
+      [ field @"stLoading" .~ LoadingError str
+      ]
 
-    elCMSContent (fmap mconcat $ updated $ fst <$> dynPair)
+    let
+        elWaitingForCMS = elClass "span" "text-xs italic" $
+          text "waiting for content-management-system"
+        evContent = updated (fst <$> dynPair)
+
+    widgetHold_ elWaitingForCMS $ evContent <&> \lsPandoc ->
+      elClass "div" "my-prose" $ for_ lsPandoc \pandoc@(Pandoc meta _) -> do
+        el "h3" $ elPandocInlines $ docDate meta
+        el "h1" $ elPandocInlines $ docTitle meta
+        el "p" do
+          text "by "
+          elPandocInlines $ join $ docAuthors meta
+        elPandoc defaultConfig pandoc
+        el "hr" blank
+  where
+    elContainer h = do
+      elClass "div" "w-full h-28 pt-8 px-8 text-6xl bg-grayishblue-300 \
+                    \text-grayishblue-900" do
+        elRouteLink (FrontendRoute_Main :/ ()) $
+          elClass "span" "float-left font-serif" $ text "Palantype DE"
+        elClass "span" "float-right" $ text "Blog"
+        elClass "br" "clear-both" blank
+      elClass "div" "px-8" h
+
 
 elCMSMenu
   :: forall (m :: * -> *) t
