@@ -31,7 +31,7 @@ the system will output the word uncapitalized and leave the decision to you.
 |       | `F-  ` | retroactively delete space        | {*!}            |
 | .     | `+-  ` | full stop: period                 | {^.}{-&#124;}   |
 | :     | `M-  ` | attach colon                      | {^:}            |
-| :     | `NM- ` | colon and capitalize              | {^:}{-&#124;}   |
+| :     | `SM- ` | colon and capitalize              | {^:}{-&#124;}   |
 | ?     | `N+- ` | question mark and capitalize      | {^?}{-&#124;}   |
 | !     | `NL- ` | exclamation mark and capitalize   | {^!}{-&#124;}   |
 | #     | `N+- ` | hash with next word attached      | {\#^}           |
@@ -101,7 +101,7 @@ All but the first follow the same scheme: `DSN+-` plus some letter related to th
 | `DSN+-S` | {PLOVER:SUGGESTIONS}     |
 | `DSN+-F` | {PLOVER:FOCUS}           |
 | `DSN+-G` | {PLOVER:CONFIGURE}       |
-| `DSN++G` | {PLOVER:CONFIGURE}       |
+| `DSN++G` | {PLOVER:QUIT}            |
 |          |                          |
 
 Sooner or later you will add your own dictionary entries, or make adjustments to the default.

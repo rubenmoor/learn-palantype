@@ -68,3 +68,50 @@ this isn't really any strict limit.
 For this particular key combination, there exists already a steno code in the command keys:
 
 `N++NSD`
+
+### Collisions and exclusions
+
+Unfortunately, some of the steno codes that are implied by the command key mode
+are already in use.
+When a steno code has competing meanings, there is a collision that needs resolution.
+Here is a list of all collisions:
+
+| steno code   | command      | word         |
+|--------------|--------------|--------------|
+| A+S          | WIN + a      | aß           |
+| A+SD         | WIN + A      | aßt          |
+| A+ʃD         | CTRL + A     | acht         |
+| E+ʃD         | CTRL + E     | echt         |
+| FG+O         | ALT + F12    | quo          |
+| SG+I         | WIN + F11    | Ski          |
+| ʃG+O         | CTRL + F12	  | zwo          |
+
+If there were a lot of collisions, we would have to reconsider the choice of
+characters that trigger the special mode.
+Luckily it's only a handful and the relatively simple scheme doesn't seem like
+such a bad choice.
+
+But still, something needs to be done.
+By default, the plover software will use the first valid code it finds.
+Given that the codes are found in different dictionaries, in theory, the user
+could just put either one of the dictionaries on top of the list.
+This would then allow to set the priority on either words or commands.
+However, this will also result in unexpected behavior for the affected steno
+codes in the majority of cases.
+
+Imagine you want expect to type *echt* and you trigger some shortcut in whatever
+program you happen to be using instead.
+But the same goes the other way round:
+Imagine you don't want to do any text input and really want to reach `CTRL + E`.
+The fact that this kind of situation is unlikely to arise doesn't help;
+it just makes it much harder to figure out what's going on.
+
+The solution is to leave the word generation intact and instead exclude all of
+the above steno codes from the command generation.
+That means none of the commands in the list above actually work.
+Or put differently: the steno codes always produce the word and never the command.
+In case you want to use one of the commands, you have two options:
+
+First, you can add your own, specific steno code to reach the command.
+Second, you can (sometimes) re-configure the software in question to rely on a
+different shortcut.

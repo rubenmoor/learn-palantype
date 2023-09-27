@@ -782,7 +782,7 @@ elCell CellContext{..} i colspan positional =
     bPressed s = bool NotPressed IsPressed $ k `Set.member` s
     mode setPressedKeys modes =
       let
-          isNumberModeAnyActive = Set.fromList (fromIndex <$> [9, 11])
+          isNumberModeAnyActive = Set.fromList (fromIndex <$> [8, 10])
             `Set.isSubsetOf` setPressedKeys
           isCommandModeActive = Set.fromList (fromIndex <$> [8, 11])
             `Set.isSubsetOf` setPressedKeys

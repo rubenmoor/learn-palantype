@@ -137,11 +137,13 @@ pageBlog getLoadedAndBuilt = elContainer mdo
 
     widgetHold_ elWaitingForCMS $ evContent <&> \lsPandoc ->
       elClass "div" "my-prose" $ for_ lsPandoc \pandoc@(Pandoc meta _) -> do
-        el "h3" $ elPandocInlines $ docDate meta
+        el "div" do
+          elClass "span" "font-bold text-lg" $ elPandocInlines $ docDate meta
+          el "span" do
+            text " by "
+            elPandocInlines $ join $ docAuthors meta
+        el "br" blank
         el "h1" $ elPandocInlines $ docTitle meta
-        el "p" do
-          text "by "
-          elPandocInlines $ join $ docAuthors meta
         elPandoc defaultConfig pandoc
         el "hr" blank
   where
@@ -152,7 +154,7 @@ pageBlog getLoadedAndBuilt = elContainer mdo
           elClass "span" "float-left font-serif" $ text "Palantype DE"
         elClass "span" "float-right" $ text "Blog"
         elClass "br" "clear-both" blank
-      elClass "div" "px-8" h
+      elClass "div" "p-8" h
 
 
 elCMSMenu

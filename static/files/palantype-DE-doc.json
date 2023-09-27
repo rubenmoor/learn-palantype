@@ -3,7 +3,7 @@
         "PatSimple",
         {
             "0": [
-                318,
+                317,
                 [
                     [
                         "und",
@@ -823,7 +823,7 @@
         "PatReplCommon1",
         {
             "0": [
-                78873,
+                78863,
                 [
                     [
                         "zu",
@@ -848,10 +848,6 @@
                     [
                         "zum",
                         "ʃGUM"
-                    ],
-                    [
-                        "ich",
-                        "I+ʃ"
                     ],
                     [
                         "Euro",
@@ -1224,6 +1220,10 @@
                     [
                         "aktuelle",
                         "A+G/D+U/EL/LE"
+                    ],
+                    [
+                        "jedem",
+                        "FNE/DEM"
                     ]
                 ]
             ],
@@ -2858,7 +2858,7 @@
         "PatCodaComboT",
         {
             "0": [
-                13502,
+                13499,
                 [
                     [
                         "nicht",
@@ -3268,7 +3268,7 @@
         "PatOnsetR",
         {
             "0": [
-                52439,
+                52437,
                 [
                     [
                         "drei",
@@ -4088,7 +4088,7 @@
         "PatDiConsonant",
         {
             "0": [
-                25909,
+                25906,
                 [
                     [
                         "kann",
@@ -4493,7 +4493,7 @@
                 ]
             ],
             "2": [
-                6012,
+                6010,
                 [
                     [
                         "Mittwoch",
@@ -4610,10 +4610,6 @@
                     [
                         "gekippt",
                         "GE/G+IBD"
-                    ],
-                    [
-                        "nett",
-                        "NED"
                     ],
                     [
                         "Rabatt",
@@ -4894,11 +4890,15 @@
                     [
                         "tippt",
                         "D+IBD"
+                    ],
+                    [
+                        "Pott",
+                        "B+OD"
                     ]
                 ]
             ],
             "4": [
-                77784,
+                77789,
                 [
                     [
                         "müssen",
@@ -5308,7 +5308,7 @@
         "PatCodaH",
         {
             "0": [
-                939,
+                944,
                 [
                     [
                         "viel",
@@ -5431,6 +5431,10 @@
                         "F+EÜD"
                     ],
                     [
+                        "Kuh",
+                        "G+~U"
+                    ],
+                    [
                         "Hannah",
                         "SNAN/NAÜ"
                     ],
@@ -5481,6 +5485,10 @@
                     [
                         "Utah",
                         "U/D+AÜ"
+                    ],
+                    [
+                        "seht",
+                        "SEÜD"
                     ],
                     [
                         "bahnt",
@@ -5701,19 +5709,11 @@
                     [
                         "Dieckmann",
                         "D~I+G/MAN"
-                    ],
-                    [
-                        "äh",
-                        "ÄÜ"
-                    ],
-                    [
-                        "gewöhnliches",
-                        "GE/F+ÄON/LI/ʃ+ES"
                     ]
                 ]
             ],
             "1": [
-                54383,
+                54378,
                 [
                     [
                         "die",
@@ -6123,7 +6123,7 @@
         "PatCodaR",
         {
             "0": [
-                319426,
+                319425,
                 [
                     [
                         "der",
@@ -6570,7 +6570,7 @@
         "PatCodaRR",
         {
             "0": [
-                2064,
+                2062,
                 [
                     [
                         "gesperrt",
@@ -7390,132 +7390,92 @@
         "PatDt",
         {
             "0": [
-                30,
+                20,
                 [
                     [
                         "Stadt",
-                        "DSAD/-D"
+                        "DSA+FD"
                     ],
                     [
                         "Stadtrat",
-                        "DSAD/-D/SMA+D"
+                        "DSA+FD/SMA+D"
                     ],
                     [
                         "Schmidt",
-                        "ʃMID/-D"
+                        "ʃMI+FD"
                     ],
                     [
-                        "gewandt",
-                        "GE/F+AND/-D"
+                        "Set",
+                        "SED"
                     ],
                     [
                         "Reinhardt",
-                        "SMEIN/SNAÜD/-D"
-                    ],
-                    [
-                        "Arndt",
-                        "AÜND/-D"
-                    ],
-                    [
-                        "entsandt",
-                        "END/SAND/-D"
-                    ],
-                    [
-                        "Stadtbahn",
-                        "DSAD/-D/BAÜN"
+                        "SMEIN/SNAÜ+FD"
                     ],
                     [
                         "Gerhardt",
-                        "GEÜ/SNAÜD/-D"
+                        "GEÜ/SNAÜ+FD"
                     ],
                     [
                         "Burkhardt",
-                        "B~U+G/SNAÜD/-D"
+                        "B~U+G/SNAÜ+FD"
                     ],
                     [
                         "Engelhardt",
-                        "EN/GEL/SNAÜD/-D"
+                        "EN/GEL/SNAÜ+FD"
                     ],
                     [
                         "Eckhardt",
-                        "E+G/SNAÜD/-D"
+                        "E+G/SNAÜ+FD"
                     ],
                     [
                         "Hardt",
-                        "SNAÜD/-D"
+                        "SNAÜ+FD"
                     ],
                     [
                         "Leonhardt",
-                        "LEON/SNAÜD/-D"
+                        "LEON/SNAÜ+FD"
                     ],
                     [
                         "Gebhardt",
-                        "GEB/SNAÜD/-D"
+                        "GEB/SNAÜ+FD"
                     ],
                     [
                         "Eberhardt",
-                        "E/BEÜ/SNAÜD/-D"
+                        "E/BEÜ/SNAÜ+FD"
                     ],
                     [
                         "Erhardt",
-                        "EÜ/SNAÜD/-D"
+                        "EÜ/SNAÜ+FD"
                     ],
                     [
                         "Eckardt",
-                        "E/G+AÜD/-D"
+                        "E/G+AÜ+FD"
                     ],
                     [
                         "Bernhardt",
-                        "BEÜN/SNAÜD/-D"
-                    ],
-                    [
-                        "abgewandt",
-                        "AB/GE/F+AND/-D"
-                    ],
-                    [
-                        "Berendt",
-                        "BE/SMEND/-D"
+                        "BEÜN/SNAÜ+FD"
                     ],
                     [
                         "Fachwerkstadt",
-                        "FA+ʃ/F+EÜ+G/DSAD/-D"
-                    ],
-                    [
-                        "Liebstadt",
-                        "LIB/DSAD/-D"
+                        "FA+ʃ/F+EÜ+G/DSA+FD"
                     ],
                     [
                         "Randstadt",
-                        "SMAND/DSAD/-D"
+                        "SMAND/DSA+FD"
                     ],
                     [
                         "Wahlstadt",
-                        "F+AL/DSAD/-D"
-                    ],
-                    [
-                        "Stadtwahl",
-                        "DSAD/-D/F+AÜL"
-                    ],
-                    [
-                        "zurückgewandt",
-                        "ʃGU/SMÜ+G/GE/F+AND/-D"
-                    ],
-                    [
-                        "Großstadttraumes",
-                        "GMO+S/DSAD/-D/-D/SMAU/MES"
-                    ],
-                    [
-                        "Großstadttraum",
-                        "GMO+S/DSAD/-D/-D/SMAUM"
+                        "F+AL/DSA+FD"
                     ],
                     [
                         "Bettstadt",
-                        "BED/DSAD/-D"
+                        "BED/DSA+FD"
                     ]
                 ]
             ],
             "2": [
-                2746,
+                2755,
                 [
                     [
                         "Hauptstadt",
@@ -7552,6 +7512,10 @@
                     [
                         "Neustadt",
                         "NEU/DSAD"
+                    ],
+                    [
+                        "gewandt",
+                        "GE/F+AND"
                     ],
                     [
                         "Stadthalle",
@@ -7654,6 +7618,10 @@
                         "DSAD/BÜ/ʃ+E/SMEI"
                     ],
                     [
+                        "entsandt",
+                        "END/SAND"
+                    ],
+                    [
                         "Stadtkirche",
                         "DSAD/G+~I/ʃ+E"
                     ],
@@ -7718,10 +7686,6 @@
                         "FMEI/DSAD"
                     ],
                     [
-                        "versandt",
-                        "FEÜ/SAND"
-                    ],
-                    [
                         "Kernstadt",
                         "G+EÜN/DSAD"
                     ],
@@ -7748,6 +7712,10 @@
                     [
                         "Stadtpolitik",
                         "DSAD/B+O/LI/D+I+G"
+                    ],
+                    [
+                        "Stadtbahn",
+                        "DSAD/BAN"
                     ],
                     [
                         "Kapstadt",
@@ -7908,14 +7876,6 @@
                     [
                         "Hauptstadtflughafens",
                         "SNAUBD/DSAD/FLUG/SNA/FENS"
-                    ],
-                    [
-                        "Hermannstadt",
-                        "SNEÜ/MAN/DSAD"
-                    ],
-                    [
-                        "Stadtkapelle",
-                        "DSAD/G+A/B+EL/LE"
                     ]
                 ]
             ]
@@ -9145,7 +9105,7 @@
         "PatReplC",
         {
             "0": [
-                1605,
+                1604,
                 [
                     [
                         "Corona",
@@ -9218,10 +9178,6 @@
                     [
                         "Nicolas",
                         "NI/DʃGO/LAS"
-                    ],
-                    [
-                        "cm",
-                        "DʃGM-"
                     ],
                     [
                         "Chicago",
@@ -9546,6 +9502,10 @@
                     [
                         "Cordula",
                         "DʃG~O/DU/LA"
+                    ],
+                    [
+                        "Collagen",
+                        "DʃGOL/LA/GEN"
                     ]
                 ]
             ],
@@ -12309,7 +12269,7 @@
         "PatSwapZ",
         {
             "0": [
-                20267,
+                20268,
                 [
                     [
                         "jetzt",
@@ -12719,19 +12679,11 @@
         "PatDiVowel",
         {
             "0": [
-                400,
+                268,
                 [
-                    [
-                        "Staat",
-                        "DSA/AD"
-                    ],
                     [
                         "Maas",
                         "MA/AS"
-                    ],
-                    [
-                        "Bundesstaat",
-                        "BUN/DES/DSA/AD"
                     ],
                     [
                         "Boot",
@@ -12774,14 +12726,6 @@
                         "F+O/OD"
                     ],
                     [
-                        "Bundesstaats",
-                        "BUN/DES/DSA/ASD"
-                    ],
-                    [
-                        "Staats",
-                        "DSA/ASD"
-                    ],
-                    [
                         "doof",
                         "DO/OF"
                     ],
@@ -12796,10 +12740,6 @@
                     [
                         "Routiniers",
                         "SMU/D+I/N~IS"
-                    ],
-                    [
-                        "routinemäßig",
-                        "SMU/D+I/NE/MÄ/S+IG"
                     ],
                     [
                         "routiniert",
@@ -12842,16 +12782,8 @@
                         "A/AÜ/SNUS"
                     ],
                     [
-                        "Routinekontrolle",
-                        "SMU/D+I/NE/G+ON/DLOL/LE"
-                    ],
-                    [
                         "Staate",
                         "DSA/A/D+E"
-                    ],
-                    [
-                        "routinemäßige",
-                        "SMU/D+I/NE/MÄ/S+I/GE"
                     ],
                     [
                         "Hoorn",
@@ -12872,10 +12804,6 @@
                     [
                         "routinierter",
                         "SMU/D+I/N~I/D+EÜ"
-                    ],
-                    [
-                        "Routineuntersuchung",
-                        "SMU/D+I/NEUN/D+EÜ/SU/ʃ+UMG"
                     ],
                     [
                         "Aas",
@@ -12902,16 +12830,12 @@
                         "SNE/EÜ/ʃAÜ"
                     ],
                     [
-                        "Routineeinsatz",
-                        "SMU/D+I/NE/EIN/SAGʃD"
-                    ],
-                    [
                         "Heerweg",
                         "SNE/EÜ/F+EG"
                     ],
                     [
                         "Haardt",
-                        "SNA/AÜD/-D"
+                        "SNA/AÜ+FD"
                     ],
                     [
                         "Rotsee",
@@ -12922,36 +12846,8 @@
                         "SE/EU/FEÜS"
                     ],
                     [
-                        "routinemäßiger",
-                        "SMU/D+I/NE/MÄ/S+I/GEÜ"
-                    ],
-                    [
-                        "Routinetest",
-                        "SMU/D+I/NE/D+Es"
-                    ],
-                    [
-                        "Installationsroutine",
-                        "IN/DSAL/LA/D+ONS/SMU/D+I/NE"
-                    ],
-                    [
-                        "Alltagsroutine",
-                        "AL/D+AGS/SMU/D+I/NE"
-                    ],
-                    [
                         "Reet",
                         "SME/E+D"
-                    ],
-                    [
-                        "Vertragsstaat",
-                        "FEÜ/DLAGS/DSA/AD"
-                    ],
-                    [
-                        "Routinemaßnahme",
-                        "SMU/D+I/NE/MA+S/NA/ME"
-                    ],
-                    [
-                        "Routineeingriff",
-                        "SMU/D+I/NE/EIN/GMIF"
                     ],
                     [
                         "Seeufern",
@@ -12966,10 +12862,6 @@
                         "BE/SNA/A/SMUMG"
                     ],
                     [
-                        "Routinearbeit",
-                        "SMU/D+I/NE/AÜ/BEID"
-                    ],
-                    [
                         "Presseeinladung",
                         "DBMES/SE/EIN/LA/DUMG"
                     ],
@@ -12980,10 +12872,6 @@
                     [
                         "Einsaat",
                         "EIN/SA/AD"
-                    ],
-                    [
-                        "Routineflug",
-                        "SMU/D+I/NE/FLUG"
                     ],
                     [
                         "routiniertes",
@@ -13014,10 +12902,6 @@
                         "B+A/AÜ/D+E"
                     ],
                     [
-                        "Routinevorgang",
-                        "SMU/D+I/NE/F~O/GAMG"
-                    ],
-                    [
                         "Maat",
                         "MA/AD"
                     ],
@@ -13028,30 +12912,6 @@
                     [
                         "Langeoogs",
                         "LAN/GEO/OGS"
-                    ],
-                    [
-                        "Einzelstaat",
-                        "EIN/ʃGEL/DSA/AD"
-                    ],
-                    [
-                        "Routineübung",
-                        "SMU/D+I/NEÜ/BUMG"
-                    ],
-                    [
-                        "Routinetermine",
-                        "SMU/D+I/NE/D+EÜ/MI/NE"
-                    ],
-                    [
-                        "Routinetermin",
-                        "SMU/D+I/NE/D+EÜ/MIN"
-                    ],
-                    [
-                        "Routineoperation",
-                        "SMU/D+I/NEO/B+E/SMA/D+ON"
-                    ],
-                    [
-                        "Arbeitsroutine",
-                        "AÜ/BEISD/SMU/D+I/NE"
                     ],
                     [
                         "routiniertere",
@@ -13090,14 +12950,6 @@
                         "SE/EUF/EÜ/F+EGS"
                     ],
                     [
-                        "Routineeinsätze",
-                        "SMU/D+I/NE/EIN/SÄD/ʃGE"
-                    ],
-                    [
-                        "Routineaufgabe",
-                        "SMU/D+I/NE/AUF/GA/BE"
-                    ],
-                    [
                         "Lärmbeeinträchtigung",
                         "LÄÜM/BE/EIN/DLÄ+ʃ/D+I/GUMG"
                     ],
@@ -13110,37 +12962,137 @@
                         "SMU/D+IMGS"
                     ],
                     [
-                        "Routineabläufe",
-                        "SMU/D+I/NEÜB/LÄU/FE"
-                    ],
-                    [
                         "boote",
                         "BO/O/D+E"
                     ],
                     [
                         "Selbsthilfeeinrichtung",
                         "SELBs/SNIL/FE/EIN/SMI+ʃ/D+UMG"
+                    ],
+                    [
+                        "Seeoberfläche",
+                        "SE/EO/BEÜ/FLÄ/ʃ+E"
+                    ],
+                    [
+                        "Schneeoberfläche",
+                        "ʃNE/EO/BEÜ/FLÄ/ʃ+E"
+                    ],
+                    [
+                        "Messeeingang",
+                        "MES/SE/EIN/GAMG"
+                    ],
+                    [
+                        "routiniertem",
+                        "SMU/D+I/N~I/D+EM"
+                    ],
+                    [
+                        "beeil",
+                        "BE/EIL"
+                    ],
+                    [
+                        "Spreeufers",
+                        "SBLE/EU/FEÜS"
+                    ],
+                    [
+                        "Haarschere",
+                        "SNA/AÜ/ʃE/SME"
+                    ],
+                    [
+                        "Analyseeinheit",
+                        "A/NA/LI/SE/EIN/SNEID"
+                    ],
+                    [
+                        "haare",
+                        "SNA/A/SME"
+                    ],
+                    [
+                        "Suchthilfeeinrichtung",
+                        "SU+ʃD/SNIL/FE/EIN/SMI+ʃ/D+UMG"
+                    ],
+                    [
+                        "Bootzeit",
+                        "BO/OD/ʃGEID"
+                    ],
+                    [
+                        "unterseeischer",
+                        "UN/D+EÜ/SE/EI/ʃEÜ"
+                    ],
+                    [
+                        "neoosmanisch",
+                        "NEO/OS/MA/NIʃ"
+                    ],
+                    [
+                        "Seeunfall",
+                        "SE/EUN/FAL"
+                    ],
+                    [
+                        "Gänseei",
+                        "GÄN/SE/EI"
+                    ],
+                    [
+                        "Bootzeiten",
+                        "BO/OD/ʃGEI/D+EN"
+                    ],
+                    [
+                        "Armeeoffiziers",
+                        "AÜ/ME/EOF/FI/ʃG~IS"
+                    ],
+                    [
+                        "seeuntüchtige",
+                        "SE/EUN/D+Ü+ʃ/D+I/GE"
+                    ],
+                    [
+                        "routinierteste",
+                        "SMU/D+I/N~I/D+ES/D+E"
+                    ],
+                    [
+                        "Seeoperation",
+                        "SE/EO/B+E/SMA/D+ON"
+                    ],
+                    [
+                        "Heerwegs",
+                        "SNE/EÜ/F+EGS"
+                    ],
+                    [
+                        "Heerweges",
+                        "SNE/EÜ/F+E/GES"
+                    ],
+                    [
+                        "Armeeoberst",
+                        "AÜ/ME/EO/BEÜs"
+                    ],
+                    [
+                        "unterseeisches",
+                        "UN/D+EÜ/SE/EI/ʃES"
+                    ],
+                    [
+                        "neoosmanisches",
+                        "NEO/OS/MA/NI/ʃES"
+                    ],
+                    [
+                        "neoosmanischer",
+                        "NEO/OS/MA/NI/ʃEÜ"
+                    ],
+                    [
+                        "Traunseeufer",
+                        "DLAUN/SE/EU/FEÜ"
+                    ],
+                    [
+                        "Seeübung",
+                        "SE/EÜ/BUMG"
                     ]
                 ]
             ],
             "1": [
-                8744,
+                6758,
                 [
                     [
                         "paar",
                         "B+AÜ"
                     ],
                     [
-                        "Staatsanwaltschaft",
-                        "DSAÜSD/AN/F+ALD/ʃAFD"
-                    ],
-                    [
                         "leer",
                         "LEÜ"
-                    ],
-                    [
-                        "staatliche",
-                        "DSAÜD/LI/ʃ+E"
                     ],
                     [
                         "Meer",
@@ -13151,20 +13103,12 @@
                         "SAÜL"
                     ],
                     [
-                        "Freistaat",
-                        "FMEI/DSAÜD"
-                    ],
-                    [
                         "Zoo",
                         "ʃG~O"
                     ],
                     [
                         "Ehepaar",
                         "E/SNE/B+AÜ"
-                    ],
-                    [
-                        "Staatschef",
-                        "DSAÜSD/ʃ+EF"
                     ],
                     [
                         "Staates",
@@ -13183,20 +13127,12 @@
                         "SAÜ/LAND"
                     ],
                     [
-                        "Staatsanwalt",
-                        "DSAÜSD/AN/F+ALD"
-                    ],
-                    [
                         "Bloomberg",
                         "BL~OM/BEÜG"
                     ],
                     [
                         "Aarau",
                         "AÜ/SMAU"
-                    ],
-                    [
-                        "Staatsbürger",
-                        "DSAÜSD/B~Ü/GEÜ"
                     ],
                     [
                         "cool",
@@ -13207,40 +13143,12 @@
                         "AÜ/GAU/EÜ"
                     ],
                     [
-                        "Staatsregierung",
-                        "DSAÜSD/SME/GI/SMUMG"
-                    ],
-                    [
-                        "Staatskanzlei",
-                        "DSAÜSD/G+AMGʃ/LEI"
-                    ],
-                    [
-                        "Rechtsstaat",
-                        "SME+ʃs/DSAÜD"
-                    ],
-                    [
-                        "staatlich",
-                        "DSAÜD/LI+ʃ"
-                    ],
-                    [
                         "Pool",
                         "B+~OL"
                     ],
                     [
-                        "Staatssekretär",
-                        "DSAÜSD/SE/DGME/D+ÄÜ"
-                    ],
-                    [
                         "Football",
                         "F~OD/BAL"
-                    ],
-                    [
-                        "staatlicher",
-                        "DSAÜD/LI/ʃ+EÜ"
-                    ],
-                    [
-                        "Rechtsstaatlichkeit",
-                        "SME+ʃs/DSAÜD/LI+ʃ/G+EID"
                     ],
                     [
                         "Bundesheer",
@@ -13253,10 +13161,6 @@
                     [
                         "Boom",
                         "B~OM"
-                    ],
-                    [
-                        "Staatsanwältin",
-                        "DSAÜSD/AN/F+ÄL/D+IN"
                     ],
                     [
                         "Aachener",
@@ -13275,56 +13179,16 @@
                         "GE/SMI+ʃs/SAÜL"
                     ],
                     [
-                        "Staatsbürgerschaft",
-                        "DSAÜSD/B~Ü/GEÜ/ʃAFD"
-                    ],
-                    [
                         "Aaron",
                         "AÜ/SMON"
-                    ],
-                    [
-                        "Staatsoberhaupt",
-                        "DSAÜSD/O/BEÜ/SNAUBD"
-                    ],
-                    [
-                        "Generalstaatsanwaltschaft",
-                        "GE/NE/SMAL/DSAÜSD/AN/F+ALD/ʃAFD"
                     ],
                     [
                         "Paares",
                         "B+AÜ/SMES"
                     ],
                     [
-                        "Staatsoper",
-                        "DSAÜSD/O/B+EÜ"
-                    ],
-                    [
-                        "Staatspräsident",
-                        "DSAÜSD/DBMÄ/SI/DEND"
-                    ],
-                    [
-                        "Staatsanwälte",
-                        "DSAÜSD/AN/F+ÄL/D+E"
-                    ],
-                    [
-                        "Staatsschutz",
-                        "DSAÜSD/ʃUGʃD"
-                    ],
-                    [
                         "Bundesstaates",
                         "BUN/DES/DSAÜ/D+ES"
-                    ],
-                    [
-                        "Staatssekretärin",
-                        "DSAÜSD/SE/DGME/D+Ä/SMIN"
-                    ],
-                    [
-                        "Oberstaatsanwalt",
-                        "O/BEÜ/DSAÜSD/AN/F+ALD"
-                    ],
-                    [
-                        "Staatshilfe",
-                        "DSAÜSD/SNIL/FE"
                     ],
                     [
                         "Saarbrücker",
@@ -13359,20 +13223,8 @@
                         "SAÜ/LE"
                     ],
                     [
-                        "Staatsangehörigkeit",
-                        "DSAÜSD/AN/GE/SNÄO/SMIG/G+EID"
-                    ],
-                    [
-                        "Staatsangehörige",
-                        "DSAÜSD/AN/GE/SNÄO/SMI/GE"
-                    ],
-                    [
                         "Tattoos",
                         "D+AD/D+~OS"
-                    ],
-                    [
-                        "Staatsstraße",
-                        "DSAÜSD/DSMA/S+E"
                     ],
                     [
                         "Cookies",
@@ -13383,28 +13235,12 @@
                         "SID/ʃGUMGS/SAÜL"
                     ],
                     [
-                        "Sozialstaat",
-                        "SO/ʃGI/AL/DSAÜD"
-                    ],
-                    [
                         "Plenarsaal",
                         "DBLE/NAÜ/SAÜL"
                     ],
                     [
-                        "Freistaats",
-                        "FMEI/DSAÜSD"
-                    ],
-                    [
-                        "Generalstaatsanwalt",
-                        "GE/NE/SMAL/DSAÜSD/AN/F+ALD"
-                    ],
-                    [
                         "Aarauer",
                         "AÜ/SMAU/EÜ"
-                    ],
-                    [
-                        "Kulturstaatsministerin",
-                        "G+UL/D+~U/DSAÜSD/MI/NIS/D+E/SMIN"
                     ],
                     [
                         "Moos",
@@ -13415,20 +13251,8 @@
                         "SAÜD/GUD"
                     ],
                     [
-                        "Inselstaat",
-                        "IN/SEL/DSAÜD"
-                    ],
-                    [
-                        "Staatssekretariat",
-                        "DSAÜSD/SE/DGME/D+A/SMI/AD"
-                    ],
-                    [
                         "Waadtländer",
                         "F+AÜD/LÄN/DEÜ"
-                    ],
-                    [
-                        "staatliches",
-                        "DSAÜD/LI/ʃ+ES"
                     ],
                     [
                         "Moor",
@@ -13439,28 +13263,12 @@
                         "DGMEI+S/SAÜL"
                     ],
                     [
-                        "Staatshaushalt",
-                        "DSAÜSD/SNAUS/SNALD"
-                    ],
-                    [
                         "Brautpaar",
                         "BMAUD/B+AÜ"
                     ],
                     [
-                        "Staatskasse",
-                        "DSAÜSD/G+AS/SE"
-                    ],
-                    [
                         "Pools",
                         "B+~OLS"
-                    ],
-                    [
-                        "Staatsgewalt",
-                        "DSAÜSD/GE/F+ALD"
-                    ],
-                    [
-                        "Staatsführung",
-                        "DSAÜSD/FÜ/SMUMG"
                     ],
                     [
                         "Saalfelder",
@@ -13471,16 +13279,8 @@
                         "SMASD/SAÜL"
                     ],
                     [
-                        "Staatsminister",
-                        "DSAÜSD/MI/NIS/D+EÜ"
-                    ],
-                    [
                         "Festsaal",
                         "FEs/SAÜL"
-                    ],
-                    [
-                        "Staatsfonds",
-                        "DSAÜSD/FONSD"
                     ],
                     [
                         "Schlauchboot",
@@ -13499,20 +13299,12 @@
                         "G+~O/LEÜ"
                     ],
                     [
-                        "Staatsrat",
-                        "DSAÜSD/SMAD"
-                    ],
-                    [
                         "Speer",
                         "SBEÜ"
                     ],
                     [
                         "Konzertsaal",
                         "G+ON/ʃGEÜD/SAÜL"
-                    ],
-                    [
-                        "Rechtsstaats",
-                        "SME+ʃs/DSAÜSD"
                     ],
                     [
                         "Freistaates",
@@ -13525,11 +13317,179 @@
                     [
                         "Heerstraße",
                         "SNEÜ/DSMA/S+E"
+                    ],
+                    [
+                        "Looks",
+                        "L~O+GS"
+                    ],
+                    [
+                        "Saarlandes",
+                        "SAÜ/LAN/DES"
+                    ],
+                    [
+                        "Scooter",
+                        "SG+~O/D+EÜ"
+                    ],
+                    [
+                        "Traumpaar",
+                        "DLAUM/B+AÜ"
+                    ],
+                    [
+                        "Reboot",
+                        "SME/B~OD"
+                    ],
+                    [
+                        "Leerstände",
+                        "LEÜ/DSÄN/DE"
+                    ],
+                    [
+                        "Hörsaal",
+                        "SNÄO/SAÜL"
+                    ],
+                    [
+                        "leergefegt",
+                        "LEÜ/GE/FEGD"
+                    ],
+                    [
+                        "Haarschnitt",
+                        "SNAÜ/ʃNID"
+                    ],
+                    [
+                        "Meerbusch",
+                        "MEÜ/BUʃ"
+                    ],
+                    [
+                        "Waagschale",
+                        "F+AÜG/ʃA/LE"
+                    ],
+                    [
+                        "Moosburg",
+                        "M~OS/B~UG"
+                    ],
+                    [
+                        "Rechtsstaates",
+                        "SME+ʃs/DSAÜ/D+ES"
+                    ],
+                    [
+                        "Liebespaar",
+                        "LI/BES/B+AÜ"
+                    ],
+                    [
+                        "Ehepaars",
+                        "E/SNE/B+AÜS"
+                    ],
+                    [
+                        "Saarburg",
+                        "SAÜ/B~UG"
+                    ],
+                    [
+                        "Kinosaal",
+                        "G+I/NO/SAÜL"
+                    ],
+                    [
+                        "Ehepaare",
+                        "E/SNE/B+AÜ/SME"
+                    ],
+                    [
+                        "Ehepaares",
+                        "E/SNE/B+AÜ/SMES"
+                    ],
+                    [
+                        "Haarfarbe",
+                        "SNAÜ/FAÜ/BE"
+                    ],
+                    [
+                        "Paarung",
+                        "B+AÜ/SMUMG"
+                    ],
+                    [
+                        "Pioneer",
+                        "B+O/NEÜ"
+                    ],
+                    [
+                        "Saalekreis",
+                        "SAÜ/LE/DGMEIS"
+                    ],
+                    [
+                        "Brautpaare",
+                        "BMAUD/B+AÜ/SME"
+                    ],
+                    [
+                        "haarscharf",
+                        "SNAÜ/ʃAÜF"
+                    ],
+                    [
+                        "Speerspitze",
+                        "SBEÜ/SBID/ʃGE"
+                    ],
+                    [
+                        "Segelboot",
+                        "SE/GEL/B~OD"
+                    ],
+                    [
+                        "Mittelmeerinsel",
+                        "MID/D+EL/MEÜ/IN/SEL"
+                    ],
+                    [
+                        "Saarlands",
+                        "SAÜ/LANSD"
+                    ],
+                    [
+                        "Alkmaar",
+                        "AL/G+-/MAÜ"
+                    ],
+                    [
+                        "Königspaar",
+                        "G+ÄO/NIGS/B+AÜ"
+                    ],
+                    [
+                        "Saalbach",
+                        "SAÜL/BA+ʃ"
+                    ],
+                    [
+                        "Bürgersaal",
+                        "B~Ü/GEÜ/SAÜL"
+                    ],
+                    [
+                        "Saab",
+                        "SAÜB"
+                    ],
+                    [
+                        "Maastricht",
+                        "MAÜSD/SMI+ʃD"
+                    ],
+                    [
+                        "Coolness",
+                        "G+~OL/NES"
+                    ],
+                    [
+                        "Haarausfall",
+                        "SNAÜ/AUS/FAL"
+                    ],
+                    [
+                        "Leerlauf",
+                        "LEÜ/LAUF"
+                    ],
+                    [
+                        "Motorboot",
+                        "MO/D+~O/B~OD"
+                    ],
+                    [
+                        "cooles",
+                        "G+~O/LES"
+                    ],
+                    [
+                        "indoor",
+                        "IN/D~O"
+                    ],
+                    [
+                        "Haarpracht",
+                        "SNAÜ/DBMA+ʃD"
                     ]
                 ]
             ],
             "4": [
-                7169,
+                7154,
                 [
                     [
                         "Idee",
@@ -14317,7 +14277,7 @@
         "PatReplH",
         {
             "0": [
-                1127,
+                1126,
                 [
                     [
                         "Hertha",
@@ -14722,7 +14682,7 @@
                 ]
             ],
             "3": [
-                9193,
+                9170,
                 [
                     [
                         "Thema",
@@ -15029,10 +14989,6 @@
                         "BAI/SMEU/D+EÜ"
                     ],
                     [
-                        "Staatstheater",
-                        "DSAÜSD/D+EÜ/D+EÜ"
-                    ],
-                    [
                         "Chemotherapie",
                         "ʃ+E/MO/D+E/SMA/B+I"
                     ],
@@ -15123,6 +15079,10 @@
                     [
                         "Mathematiker",
                         "MA/D+E/MA/D+I/G+EÜ"
+                    ],
+                    [
+                        "Whisky",
+                        "F+IS/G+I"
                     ]
                 ]
             ]
@@ -15132,7 +15092,7 @@
         "PatReplRare",
         {
             "0": [
-                16904,
+                16888,
                 [
                     [
                         "knapp",
@@ -15537,7 +15497,7 @@
                 ]
             ],
             "3": [
-                11818,
+                11800,
                 [
                     [
                         "Philipp",
@@ -15947,7 +15907,7 @@
         "PatSmallS",
         {
             "0": [
-                9952,
+                9936,
                 [
                     [
                         "aufs",
@@ -16044,10 +16004,6 @@
                     [
                         "Greifswald",
                         "GMEIFs/F+ALD"
-                    ],
-                    [
-                        "Staatschefs",
-                        "DSAÜSD/ʃ+EFs"
                     ],
                     [
                         "Hilfswerk",
@@ -16348,11 +16304,15 @@
                     [
                         "Einkaufs",
                         "EIN/G+AUFs"
+                    ],
+                    [
+                        "angriffslustig",
+                        "AN/GMIFs/LUS/D+IG"
                     ]
                 ]
             ],
             "6": [
-                541,
+                542,
                 [
                     [
                         "freie",
@@ -16956,7 +16916,7 @@
         "PatSCPlus",
         {
             "0": [
-                336,
+                341,
                 [
                     [
                         "Mann",
@@ -17175,6 +17135,10 @@
                         "G~OGʃ"
                     ],
                     [
+                        "narrt",
+                        "N+A+D"
+                    ],
+                    [
                         "flirren",
                         "FLI+/MEN"
                     ],
@@ -17185,6 +17149,10 @@
                     [
                         "Mannstunden",
                         "MA+N/DSUNn"
+                    ],
+                    [
+                        "irr",
+                        "+I+"
                     ],
                     [
                         "Tyr",
@@ -17349,14 +17317,6 @@
                     [
                         "halbirren",
                         "SNAL/BI+/MEN"
-                    ],
-                    [
-                        "wirreren",
-                        "F+I+/MEn"
-                    ],
-                    [
-                        "schwirrend",
-                        "ʃBI+/MEND"
                     ]
                 ]
             ]
@@ -17538,7 +17498,7 @@
                     ],
                     [
                         "Staatssouveränität",
-                        "DSAÜSD/SU/FE/SMÄ/NI/D+ÄD"
+                        "S+A+S/SU/FE/SMÄ/NI/D+ÄD"
                     ],
                     [
                         "Souveränitätsanspruch",
@@ -17714,7 +17674,7 @@
                     ],
                     [
                         "Staatssouveränitäten",
-                        "DSAÜSD/SU/FE/SMÄ/NI/D+Än"
+                        "S+A+S/SU/FE/SMÄ/NI/D+Än"
                     ],
                     [
                         "Souveränitätsverzichts",
@@ -17776,7 +17736,7 @@
         "PatCapitalize",
         {
             "0": [
-                966,
+                970,
                 [
                     [
                         "Welt",
@@ -18047,6 +18007,10 @@
                         "S-/FLÜGn"
                     ],
                     [
+                        "Versand",
+                        "S-/vSAND"
+                    ],
+                    [
                         "Maik",
                         "S-/MAI+G"
                     ],
@@ -18069,6 +18033,10 @@
                     [
                         "Nike",
                         "S-/NI/G+E"
+                    ],
+                    [
+                        "Arndt",
+                        "S-/AÜND"
                     ],
                     [
                         "Anwälten",
@@ -18159,24 +18127,16 @@
                         "S-/F+~In"
                     ],
                     [
+                        "Gewand",
+                        "S-/GE/F+AND"
+                    ],
+                    [
                         "Identitäten",
                         "S-/In/D+I/D+Än"
                     ],
                     [
                         "Martínez",
                         "S-/MAÜ/D+I/NEGʃ"
-                    ],
-                    [
-                        "Ted",
-                        "S-/D+ED"
-                    ],
-                    [
-                        "Helen",
-                        "S-/SNELn"
-                    ],
-                    [
-                        "Spuk",
-                        "S-/SBU+G"
                     ]
                 ]
             ]
@@ -18186,7 +18146,7 @@
         "PatShortSyllable",
         {
             "5": [
-                66095,
+                66102,
                 [
                     [
                         "andere",
@@ -18591,7 +18551,7 @@
                 ]
             ],
             "6": [
-                566188,
+                566179,
                 [
                     [
                         "einen",
@@ -18999,10 +18959,6 @@
                 211297,
                 [
                     [
-                        "den",
-                        "n"
-                    ],
-                    [
                         "werden",
                         "F+EÜn"
                     ],
@@ -19397,6 +19353,10 @@
                     [
                         "hinten",
                         "SNINn"
+                    ],
+                    [
+                        "vertreten",
+                        "vSMEn"
                     ]
                 ]
             ]
@@ -19406,8 +19366,12 @@
         "PatBrief",
         {
             "0": [
-                10385,
+                12588,
                 [
+                    [
+                        "den",
+                        "DN-"
+                    ],
                     [
                         "eine",
                         "EIn"
@@ -19439,6 +19403,10 @@
                     [
                         "hatte",
                         "SNA+n"
+                    ],
+                    [
+                        "ich",
+                        "Iʃ"
                     ],
                     [
                         "habe",
@@ -19589,6 +19557,14 @@
                         "~IS"
                     ],
                     [
+                        "Staatsanwaltschaft",
+                        "S+A+S/AN/F+ALD/ʃAFD"
+                    ],
+                    [
+                        "Staat",
+                        "S+A+"
+                    ],
+                    [
                         "System",
                         "SIS"
                     ],
@@ -19621,8 +19597,16 @@
                         "FBLIs"
                     ],
                     [
+                        "staatliche",
+                        "S+A+/LI/ʃ+E"
+                    ],
+                    [
                         "keinem",
                         "G+EIM"
+                    ],
+                    [
+                        "Bundesstaat",
+                        "BUN/DES/S+A+"
                     ],
                     [
                         "schlimmer",
@@ -19635,6 +19619,10 @@
                     [
                         "Polizeisprecher",
                         "B+OLGʃ/SBLE/ʃ+EÜ"
+                    ],
+                    [
+                        "Freistaat",
+                        "FMEI/S+A+"
                     ],
                     [
                         "Gesundheitssystem",
@@ -19651,6 +19639,10 @@
                     [
                         "wen",
                         "F+-N"
+                    ],
+                    [
+                        "Staatschef",
+                        "S+A+S/ʃ+EF"
                     ],
                     [
                         "Polizeigewalt",
@@ -19685,6 +19677,10 @@
                         "IM/MUN/SIS"
                     ],
                     [
+                        "Staatsanwalt",
+                        "S+A+S/AN/F+ALD"
+                    ],
+                    [
                         "Polizeieinsatz",
                         "B+OLGʃ/EIN/SAGʃD"
                     ],
@@ -19701,6 +19697,10 @@
                         "SME+ʃs/EGSD/-D/SME/MIMS"
                     ],
                     [
+                        "Staatsbürger",
+                        "S+A+S/B~Ü/GEÜ"
+                    ],
+                    [
                         "Zimmermann",
                         "ʃGIMs/MAN"
                     ],
@@ -19709,8 +19709,28 @@
                         "G+A/B+I/D+A/LIMS"
                     ],
                     [
+                        "Staatsregierung",
+                        "S+A+S/SME/GI/SMUMG"
+                    ],
+                    [
+                        "Staatskanzlei",
+                        "S+A+S/G+AMGʃ/LEI"
+                    ],
+                    [
+                        "Rechtsstaat",
+                        "SME+ʃs/S+A+"
+                    ],
+                    [
+                        "staatlich",
+                        "S+A+/LI+ʃ"
+                    ],
+                    [
                         "systematisch",
                         "SIS/MA/D+Iʃ"
+                    ],
+                    [
+                        "Staatssekretär",
+                        "S+A+S/SE/DGME/D+ÄÜ"
                     ],
                     [
                         "Apples",
@@ -19721,6 +19741,10 @@
                         "B+OLGʃ/SME/F~I"
                     ],
                     [
+                        "staatlicher",
+                        "S+A+/LI/ʃ+EÜ"
+                    ],
+                    [
                         "Polizeisprecherin",
                         "B+OLGʃ/SBLE/ʃ+E/SMIN"
                     ],
@@ -19729,84 +19753,20 @@
                         "D+EÜ/SMO/SMIMS"
                     ],
                     [
+                        "Rechtsstaatlichkeit",
+                        "SME+ʃs/S+A+/LI+ʃ/G+EID"
+                    ],
+                    [
                         "keines",
                         "G+EIS"
                     ],
                     [
-                        "Nationalsozialismus",
-                        "NA/D+O/NAL/SO/ʃGI/A/LIMS"
+                        "Staatsanwältin",
+                        "S+A+S/AN/F+ÄL/D+IN"
                     ],
                     [
-                        "Schlafzimmer",
-                        "ʃLAF/ʃGIMs"
-                    ],
-                    [
-                        "systemrelevant",
-                        "SIS/SME/LE/FAND"
-                    ],
-                    [
-                        "Gesundheitssystems",
-                        "GE/SUND/SNEISD/SISs"
-                    ],
-                    [
-                        "Sozialismus",
-                        "SO/ʃGI/A/LIMS"
-                    ],
-                    [
-                        "Faschismus",
-                        "FA/ʃIMS"
-                    ],
-                    [
-                        "Stadtpolizei",
-                        "DSAD/B+OLGʃ"
-                    ],
-                    [
-                        "Mechanismus",
-                        "ME/ʃ+A/NIMS"
-                    ],
-                    [
-                        "isst",
-                        "ISs"
-                    ],
-                    [
-                        "Extremismus",
-                        "EGSD/-D/SME/MIMS"
-                    ],
-                    [
-                        "Polizeistreife",
-                        "B+OLGʃ/DSMEI/FE"
-                    ],
-                    [
-                        "Hotelzimmer",
-                        "SNO/D+EL/ʃGIMs"
-                    ],
-                    [
-                        "Polizeigewahrsam",
-                        "B+OLGʃ/GE/F+AÜ+/SAM"
-                    ],
-                    [
-                        "Polizeiwache",
-                        "B+OLGʃ/F+A/ʃ+E"
-                    ],
-                    [
-                        "Polizeipräsident",
-                        "B+OLGʃ/DBMÄ/SI/DEND"
-                    ],
-                    [
-                        "Polizeihubschrauber",
-                        "B+OLGʃ/SNUB/DʃMAU/BEÜ"
-                    ],
-                    [
-                        "Vandalismus",
-                        "FAN/DA/LIMS"
-                    ],
-                    [
-                        "Polizeistation",
-                        "B+OLGʃ/DSA/D+ON"
-                    ],
-                    [
-                        "Ökosystem",
-                        "ÄO/G+O/SIS"
+                        "nett",
+                        "NED"
                     ]
                 ]
             ]
@@ -19816,7 +19776,7 @@
         "PatCommonPrefix",
         {
             "7": [
-                105503,
+                105502,
                 [
                     [
                         "weiter",
@@ -20221,7 +20181,7 @@
                 ]
             ],
             "8": [
-                8454,
+                8456,
                 [
                     [
                         "Juni",
@@ -20521,7 +20481,7 @@
                     ],
                     [
                         "Staatsvertrag",
-                        "DSAÜSD/vSMAG"
+                        "S+A+S/vSMAG"
                     ],
                     [
                         "Juniors",
@@ -25244,7 +25204,7 @@
         "PatAnglOther",
         {
             "0": [
-                2314,
+                2315,
                 [
                     [
                         "Washington",
@@ -25417,6 +25377,10 @@
                     [
                         "Screenshot",
                         "DSGMIN/ʃOD"
+                    ],
+                    [
+                        "Ken",
+                        "G+EN"
                     ],
                     [
                         "Cashflow",
@@ -25641,10 +25605,6 @@
                     [
                         "gepusht",
                         "GE/B+UʃD"
-                    ],
-                    [
-                        "Showrunner",
-                        "ʃOF/SMUN/NEÜ"
                     ]
                 ]
             ]
@@ -26152,7 +26112,7 @@
         "PatAcronym",
         {
             "0": [
-                1453,
+                1469,
                 [
                     [
                         "USA",
@@ -26399,6 +26359,10 @@
                         "NÜM/ID"
                     ],
                     [
+                        "km",
+                        "NÜM/G+-/M-"
+                    ],
+                    [
                         "BIP",
                         "NÜM/BIB"
                     ],
@@ -26449,6 +26413,10 @@
                     [
                         "WDR",
                         "NÜM/-FD/SM-"
+                    ],
+                    [
+                        "cm",
+                        "NÜM/DʃG-/M-"
                     ],
                     [
                         "BBC",
@@ -26545,14 +26513,6 @@
                     [
                         "LKA",
                         "NÜM/L+G/A"
-                    ],
-                    [
-                        "CHF",
-                        "NÜM/-+G/SN-F"
-                    ],
-                    [
-                        "HD",
-                        "NÜM/SN-D"
                     ]
                 ]
             ]

@@ -148,13 +148,13 @@ in
         sha256 = "sha256-6UViAujrl7odTPvnseIx+x+/9HBhoKFbeM8Yo2P3iwQ=";
       }) {};
 
-      servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex {};
-      # servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
-      #   owner = "rubenmoor";
-      #   repo = "servant-reflex";
-      #   rev = "06bd09d0777c658da5269840be60d6cb24a264e8";
-      #   sha256 = "0s23q4cz93dw8wwz3n94l69qw5syvh37hj7bgdy5i0bb8b9g2617";
-      # }) {};
+      #servant-reflex = self.callCabal2nix "servant-reflex" ../servant-reflex {};
+      servant-reflex = self.callCabal2nix "servant-reflex" (pkgs.fetchFromGitHub {
+        owner = "rubenmoor";
+        repo = "servant-reflex";
+        rev = "ba50e31bc75cd3247c6b711aee998bbf4150f221";
+        sha256 = "1aq621li77xjh59w0za16971ilkdll5z8m124lh19hxi8jyqym4d";
+      }) {};
 
       #servant-snap = self.callCabal2nix "servant-snap" ../servant-snap {};
       servant-snap = self.callCabal2nix "servant-snap" (pkgs.fetchFromGitHub {
@@ -168,8 +168,8 @@ in
       my-palantype = self.callCabal2nix "my-palantype" (pkgs.fetchFromGitHub {
         owner = "rubenmoor";
         repo = "my-palantype";
-        rev = "2afe58feed95771c2094fb797589286b1b84b522";
-        sha256 = "077cgzf7nd458sdy9aarp2nv1x5mfrb7wmzchqrz5yh4gp8s6l42";
+        rev = "a046de6e676173f520b10a430a4661aa5a042e90";
+        sha256 = "1sinsh4synsx9fa2hyfqx4pgqv8gqll499z3ya9hs7xzbca9hphj";
       }) {};
 
       bytestring-trie = self.callHackage "bytestring-trie" "0.2.7" {};
